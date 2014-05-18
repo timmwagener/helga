@@ -1,0 +1,1888 @@
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+/// creation date :	may, 2006
+///
+/// Author :	Carla Heinzel
+/// Contact :	carla@anderswo.org
+///
+/// Description :
+///
+///		works on Windows. I didn't test it on other
+///		platforms, but it may work on them too - try on your own
+///		what it does:
+///		its an alternative skin-weights editor for poly meshes 
+///
+///		features:
+///		better overview through grouping joints and influence objects by names
+///		export weights for selected vertices
+///		hold weights for all desired joints at once (much more confortable than
+///		using the component editor or weights paint tool)
+///
+///
+/// How to use :
+///
+///		Put the script in your scripts folder then start Maya. Type
+///		and execute "carlaH_skinWeightsEditor" in command line or Script
+///		Editor. Use the help-menu for further instructions
+///
+/// All Rights Reserved .
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+proc string[] compare(string $arrayI[], string $arrayII[])
+{
+	string $dif[];
+	
+	if (size($arrayI) > size($arrayII))
+		$dif = stringArrayRemove($arrayII, $arrayI);
+	else
+		$dif = stringArrayRemove($arrayI, $arrayII);
+	
+	return $dif;
+}
+
+
+proc int findObj(string $obj, string $searchIn[])
+{
+	int $i = 0;
+	int $id = 0;
+	for ($i = 0; $i < size($searchIn); $i++)
+		if ($searchIn[$i] == $obj)
+		{
+			$id = $i;
+			break;
+		}
+		
+	return $i;
+}
+
+
+proc int confirm(string $text)
+{
+	string $result = `confirmDialog 
+		-title "Confirm" 
+		-message $text
+		-button "Yes" 
+		-button "No" 
+		-defaultButton "Yes"
+		-cancelButton "No" 
+		-dismissString "No"`;
+		
+	if ($result == "Yes")
+		return 1;
+	
+	return 0;
+}
+
+proc string stringLast(string $toToken, string $token)
+{
+	string $tokens[] = {};
+	tokenize $toToken $token $tokens;
+
+	return $tokens[size($tokens) - 1];
+}
+
+proc string stringFirst(string $toToken, string $token)
+{
+	string $tokens[] = {};
+	tokenize $toToken $token $tokens;
+
+	return $tokens[0];
+}
+
+proc string stringPart(string $toToken, string $token, int $pos)
+{
+	string $tokens[] = {};
+	tokenize $toToken $token $tokens;
+
+	return $tokens[$pos];
+}
+
+
+
+// ===================================================================
+// ==== allgemeine procs =============================================
+// ===================================================================
+proc string[] carlaTokens(string $stringToTokenize, string $token)
+{
+	string $tokens[] = {};
+	tokenize $stringToTokenize $token $tokens;
+	return $tokens;
+}
+
+proc string carlaToken (string $stringToTokenize, string $token, int $nr)	
+{
+	string $tokens[] = {};
+	tokenize $stringToTokenize $token $tokens;
+
+	if (size($tokens) < ($nr - 1))
+		$nr = size($tokens);
+
+	string $tokenToRet = "";
+	if ($nr == 1000)
+		$tokenToRet = $tokens[size($tokens) - 1];
+	else
+		$tokenToRet = $tokens[$nr];
+
+	return $tokenToRet;
+}
+
+proc string carla_stringForQuotes(string $array[])
+{
+	string $string = "{\"";
+	$string = $string + (stringArrayToString($array, "\", \""));
+	$string = $string + "\"}";
+
+	return $string;
+}
+
+proc int carla_floatEq(float $floatI, float $floatII, float $tol)
+{
+	int $eq = 0;
+	if ( ($floatI < $floatII + $tol) && ($floatI > $floatII - $tol) )
+		$eq = 1;
+	return $eq;
+}
+
+
+//===============================================
+//========== select all vtx influenced by =======
+//========== given joints or infl-objects =======
+//===============================================
+global proc string[] carlaH_CESgetInflVtx(string $joints[], string $skinCluster, float $tolerance)
+{	
+	// get obj
+	string $tmp[] = `skinCluster -q -g $skinCluster`;
+	string $obj = $tmp[0];
+	
+	// get weight-List Id for given joints
+	int $scId[] = {};
+	for ($j in $joints)
+	{
+		string $id = "";
+		string $conn[] = `listConnections -s 0 -d 1 -p 1 ($j + ".lockInfluenceWeights")`;
+		$id = stringLast($conn[0], "[");
+		$id = stringFirst($id, "]");
+		$scId[size($scId)] = $id;
+	}
+	
+	// get vertices
+	string $weightList[] = `listAttr -m ($skinCluster + ".weightList")`;
+	string $vtx[] = {};
+	for ($i = 0; $i < size($joints); $i++)
+	{
+		int $cnt = 0;
+		for ($wl in $weightList)
+		{
+			//$cnt++;
+			string $weightsString = stringLast($wl, ".");
+			if ($weightsString == ("weights[" + $scId[$i] + "]") )
+			{
+				string $id = "";
+				$id = stringPart($wl, "[", 1);
+				$id = stringFirst($id, "]");
+	
+				if (`getAttr ($skinCluster + "." + $wl)` >= 0.3)
+					$vtx[size($vtx)] = $obj + ".vtx[" + $id + "]";
+			}
+	
+			//if ($cnt > 100)
+				//break;
+		}
+	}
+
+	return $vtx;	
+}
+
+
+// ===================================================================
+// ==== remove polyColorPerVertex History-Node =======================
+// ===================================================================
+global proc string carla_removePCPVHistory(string $obj)
+{
+	global string $ch_CES_pcvNode;
+
+//get PCPV-history object
+	string $input [] = `listHistory -pdo 1 $obj`;
+	string $PCPV[] = `ls -type "polyColorPerVertex" $input`;
+	
+	int $id = findObj($ch_CES_pcvNode, $PCPV);
+
+	
+// remove node
+	if ( (size($PCPV)) && ($id < size($PCPV) ) )
+	{
+		delete $PCPV[$id];
+		string $shape[] = `listRelatives -s -ni $obj`;
+			setAttr ($shape[0] + ".displayColors") 0;
+	}	
+	
+	return $PCPV[$id];
+
+/*
+//remove vertex-color
+	if (size($PCPV))
+		polyColorPerVertex -rem $obj;
+
+//set dislplay colors attribute to 0
+	string $shape[] = `listRelatives -s -ni $obj`;
+	setAttr ($shape[0] + ".displayColors") 0;
+
+//delete history-obj
+	if (size($PCPV))
+		delete $PCPV[0];
+
+	return $PCPV[0];
+*/
+}
+
+
+// ===================================================================
+// ==== sort joints to groups ========================================
+// ===================================================================
+proc string[] carlaCES_groupJoints(int $grpNameSize, int $namePart, string $joints[], string $jointGrp[])
+{
+	int $jointsUsed[] = {};
+	string $jointsInGrp[] = {};
+	for ($i = 0; $i < size($jointGrp); $i++)
+		{
+		$jointsInGrp[$i] = "";
+		for ($o = 0; $o < size($joints); $o++)
+			{
+		//namepart auslesen, der fuers grouping interessant
+			string $partForTesting = carlaToken($joints[$o], "_", ($namePart - 1));
+			string $maybeGrp = startString($partForTesting, $grpNameSize);
+
+		//überprüfen, ob joint zur gruppe gehört
+			if ($jointGrp[$i] == $maybeGrp)
+				{
+				$jointsInGrp[$i] = ($jointsInGrp[$i] + $joints[$o] + ";");
+			//joints merken, die in gruppen untergebracht
+				$jointsUsed[size($jointsUsed)] = $o;
+				}
+			}
+		}
+//joints, die noch in keiner Gruppe, in "others"-gruppe einordnen
+	for ($i = 0; $i < size($joints); $i++)
+		{
+		int $usedJoint = 0;
+		for ($ju in $jointsUsed)
+			if ($ju == $i)
+				$usedJoint = 1;
+		if (!$usedJoint)
+			$jointsInGrp[size($jointGrp)] = $jointsInGrp[size($jointGrp)] + $joints[$i] + ";";
+		}
+	return $jointsInGrp;
+}
+
+
+// ===================================================================
+// ==== sorting option window ========================================
+// ===================================================================
+global proc carlaH_CESsortingOptions()
+{
+	global int $carlaH_CESbuildNew; //das fenster zwigen, sich neu aufzubauen
+	global int $carlaH_CESgrpSize; //minimale Groesse einer Joint-Group
+	global int $carlaH_CESgrpNameSize; //groesse des Gruppen-Namens
+	global int $carlaH_CESnamePart; //token des Joint-Namens nach dem gruppiert werden soll
+
+	string $soWin = "carlaH_CESsortingOptionWindow";
+	if (`window -ex $soWin`)
+		deleteUI $soWin;
+
+	window -t "CES - sorting options" -s 0 -w 280 -h 80 -rtf 0 $soWin;
+	frameLayout -bv 0 -lv 0 -mw 5 -mh 5;
+	frameLayout -bs "etchedOut" -lv 0 -mw 5 -mh 5;
+	string $mainLayout = `columnLayout -adj 1`;
+
+	rowLayout -nc 2 -adj 1 -cw2 50 30 -ct2 "both" "both";
+	text -l "min. count of objects to be sortet in a group";
+	intField -s 1 -min 2 -max 100 
+		-v $carlaH_CESgrpSize 
+		-cc ("global int $carlaH_CESbuildNew; $carlaH_CESbuildNew = 1;" +
+		"global int $carlaH_CESgrpSize; $carlaH_CESgrpSize = `intField -q -v carlaH_grpSizeField`;" +
+		"carlaH_skinWeightsEditor;")
+		carlaH_grpSizeField;
+	setParent ..;
+	
+	rowLayout -nc 2 -adj 1 -cw2 50 30 -ct2 "both" "both";
+	text -l "sort by which part of name (divided by \"_\")";
+	intField -s 1 -min 1 -max 10 
+		-v $carlaH_CESnamePart 
+		-cc ("global int $carlaH_CESbuildNew; $carlaH_CESbuildNew = 1;" +
+		"global int $carlaH_CESnamePart ; " +
+"$carlaH_CESnamePart = `intField -q -v carlaH_namePartField`; carlaH_skinWeightsEditor;") carlaH_namePartField;	
+	setParent ..;
+
+	rowLayout -nc 2 -adj 1 -cw2 50 30 -ct2 "both" "both";
+	text -l "size of goup-name" ;
+	intField -s 1 -min 2 -max 10 
+-v $carlaH_CESgrpNameSize 
+-cc ("global int $carlaH_CESbuildNew; $carlaH_CESbuildNew = 1;" +
+"global int $carlaH_CESgrpNameSize ; " +
+"$carlaH_CESgrpNameSize = `intField -q -v carlaH_grpNameSizeField`; carlaH_skinWeightsEditor;") carlaH_grpNameSizeField;
+	setParent ..;
+
+	window -e -s 0 -w 280 -h 115 -rtf 0 $soWin;
+	showWindow $soWin;
+}
+
+
+// ===================================================================
+// ==== help window ==================================================
+// ===================================================================
+global proc carlaH_CEShelp()
+{
+// text
+	string $generalTxt = 	
+		"Why I turned Off undo for weights editing \n" +
+		"-----------------------------------------\n\n" +
+		"First: Don't be disturbed! You can undo everything besides the weights editing. " +
+		"I turned it off, simply because maya can not handle it properly and weights after undo " +
+		"mostly are worse than before...\n" +
+		"Use the fetch and hold functions under the saveWeights-menu instead: You can save the weights " +
+		"for the selected Vertices temporarily with the hold-button and get it back later with fetch.\n\n" +
+		"!!!Caution!!! only weights for selected vertices will be saved and exactly this weights will be loaded " +
+		"later on (ignoring the selection at the time you press fetch).\n" +
+		"The temporary hold-saves will be overwritten each time you use hold again. " +
+		"Alternatively you can use export and import (which works the same way as hold and fetch), " +
+		"for saving the weights permanently to disk.\n\n\n" +
+		"Why you cant see all selected vertices at a time\n" +
+		"------------------------------------------------\n\n" +
+		"Its rather simple: I wanted a tool, where I can get a better overview over my weights " +
+		"than I can get with the maya internal tools. So it wouldn't " +
+		"help to script a table as the component editor does. And what does it help, if you see the " +
+		"the names of all selected vertices, when you cant identify them by name after all. (Or do " +
+		"you know which vertice of your mesh has number 3928?)" +
+		"For the few cases when you need to see every single weight, use can have a short look on the " +
+		"component editor ;-)";
+		
+	string $layoutTxt = 
+		"Ok, and so it works:\n" +
+		"--------------------\n\n" +
+		"At the top of the window you see four text-fields, which mean the following:\n" +
+		"First field is to get a better overview over your joints and influence objects. " +
+		"So you don't have to scroll through a never ending list of deformer, the script sorts " +
+		"them by name. You can edit the sorting options with the so called menu (see text part " +
+		"below for further information).\n" +
+		"The second field shows the joints of the corresponding selected group(s) of the first field. " +
+		"You can select more than one, so you will see all joints of all selected groups - the " +
+		"script will remember the selection as long as you don't close the window.\n" +
+		"The third field shows the weights for the first selected vertice and the corresponding joints " +
+		"of the second field.\n" +
+		"the fourth field shows the hold-state for the joints of the second field.\n\n" +
+		"Below are the buttons to set the hold-state for the deformer-objects. Its one of the mostly " +
+		"comfortable advantages to the weights-paint or component editor tool, that you can set the " +
+		"hold state for as much joints as you want at the same time!";
+
+	string $sliderTxt =
+		"Just as simple as it seems to be:\n" +
+		"---------------------------------\n\n" +
+		"Select all vertices and corresponding joints (in the componentEditorSliders text field) " +
+		"you want to set weights for, " +
+		"then drag the slider and all selected vertices will get the appropriate weights for the " +
+		"selected joint.\n" +
+		"If you use the slider in absolute-mode, all vertices will get the same weight." +
+		"In relative mode, the set weight will be added (or subtracted) to the weight they already have.\n" +
+		"!!!Caution!!! in some few cases you may get unpredictable results, if you set the weights for more " +
+		"than one joint at a time (it happens sometimes, when you set them to weights that would exceed the " +
+		"normalised weights option of your skin cluster).\n" +
+		"You can edit the slider step by setting the value of the appropriate field.";
+
+	string $colorFeedback = 
+		"Just try - select one or more joints and press the button. You have to decide, whether or not " +
+		"it is usefull for you. Unlike the maya tool, it doesn't has realtime-feedback. You will have to " +
+		"press the button again, if you want the color to be actualised";
+
+	string $saveWeights = 
+		"export\n" +
+		"------\n" +
+		"use it to export the weights for only the selected vertices\n\n" +
+		"import\n" +
+		"------\n" +
+		"imports the weights for those vertices the weights were formerly exported\n\n" +
+		"hold\n" +
+		"----\n" +
+		"same as export, but doesn't write it to disk. Just hold it temporarily during your maya-session " +
+		"and only until you press hold again\n\n" +
+		"fetch\n" +
+		"-----\n" +
+		"same as import, but loads the weights saved temporarily by the hold funktion";
+
+	string $sortingOptions = 
+		"min. count of objects to be sortet in a group\n" +
+		"---------------------------------------------\n" +
+		"specifies the minimum size a sorting group should have\n" +
+		"for example you have two joints with the prefix \"lips_\" but specify the group size to be " +
+		"three - than there will be no lips-group - specify it to be two and there will be one\n\n" +
+		"sort by which part of name (divided by \"_\")\n" +
+		"---------------------------------------------\n" +
+		"for example the naming-convention of your joints is something like this: character01_Left_thumb01, " +
+		"character01_Left_index01,... Then you should specify the name part to three, if you want the " +
+		"joints to be sortet by the fingers - specify it to two and the joints will be sorted by the side.\n\n" +
+		"size of goup-name\n" +
+		"-----------------\n" +
+		"specifies the count of letters, a group should have - take the example above, than a group-name size " +
+		"of 3 would name your groups \"thu\" and \"ind\" - a group-name size of 5 would name it " +
+		"\"thumb\" and \"index\" ";
+
+	string $about = 
+		"author: Carla Heinzel\n\n" +
+		"version: 1.0\n\n" +
+		"www.anderswo.org\n\n" +
+		"Check for updates frequently - we are using this tool in our production " +
+		"so its steadily improving :-)";
+		
+
+// ui
+	string $win = "carlaH_CEShelpWindow";
+	if (`window -ex $win`)
+		deleteUI $win;
+	window -t "CES - help" -w 500 -h 400 $win;
+	frameLayout -bv 0 -lv 0 -mw 5 -mh 5;
+	frameLayout -bs "etchedOut" -lv 0 -mw 5 -mh 5;
+	string $mainLayout = `scrollLayout -cr 1`;
+		columnLayout -adj 1;
+		//frameLayout -bv 0 -lv 0 -mw 5 -mh 5;
+			frameLayout -bs "in" -mw 5 -mh 5 -l "About this Tool";
+			scrollField -h 130 -ed 0 -ww 1 -tx $about;
+			//setParent ..;
+		setParent ..;
+		columnLayout -adj 1;
+		//frameLayout -bv 0 -lv 0 -mw 5 -mh 5;
+			frameLayout -bs "in" -mw 5 -mh 5 -l "General";
+			scrollField -h 480 -ed 0 -ww 1 -tx $generalTxt;
+			//setParent ..;
+		setParent ..;
+		//frameLayout -bv 0 -lv 0 -mw 5 -mh 5;
+			frameLayout -bs "in" -mw 5 -mh 5 -l "Layout";
+			scrollField -h 375 -ed 0 -ww 1 -tx $layoutTxt;
+			//setParent ..;
+		setParent ..;
+		//frameLayout -bv 0 -lv 0 -mw 5 -mh 5;
+			frameLayout -bs "in" -mw 5 -mh 5 -l "Slider";
+			scrollField -h 270 -ed 0 -ww 1 -tx $sliderTxt;
+			//setParent ..;
+		setParent ..;
+		//frameLayout -bv 0 -lv 0 -mw 5 -mh 5;
+			frameLayout -bs "in" -mw 5 -mh 5 -l "Vertex/Joint Relations";
+			scrollField -h 80 -ed 0 -ww 1 -tx $colorFeedback;
+			//setParent ..;
+		setParent ..;
+		//frameLayout -bv 0 -lv 0 -mw 5 -mh 5;
+			frameLayout -bs "in" -mw 5 -mh 5 -l "Save Weights";
+			scrollField -h 300 -ed 0 -ww 1 -tx $saveWeights;
+			//setParent ..;
+		setParent ..;
+		//frameLayout -bv 0 -lv 0 -mw 5 -mh 5;
+			frameLayout -bs "in" -mw 5 -mh 5 -l "Sorting Options";
+			scrollField -h 340 -ed 0 -ww 1 -tx $sortingOptions;
+			//setParent ..;
+		setParent ..;
+		
+			
+	window -e -w 500 -h 400 $win;
+	showWindow $win;	
+}
+
+
+// ===================================================================
+// ==== main proc  ===================================================
+// ===================================================================
+global proc carlaH_skinWeightsEditor()
+{
+// undo ausschalten
+	undoInfo -swf 0;
+
+// variablen
+	global int $carlaH_CESselJoints[]; //selektierte joint-gruppen merken
+	global int $carlaH_CESselJointGrps[]; //selektierte joints merken
+	global int $carlaH_CESmodus; //abs/rel modus merken
+	global string $carlaH_CESskinCluster;	//skinCluster merken
+	global string $carlaH_CESselVerts[]; //selected vertices
+	global string $carlaH_CESselVertsEx[]; //zusammengefasste vertices
+	global string $carlaH_CESjointsHilited[]; //hilited joints
+	global float $carlaH_CESincrement; //slider Stepp
+	global int $carlaH_CESbuildNewUI; //ui neu aufbauen
+	global string $carlaH_CESobj;
+	global int $carlaH_CESgrpSize; //minimale Groesse einer Joint-Group
+	global int $carlaH_CESgrpNameSize; //groesse des Gruppen-Namens
+	global int $carlaH_CESnamePart; //token des Joint-Namens nach dem gruppiert werden soll
+	global int $carlaH_CESbuildNew; //das fenster zwigen, sich neu aufzubauen 
+
+	string $panel = `getPanel -wf`;
+	int $sliderSize; //groesse des sliders durch increment
+
+
+//Selektion abfragen
+	$carlaH_CESselVerts = `filterExpand -sm 31 -ex 1`; //single points
+	$carlaH_CESselVertsEx = `filterExpand -sm 31 -ex 0`; //multiple points
+
+//objekt abfragen
+	string $obj = "";
+	string $tokens[] = {};
+	tokenize $carlaH_CESselVerts[0] "." $tokens;
+	$obj = $tokens[0];
+
+//skinCluster abfragen
+	string $skinCluster = "";
+	if ($obj != "")
+		$skinCluster = findRelatedSkinCluster($obj);
+
+//ueberpruefen, ob sich der skinCluster, also das objekt veraendert hat
+	int $skinClusterChanged = 0;
+	if ( ($skinCluster != $carlaH_CESskinCluster) && ($skinCluster != "") )
+		{
+		if ($carlaH_CESobj != "")
+		{
+			//carla_removePCPVHistory($carlaH_CESobj);
+		}
+		$skinClusterChanged = 1;
+		$carlaH_CESskinCluster = $skinCluster;
+		}
+
+//wenn sich der $skinCluster veraendert hat, dann die selection-variablen aendern
+	if ($skinClusterChanged)
+		{
+		$carlaH_CESselJoints = {1};
+		$carlaH_CESselJointGrps = {1};
+		}
+
+//influence Objekte abfragen
+	string $joints[] = {};
+	if ($skinCluster != "")
+		$joints = `skinCluster -q -inf $skinCluster`;
+
+//quote-strings
+	string $jointsString = carla_stringForQuotes($joints);
+
+
+//------------------------------------------------------------------------------------
+//UI erstellen
+//------------------------------------------------------------------------------------
+	string $win = "carlaH_CESwindow";
+	int $winEx = 0;
+	int $UIex = 0;
+
+	//skriptJobs
+	global int $carlaH_CESselectSJ;
+	global int $carlaH_CESundoSJ;
+	global int $carlaH_CESredoSJ;
+	if (!`window -ex $win`)
+		{
+	//globale Variablen resetten
+		$carlaH_CESselJoints = {1};
+		$carlaH_CESselJointGrps = {1};
+		$carlaH_CESmodus = 1;
+		$carlaH_CESincrement = 0.05;
+		$carlaH_CESgrpSize = 3;
+		$carlaH_CESgrpNameSize = 5;
+		$carlaH_CESnamePart = 2;
+
+		$sliderSize = 1.0/$carlaH_CESincrement;
+
+	//scriptJobs iniziieren
+		$carlaH_CESselectSJ = 0;
+		$carlaH_CESundoSJ = 0;
+		$carlaH_CESredoSJ = 0;
+		$carlaH_CESselectSJ = `scriptJob -kws -e "SelectionChanged" 
+				("float $ch_ces_width = `window -q -w carlaH_CESwindow`;" +
+				"float $ch_ces_high = `window -q -h carlaH_CESwindow`;" +
+				"carlaH_skinWeightsEditor;" +
+				"if (`textScrollList -ex carlaH_CESvalueScroll`)" +
+				"{	carlaCES_actValues;" +
+				"	if (`radioButtonGrp -q -sl carlaH_CESabsRelOption` == 1) " +
+				"		carlaH_CESsetSliderVal(" + $sliderSize + ");}"
+				)`;
+		$carlaH_CESundoSJ = `scriptJob -kws -e "Undo" 
+				("float $ch_ces_width = `window -q -w carlaH_CESwindow`;" +
+				"float $ch_ces_high = `window -q -h carlaH_CESwindow`;" +
+				"carlaH_skinWeightsEditor;" +
+				"if (`textScrollList -ex carlaH_CESvalueScroll`)" +
+				"{	carlaCES_actValues;" +
+				"	if (`radioButtonGrp -q -sl carlaH_CESabsRelOption` == 1)" +
+				"		carlaH_CESsetSliderVal(" + $sliderSize + ");}"
+				)`;
+		$carlaH_CESredoSJ = `scriptJob -kws -e "Redo" 
+				("float $ch_ces_width = `window -q -w carlaH_CESwindow`;" +
+				"float $ch_ces_high = `window -q -h carlaH_CESwindow`;" +
+				"carlaH_skinWeightsEditor;" +
+				"if (`textScrollList -ex carlaH_CESvalueScroll`)" +
+				"{	carlaCES_actValues;" +
+				"	if (`radioButtonGrp -q -sl carlaH_CESabsRelOption` == 1) " +
+				"		carlaH_CESsetSliderVal(" + $sliderSize + ");}"
+				)`;
+		}
+	else
+		{
+		$winEx = 1;
+		if (`textScrollList -ex carlaH_CESjointScroll`)
+			{
+			$UIex = 1;
+			}
+		}
+
+
+//slider groesse festlegen
+	$sliderSize = 1.0/$carlaH_CESincrement;
+
+//überprüfen, ob sich selektion von adäquaten objekten zu nicht adä. obj. (o. umgekehrt) geaendert hat
+//..........................................................
+	int $buildNew = 0;
+	if ($carlaH_CESbuildNew)
+	{
+		$buildNew = 1;
+		$carlaH_CESbuildNew = 0;
+	}
+
+	if ( 	(($UIex) && ( (size($carlaH_CESselVerts )== 0) || ($skinCluster == "") )) || 
+			((!$UIex) && ( (size($carlaH_CESselVerts )!= 0) && ($skinCluster != "") ))  )
+		$buildNew = 1;
+
+	if ($skinClusterChanged)
+		$buildNew = 1;
+
+	if ($carlaH_CESbuildNewUI == 1)
+		{
+		$buildNew = 1;
+		$carlaH_CESbuildNewUI = 0;
+		}
+
+	if ( ($winEx) && ($buildNew) )
+		{
+		deleteUI -window $win;
+		if ($carlaH_CESobj != "")
+			{
+			//carla_removePCPVHistory($carlaH_CESobj);
+			}
+		}
+
+
+//wenn das fenster neu aufgebaut wird, dann alle joints unhiliten
+	if ($buildNew)
+		{
+		string $jointHilite = " ";
+		for ($sj in $carlaH_CESjointsHilited)
+			$jointHilite = $jointHilite + $sj + " ";
+		string $hiliteEval = "hilite -u " + $jointHilite;
+		eval $hiliteEval;
+		}
+	else if ( ($winEx) && ($skinCluster != "") )
+		{
+	//slider wert anpassen, wenn im absolut modus
+		int $mode = `radioButtonGrp -q -sl carlaH_CESabsRelOption`;
+		if ($mode == 1)
+			{
+			carlaH_CESsetSliderVal($sliderSize);
+			}
+		}
+
+//objekt in globaler variablen speichern
+	$carlaH_CESobj = $obj;
+
+
+//-----------------------------------------------------------------------------
+//fenster neu aufbauen oder zum ersten mal aufbauen
+//-----------------------------------------------------------------------------
+if ( (!$winEx) || ($buildNew) )
+	{
+	window -mb 1 -tbm 0 -t "ComponentEditorSlider" -rtf 0 -w 546 $win;
+
+//menu
+//.......................................
+	menuBarLayout;
+	menu -l "saveWeights";
+		menuItem -l "export" 
+			-c ("carlaH_CESexportWeigths(\"" + $obj + "\", \"" + 
+				$skinCluster + "\", " + $jointsString + ")");
+		menuItem -l "import" 
+			-c ("carlaH_CESimportWeigths(" + $sliderSize + ", \"" + $obj + "\", \"" + 
+				$skinCluster + "\", " + $jointsString + ")");
+		menuItem -l "hold" 
+			-c ("carlaCES_undoControl(1, " + $sliderSize + ", " + $jointsString + ", \"" + $skinCluster + "\")");
+		menuItem -l "fetch"
+			-c ("carlaCES_undoControl(0, " + $sliderSize + ", " + $jointsString + ", \"" + $skinCluster + "\")");
+
+	menu -l "sortingOptions";
+		menuItem -l "options"
+			-c ("carlaH_CESsortingOptions");
+
+	menu -l "help";
+		menuItem -l "help"
+			-c ("carlaH_CEShelp");
+
+	
+//main Layout
+//.......................................
+	frameLayout -bgc 0.5 0.1 0.4 -mh 10 -mw 10 -lv 0;
+	frameLayout -mh 3 -mw 3 -lv 0 -bv 1 -bs "in";
+	string $mainForm = `formLayout`;
+		string $inflScroll = `scrollLayout`;
+	setParent $mainForm;
+		columnLayout -adj 1 carlaH_CEScloseButton;
+
+//ui-elemente, die nur benötigt werden, wenn vertices mit skinCluster selektiert
+//------------------------------------------------------------------------------
+if ( (size($carlaH_CESselVerts )!= 0) && ($skinCluster != "") )
+	{
+//Gruppen nach Namen erstellen
+//........................................
+	string $jointGrp[] = {};
+	if (size($joints))
+		$jointGrp = carlaH_makeInflGrps_names($carlaH_CESgrpSize, $carlaH_CESgrpNameSize, $carlaH_CESnamePart, $joints);
+
+	setParent $inflScroll;
+		rowColumnLayout -nr 1 -rh 1 (size($joints) * 20);
+		//-nc 5 -cw 1 60 -cw 2 270 -cw 3 20 -cw 4 60 -cw 5 60 carlaH_CEStslRow;
+
+//textScrollLists
+//.........................................
+		textScrollList -w 70 -ams 1 carlaH_CESjointGroup;
+		textScrollList -w 270 -ams 1 carlaH_CESjointScroll;
+	
+		//joint-color list
+		columnLayout carlaH_CESjointColorColumn;
+		columnLayout;
+		text -l "" -w 20;
+		setParent ..;
+		setParent ..;
+
+		string $valScroll = `textScrollList -w 60 -en 0 carlaH_CESvalueScroll`;
+		textScrollList -w 60 -en 0 carlaH_CESholdScroll;
+
+//lock buttons
+//.........................................
+	setParent carlaH_CEScloseButton;
+		formLayout carlaH_holdButtonForm;
+			button -w 150 -l "lock" carlaH_CESlockButton;
+			button -l "toggle" carlaH_CEStoggleButton;
+			button -w 150 -l "unlock" carlaH_CESunlockButton;
+
+		formLayout -e
+			-attachForm carlaH_CESlockButton "left" 0
+			-attachControl carlaH_CEStoggleButton "left" 0 carlaH_CESlockButton
+			-attachControl carlaH_CEStoggleButton "right" 0 carlaH_CESunlockButton
+			-attachForm carlaH_CESunlockButton "right" 0
+		carlaH_holdButtonForm;
+	setParent ..;
+	separator -h 10;
+
+//display commands
+//.........................................
+	frameLayout -cll 1 -l "Vertex/Joint Relations" -bs "out" carlaH_CESdisplayFrame; 
+	columnLayout -adj 1;
+		separator -h 5;
+		formLayout carlaH_CEScolorForm;
+			columnLayout -adj 1 carlaH_CESdisplayColumI;
+			rowLayout -nc 2 -adj 2 -cw2 150 100;
+				button -w 150 -l "color joint weights" -h 20 carlaH_CESvertexColorButton;
+				button -l "remove color" -h 20 carlaH_CESremoveVertexColorButton;
+				setParent..;
+			setParent..;
+			columnLayout -adj 1 carlaH_CESdisplayColumII;
+			separator -h 20;
+			rowLayout -nc 3 -adj 3 -cw3 50 100 100;
+				floatField -w 50 -min 0 -max 1 -value 0 carlaH_CESselectInflVtxTolField;
+				text -l "min. Value";
+				button -l "select influenced vertices" carlaH_CESselectInflVtxButton;	
+				setParent..;
+			setParent..;
+
+		formLayout -e 
+			-attachForm "carlaH_CESdisplayColumI" "top" 0
+			-attachForm "carlaH_CESdisplayColumI" "right" 0
+			-attachForm "carlaH_CESdisplayColumI" "left" 0
+			
+			-attachForm "carlaH_CESdisplayColumII" "bottom" 0
+			-attachForm "carlaH_CESdisplayColumII" "right" 0
+			-attachForm "carlaH_CESdisplayColumII" "left" 0 
+			-attachControl "carlaH_CESdisplayColumII" "top" 0 "carlaH_CESdisplayColumI"
+			
+			carlaH_CEScolorForm;
+
+		setParent ..;
+	setParent ..;
+	frameLayout -e -cl 1 carlaH_CESdisplayFrame;
+	setParent ..;
+	separator -h 10;
+
+//absolute/relative option
+//..........................................
+	setParent carlaH_CEScloseButton;
+	rowLayout -nc 6 -adj 5 -cw 1 10 -cw 2 60 -cw 3 50 -cw 4 110 -cw 6 30;
+		text -l "";
+		text -l "slider step";
+		text -l "";
+		text -l "";
+		radioButtonGrp
+			-adj 1
+			-nrb 2
+			-sl $carlaH_CESmodus
+			-l1 "absolute"
+			-l2 "relative"
+			-on2 ("carlaH_CESabsRelChanged(2, " + $sliderSize + ")")
+			-on1 ("carlaH_CESabsRelChanged(1, " + $sliderSize + ")")
+			carlaH_CESabsRelOption;
+		text -l "";
+
+//slider
+//..........................................
+	setParent carlaH_CEScloseButton;
+	rowLayout -nc 6 -adj 5 -cw 1 10 -cw 2 60 -cw 3 50 -cw 4 60 -cw 6 30;
+
+		//first-touch slider check
+		intField -m 0 -s 1 -min 0 -max 2 -v 1 carlaH_CESbeforeSlidingField; 
+
+		//increment field
+		floatField -v $carlaH_CESincrement -pre 3 -w 50 -min 0.001 -max 1 carlaH_CESincrementField;
+
+		text -l "";
+
+		//value field
+		floatField -pre 3 -w 50 -min 0 -max 1 carlaH_CESvalField;
+
+		//value slider
+		intSlider -min 0 -max $sliderSize carlaH_CESvalSlider;
+
+		text -l "";
+
+	setParent ..;
+
+	//wenn relativ-modus, dann slider anpassen
+	if ($carlaH_CESmodus == 2)
+		carlaH_CESabsRelChanged(2, $sliderSize);
+
+
+//------------------------------------------------------------------------
+//der UI commands zufügen
+//------------------------------------------------------------------------
+	//Slider command
+	//......................................................................
+		intSlider -e 
+			-dc 	(
+					"undoInfo -swf 0;" +
+					"carlaH_CESsliderDrag(" + $carlaH_CESincrement + 
+					", \"" + $skinCluster + "\", " + $jointsString + ");"
+					) 
+			-cc 	(
+					"undoInfo -swf 1;" +
+					"global float $carlaH_CESfieldVal;" +
+					"$carlaH_CESfieldVal = 0;" +
+					//slider zurücksetzen, wenn im relativ-modus
+					"if (`radioButtonGrp -q -sl carlaH_CESabsRelOption` == 2)" +
+					"{	intSlider -e -v 0 carlaH_CESvalSlider;" +
+					"	floatField -e -v 0 carlaH_CESvalField;}" + 
+					"intField -e -v 1 carlaH_CESbeforeSlidingField;"
+					)
+			carlaH_CESvalSlider;
+
+
+
+	//increment command
+	//......................................................................
+		floatField -e
+			-cc ("carlaH_CESincrementChange")
+			carlaH_CESincrementField;
+
+
+	//value Field command
+	//......................................................................
+		floatField -e
+			-cc	("carlaH_CESvalueFieldChange(\"" + $skinCluster + "\", " + $sliderSize + ")")
+			carlaH_CESvalField;
+
+
+	//scroll lists füllen
+	//.......................................................................
+	//joints in gruppen einteilen und joint-scroll-list entsprechend editieren
+		string $jointsInGrp[] = carlaCES_groupJoints($carlaH_CESgrpNameSize, $carlaH_CESnamePart, $joints, $jointGrp);
+
+	// wenn nicht alle joints auf gruppen verteilt, dann others-gruppe erstellen
+		if (size($jointsInGrp) != size($jointGrp))
+			$jointGrp[size($jointGrp)] = "others";
+
+	//joint-group scroll list füllen
+		for ($j in $jointGrp)
+			{
+			textScrollList -e -a $j carlaH_CESjointGroup;
+			}
+
+	//selection anhand der globalen variablen
+		int $nrOfJointGrps = `textScrollList -q -ni carlaH_CESjointGroup`;
+		string $siiString = "";
+		for ($jgs in $carlaH_CESselJointGrps)
+			if ($jgs <= $nrOfJointGrps)
+				$siiString = $siiString + "-sii " + $jgs + " ";
+		if ($siiString == "")
+			$siiString = "-sii 1 ";
+		string $selEvalString = "textScrollList -e " + $siiString + "carlaH_CESjointGroup";
+		eval $selEvalString;
+
+	//joint-scroll-list füllen
+		carlaH_CESjointGrpSelChanged($jointGrp, $jointsInGrp, $skinCluster, $obj);
+		int $nrOfJoints = `textScrollList -q -ni carlaH_CESjointScroll`;
+		textScrollList -e -da carlaH_CESjointScroll;
+		string $siiString = "";
+		for ($js in $carlaH_CESselJoints)
+			if ($js <= $nrOfJoints)
+				$siiString = $siiString + "-sii " + $js + " ";
+		if ($siiString == "")
+			$siiString = "-sii 1 ";
+		string $selEvalString = "textScrollList -e " + $siiString + "carlaH_CESjointScroll";
+		eval $selEvalString;
+
+
+	//scroll-list selection commands
+	//.......................................................................
+		string $jointGrpString = carla_stringForQuotes($jointGrp);
+		string $jointsInGrpString = carla_stringForQuotes($jointsInGrp);
+		textScrollList -e
+			-sc (
+			"global int $carlaH_CESselJointGrps[];" +
+			"$carlaH_CESselJointGrps = `textScrollList -q -sii carlaH_CESjointGroup`;" +
+			"carlaH_CESjointGrpSelChanged(" + $jointGrpString + ", " + $jointsInGrpString + 
+			", \"" + $skinCluster + "\", \"" + $obj + "\");" +
+			"int $mode = `radioButtonGrp -q -sl carlaH_CESabsRelOption`;" +
+			"if ($mode == 1)" +
+			"	carlaH_CESsetSliderVal(" + $sliderSize + ");"
+			) 
+			carlaH_CESjointGroup;
+
+		textScrollList -e
+			-sc 	(
+					"carlaH_CESjointScrollSelChanged(" + $sliderSize + ", \"" + $obj + "\");"
+					)
+			carlaH_CESjointScroll;
+
+
+	
+
+
+	//vertex color commands 
+	//................................................................
+		button -e 
+			-c ("carlaH_CESsetVertexColor(\"" + $obj + "\", \"" + $skinCluster + "\");")
+			carlaH_CESvertexColorButton;
+
+		button -e
+			-c (
+			"global string $carlaH_CESobj;"
+			//"carla_removePCPVHistory($carlaH_CESobj);"
+			)
+			carlaH_CESremoveVertexColorButton;
+			
+		button -e 
+			-c (
+			"string $carlaH_CESselJointsNonGlob[] = `textScrollList -q -si carlaH_CESjointScroll`;\n" +
+			"float $carlaH_CESselInflJointsTol = `floatField -q carlaH_CESselectInflVtxTolField`;\n" +
+			"string $carlaH_CESvtxToSelect[] = carlaH_CESgetInflVtx($carlaH_CESselJointsNonGlob, \"" + $skinCluster + "\", $carlaH_CESselInflJointsTol);\n" +
+			"select -r $carlaH_CESvtxToSelect;\n"
+			)
+			carlaH_CESselectInflVtxButton;
+
+
+	//lock-button commands
+	//................................................................
+			button -e
+				-c ("carlaH_CESholdCommand(1, \"" + $skinCluster + "\")") 
+				carlaH_CESlockButton;
+			button -e 
+				-c ("carlaH_CESholdCommand(2, \"" + $skinCluster + "\")")
+				carlaH_CEStoggleButton;
+			button -e 
+				-c ("carlaH_CESholdCommand(3, \"" + $skinCluster + "\")") 
+				carlaH_CESunlockButton;
+
+
+		int $mode = `radioButtonGrp -q -sl carlaH_CESabsRelOption`;
+		if ($mode == 1)
+			carlaH_CESsetSliderVal($sliderSize);
+	}
+
+//------------------------------------------------------------------------
+//ende skin-cluster-gebundene elemente
+
+//CloseButton
+	separator -h 20;
+	button -l "close" -c (
+							"carlaH_CESunhiliteByClosing(\"" + $obj + "\", \"" + $win + "\");"
+							);
+
+//main formLayout anpassen
+	formLayout -e
+		-attachForm $inflScroll "top" 0
+		-attachForm $inflScroll "left" 0
+		-attachForm $inflScroll "right" 0
+		-attachControl $inflScroll "bottom" 0 carlaH_CEScloseButton
+
+		-attachNone carlaH_CEScloseButton  "top"
+		-attachForm carlaH_CEScloseButton "left" 0
+		-attachForm carlaH_CEScloseButton "right" 0
+		-attachForm carlaH_CEScloseButton "bottom" 0
+		$mainForm;
+
+/*
+	if (!`textScrollList -ex carlaH_CESjointScroll`)
+		window -e -h 300 $win;
+	else if ($buildNew)
+	{
+		int $jointsInTSL = `textScrollList -q -ni carlaH_CESjointScroll`;
+		int $grpsInTSL = `textScrollList -q -ni carlaH_CESjointGroup`;
+		window -e -h ((max($grpsInTSL, $jointsInTSL) * 20) + 200) $win;
+	}
+*/
+
+	showWindow $win;
+	setFocus $panel;
+	}
+
+// undo ausschalten
+	undoInfo -swf 1;
+
+//------------------------------------------------------------------------
+//ende fenster neu aufbauen
+//------------------------------------------------------------------------
+}
+
+
+// ===================================================================
+// ==== write export mel file basis ===================================
+// ===================================================================
+global proc string carlaH_CESsaveExportFile (string $dir, string $fileType)
+{
+global string $carlaH_CESsavedWeightsExport;
+
+//check if filetype is mel
+	string $testMel = carlaToken($dir, ".", 1000);
+	if ($testMel != "mel")
+		$dir = $dir + ".mel";
+	
+//save mel file
+	int $fileId = `fopen $dir "w"`;
+	fclose $fileId;
+
+//return the file-path
+	$carlaH_CESsavedWeightsExport = $dir;
+	return $dir;
+}
+
+// ===================================================================
+// ==== set export mel file file path ================================
+// ===================================================================
+proc string createWeightsExportFile (int $create)
+{
+//get user-path
+	string $scriptsDir = `internalVar -userScriptDir`;
+	string $CESdir = $scriptsDir + "carlaH_savedWeights/";
+
+//if CESdir doesnt exists, create
+	if (!`file -q -ex $CESdir`)
+	{
+		sysFile -md $CESdir;
+		print ("\ncreated folder: " + $CESdir + "\n");
+	}
+
+//let the user save the file
+	string $currWorkingDir = `workspace -q -dir`;
+	workspace -dir $CESdir;
+	global string $carlaH_CESsavedWeightsExport;
+	
+	if ($create)
+		fileBrowserDialog -fc "carlaH_CESsaveExportFile" -om "saveAs" -m 1 -ft "mel" -an "saveWeights";
+	else
+		$carlaH_CESsavedWeightsExport = `fileDialog -dm $CESdir`;
+
+	workspace -dir $currWorkingDir;
+
+	return $carlaH_CESsavedWeightsExport;
+}
+
+// ===================================================================
+// ==== export weights for selected vertices =========================
+// ===================================================================
+global proc carlaH_CESexportWeigths (string $obj, string $skinCluster, string $joints[])
+{
+global string $carlaH_CESselVerts[];
+string $jointString = carla_stringForQuotes($joints);
+
+//create mel file
+	string $filePath = createWeightsExportFile(1);
+	int $fileId = `fopen $filePath "w"`;
+	fprint $fileId 
+		(
+		"proc importWeights(string $skinCluster, string $obj, string $joints[])\n" +
+		"{\n"
+		);
+	fclose $fileId;
+	$fileId = `fopen $filePath "a"`;
+
+//print joint-check
+	fprint $fileId 
+		(
+		"int $locked[] = {};\n" +
+		"for ($i = 0; $i < size($joints); $i++)\n" +
+		"{	$locked[size($locked)] = `skinCluster -inf $joints[$i] -q -lw $skinCluster`;\n " +
+		"	skinCluster -inf $joints[$i] -e -lw 0 $skinCluster;} \n\n "
+		);
+
+//werte der einzelnen Punkte ermitteln
+	string $lines[] = {};
+	for ($s in $carlaH_CESselVerts )
+		{
+		string $vert = carlaToken($s, ".", 1);
+
+		string $tvFlag = "";
+		string $checkJoints = "if ( ";
+		for ($j in $joints)
+			{
+			float $val = `skinPercent -t $j -q -v $skinCluster $s`;
+			if (!carla_floatEq($val, 0.0, 0.0005))
+				{
+				$tvFlag = $tvFlag + " -tv " + $j + " " + $val;
+				$checkJoints = $checkJoints + "(`objExists " + $j + "`) && ";
+				}
+			}
+		$checkJoints = $checkJoints + "(`objExists ($obj + \"." + $vert + "\")`) )\n";
+		fprint $fileId $checkJoints;
+		fprint $fileId ("	skinPercent " 	+ $tvFlag + " $skinCluster ($obj + \"." + $vert + "\");\n");
+		fprint $fileId 
+			("else\n" + 
+			"	warning (\"couldnt set weights for \" + $obj + \"." + $vert + "\");\n\n");
+		}
+
+	fprint $fileId
+		(
+		"for ($i = 0; $i < size($joints); $i++)\n" +
+		"{	int $lock = $locked[$i];" +
+		"	skinCluster -inf $joints[$i] -e -lw $lock $skinCluster;}\n " +
+		//"skinPercent -nrm 1 $skinCluster;\n" +
+		"}\n" +
+		"\n" +
+		"\n" 
+		);
+
+	fclose $fileId;
+}
+
+
+// ===================================================================
+// ==== import weights ===============================================
+// ===================================================================
+global proc carlaH_CESimportWeigths (int $sliderSize, string $obj, string $skinCluster, string $joints[])
+{
+	string $jointString = carla_stringForQuotes($joints);	
+
+//get mel file
+	string $melFile = createWeightsExportFile(0);
+	int $fileId = `fopen $melFile "r"`;
+
+//read lines from file
+	string $lines[] = {};
+	string $nextLine = `fgetline $fileId`;
+ 	while ( size( $nextLine ) > 0 ) 
+		{ 
+ 		$lines[size($lines)] = $nextLine;
+ 		$nextLine = `fgetline $fileId`;
+ 		}	
+ 	fclose $fileId; 
+
+//write last line
+	$fileId = `fopen $melFile "a"`;
+	fprint $fileId 
+		(
+		"importWeights(\"" + $skinCluster + "\", \"" + $obj + "\", " + $jointString + ");"
+		);	
+	fclose $fileId;
+
+//script ausfuehren
+	string $sourceString = "source \"" + $melFile + "\";";
+	eval $sourceString;
+
+//rewrite file
+	$fileId = `fopen $melFile "w"`;	
+	fprint $fileId $lines[0];
+	fclose $fileId;
+
+	$fileId = `fopen $melFile "a"`;
+	for ($i = 1; $i < size($lines); $i++)
+		fprint $fileId $lines[$i];
+	fclose $fileId;
+
+//act weigthsScroll
+	carlaCES_actValues;
+	carlaH_CESsetSliderVal($sliderSize);
+}
+
+// ===================================================================
+// ==== undo controll ================================================
+// ===================================================================
+global proc carlaCES_undoControl(int $before, int $sliderSize, string $joints[], string $skinCluster)
+{
+	global string $carlaH_CESselVerts[];
+	global string $carlaH_CESundoBeforeEvalString[];
+
+	if ($before)
+		{
+	//text zum evaluieren davor
+		clear $carlaH_CESundoBeforeEvalString;
+		//werte der einzelnen Punkte ermitteln
+		for ($s in $carlaH_CESselVerts )
+			{
+			string $tvFlag = "";
+			for ($j in $joints)
+				{
+				float $val = `skinPercent -t $j -q -v $skinCluster $s`;
+
+				if (!carla_floatEq($val, 0.0, 0.0005))
+					$tvFlag = $tvFlag + " -tv " + $j + " " + $val;
+				}
+			$carlaH_CESundoBeforeEvalString[size($carlaH_CESundoBeforeEvalString)] = 
+									"skinPercent" 	+ $tvFlag + " " + $skinCluster + " " + $s;
+			}
+		}
+	else
+		{
+	//werte wieder herstellen
+		for ($after in $carlaH_CESundoBeforeEvalString)
+			eval $after;
+
+	//act weigthsScroll
+		carlaCES_actValues;
+		carlaH_CESsetSliderVal($sliderSize);
+		}
+}
+
+
+
+
+// ===================================================================
+// ==== set vertex color for selected joints and verts ===============
+// ===================================================================
+global proc carlaH_CESsetVertexColor (string $obj, string $skinCluster)
+{
+// user fragen, ob er den node wirklich einfuegen will	
+	int $do = confirm("This funktion will create a polyColorPerVertex-node for " + $obj +"\n" +
+		"This node will be deleted by quitting the prodedure - proceed?");
+		
+	if (!$do)
+		return;
+
+	global string $ch_CES_pcvNode;
+	
+//check if there is already a pcv-node
+	global string $ch_CES_pcvNode;
+	
+	string $input[] = `listHistory -pdo 1 $obj`;
+	string $PCPV[] = `ls -type "polyColorPerVertex" $input`;
+	
+	int $id = findObj($ch_CES_pcvNode, $PCPV);
+	if ( (size($PCPV)) && ( ($id > size($PCPV) )  || (!size($ch_CES_pcvNode)) ) )
+	{
+		int $do = confirm("There already is a polyColorPerVertex-node on " + $obj +"\n" +
+		"This one will be overwritten and deleted after process - proceed?");
+		
+		if (!$do)
+			return;
+	}
+	
+//selected vertices
+	global string $carlaH_CESselVerts[];
+	
+//selected joints
+	string $selJoints[] = `textScrollList -q -si carlaH_CESjointScroll`;
+	string $allJoints[] = `textScrollList -q -ai carlaH_CESjointScroll`;
+	int $jointCnt = size($selJoints);
+
+//hsv: h-werte fuer joints festlegen
+	float $hForHSV[] = {0};
+	for ($i = 1; $i < $jointCnt; $i++)
+		{
+		$hForHSV[$i] = $i * 1.0/$jointCnt;
+		}
+	
+//set polygon to display vertex-color
+	polyOptions -cs 1 $obj;
+	string $pcv_node = "";
+	
+	polyColorPerVertex -rgb 0 0 0 $obj;
+	
+	string $input[] = `listHistory -pdo 1 $obj`;
+	string $PCPV[] = `ls -type "polyColorPerVertex" $input`;	
+	$ch_CES_pcvNode = $PCPV[0];
+	
+
+//set vertex-colors
+	vector $hsvRem[] = {};
+	for ($s in $carlaH_CESselVerts)
+		{
+		vector $hsv = <<0,0,0>>;
+		vector $rgb = <<0,0,0>>;
+		float $vVal = 0;
+		float $hVal = 0;
+		for ($i = 0; $i < $jointCnt; $i++)
+			{
+			float $val = `skinPercent -t $selJoints[$i] -q -v $skinCluster $s`;
+			if ($val > 0)
+				{
+				$vVal = $vVal + $val;
+				$hVal = $hVal + ($val * $hForHSV[$i]);
+				}
+			$hsvRem[$i] = <<$hVal, 1, $vVal>>;
+			}
+		$hsv = <<$hVal, 1, $vVal>>;
+		$rgb = `hsv_to_rgb $hsv`;
+		polyColorPerVertex -r ($rgb.x) -g ($rgb.y) -b ($rgb.z) $s;
+		}
+
+//color feedback in ui
+	string $colToDel[] = `columnLayout -q -ca carlaH_CESjointColorColumn`;
+	deleteUI $colToDel[0];
+	setParent carlaH_CESjointColorColumn;
+	columnLayout -co "both" 5;
+	text -l "" -w 10 -h 2;
+	for ($o = 0; $o < size($allJoints); $o++)
+		{
+		vector $col = <<0,0,0>>;
+		int $selected = 0;
+		for ($i = 0; $i < $jointCnt; $i++)
+			if ($allJoints[$o] == $selJoints[$i])
+				{
+				$selected = 1;
+				$col = `hsv_to_rgb <<$hForHSV[$i], 1, 1>>`;
+				break;
+				}
+		
+		text -l "" -w 10 -h 2;
+		if ($selected)
+			{
+			text -w 10 -h 9 -l "" -bgc ($col.x) ($col.y) ($col.z) ("carlaH_CESjointColTxt" + $o);
+			}
+		else
+			text -w 10 -h 9 -l "" ("carlaH_CESjointColTxt" + $o);;
+		text -l "" -w 10 -h 2;
+		}
+}
+
+
+// ===================================================================
+// ==== user slider Stepp change =====================================
+// ===================================================================
+global proc carlaH_CESincrementChange()
+{
+//globale increment variable aendern
+	global float $carlaH_CESincrement;
+	$carlaH_CESincrement = `floatField -q -v carlaH_CESincrementField`;
+
+//UI neu aufbauen
+	global int $carlaH_CESbuildNewUI;
+	$carlaH_CESbuildNewUI = 1;
+	carlaH_skinWeightsEditor();
+}
+
+
+// ===================================================================
+// ==== close proc ===================================================
+// ===================================================================
+global proc carlaH_CESunhiliteByClosing (string $obj, string $win)
+{
+//globale variablen
+//.............................
+	global int $carlaH_CESredoSJ;
+	global int $carlaH_CESselectSJ;
+	global int $carlaH_CESundoSJ;
+	global string $carlaH_CESobj;
+	global string $carlaH_CESselVerts[];
+	global string $carlaH_CESselVertsEx[];
+
+	global int $carlaH_CESselJoints[]; //selektierte joint-gruppen merken
+	global int $carlaH_CESselJointGrps[]; //selektierte joints merken
+	global int $carlaH_CESmodus; //abs/rel modus merken
+	global string $carlaH_CESskinCluster;	//skinCluster merken
+	global string $carlaH_CESjointsHilited[]; //hilited joints
+	global float $carlaH_CESincrement; //slider Stepp
+	global int $carlaH_CESbuildNewUI; //ui neu aufbauen
+	
+	global string $ch_CES_pcvNode; //polyColorPerVertex-node to delete
+
+//globale variablen resetten
+//.............................
+	clear $carlaH_CESselVerts;
+	clear $carlaH_CESselVertsEx;
+	$carlaH_CESobj = "";
+
+//vertex color removen
+//.............................
+	if ($obj != "" )
+		carla_removePCPVHistory($obj);
+
+//scriptJobs loeschen
+//.............................
+	if (`scriptJob -ex $carlaH_CESselectSJ`)
+		scriptJob -kill $carlaH_CESselectSJ;
+	if (`scriptJob -ex $carlaH_CESundoSJ`)
+		scriptJob -kill $carlaH_CESundoSJ;
+	if (`scriptJob -ex $carlaH_CESredoSJ`)
+		scriptJob -kill $carlaH_CESredoSJ;
+
+//abfragen, ob jointscroll-list existiert
+//wenn ja: selectierte joints unhiliten
+//.............................
+	if (`textScrollList -ex carlaH_CESjointScroll`)
+		{
+		string $selJoints[] = `textScrollList -q -si carlaH_CESjointScroll`;
+
+	//joints hiliten
+		string $jointHilite = " ";
+		for ($sj in $selJoints)
+			$jointHilite = $jointHilite + $sj + " ";
+		string $hiliteEval = "hilite -u " + $jointHilite;
+		eval $hiliteEval;
+		}
+
+//reset global vars
+	$carlaH_CESobj = "";
+	$carlaH_CESselVerts = {};
+	$carlaH_CESselVertsEx  = {};
+	$carlaH_CESselJoints = {};
+	$carlaH_CESselJointGrps = {};
+	$carlaH_CESskinCluster = "";
+	$carlaH_CESjointsHilited = {};
+	$ch_CES_pcvNode = "";
+
+//fenster loeschen
+	deleteUI $win;
+	
+}
+
+
+// ===================================================================
+// ==== joints hiliten ===============================================
+// ===================================================================
+global proc carlaH_CEShiliteSelJoints(string $obj)
+{
+//selektierte joints auslesen
+	string $selJoints[] = `textScrollList -q -si carlaH_CESjointScroll`;
+
+//globale variable mit gehiliteten joints erstellen
+	global string $carlaH_CESjointsHilited[];
+	$carlaH_CESjointsHilited = $selJoints;
+
+//joints hiliten
+	string $jointHilite = " ";
+	for ($sj in $selJoints)
+		$jointHilite = $jointHilite + $sj + " ";
+	string $hiliteEval = "hilite -r " + $obj + $jointHilite;
+	eval $hiliteEval;
+
+//componenten anzeigen, wenn nicht im component-select modus
+	if (`selectMode -q -object`) 
+		{
+		hilite $obj;
+		selectType -ocm -alc false;
+		selectType -ocm -vertex true;
+		} 
+}
+
+
+
+// ===================================================================
+// ==== joint scroll list selection changed ==========================
+// ===================================================================
+global proc carlaH_CESjointScrollSelChanged (int $sliderSize, string $obj)
+{
+//globale selections-variable anpassen
+	global int $carlaH_CESselJoints[];
+	$carlaH_CESselJoints = `textScrollList -q -sii carlaH_CESjointScroll`;
+
+//joints hiliten
+	carlaH_CEShiliteSelJoints($obj);
+
+//slider wert anpassen, wenn im absolut modus
+	int $mode = `radioButtonGrp -q -sl carlaH_CESabsRelOption`;
+	if ($mode == 1)
+		carlaH_CESsetSliderVal($sliderSize);
+}
+
+
+
+// ===================================================================
+// ==== slider value setzen ==========================================
+// ===================================================================
+global proc carlaH_CESsetSliderVal(int $sliderSize)
+{
+	int $selJoint[] = `textScrollList -q -sii carlaH_CESjointScroll`;
+	string $jointVal[] = `textScrollList -q -ai carlaH_CESvalueScroll`;
+	float $selJointVal = $jointVal[$selJoint[0] - 1];
+
+	floatField -e -v $selJointVal carlaH_CESvalField;
+	$selJointVal = $selJointVal * $sliderSize;
+	int $sliderIntVal = $selJointVal;
+	intSlider -e -v $sliderIntVal carlaH_CESvalSlider;
+}
+
+
+// ===================================================================
+// ==== absolute / relative modus=====================================
+// ===================================================================
+global proc carlaH_CESabsRelChanged (int $mode, int $sliderSize)
+{
+	global int $carlaH_CESmodus;
+	switch ($mode)
+		{
+		case 1:
+			$carlaH_CESmodus = 1;
+			intSlider -e -min 0 -max ($sliderSize) carlaH_CESvalSlider;
+			floatField -e -min 0 carlaH_CESvalField;
+			carlaH_CESsetSliderVal($sliderSize);
+			break;
+		case 2:
+			$carlaH_CESmodus = 2;
+			intSlider -e -min (-$sliderSize) -max ($sliderSize) -v 0 carlaH_CESvalSlider;
+			floatField -e -min (-1) -v 0 carlaH_CESvalField;
+			break;
+		}
+}
+
+
+
+// ===================================================================
+// ==== value-scroll list aktualisieren ==============================
+// ===================================================================
+global proc carlaCES_actValues()
+{	
+	global string $carlaH_CESselVerts[];
+	global string $carlaH_CESskinCluster;
+	string $allJointInGrp[] = `textScrollList -q -ai carlaH_CESjointScroll`;
+
+//value-scroll-list aktualsisieren
+	for ($i = 0; $i < size($allJointInGrp); $i++)
+		{
+		textScrollList -e -rii ($i + 1) carlaH_CESvalueScroll;
+		float $val = `skinPercent -t $allJointInGrp[$i] -q -v $carlaH_CESskinCluster $carlaH_CESselVerts[size($carlaH_CESselVerts ) - 1]`;
+		string $valString = $val;
+		textScrollList -e -ap ($i + 1) $val carlaH_CESvalueScroll;
+		}
+}
+
+
+
+
+
+// ===================================================================
+// ==== value field change command ===================================
+// ===================================================================
+global proc carlaH_CESvalueFieldChange (string $skinCluster, int $sliderSize)
+{
+//variablen
+	float $fieldVal = `floatField -q -v carlaH_CESvalField`;
+	string $jointsSel[] = `textScrollList -q -si carlaH_CESjointScroll`;
+	global string $carlaH_CESselVertsEx[];
+	int $mode = `radioButtonGrp -q -sl carlaH_CESabsRelOption`;
+
+//eval-string erstellen
+	string $tvFlag = "";
+	string $objList = stringArrayToString($carlaH_CESselVertsEx, " ");
+	for ($js in $jointsSel)
+		$tvFlag = $tvFlag + " -tv " + $js + " " + $fieldVal;
+	string $evalString = "";
+
+	//absolut-modus
+	if ($mode == 1)
+		$evalString = "skinPercent" + $tvFlag + " " + $skinCluster + " " + $objList;
+
+	//relativ-modus
+	else
+		$evalString = "skinPercent -r 1" + $tvFlag + " " + $skinCluster + " " + $objList;
+
+//werte setzen
+	eval $evalString;
+
+//value-scroll list aktualisieren
+	carlaCES_actValues;
+	
+//wenn absolut-modus, dann slider setzen
+//sonst field zuruecksetzen
+	if ($mode == 1)
+		carlaH_CESsetSliderVal($sliderSize);
+	else
+		floatField -e -v 0 carlaH_CESvalField;
+}
+
+
+
+// ===================================================================
+// ==== slider drag command ==========================================
+// ===================================================================
+global proc carlaH_CESsliderDrag(float $increment, string $skinCluster, string $jointsAll[])
+{
+//variablen
+	global float $carlaH_CESincrement;
+	global string $carlaH_CESselVerts[];
+	global string $carlaH_CESselVertsEx[];
+	global float $carlaH_CESfieldVal;
+	global float $carlaH_CESoffsetVal;
+	int $mode = `radioButtonGrp -q -sl carlaH_CESabsRelOption`;
+	string $jointsSel[] = `textScrollList -q -si carlaH_CESjointScroll`;
+
+	$increment = $carlaH_CESincrement;
+
+//slider value auslesen
+	float $val = `floatField -q -v carlaH_CESvalField`;
+
+//slider value berechnen
+	int $slidVal = `intSlider -q -v carlaH_CESvalSlider`;
+	float $fieldVal = $slidVal * $increment;
+
+//wenn erstes mal angefasst, dann evtl. offset zwischen field und slider errechnen
+	float $offset = 0;
+	if (`intField -q -v carlaH_CESbeforeSlidingField`)
+	{
+		$carlaH_CESoffsetVal = $fieldVal - $val;
+		intField -e -v 0 carlaH_CESbeforeSlidingField;
+	}
+
+//value anpassen
+	$val = $fieldVal - $carlaH_CESoffsetVal;
+	if ($val < 1)
+		floatField -e -v $val carlaH_CESvalField;
+	else
+		floatField -e -v 1 carlaH_CESvalField;
+
+//joint values setzen
+//.............................................
+//text zum evaluieren
+	string $tvFlag = "";
+	string $objList = stringArrayToString($carlaH_CESselVertsEx, " ");
+	
+//checken, ob naechstes wert-intervall erreicht
+//wenn ja, dann eval text erstellen und werte zuweisen
+	if ( ($val + 0.0001 >= $carlaH_CESfieldVal + $increment) || ($val - 0.0001 <= $carlaH_CESfieldVal - 
+$increment) )
+	{
+//warnung ausgeben, falls mehr als ein joint selektiert
+	if (size($jointsSel) > 1)
+		warning (
+					"maya is buggy in setting more than one joint value at a time - use it on your own risk "
+					//"(in the security-settings you can turn off the ability to do so)"
+					);
+
+//absolut-modus
+//.................
+	if ($mode == 1)
+		{
+	//evaluierungs-string erstellen
+		for ($js in $jointsSel)
+			$tvFlag = $tvFlag + " -tv " + $js + " " + $val;
+		string $evalString = "";
+		$evalString = "skinPercent" + $tvFlag + " " + $skinCluster + " " + $objList;
+
+	//values setzen
+		eval $evalString;	
+		}
+
+//relativ-modus
+//................
+	else
+		{
+		//evaluierungs-string erstellen
+			float $incrementVal = ($val - $carlaH_CESfieldVal);
+			for ($js in $jointsSel)
+				$tvFlag = $tvFlag + " -tv " + $js + " " + $incrementVal;
+			string $evalString = "";
+			$evalString = "skinPercent -r 1" + $tvFlag + " " + $skinCluster + " " + $objList;
+
+		//values setzen
+			eval $evalString;
+
+		//werte kleiner als 0 "prunen"
+			//abfragen, ob selektierte joints gelocked
+			int $holded[] = {};
+			for ($js in $jointsSel)
+				if (`skinCluster -inf $js -q -lw $skinCluster` == 1)
+					{
+					skinCluster -inf $js -e -lw 0 $skinCluster;
+					$holded[size($holded)] = 1;
+					}
+				else
+					$holded[size($holded)] = 0;
+
+			//werte prunen
+				string $pruneCommand = ("skinPercent -prw 0.0 " + $skinCluster);
+				eval $pruneCommand;
+				
+			//ehemals gelockte joints locken
+				for ($i = 0; $i < size($jointsSel); $i++)
+					if ($holded[$i])
+						skinCluster -inf $jointsSel[$i] -e -lw 1 $skinCluster;
+			}
+
+		//global float fieldVal aktualsisieren
+			$carlaH_CESfieldVal = $val;
+		}
+
+//value scroll list aktualisieren
+	carlaCES_actValues;
+}
+
+
+
+// ===================================================================
+// ==== hold buttons =================================================
+// ===================================================================
+global proc carlaH_CESholdCommand(int $button, string $skinCluster)
+{
+//gewaehlte joints nach lock-status abfragen
+	string $selJoints[] = `textScrollList -q -si carlaH_CESjointScroll`;
+	int $selJointIndex[] = `textScrollList -q -sii carlaH_CESjointScroll`;
+
+//je nach gedrücktem button entsprechenden lock-status setzen
+	for ($sj in $selJoints)
+		{
+		switch($button)
+			{
+			case 1:
+				skinCluster -inf $sj -e -lw 1 $skinCluster;
+				break;
+			case 2:
+				if (`skinCluster -inf $sj -q -lw $skinCluster` == 1)
+					skinCluster -inf $sj -e -lw 0 $skinCluster;
+				else
+					skinCluster -inf $sj -e -lw 1 $skinCluster;
+				break;
+			case 3:
+				skinCluster -inf $sj -e -lw 0 $skinCluster;
+				break;
+			}
+		}
+//lock-scroll-list aktualsisieren
+	for ($i = 0; $i < size($selJoints); $i++)
+		{
+		textScrollList -e -rii $selJointIndex[$i] carlaH_CESholdScroll;
+		int $hold = `skinCluster -inf $selJoints[$i] -q -lw $skinCluster`;
+		if ($hold)
+			textScrollList -e -ap ($selJointIndex[$i]) "locked" carlaH_CESholdScroll;
+		else
+			textScrollList -e -ap ($selJointIndex[$i]) "  " carlaH_CESholdScroll;
+		}
+}
+
+// ===================================================================
+// ==== selection of jointGroup list changed =========================
+// ===================================================================
+global proc carlaH_CESjointGrpSelChanged(string $jointGrp[], string $jointsInGrp[], string $skinCluster, string $obj)
+{
+//remove joint colors
+	string $currPar = `setParent -q`;
+	setParent carlaH_CESjointColorColumn;
+	string $colToDel[] = `columnLayout -q -ca carlaH_CESjointColorColumn`;
+	deleteUI $colToDel[0];
+	columnLayout;
+	text -l "" -w 20;
+	setParent $currPar;
+
+//variablen
+	global string $carlaH_CESselVerts[];
+
+//selectierte joints abfragen
+	string $selJoints[] = `textScrollList -q -si carlaH_CESjointScroll`;
+
+//joint-scroll-list füllen
+	int $selJointGrp[] = `textScrollList -q -sii carlaH_CESjointGroup`;
+	textScrollList -e -ra carlaH_CESjointScroll;
+	textScrollList -e -ra carlaH_CESvalueScroll;
+	textScrollList -e -ra carlaH_CESholdScroll;
+	for ($sjg in $selJointGrp)
+	{
+		string $jointsInActGrp[] = carlaTokens($jointsInGrp[$sjg - 1], ";");
+		for ($j in $jointsInActGrp)
+			{
+			textScrollList -e -a $j carlaH_CESjointScroll;
+		//values auslesen und in die value-list schreiben
+			float $val = `skinPercent -t $j -q -v $skinCluster $carlaH_CESselVerts[size($carlaH_CESselVerts ) - 
+1]`;
+			textScrollList -e -a $val carlaH_CESvalueScroll;
+		//abfragen, ob joint holded und entsprechenden in die hold-list schreiben
+			int $hold = `skinCluster -inf $j -q -lw $skinCluster`;
+			if ($hold)
+				textScrollList -e -a "locked" carlaH_CESholdScroll;
+			else
+				textScrollList -e -a "  " carlaH_CESholdScroll;
+			}
+	}
+
+//wenn ehemals selectierte joints immer noch aktuell, dann wieder selektieren
+	string $actJoints[] =  `textScrollList -q -ai carlaH_CESjointScroll`;
+	int $jointFound = 0;
+	for ($sj in $selJoints)
+		for ($aj in $actJoints)
+			if ($sj == $aj)
+				{
+				textScrollList -e -si $sj carlaH_CESjointScroll;
+				$jointFound = 1;
+				}
+	if (!$jointFound)
+		textScrollList -e -sii 1 carlaH_CESjointScroll;
+
+//joints hiliten
+	carlaH_CEShiliteSelJoints($obj);
+}
+
+
+
+// ===================================================================
+// ==== sort joints by names =========================================
+// ===================================================================
+global proc string[] carlaH_makeInflGrps_names (int $grpSize, int $grpNameSize, int $namePart, string $joints[])
+{
+
+// gruppen fuer alle entsprechenden nameparts erstellen
+// ....................................................
+	string $jointGrpsTmp[] = {};
+	int $sizeJointGrp[] = {};
+
+	for ($i = 0; $i < size($joints); $i++)
+		{
+	//namepart auslesen, der fuers grouping interessant
+		string $partForTesting = carlaToken($joints[$i], "_", ($namePart - 1));
+		string $maybeGrp = startString($partForTesting, $grpNameSize);
+	
+		if ($maybeGrp != "")
+		{
+	// testen, ob der name bereits in jointGrpsTmp gespeichert. 
+	// wenn ja, dann 	entsprechende sizeJointGrp hochzählen, 
+	// wenn nein dann neue jointGrpsTmp speichern
+		int $found = 0;
+		int $foundID = 0;
+		for ($o = 0; $o < size($jointGrpsTmp); $o++)
+			{
+				if ($jointGrpsTmp[$o] == $maybeGrp)
+				{
+					$found = 1;
+					$foundID = $o;
+					break;
+				}
+			}
+		if ($found)
+			{
+			$sizeJointGrp[$foundID] = $sizeJointGrp[$foundID] + 1;
+			}
+		else
+			{
+			$jointGrpsTmp[size($jointGrpsTmp)] = $maybeGrp;
+			$sizeJointGrp[size($sizeJointGrp)] = 1;
+			}
+		}
+		}
+
+// nur die Gruppen merken, deren Anzahl groesser gleich $carlaH_CESgrpSize
+// ...........................................................
+	string $jointGrps[] = {};
+	for ($i = 0; $i < size($jointGrpsTmp); $i++)
+		{
+		if ($sizeJointGrp[$i] >= $grpSize)
+			$jointGrps[size($jointGrps)] = $jointGrpsTmp[$i];
+		}
+
+	return $jointGrps; 
+}

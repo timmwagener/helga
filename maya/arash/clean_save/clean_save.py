@@ -440,7 +440,7 @@ class cleanSave_UI:
                                     warning_text = str("File is clean and saved on: ") + str(self.scene_full_path) +str("/")+ str(self.new_file_name)
                                     cmds.warning(warning_text)
                                 else:
-                                    cmds.warning("File is not clean")
+                                    cmds.warning("Path is not clean")
 
 
     def upversion(self, *args):

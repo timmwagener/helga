@@ -6,11 +6,9 @@ import time
 
 Version= '0.5'
 #zu_eigene_pfad_wechseln!!!
+
 projects_scene_dir = "Y:/Production/3d/maya/scenes"
 
-#class Color:
-#    red = (0.3,0.5,0.3)
-#    yellow = (0.3,0.5,0.3)
 
 class cleanSave_UI:
 
@@ -25,7 +23,12 @@ class cleanSave_UI:
         self.windowsHeight=windowsHeight
 
         #window
-        self.allUIs ["clean_save"]=cmds.window('clean_save', title='clean save  V'+str(Version)+' - UI ', widthHeight=(self.windowsWidth,self.windowsHeight),sizeable=False,menuBar=True, minimizeButton=True, maximizeButton=False)
+        self.allUIs ["clean_save"]=cmds.window('clean_save', title='clean save  v '+str(Version)+' - UI ', widthHeight=(self.windowsWidth,self.windowsHeight),sizeable=False,menuBar=True, minimizeButton=True, maximizeButton=False)
+
+        cmds.menu(label="Debug", tearOff = True)
+        cmds.menuItem(label = "Debug", command=self.debug)
+        cmds.setParent('..', menu=True)
+
 
         # Vars
         self.fileName = ""
@@ -41,7 +44,6 @@ class cleanSave_UI:
 
         #mainLayout__rowColumn
         self.allUIs["rowColumn_mainLayout"] = cmds.columnLayout( 'mainLayout',columnAttach=('both', 0), rowSpacing=1,adjustableColumn=True,w=(self.windowsWidth),h=(self.windowsHeight))
-
 
 
         #text info line
@@ -64,9 +66,7 @@ class cleanSave_UI:
         self.allUIs["artist_text_field"]=cmds.textField("artistField",bgc=(0.6,0.7,0.7), cc=(self.artistField))
 
         #space
-        self.allUIs["space"]=cmds.separator(h=20, vis=True)
-        #space
-        #self.allUIs["space"]=cmds.separator(h=10, vis=True)
+        self.allUIs["space"]=cmds.separator(h=10, vis=True)
 
         #result_layout
         self.allUIs["rowColumn_result_mainLayout"] = cmds.rowColumnLayout( 'rowColumn_result_mainLayout',numberOfColumns=5,columnWidth=[(1,70),(2,70),(3,70),(4,70),(5,70)])
@@ -83,7 +83,7 @@ class cleanSave_UI:
         self.allUIs["column_sub_mainLayout"] = cmds.columnLayout( 'column_sub_mainLayout',columnAttach=('both', 0), rowSpacing=2,adjustableColumn=True,w=(self.windowsWidth),h=(self.windowsHeight))
 
         #space
-        self.allUIs["spaces"]=cmds.separator(h=10, vis=True, st='none')
+        self.allUIs["spaces"]=cmds.separator(h=5, vis=True, st='none')
 
         #save_button
         self.allUIs["save_button"] = cmds.button('save',label="Save", h=50,w=300,bgc=(0.6,0.3,0.3), command=self.saveScene)
@@ -110,6 +110,8 @@ class cleanSave_UI:
             cmds.deleteUI('clean_save', window=True)
         if cmds.window("saveQuestion", exists=True):
             cmds.deleteUI("saveQuestion")
+        if cmds.window("Debug", exists=True):
+            cmds.deleteUI("Debug")
 
 
     def nameField(self, *args):
@@ -300,9 +302,10 @@ class cleanSave_UI:
         queryColorVersionField = cmds.text('resultVersion', bgc=True,q = True)
 
         len_queryArtistField=len(queryTextArtistField)
+        lowerqueryTextArtistField = queryTextArtistField.lower()
         if len_queryArtistField==2:
             for artist in queryTextArtistField:
-                cmds.text('resultArtist', e = True, label=queryTextArtistField)
+                cmds.text('resultArtist', e = True, label=lowerqueryTextArtistField)
                 self.changeArtistColor()
                 if queryColorNameField[0]<0.4:
                     if queryColorDepartmentField[0]<0.4:
@@ -367,6 +370,31 @@ class cleanSave_UI:
         if cmds.window("saveQuestion", exists=True):
             cmds.deleteUI("saveQuestion")
 
+    def debug(self, *args):
+        if cmds.window("Debug", exists=True):
+            cmds.deleteUI("Debug")
+        debug_windows = cmds.window("Debug",title="Debug Info",mnb=True, mxb=False,w=400,h=130,sizeable=False)
+        debug_layout = cmds.columnLayout(w = 250, h=160, columnAttach=('both', 0), rowSpacing=5, columnWidth=250)
+        cmds.separator(h=5,vis=True, st='none')
+        debug_text = cmds.text(label="Please describe your problem or suggestion.")
+        debug_text_field = cmds.textField('debugTextField',h=20,text = "")
+        debug_button = cmds.button(label="Send to Admin",bgc=(0.7,0.2,0.3),command=self.sendDebug)
+        cmds.showWindow()
+
+    def sendDebug(self, *args):
+        query_debug_text = cmds.textField('debugTextField', text=True, query=True)
+        file = open("Y:/Production/rnd/ahosseini/helga_debug_clean_save/helga_debug_file.txt", "a")
+        file.write("//New Bug:"+query_debug_text+"//\n")
+        file.close()
+        warning = cmds.warning("successful sending to Arash")
+        if cmds.window("Debug", exists=True):
+            cmds.deleteUI("Debug")
+
+    def saveLogFile(self, *args):
+        query_last_save_info = cmds.text('savedFile', label= True, query = True)
+        file = open("Y:/Production/rnd/ahosseini/helga_save_log_file/helga_save_file.txt", "a")
+        file.write("//saved_file:"+ query_last_save_info +"//\n")
+        file.close()
 
     def overWriteFile(self):
         if cmds.window("saveQuestion", exists=True):
@@ -387,60 +415,85 @@ class cleanSave_UI:
         cleanVersionField=cmds.textField('versionField', e = True, text="")
         cleanArtistField=cmds.textField('artistField', e = True, text="")
 
-
-
     def sceneCheck(self, *args):
-
         scene_full_name = cmds.file(sceneName = True, q=True)
+        scene_name = scene_full_name.split("/")[-1]
         if scene_full_name == "":
             cmds.warning("save the File!")
         else:
-            self.scene_full_path = os.path.dirname(scene_full_name)
-            #print self.scene_full_path
-            #scene name
-            self.scene_name = scene_full_name.split("/")[-1]
+            if ('_') in scene_name:
+                if scene_full_name.startswith("//bigfoot/grimmhelga/Production/3d/maya/scenes/"):
+                    self.scene_full_path = os.path.dirname(scene_full_name)
+                    #print self.scene_full_path
+                    #scene name
+                    self.scene_name = scene_full_name.split("/")[-1]
 
-            #version check
-            self.version_check = self.scene_name.split("_")[-2]
+                    #check the artist name
+                    artist_name = self.scene_name.split("_")[-1]
+                    #print len(artist_name)
+                    #print artist_name
 
-            #path check
-            self.path_check = scene_full_name.split("/")[7]
+                    #version check
+                    self.version_check = self.scene_name.split("_")[-2]
+
+                    #path check
+                    self.path_check = scene_full_name.split("/")[7]
 
 
-            #faktor check
-            faktor_check = self.scene_name.split("_")[-3]
+                    #faktor check
+                    faktor_check = self.scene_name.split("_")[-3]
 
-            #debug
-            #print self.path_check
-            #print self.scene_name
-            #print self.version_check
+                    #debug
+                    #print self.path_check
+                    #print self.scene_name
+                    #print self.version_check
 
-            upversion_version_number = ["0","1","2","3","4","5","6","7","8","9"]
-            upversion_faktor=["a","b","c","d","e","f","g",
-                         "h","j","i","k","l","m","n",
-                         "o","p","q","r","s","t",
-                         "u","v","w","x","y","z"]
+                    upversion_version_number = ["0","1","2","3","4","5","6","7","8","9"]
+                    upversion_faktor=["a","b","c","d","e","f","g",
+                                        "h","j","i","k","l","m","n",
+                                        "o","p","q","r","s","t",
+                                        "u","v","w","x","y","z"]
 
-            if self.version_check[0] in upversion_version_number:
-                if self.version_check[1] in upversion_version_number:
-                    if self.version_check[2] in upversion_version_number:
-                        if self.version_check[3] in upversion_version_number:
-                            if faktor_check[0] in upversion_faktor:
-                                if self.path_check == "scenes":
-                                    len_version_check = len(self.version_check)
-                                    while self.version_check.startswith("0"):
-                                        self.version_check = self.version_check[1:]
-                                    version = eval(self.version_check)
-                                    version += 1
-                                    self.version_check = str(version)
-                                    self.version_check = "0"*len_version_check + self.version_check
-                                    self.version_check = self.version_check[-len_version_check:]
-                                    #print self.version_check
-                                    self.upversion()
-                                    warning_text = str("File is clean and saved on: ") + str(self.scene_full_path) +str("/")+ str(self.new_file_name)
-                                    cmds.warning(warning_text)
+                    if len(self.version_check) == 4:                                        #version len check
+                        if self.version_check[0] in upversion_version_number:               #version member check
+                            if self.version_check[1] in upversion_version_number:
+                                if self.version_check[2] in upversion_version_number:
+                                    if self.version_check[3] in upversion_version_number:
+                                        if len(faktor_check) == 1:
+                                            if faktor_check[0] in upversion_faktor:
+                                                if len(artist_name) == 5:
+                                                    len_version_check = len(self.version_check)
+                                                    while self.version_check.startswith("0"):
+                                                        self.version_check = self.version_check[1:]
+                                                    version = eval(self.version_check)
+                                                    version += 1
+                                                    self.version_check = str(version)
+                                                    self.version_check = "0"*len_version_check + self.version_check
+                                                    self.version_check = self.version_check[-len_version_check:]
+                                                    #print self.version_check
+                                                    self.upversion()
+                                                    warning_text = str("File is clean and saved on: ") + str(self.scene_full_path) +str("/")+ str(self.new_file_name)
+                                                    cmds.warning(warning_text)
+                                                else:
+                                                    cmds.warning("more as two Members for Artist name")
+                                            else:
+                                                cmds.warning("only alphabet member, a,b,c...")
+                                        else:
+                                            cmds.warning("more as one Member for Faktor name")
+                                    else:
+                                        cmds.warning("only numbers for Version  1,2,3...")
                                 else:
-                                    cmds.warning("Path is not clean")
+                                    cmds.warning("only numbers for Version  1,2,3... ")
+                            else:
+                                cmds.warning("only numbers for Version  1,2,3...")
+                        else:
+                            cmds.warning("only numbers for Version 1,2,3...")
+                    else:
+                        cmds.warning("Version have to be four Members")
+                else:
+                    cmds.warning("Path not clean")
+            else:
+                cmds.warning("Scene Name not clean")
 
 
     def upversion(self, *args):
@@ -458,8 +511,7 @@ class cleanSave_UI:
             cmds.text('savedFile', e=True, label=self.new_file_name + time.strftime("  %y/%m/%d %H:%M", now), bgc=(0.3,0.5,0.3))
 
         cmds.text('savedPath', e=True, label=self.scene_full_path)
-
-
+        self.saveLogFile()
 
     def saveSceneOverwrite(self, *args):
         queryNameField=cmds.text('resultName', label=True, q=True)
@@ -502,6 +554,7 @@ class cleanSave_UI:
                 self.wrongChangeVersionColor()
                 self.wrongChangeSaveColor()
                 self.cleanTextFields()
+                self.saveLogFile()
                 cmds.warning("Successful Saving on "+self.fileName)
 
             else:
@@ -539,6 +592,7 @@ class cleanSave_UI:
                 self.wrongChangeVersionColor()
                 self.wrongChangeSaveColor()
                 self.cleanTextFields()
+                self.saveLogFile()
                 cmds.warning("Successful Saving on "+self.fileName)
 
             else:
@@ -589,7 +643,11 @@ class cleanSave_UI:
         else:
             cmds.warning("Please set a new File-Data")
 
-
+#run
+#----------------------------------------------------------
+#----------------------------------------------------------
+def run():
+    cleanSave_UI()
 
 
 

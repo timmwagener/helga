@@ -31,7 +31,8 @@ import mock
 
 #custom_path_list
 custom_path_list = [
-  r'Y:/Production/scripts/deploy'
+  r'Y:/Production/scripts/deploy',
+  r'C:/symlinks/filmaka/helga_scripts_deploy'
 ]
 
 #append

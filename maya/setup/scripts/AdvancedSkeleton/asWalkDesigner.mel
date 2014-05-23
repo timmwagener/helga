@@ -1,0 +1,330 @@
+//     AdvancedSkeleton
+//     Version 3.9.93
+// 
+// 
+// AdvancedSkeleton is is a collection of Maya tools for doing character setup.
+//   
+// INSTALLATION: 
+// Run the SETUP file (setup.exe) 
+// Choose the Destination Folder.
+// NOTE: destination folder must be your Maya user directory 
+// eg: C:\Users\$user\Documents\maya\2014\
+// Continue installation.
+// Start Maya. 
+// Now you will find a new Shelf called 'advancedSkeleton':  
+// 
+// For detailed instructions go to: www.animationstudios.com.au
+// 
+// Copyright (C)2014 Animation Studios
+// 
+// email: support@animationstudios.com.au
+// Last Modified 17/04/2014
+
+global proc asScriptLocator (){}
+
+global proc string asScriptLocation ()
+{
+string $whatIs=`whatIs asScriptLocator`;
+string $fullPath=`substring $whatIs 25 999`;
+string $buffer[];
+int $numTok=`tokenize $fullPath "/" $buffer`;
+int $numLetters=size($fullPath);
+int $numLettersLastFolder=size($buffer[$numTok-1]);
+string $scriptLocation=`substring $fullPath 1 ($numLetters-$numLettersLastFolder)`;
+return $scriptLocation;
+}
+
+global proc asWalkDesigner ()
+{
+string $asScriptLocation=`asScriptLocation`;
+string $sourceAsToolProcedures=("source \""+$asScriptLocation+"asToolProcedures.mel\"");
+string $sourceAsProcedures=("source \""+$asScriptLocation+"asProcedures.mel\"");
+eval ($sourceAsToolProcedures);
+if (!`exists asCharSize`)
+	eval ($sourceAsProcedures);
+
+string $motions[]={"run_female","run_male","walk_angry","walk_cool","walk_cute","walk_female","walk_macho","walk_male","walk_proud","walk_sad","walk_sneak"};
+//create, connectControl, and delete, to disable.
+int $mixerExisted=1;
+if (!`objExists WalkDesignerMotionMixer`)
+	{
+	createNode -n WalkDesignerMotionMixer transform;
+	addAttr -k 1 -dv 1 -ln "speed" -at double WalkDesignerMotionMixer;
+	$mixerExisted=0;
+	}
+if (`window -q -ex asWalkDesigner`)
+	deleteUI asWalkDesigner;
+window -mb 1 -t WalkDesigner asWalkDesigner;
+formLayout asWDFormLayout;
+columnLayout;
+optionMenu -w 200 asWalkDesignerOptionMenu;
+button -l "Start" -c asWDStart;
+columnLayout asWDMixerColumnLayout;
+for($i=0;$i<size($motions);$i++)
+	{
+	if(!$mixerExisted)
+		addAttr -k 1 -ln $motions[$i] -at double WalkDesignerMotionMixer;
+	rowLayout -nc 2 -cw2 240 100;
+		floatSliderGrp -label $motions[$i] -field true -cw 1 80 -cw 2 50 -cw 3 100 -min 0 -max 1 ("asWDField"+$i);
+		connectControl ("asWDField"+$i) ("WalkDesignerMotionMixer."+$motions[$i]);
+		button -l "solo" -c ("asWDSolo "+$i);
+		setParent..;
+	}
+floatSliderGrp -cc asWDSpeedChange -pre 2 -v 1 -label "speed" -field true -cw 1 40 -cw 2 40 -cw 3 180 -min 0.01 -max 2 asWDSpeedField;
+connectControl asWDSpeedField WalkDesignerMotionMixer.speed;
+setParent..;
+
+frameLayout -w 279 -cll 1 -cl 1 -l "Baking";
+columnLayout;
+//text -l "baking:";
+checkBox -cc asWDSpeedChange -l "loop animation (curves > post infinity > cycle)" -v 1 -onc "intField -e -en 0 asWDLoopsIntField" -ofc "intField -e -en 1 asWDLoopsIntField" asWDLoopCheckBox;
+text -l "or";
+rowLayout -nc 3;
+	text -l "loop animation";
+	intField -cc asWDSpeedChange -en 0 -w 30 -min 1 -v 1 asWDLoopsIntField;
+	text -l "times";
+	setParent..;
+button -l "Ok, Bake keys onto character" -c asWDBake;
+setParent..;
+setParent..;
+setParent..;
+button -l "Cancel and Close" -c asWDFinish asWDClose;
+formLayout -e 
+	-attachForm asWDClose "bottom" 0
+	-attachForm asWDClose "left" 0
+	-attachForm asWDClose "right" 0
+	asWDFormLayout;
+
+asPopulateNameSpaceMenu "asWalkDesigner";
+if(!$mixerExisted)
+	delete WalkDesignerMotionMixer;
+showWindow;
+}
+
+global proc asWDBake ()
+{
+string $nameSpace=`optionMenu -q -v asWalkDesignerOptionMenu`;
+if ($nameSpace==":")
+	$nameSpace="";
+
+float $defaultEndTime=`getAttr WalkDesignerMotionMixer.defaultEndTime`;
+float $speed=`getAttr WalkDesignerMotionMixer.speed`;
+float $endTime=$defaultEndTime*(1.0/$speed);
+
+string $consts[]={"Root_M","BackA_M","BackB_M","Chest_M","Neck_M","Head_M",
+									"Shoulder_R","Elbow_R","Wrist_R","Hip_R","Knee_R","Ankle_R","MiddleToe1_R",
+									"Shoulder_L","Elbow_L","Wrist_L","Hip_L","Knee_L","Ankle_L","MiddleToe1_L"};
+select -cl;
+string $allFkControls[];
+for($i=0;$i<size($consts);$i++)
+	{
+	string $fkControl=$nameSpace+"FK"+$consts[$i];
+	if ($consts[$i]=="Root_M")
+		$fkControl=$nameSpace+"Center_M";
+	$allFkControls[size($allFkControls)]=$fkControl;
+	select -add $fkControl;
+	}
+
+if (!`checkBox -q -v asWDLoopCheckBox`)
+	{
+	setAttr "walkDesignerClip.postCycle" 9999;
+	$endTime=$endTime*`intField -q -v asWDLoopsIntField`;
+	}
+
+bakeResults -simulation true -t ("0:"+$endTime)
+	-sampleBy 1 -disableImplicitControl true -preserveOutsideKeys false -sparseAnimCurveBake false 
+	-removeBakedAttributeFromLayer false -bakeOnOverrideLayer false -at "rx" -at "ry" -at "rz";
+select ($nameSpace+"Center_M");
+bakeResults -simulation true -t ("0:"+$endTime)
+	-sampleBy 1 -disableImplicitControl true -preserveOutsideKeys false -sparseAnimCurveBake false 
+	-removeBakedAttributeFromLayer false -bakeOnOverrideLayer false -at "tx" -at "ty" -at "tz";
+if (`checkBox -q -v asWDLoopCheckBox`)
+	{
+	select $allFkControls;
+	setInfinity -poi cycle;
+	}
+asWDFinish;
+}
+
+global proc asWDSpeedChange ()
+{
+if (!`objExists WalkDesignerMotionMixer` || !`objExists walkDesignerClip`)
+	return;
+float $defaultEndTime=`getAttr WalkDesignerMotionMixer.defaultEndTime`;
+float $speed=`getAttr WalkDesignerMotionMixer.speed`;
+float $endTime=$defaultEndTime*(1.0/$speed);
+if (!`checkBox -q -v asWDLoopCheckBox`)
+	{
+	setAttr "walkDesignerClip.postCycle" 9999;
+	$endTime=$endTime*`intField -q -v asWDLoopsIntField`;
+	}
+playbackOptions -min 0 -ast 0 -aet $endTime -max $endTime;
+setAttr walkDesignerClip.scale (1.0/$speed);
+}
+
+global proc asWDStart ()
+{
+string $nameSpace=`optionMenu -q -v asWalkDesignerOptionMenu`;
+if ($nameSpace==":")
+	$nameSpace="";
+if (!`objExists ($nameSpace+"Main")`)
+	error ("AdvancedSkeleton not found in your scene");
+float $charHeight=`getAttr ($nameSpace+"Main.height")`;
+
+string $motionFile=`asScriptLocation`+"asMotion.ma";
+if (!`file -q -ex $motionFile`)
+	error ("Not found:"+$motionFile);
+if (`objExists WalkDesignerMotionMixer`)
+	error ("\"WalkDesignerMotionMixer\", already exists, delete this object, before starting again");
+if (!`file -q -ex $motionFile`)
+	error ("Required motion file not found:\""+$motionFile+"\"");
+string $tempString[]=`ls "asMotion:*"`;
+if (size($tempString))
+	delete $tempString;
+if (`namespace -ex "asMotion"`)
+	if (catchQuiet (`namespace -dnc -rm "asMotion"`))
+		{ 
+		//Maya2012 and older dont have namespace -dnc, so we work around the problems of empty nameSpaces not agknowlowdge their empty
+		for($i=0;$i<99;$i++)
+			if (!`namespace -ex ("tempNameSpace"+$i)`)
+				break;
+		namespace -ren asMotion ("tempNameSpace"+$i);
+		}
+if (`namespace -ex "asMotion"`)
+	error "Unable to remove namespace \"asMotion\", try restarting Maya";
+string $tempString[]=`listConnections time1.timewarpIn_Raw`;
+if (size($tempString))
+	delete $tempString;
+AddTimeWarp;
+
+file -ns "asMotion" -i $motionFile;
+setAttr asMotion:Group.v 0;
+setAttr -type float3 asMotion:Group.s ($charHeight/12.0) ($charHeight/12.0) ($charHeight/12.0);
+
+createNode -n WalkDesignerMotionMixer transform;
+setAttr -l 1 -k 0 WalkDesignerMotionMixer.tx;setAttr -l 1 -k 0 WalkDesignerMotionMixer.ty;setAttr -l 1 -k 0 WalkDesignerMotionMixer.tz;
+setAttr -l 1 -k 0 WalkDesignerMotionMixer.rx;setAttr -l 1 -k 0 WalkDesignerMotionMixer.ry;setAttr -l 1 -k 0 WalkDesignerMotionMixer.rz;
+setAttr -l 1 -k 0 WalkDesignerMotionMixer.sx;setAttr -l 1 -k 0 WalkDesignerMotionMixer.sy;setAttr -l 1 -k 0 WalkDesignerMotionMixer.sz;
+setAttr -l 1 -k 0 WalkDesignerMotionMixer.v;
+addAttr -k 1 -ln "speed" -dv 1 -at double WalkDesignerMotionMixer;
+addAttr -k 0 -ln defaultEndTime -at double WalkDesignerMotionMixer;
+parent "asMotion:Group" WalkDesignerMotionMixer;
+
+select -hi "asMotion:Group";
+select -d "asMotion:Group";
+character -name walkDesignerSet -excludeVisibility -excludeScale;
+clip -name walkDesignerClip -sc 1 -allAbsolute -animCurveRange walkDesignerSet;
+setAttr walkDesignerClip.postCycle 9999;
+
+if (`objExists ($nameSpace+"FKIKLeg_R")`) setAttr ($nameSpace+"FKIKLeg_R.FKIKBlend") 0;
+if (`objExists ($nameSpace+"FKIKLeg_L")`) setAttr ($nameSpace+"FKIKLeg_L.FKIKBlend") 0;
+if (`objExists ($nameSpace+"FKIKArm_R")`) setAttr ($nameSpace+"FKIKArm_R.FKIKBlend") 0;
+if (`objExists ($nameSpace+"FKIKArm_L")`) setAttr ($nameSpace+"FKIKArm_L.FKIKBlend") 0;
+if (`objExists ($nameSpace+"FKIKSpine_M")`) setAttr ($nameSpace+"FKIKSpine_M.FKIKBlend") 0;
+if (`objExists ($nameSpace+"FKShoulder_R")`) if (`attributeExists "Global"  ($nameSpace+"FKShoulder_R")`) setAttr ($nameSpace+"FKShoulder_R.Global") 0;
+if (`objExists ($nameSpace+"FKShoulder_L")`) if (`attributeExists "Global"  ($nameSpace+"FKShoulder_L")`) setAttr ($nameSpace+"FKShoulder_L.Global") 0;
+if (`objExists ($nameSpace+"FKWrist_R")`) if (`attributeExists "Global"  ($nameSpace+"FKWrist_R")`) setAttr ($nameSpace+"FKWrist_R.Global") 0;
+if (`objExists ($nameSpace+"FKWrist_L")`) if (`attributeExists "Global"  ($nameSpace+"FKWrist_L")`) setAttr ($nameSpace+"FKWrist_L.Global") 0;
+if (`objExists ($nameSpace+"FKHead_M")`) if (`attributeExists "Global"  ($nameSpace+"FKHead_M")`) setAttr ($nameSpace+"FKHead_M.Global") 0;
+
+string $consts[]={"Root_M","BackA_M","BackB_M","Chest_M","Neck_M","Head_M",
+									"Shoulder_R","Elbow_R","Wrist_R","Hip_R","Knee_R","Ankle_R","MiddleToe1_R",
+									"Shoulder_L","Elbow_L","Wrist_L","Hip_L","Knee_L","Ankle_L","MiddleToe1_L"};
+string $motions[]={"run_female","run_male","walk_angry","walk_cool","walk_cute","walk_female","walk_macho","walk_male","walk_proud","walk_sad","walk_sneak"};
+string $orientConstraint,$pointConstraint;
+
+for($i=0;$i<size($motions);$i++)
+	{
+	addAttr -k 1 -ln $motions[$i] -at double WalkDesignerMotionMixer;
+	for($y=0;$y<size($consts);$y++)
+		{
+		$fkControl=$nameSpace+"FK"+$consts[$y];
+		if ($consts[$y]=="Root_M")
+			{
+			$fkControl=$nameSpace+"Center_M";
+			$tempString=`pointConstraint ("asMotion:"+$motions[$i]+":"+$consts[$y]) $fkControl`;
+			$pointConstraint=$tempString[0];
+			}
+		if (!`objExists $fkControl`)
+			continue;
+		$tempString=`orientConstraint ("asMotion:"+$motions[$i]+":"+$consts[$y]) $fkControl`;
+		$orientConstraint=$tempString[0];
+		setAttr ($orientConstraint+".interpType") 2;
+
+		if ($consts[$y]=="Root_M")
+			{
+			setAttr Center_M_orientConstraint1.offsetX -90;
+			setAttr Center_M_orientConstraint1.offsetY -90;
+			connectAttr ("WalkDesignerMotionMixer."+$motions[$i]) ($pointConstraint+"."+$consts[$y]+"W"+$i);
+			}
+		connectAttr ("WalkDesignerMotionMixer."+$motions[$i]) ($orientConstraint+"."+$consts[$y]+"W"+$i);
+		}
+	connectControl ("asWDField"+$i) ("WalkDesignerMotionMixer."+$motions[$i]);
+	}
+connectControl asWDSpeedField WalkDesignerMotionMixer.speed;
+
+if (`attributeExists walk_male WalkDesignerMotionMixer`)
+	setAttr WalkDesignerMotionMixer.walk_male 1;
+currentTime 0;
+if (`objExists ($nameSpace+"FKAnkle_R")` && `objExists ($nameSpace+"Ankle")`)
+	{
+	float $anklePos[3]=`xform -q -ws -t ($nameSpace+"FKAnkle_R")`;
+	float $fitAnklePos[3]=`xform -q -ws -t ($nameSpace+"Ankle")`;
+	float $offset=$anklePos[1]-$fitAnklePos[1];
+	setAttr asMotion:Group.ty ($offset*-1);
+	}
+float $tempFloats[]=`keyframe -index 1 -q  -tc asMotion:Group.timing`;
+float $endTime=$tempFloats[0];
+playbackOptions -min 0 -ast 0 -aet $endTime -max $endTime;
+setAttr WalkDesignerMotionMixer.defaultEndTime $endTime;
+select -cl;
+}
+
+global proc asWDSolo (int $num)
+{
+if (!`objExists WalkDesignerMotionMixer`)
+	error ("WalkDesignerMotionMixer not found");
+float $value;
+string $motions[]={"run_female","run_male","walk_angry","walk_cool","walk_cute","walk_female","walk_macho","walk_male","walk_proud","walk_sad","walk_sneak"};
+for($i=0;$i<size($motions);$i++)
+	{
+	if ($i==$num)
+		$value=1;
+	else
+		$value=0;
+	floatSliderGrp -e -v $value ("asWDField"+$i);
+	setAttr ("WalkDesignerMotionMixer."+$motions[$i]) $value;
+	}
+}
+
+global proc asWDFinish ()
+{
+string $nameSpace=`optionMenu -q -v asWalkDesignerOptionMenu`;
+if ($nameSpace==":")
+	$nameSpace="";
+
+if (`objExists walkDesignerSet`)
+	delete walkDesignerSet;
+if (`objExists WalkDesignerMotionMixer`)
+	delete WalkDesignerMotionMixer;
+
+string $consts[]={"Root_M","BackA_M","BackB_M","Chest_M","Chest_M","Chest_M","Chest_M","Neck_M","Head_M",
+									"Shoulder_R","Elbow_R","Wrist_R","Hip_R","Knee_R","Ankle_R","MiddleToe1_R",
+									"Shoulder_L","Elbow_L","Wrist_L","Hip_L","Knee_L","Ankle_L","MiddleToe1_L"};
+string $tempString[];
+string $attrs[]={"tx","ty","tz","rx","ry","rz"};
+for($y=0;$y<size($consts);$y++)
+	{
+	$fkControl=$nameSpace+"FK"+$consts[$y];
+	if ($consts[$y]=="Root_M")
+		$fkControl=$nameSpace+"Center_M";
+	for($i=0;$i<size($attrs);$i++)
+		{
+		$tempString=`listConnections ($fkControl+"."+$attrs[$i])`;
+		if (!size($tempString))
+			setAttr ($fkControl+"."+$attrs[$i]) 0;
+		}
+	}
+deleteUI asWalkDesigner;
+}
+

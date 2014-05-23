@@ -1,0 +1,163 @@
+global proc shelf_advancedSkeleton () {
+
+//This file is for Drag`n`Drop installation of the AdvancedSkeleton shelf.
+//AdvancedSkeleton can have a single installation on a shared detwork drive,
+//And all all users on the network, can Drag`n`Drop this file into Maya to get the shelf.
+
+//In this example, AdvancedSkeleton is on a shared network drive called P:
+//You can change the path of the 2 lines below, to match your system.
+//Then just drag`n`drop this file into Maya on any machine to install the AdvancedSkeleton shelf
+string $asIconsPath="P:/SharedTools/maya/prefs/icons/AdvancedSkeleton/";
+string $asScriptsPath="P:/SharedTools/maya/scripts/AdvancedSkeleton/";
+
+
+
+global string $gBuffStr;
+global string $gBuffStr0;
+global string $gBuffStr1;
+string $ext="png";
+string $versionString=`about -v`;
+string $buffer[];
+tokenize $versionString $buffer;
+float $version=$buffer[0];
+if ($version<2011)
+	$ext="xpm";
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "bodySetup" 
+        -imageOverlayLabel "" 
+        -image ($asIconsPath+"asBody."+$ext)
+        -image1 ($asIconsPath+"asBody."+$ext)
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command ("source \""+$asScriptsPath+"asBody.mel\";asBody;")
+        -actionIsSubstitute 0
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "faceSetup" 
+        -imageOverlayLabel "" 
+        -image ($asIconsPath+"asFace."+$ext)
+        -image1 ($asIconsPath+"asFace."+$ext)
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command ("source \""+$asScriptsPath+"asFace.mel\";asFace;")
+        -actionIsSubstitute 0
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "UI" 
+        -imageOverlayLabel "" 
+        -image ($asIconsPath+"asUI."+$ext)
+        -image1 ($asIconsPath+"asUI."+$ext)
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command ("source \""+$asScriptsPath+"asSelectorDesigner.mel\";asSelectorDesigner;")
+        -actionIsSubstitute 0
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "Poser" 
+        -imageOverlayLabel "" 
+        -image ($asIconsPath+"asPoser."+$ext)
+        -image1 ($asIconsPath+"asPoser."+$ext)
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command ("source \""+$asScriptsPath+"asPoserDesigner.mel\";asPoserDesigner;")
+        -actionIsSubstitute 0
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "Help" 
+        -imageOverlayLabel "" 
+        -image ($asIconsPath+"asHelp."+$ext)
+        -image1 ($asIconsPath+"asHelp."+$ext)
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command ("source \""+$asScriptsPath+"asHelp.mel\";asHelp;")
+        -actionIsSubstitute 0
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "Selector:biped" 
+        -imageOverlayLabel "" 
+        -image ($asIconsPath+"asBiped."+$ext)
+        -image1 ($asIconsPath+"asBiped."+$ext)
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command ("source \""+$asScriptsPath+"Selector/biped.mel\";asSelectorbiped;")
+        -actionIsSubstitute 0
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "Selector:biped" 
+        -imageOverlayLabel "" 
+        -image ($asIconsPath+"asFaceSelector."+$ext)
+        -image1 ($asIconsPath+"asFaceSelector."+$ext)
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command ("source \""+$asScriptsPath+"Selector/face.mel\";asSelectorface;")
+        -actionIsSubstitute 0
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "WalkDesigner" 
+        -imageOverlayLabel "" 
+        -image ($asIconsPath+"asWalkDesigner."+$ext)
+        -image1 ($asIconsPath+"asWalkDesigner."+$ext)
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command ("source \""+$asScriptsPath+"asWalkDesigner.mel\";asWalkDesigner;")
+        -actionIsSubstitute 0
+    ;
+} 
+addNewShelfTab ("advancedSkeleton");

@@ -7,7 +7,7 @@ import time
 Version= '0.5'
 #zu_eigene_pfad_wechseln!!!
 
-projects_scene_dir = "Y:/Production/3d/maya/scenes"
+projects_scene_dir = "Y:/Production/3d/"
 
 
 class cleanSave_UI:
@@ -392,8 +392,9 @@ class cleanSave_UI:
 
     def saveLogFile(self, *args):
         query_last_save_info = cmds.text('savedFile', label= True, query = True)
+        query_last_save_path = cmds.text('savedPath', label =True, query = True)
         file = open("Y:/Production/rnd/ahosseini/helga_save_log_file/helga_save_file.txt", "a")
-        file.write("//saved_file:"+ query_last_save_info +"//\n")
+        file.write("[saved_file: "+ query_last_save_info +""+ query_last_save_path +"]\n")
         file.close()
 
     def overWriteFile(self):
@@ -422,7 +423,7 @@ class cleanSave_UI:
             cmds.warning("save the File!")
         else:
             if ('_') in scene_name:
-                if scene_full_name.startswith("//bigfoot/grimmhelga/Production/3d/maya/scenes/"):
+                if scene_full_name.startswith("//bigfoot/grimmhelga/Production/3d/maya/scenes/") or ("//bigfoot/grimmhelga/Production/rnd/"):
                     self.scene_full_path = os.path.dirname(scene_full_name)
                     #print self.scene_full_path
                     #scene name
@@ -437,7 +438,7 @@ class cleanSave_UI:
                     self.version_check = self.scene_name.split("_")[-2]
 
                     #path check
-                    self.path_check = scene_full_name.split("/")[7]
+                    #self.path_check = scene_full_name.split("/")[7]
 
 
                     #faktor check

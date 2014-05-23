@@ -1,0 +1,562 @@
+//     AdvancedSkeleton
+//     Version 3.9.93
+// 
+// 
+// AdvancedSkeleton is is a collection of Maya tools for doing character setup.
+//   
+// INSTALLATION: 
+// Run the SETUP file (setup.exe) 
+// Choose the Destination Folder.
+// NOTE: destination folder must be your Maya user directory 
+// eg: C:\Users\$user\Documents\maya\2014\
+// Continue installation.
+// Start Maya. 
+// Now you will find a new Shelf called 'advancedSkeleton':  
+// 
+// For detailed instructions go to: www.animationstudios.com.au
+// 
+// Copyright (C)2014 Animation Studios
+// 
+// email: support@animationstudios.com.au
+// Last Modified 17/04/2014
+
+global proc asScriptLocator (){}
+
+global proc string asScriptLocation ()
+{
+string $whatIs=`whatIs asScriptLocator`;
+string $fullPath=`substring $whatIs 25 999`;
+string $buffer[];
+int $numTok=`tokenize $fullPath "/" $buffer`;
+int $numLetters=size($fullPath);
+int $numLettersLastFolder=size($buffer[$numTok-1]);
+string $scriptLocation=`substring $fullPath 1 ($numLetters-$numLettersLastFolder)`;
+return $scriptLocation;
+}
+
+global proc asBody ()
+{
+string $asScriptLocation=`asScriptLocation`;
+string $sourceAsProcedures=("source \""+$asScriptLocation+"asProcedures.mel\"");
+string $sourceAsToolProcedures=("source \""+$asScriptLocation+"asToolProcedures.mel\"");
+string $sourceAdvancedSkeleton=("source \""+$asScriptLocation+"advancedSkeleton.mel\"");
+if (!`exists asCharSize`)
+	eval ($sourceAsProcedures);
+if (!`exists aspopulateNameSpaceMenu`)
+	eval ($sourceAsToolProcedures);	
+if (!`exists advancedSkeleton`)
+	eval ($sourceAdvancedSkeleton);	
+
+string $labels[]={"Root","Chest","Mid","Hip","Foot","Heel","Ball","Toe","BigToe","PinkyToe","LegAim","Shoulder","Hand","Eye","Wheel","0","1","2","3"};
+
+if ((`window -ex bodySetup`) == 1)
+	deleteUI -window bodySetup;
+
+window -w 370 bodySetup;
+formLayout asByFormLayout;
+scrollLayout asByScrollLayout1;
+columnLayout asByColumnLayout;
+
+int $en=0;
+if (`objExists "Group"`)
+	$en=1;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "Fit";
+	columnLayout;
+		rowLayout -nc 3 -cw3 72 144 72;
+			text -l "FitSkeleton:";
+			optionMenu asFitOptionMenu;
+			button -w 72 -l "import" -c asImportFitSkeleton;
+			setParent..;
+		setParent..;
+	separator;
+	columnLayout -adj 1;
+		text -l "Select FitJoint, then..";
+		separator -st none -h 10;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l "Label:";
+			optionMenu -cc asUpdateLabelHelp asLabelType;
+			for ($label in $labels)
+				menuItem -l $label;
+			separator -st none;
+			button -w 72 -c asLabelJoint -l "set label";
+			setParent..;
+		rowLayout -nc 2 -cw2 90 100;
+			separator -h 10 -st "none";
+			text -en 0 asLabelHelp;
+			setParent..;
+		setParent..;
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l "Attribute:";
+			text -l "        Add:";
+			separator -st none;
+			text -l "     Remove:";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 52 72 72;
+			separator -st none;
+			button -w 72 -l "Twist/Bendy" -c "addFitSkelAttrJoints twistJoints";
+			separator -st none;
+			button -w 72 -l "Twist/Bendy" -c "removeFitSkelAttr twistJoints";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st none;
+			button -w 72 -l "Global" -c "addFitSkelGlobal";
+			separator -st none;
+			button -w 72 -l "Global" -c "removeFitSkelAttr \"global\"";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st none;
+			button -w 72 -l "FreeOrient" -c "addFitSkelAttr freeOrient";
+			separator -st none;
+			button -w 72 -l "FreeOrient" -c "removeFitSkelAttr freeOrient";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st none;
+			button -w 72 -l "GeoAttach" -c "addFitSkelAttr attach";
+			separator -st none;
+			button -w 72 -l "GeoAttach" -c "removeFitSkelAttr attach";
+			setParent..;
+		setParent..;
+	separator;
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l "Display:";
+			text -l "        Hide:";
+			separator -st none;
+			text -l "     Show:";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st none;
+			button -w 72 -l "LRA(axis)" -c "displayAllJointRLA FitSkeleton 0";
+			separator -st none;
+			button -w 72 -l "LRA(axis)" -c "displayAllJointRLA FitSkeleton 1";
+			setParent..;
+
+/*
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st none;
+			button -w 72 -l "Wheel" -c "addFitSkelAttr wheel";
+			separator -st none;
+			button -w 72 -l "Wheel" -c "removeFitSkelAttr wheel";
+			setParent..;
+*/
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "Build";
+	columnLayout -adj 1;
+		text -l "Select Root joint, then..";
+		separator -st none -h 10;
+		rowLayout -nc 2 -cw2 100 150;
+			separator -st none;
+			button -en 1 -c advancedSkeleton -l "Build AdvancedSkeleton";
+			setParent..;
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "ReBuild";
+	columnLayout;
+		rowLayout -nc 3 -cw3 52 140 100;
+			separator -st "none";
+			separator -st "none";
+			checkBox -en $en -v 1 -l "Rebuild Connections" RebuildCheckBox;
+			setParent..;
+		rowLayout -nc 3 -cw3 72 120 100;
+			separator -st "none";
+			button -en $en -c asToggleFitSkeleton -l "Toggle Fit/Advanced";
+			button -en $en -c asAdvancedRebuild -l "Rebuild Skeleton";
+			setParent..;
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "Skinning            (deformation option 1)";
+	columnLayout;
+		rowLayout -nc 2 -cw2 120 100;
+			separator -st "none";
+			button -w 100 -en $en -c asSelectDeformJoints -l "Select DeformJoints";
+			setParent..;
+		separator -st "none" -h 10;
+		rowLayout -nc 2 -cw2 120 100;
+			separator -st "none";
+			text -l "And select the geometry..";
+			setParent..;
+		separator -st "none" -h 10;
+		rowLayout -nc 2 -cw2 95 100;
+			separator -st "none";
+			button -w 150 -en $en -c asSetSmoothBindOptions -l "Set Smooth Bind Options";
+			setParent..;
+		rowLayout -nc 2 -cw2 120 100;
+			separator -st "none";
+			text -l "     And Bind Skin";
+			setParent..;
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "SkinCage           (deformation option 2)";
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Cage:";
+			button -en $en -w 72 -c asCreateSkinCage -label "Create";
+			separator -st "none";
+			button -en $en -w 72 -c asDeleteSkinCage -label "Delete";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Sliders:";
+			button -en $en -w 72 -c asCreateSliders -label "Create";
+			separator -st "none";
+			button -en $en -w 72 -c asDeleteSliders -label "Delete";
+			setParent..;
+		separator -st "none";
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Mirror:";
+			button -en $en -w 72 -c "asMirrorControlCurves 1 SkinCageCurvesSet" -label "Left To Right";
+			separator -st "none";
+			button -en $en -w 72 -c "asMirrorControlCurves 0 SkinCageCurvesSet" -label "Right To Left";
+			setParent..;
+		separator -st "none";
+		rowLayout -nc 2 -cw2 100 150;
+			separator;
+			button -en $en -w 150 -c asDeleteSkinCurves -label "Delete SkinCurves";
+			setParent..;
+		setParent..;
+	separator;
+	text -l "Select mesh to deform, then:";
+	columnLayout;
+		rowLayout -nc 2 -cw2 100 150;
+			separator;
+			button -en $en -w 150 -c asCopySkin -label "Copy weights";
+			setParent..;
+/*
+		rowLayout -nc 2 -cw2 100 150;
+			separator;
+			button -en $en -w 150 -c asSmoothSkin -label "Smooth weights";
+			setParent..;
+*/
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "SubWrap           (deformation option 3)";
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " SubCage:";
+			button -en $en -w 72 -c asCreateSkinSub -label "Create";
+			separator -st "none";
+			button -en $en -w 72 -c asDeleteSkinSub -label "Delete";
+			setParent..;
+		rowLayout -nc 2 -cw2 100 150;
+			separator;
+			button -en $en -w 150 -c asWrapSkin -label "Wrap selected mesh";
+			setParent..;
+		setParent..;
+	separator;
+	columnLayout;
+		rowLayout -nc 4 -cw4 100 72 3 72;
+			separator;
+			button -en $en -w 72 -c asSkinSubDetach -label "Detach";
+			separator -st "none";
+			button -en $en -w 72 -c asSkinSubAttach -label "Attach";
+			setParent..;
+		setParent..;
+	separator;
+	columnLayout;
+		rowLayout -nc 2 -cw2 100 150;
+			separator;
+			button -en $en -w 150 -c asWrapExlude -label "Exclude selected vertices";
+			setParent..;
+/*
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " ExclusionBox:";
+			button -en $en -w 72 -c asCreateSubWrapExclusionBox -label "Add";
+			separator -st "none";
+			button -en $en -w 72 -c asUpdateSubWrapExclusionBoxs -label "Update";
+			setParent..;
+*/
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "Skeleton";
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st "none";
+			button -en $en -w 72 -c asCreateSkeleton -label "Create";
+			separator -st "none";
+			button -en $en -w 72 -c asDeleteSkeleton -label "Delete";
+			setParent..;
+		setParent..;
+	setParent..;
+	
+frameLayout -w 340 -cll 1 -cl 1 -l "PolyBoxes";
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st "none";
+			button -en $en -w 72 -c asCreatePolyBoxes -label "Create";
+			separator -st "none";
+			button -en $en -w 72 -c asDeletePolyBoxes -label "Delete";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st "none";
+			button -en $en -w 72 -c "asHidePolyBoxes 1" -l "Hide";
+			separator -st "none";
+			button -en $en -w 72 -c "asHidePolyBoxes 0" -l "Show";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Mirror:";
+			button -en $en -w 72 -l "Left To Right" -c "asMirrorPolyBoxes 1";
+			separator -st "none";
+			button -en $en -w 72 -l "Right To Left" -c "asMirrorPolyBoxes 0";
+			setParent..;
+		separator -st "none" -h 10;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Boolean:";
+			button -en $en -w 72 -c asCreateBoolean -l "Create";
+			separator -st "none";
+			button -en $en -w 72 -c asDeleteBoolean -l "Delete";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Warp:";
+			button -en $en -w 72 -c asCreateWarp -l "Create";
+			separator -st "none";
+			button -en $en -w 72 -c asDeleteWarp -l "Delete";
+			setParent..;
+/*
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Bevel:";
+			button -en $en -w 72 -l "Create" -c "asCreateBevel";
+			separator -st "none";
+			button -en $en -w 72 -l "Delete" -c "asDeleteBevel";
+			setParent..;
+*/
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "Mannequin";
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st "none";
+			button -en $en -w 72 -c asCreateMannequin -label "Create";
+			separator -st "none";
+			button -en $en -w 72 -c asDeleteMannequin -label "Delete";
+			setParent..;
+/*
+		rowLayout -nc 2 -cw2 100 150;
+			separator;
+			button -en $en -w 150 -c asWarpMannequin -label "Warp to selected mesh";
+			setParent..;
+*/
+		setParent..;
+	setParent..;
+
+
+frameLayout -w 340 -cll 1 -cl 1 -l "Character Set";
+	columnLayout;
+		textFieldGrp -w 250 -label "Name:" -tx "character1" "ASCharNodeName";
+		separator -st "none" -h 10;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st "none";
+			button -en $en -w 72 -l "Create" -c asCreatecharacter;
+			separator -st "none";
+			button -en $en -w 72 -l "Delete" -c asKillcharacter;
+			setParent..;
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "ControlCurves";
+	columnLayout;
+		separator -st "none" -h 10;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Mirror:";
+			button -en $en -w 72 -l "Left To Right" -c "asMirrorControlCurves 1 ControlSet";
+			separator -st "none";
+			button -en $en -w 72 -l "Right To Left" -c "asMirrorControlCurves 0 ControlSet";
+			setParent..;
+		separator -st "none" -h 10;
+		rowLayout -nc 4 -cw4 90 128 72 72;
+			text -l "      scale multiplier:";
+			floatField -v 1 ScaleCCFloatField;
+			button -en $en -w 72 -l "Scale" -c "asScaleControlCurves";
+			setParent..;
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "Motion Capture";
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l "skeleton";
+			button -en $en -w 72 -c asCreateMoCap -label "Create";
+			separator -st "none";
+			button -en $en -w 72 -c asDeleteMocap -label "Delete";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l "FK/IK";
+			button -en $en -w 72 -c asSetAllFK -label "Set All FK";
+			separator -st "none";
+			button -en $en -w 72 -c "asGoToBuildPose bodySetup" -label "Default";
+			setParent..;
+		rowLayout -nc 5 -cw5 72 72 20 50 72;
+			text -l "bvh file";
+			button -en $en -w 72 -c asReadBVH -label "Read";
+			text -l "fps:";
+			floatField -v 120 -pre 1 -w 40 asBVHfps;
+			button -en $en -w 72 -c asDeleteBHV -label "Delete";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l "auto-mapping";
+			button -en $en -w 72 -c asAutoMapMocap -label "Connect";
+			separator -st "none";
+			button -en $en -w 72 -c asDeleteMocapMap -label "Disconnect";
+			setParent..;
+		text -l "(Ensure both rig and BHVskeleton are in build-pose when connecting)";
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "Partial Joints";
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			separator -st "none";
+			button -en $en -w 72 -l "Create" -c "asCreatePartialJoints";
+			separator -st "none";
+			button -en $en -w 72 -l "Delete" -c "asDeletePartialJoints";
+			setParent..;
+		setParent..;
+	setParent..;
+/*
+frameLayout -w 340 -cll 1 -cl 0 -l "Limit joints";
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Set Limits:";
+			button -w 72 -l "Elbows" -c ("asLimitElbowsKnees Arm 1") LimitElbowsButton;
+			separator -st "none";
+			button -w 72 -l "Knees" -c ("asLimitElbowsKnees Leg 1") LimitKneesButton;
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Remove Limits:";
+			button -w 72 -l "Elbows" -c ("asLimitElbowsKnees Arm 0") UnLimitElbowsButtons;
+			separator -st "none";
+			button -w 72 -l "Knees" -c ("asLimitElbowsKnees Leg 0") UnLimitKneesButton;
+			setParent..;
+		setParent..;
+	setParent..;
+*/
+int $csm=0;//CorrectiveShapeMode
+string $rootLevelObjects[]=`ls -as -type transform`;
+for ($i=0;$i<size($rootLevelObjects);$i++)
+	if (`attributeExists driverValue $rootLevelObjects[$i]`)
+		$csm=1;
+frameLayout -w 340 -cll 1 -cl 1 -l "Corrective";
+	columnLayout;
+		text -l "Go to pose to correct, then:";
+		text -l "Select mesh to correct, then:";
+		rowLayout -nc 2;
+			button -en (!$csm) -l "Create Corrective Shape" -c asCreateCorrectiveShape asCreateCorrectiveButton;
+			checkBox -v 1 -l "Use Angle Rotations" asCorrectiveAngleCheckBox;
+			setParent..;
+		text -l "Or, Right Click on any of these buttons,\nto access existing Corrective Shapes";
+		rowLayout -nc 4;
+			button -en (!$csm) -l "Re-Create" asReCreateCorrectiveButton;
+			popupMenu -pmc "asPopulateCorrectivePopupMenu ReCreate" asReCreateCorrectiveShapesPopupMenu;
+			button -en (!$csm) -l "Delete" asDeleteCorrectiveButton;
+			popupMenu -pmc "asPopulateCorrectivePopupMenu Delete" asDeleteCorrectiveShapesPopupMenu;
+			button -en (!$csm) -l "Graph" asGraphCorrectiveButton;
+			popupMenu -pmc "asPopulateCorrectivePopupMenu Graph" asGraphCorrectiveShapesPopupMenu;
+			setParent..;
+		separator -st "none" -h 20;
+		text -l "After sculpted shape, then:";
+		rowLayout -nc 4;
+			button -en $csm -l "Connect Corrective Shape" -c asConnectCorrectiveShape asConnectCorrectiveShapeButton;
+			checkBox -v 1 -l "mirror" asCorrectiveMirrorCheckBox;
+			separator -st "none" -w 10;
+			button -en $csm -l "Cancel Corrective Shape" -c asCancelCorrectiveShape asCancelCorrectiveShapeButton;
+			setParent..;
+		setParent..;
+	setParent..;
+
+frameLayout -w 340 -cll 1 -cl 1 -l "FitMode";
+	columnLayout;
+		rowLayout -nc 2 -cw2 100 150;
+			separator -st "none";
+			button -w 150 -c asFitMode -l "FitMode" FitModeButton;
+			setParent..;
+		setParent..;
+	text -en 0 -l "Automatically orient joint, to preserves X-down\nand updates SDK curves.";
+	separator -st "none" -h 2;
+/*
+	rowLayout -nc 2 -cw2 120 100;
+		separator -st "none";
+		button -w 72 -c asSDKMode -l "SDKMode" SDKModeButton;
+		setParent..;
+	text -en 0 -l "Connects FitSkeleton SDKs to AdvancedSkeleton SDKs..";
+*/
+	setParent..;
+//setParent..;
+
+
+frameLayout -w 340 -cll 1 -cl 1 -l "Display";
+	columnLayout;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " MotionSystem:";
+			button -en $en -w 72 -c "asHideMotionSystem 1" -l "Hide";
+			separator -st "none";
+			button -en $en -w 72 -c "asHideMotionSystem 0" -l "Show";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Joint:";
+			button -en $en -w 72 -l "Hide" -c "setAttr Main.jointVis 0";
+			separator -st "none";
+			button -en $en -w 72 -l "Show" -c "setAttr Main.jointVis 1";
+			setParent..;
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " Joint (2014):";
+			button -en $en -w 72 -l "Hide" -c "jointVisMaya2014 0";
+			separator -st "none";
+			button -en $en -w 72 -l "Show" -c "jointVisMaya2014 1";
+			setParent..;
+
+		rowLayout -nc 4 -cw4 72 72 72 72;
+			text -l " LRA(axis):";
+			button -en $en -w 72 -l "Hide" -c "displayAllJointRLA DeformationSystem 0";
+			separator -st none;
+			button -en $en -w 72 -l "Show" -c "displayAllJointRLA DeformationSystem 1";
+			setParent..;
+
+		rowLayout -nc 2 -cw2 70 100;
+			text " Joint Size:";
+			floatSliderGrp -field 1 -min 0.01 -max 10.0 -pre 2 -v `jointDisplayScale -q` -dc "jointDisplayScale #1" -cc "jointDisplayScale #1";
+			setParent..;
+		setParent..;
+	setParent..;
+	setParent..;
+	setParent..;
+rowLayout -nc 2 -cw2 120 100 asByRowLayout1;
+separator;
+button -l "Go to Build Pose" -c "asGoToBuildPose bodySetup";
+
+formLayout -e
+	-af asByScrollLayout1 "right" 0
+	-af asByScrollLayout1 "left" 0
+	-af asByScrollLayout1 "top" 0
+	-ac asByScrollLayout1 "bottom" 0 asByRowLayout1
+	-af asByRowLayout1 "bottom" 0
+	asByFormLayout;
+
+showWindow bodySetup;
+
+//populate asFitOptionMenu
+string $fitSkeletonFileList[]=`getFileList -fld ($asScriptLocation+"/FitSkeletons/") -fs "*.m?"`;
+for ($file in $fitSkeletonFileList)
+	menuItem -p asFitOptionMenu -l $file;
+asUpdateLabelHelp;
+
+//Warn about "automatically orient joints
+int $ojeIsOn = 0;
+catchQuiet ($ojeIsOn = `manipMoveContext -q -oje "Move"`); //Maya 2011 and older fail to -q -oje
+if ($ojeIsOn)
+	if (`confirmDialog -t AdvancedSkeleton -m "Your MoveTool>automatically-orient-joints option is On\nWhich might cause undesired results.\nClick OK to switch this OFF" -b "Ok" -b "Cancel" -db "Ok"`=="Ok")
+		manipMoveContext -e -orientJointEnabled false Move;
+
+//Warn to switch to "cm"
+string $currentUnit=`currentUnit -query -linear`;
+if ($currentUnit!="cm")
+	if (`confirmDialog -t AdvancedSkeleton -m "Your current units are not set to \"cm\".\nAdvancedSkeleton works best with \"cm\".\nClick OK to switch to \"cm\"" -b "Ok" -b "Cancel" -db "Ok"`=="Ok")
+		currentUnit -linear "cm";
+}

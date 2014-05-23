@@ -1,0 +1,211 @@
+//     AdvancedSkeleton
+//     Version 3.9.93
+// 
+// 
+// AdvancedSkeleton is is a collection of Maya tools for doing character setup.
+//   
+// INSTALLATION: 
+// Run the SETUP file (setup.exe) 
+// Choose the Destination Folder.
+// NOTE: destination folder must be your Maya user directory 
+// eg: C:\Users\$user\Documents\maya\2014\
+// Continue installation.
+// Start Maya. 
+// Now you will find a new Shelf called 'advancedSkeleton':  
+// 
+// For detailed instructions go to: www.animationstudios.com.au
+// 
+// Copyright (C)2014 Animation Studios
+// 
+// email: support@animationstudios.com.au
+// Last Modified 17/04/2014
+
+global proc asScriptLocator (){}
+
+global proc string asScriptLocation ()
+{
+string $whatIs=`whatIs asScriptLocator`;
+string $fullPath=`substring $whatIs 25 999`;
+string $buffer[];
+int $numTok=`tokenize $fullPath "/" $buffer`;
+int $numLetters=size($fullPath);
+int $numLettersLastFolder=size($buffer[$numTok-1]);
+string $scriptLocation=`substring $fullPath 1 ($numLetters-$numLettersLastFolder)`;
+return $scriptLocation;
+}
+
+global proc asFitMode ()
+{
+global int $asFitModeScriptJobNr1;
+global int $asFitModeScriptJobNr2[];
+
+string $asScriptLocation=`asScriptLocation`;
+string $sourceAsProcedures=("source \""+$asScriptLocation+"asProcedures.mel\"");
+if (!`exists asCharSize`)
+	eval ($sourceAsProcedures);
+
+int $onOff=1;
+if ($asFitModeScriptJobNr1)
+	$onOff=0;
+asByPassSDK $onOff;
+select -cl;
+if ($onOff)
+	{
+	$asFitModeScriptJobNr1=`scriptJob -cu 1 -e "SelectionChanged" "asFitModeUpdateScriptJob"`;
+	headsUpDisplay -s 1 -b 0 -bs "medium" -l "FitMode" -lfs "large" HUDFitMode;
+	}
+else
+	{
+	if (`scriptJob -ex $asFitModeScriptJobNr1`)
+		{
+		scriptJob -kill $asFitModeScriptJobNr1;
+		$asFitModeScriptJobNr1=0;
+		}
+	asFitModeUpdateScriptJob;
+	if (`headsUpDisplay -ex HUDFitMode`)
+		headsUpDisplay -rem HUDFitMode;
+	}
+}
+
+global proc asFitModeUpdateScriptJob ()
+{
+global int $asFitModeScriptJobNr2[];
+global string $asFitModeOffRLA[];
+for ($i=0;$i<size($asFitModeOffRLA);$i++)
+	if (`objExists $asFitModeOffRLA[$i]`)
+		setAttr ($asFitModeOffRLA[$i]+".displayLocalAxis") 0;
+
+clear $asFitModeOffRLA;
+for ($i=0;$i<size($asFitModeScriptJobNr2);$i++)
+	if ($asFitModeScriptJobNr2[$i])
+		if (`scriptJob -ex $asFitModeScriptJobNr2[$i]`)
+			{
+			scriptJob -kill $asFitModeScriptJobNr2[$i];
+			$asFitModeScriptJobNr2[$i]=0;
+			}
+string $sel[]=`ls -sl -type joint`;
+string $tempString[];
+string $rlaParent,$rlaChild;
+float $pos[];
+string $aimParents;
+for ($i=0;$i<size($sel);$i++)
+	{
+	//Parent
+	if (size(`ls -ap $sel[$i]`)>1)
+		continue;
+	$rlaParent=`asRlaParent $sel[$i]`;
+	if (!`objExists $rlaParent`)
+		continue;
+	if (`objectType $rlaParent`!="joint")
+		continue;
+	$pos=`getAttr ($sel[$i]+".translate")`;
+	if ($pos[1]>0.01 || $pos[1]<-0.01 || $pos[2]>0.01 || $pos[2]<-0.01)
+		continue;
+
+	if (!`getAttr ($rlaParent+".displayLocalAxis")`)
+		$asFitModeOffRLA[$i]=$rlaParent;
+	setAttr ($rlaParent+".displayLocalAxis") 1;
+
+	if ($aimParents!="")
+		$aimParents+="@";
+	$aimParents+=$sel[$i];
+	}
+
+for ($i=0;$i<size($sel);$i++)
+	{
+	//Child
+	$rlaChild=`asRlaChild $sel[$i]`;
+	if (size(`ls -ap $rlaChild`)!=1)
+		continue;
+	$pos=`getAttr ($rlaChild+".translate")`;
+	if ($pos[1]>0.01 || $pos[1]<-0.01 || $pos[2]>0.01 || $pos[2]<-0.01)
+		continue;
+	$aimParents+="@"+$rlaChild;
+	}
+if ($aimParents!="")
+	{	
+	$asFitModeScriptJobNr2[0]=`scriptJob -cu 1 -ac ($sel[0]+".translateY") ("asFitModeAimParent (\""+$aimParents+"\")")`;
+	$asFitModeScriptJobNr2[1]=`scriptJob -cu 1 -ac ($sel[0]+".translateZ") ("asFitModeAimParent (\""+$aimParents+"\")")`;
+	}
+}
+
+global proc asFitModeAimParent (string $jointsString)
+{
+string $sel[]=`ls -sl`;
+string $generatedTransform1,$generatedTransform2;
+string $joints[],$generatedTransforms[];
+tokenize $jointsString "@" $joints;
+for ($joint in $joints)
+	{
+	if (size(`ls -ap $joint`)!=1)
+		return;
+	string $label=`asLabel $joint`;
+	if (`gmatch $label "Twist*"`)
+		return;
+	string $tempString[]=`listRelatives -f -p $joint`;
+	string $parent=$tempString[0];
+	int $operatingOnSelected;
+	for ($obj in $sel)
+		if ($obj==$joint)
+			$operatingOnSelected=1;
+	int $hasTwistParent;
+	string $rlaParent=`asRlaParent $joint`;
+	string $rlaParentFirstChild;
+	if (`objExists $rlaParent`)
+		if ($rlaParent!=$parent)
+			{
+			$hasTwistParent=1;
+			$tempString=`listRelatives -f -c $rlaParent`;
+			$rlaParentFirstChild=$tempString[0];
+			}
+	if (!`objExists $parent` || !`objExists $rlaParent`)
+		return;
+	
+	float $pos[];
+	if ($operatingOnSelected)
+		$pos=`getAttr ($joint+".translate")`;
+	else
+		$pos=`getAttr ($rlaParentFirstChild+".translate")`;
+	if (!($pos[1]>0.01 || $pos[1]<-0.01 || $pos[2]>0.01 || $pos[2]<-0.01))
+		return;
+	$tempString=`parent -w $joint`;
+	string $otherChildren[]=`listRelatives -f -c -type joint $parent`;
+	$joint=$tempString[0];
+	$tempString=`listRelatives -p $joint`;
+	if (size($tempString))
+		$generatedTransform1=$tempString[0];
+	string $upVec=`createNode joint`;
+	parent -r $upVec $rlaParent;
+	setAttr ($upVec+".translate") 0 3 0;
+	parent -w $upVec;
+	$tempString=`listRelatives -p $upVec`;
+	if (size($tempString))
+		$generatedTransform2=$tempString[0];
+	if (size($otherChildren))
+		$otherChildren=`parent -w $otherChildren`;
+	for ($i=0;$i<size($otherChildren);$i++)
+		{
+		$tempString=`listRelatives -p $otherChildren[$i]`;
+		if (size($tempString))
+			$generatedTransforms[$i]=$tempString[0];
+		}
+
+	$tempString=`aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpType "object" -worldUpObject $upVec $joint $rlaParent`;
+
+	if (size($otherChildren))
+		parent $otherChildren $parent;
+
+	delete $tempString[0] $upVec;
+
+	parent $joint $parent;
+	if (`objExists $generatedTransform1`)
+		delete $generatedTransform1;
+	if (`objExists $generatedTransform2`)
+		delete $generatedTransform2;
+	if (size ($generatedTransforms))
+		for ($obj in $generatedTransforms)
+			if (`objExists $obj`)
+				delete $obj;
+	}
+select $sel;
+}

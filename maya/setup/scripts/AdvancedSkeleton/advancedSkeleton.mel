@@ -1,0 +1,3574 @@
+//     AdvancedSkeleton
+//     Version 3.9.93
+// 
+// 
+// AdvancedSkeleton is is a collection of Maya tools for doing character setup.
+//   
+// INSTALLATION: 
+// Run the SETUP file (setup.exe) 
+// Choose the Destination Folder.
+// NOTE: destination folder must be your Maya user directory 
+// eg: C:\Users\$user\Documents\maya\2014\
+// Continue installation.
+// Start Maya. 
+// Now you will find a new Shelf called 'advancedSkeleton':  
+// 
+// For detailed instructions go to: www.animationstudios.com.au
+// 
+// Copyright (C)2014 Animation Studios
+// 
+// email: support@animationstudios.com.au
+// Last Modified 17/04/2014
+
+global proc asScriptLocator (){}
+
+global proc string asScriptLocation ()
+{
+string $whatIs=`whatIs asScriptLocator`;
+string $fullPath=`substring $whatIs 25 999`;
+string $buffer[];
+int $numTok=`tokenize $fullPath "/" $buffer`;
+int $numLetters=size($fullPath);
+int $numLettersLastFolder=size($buffer[$numTok-1]);
+string $scriptLocation=`substring $fullPath 1 ($numLetters-$numLettersLastFolder)`;
+return $scriptLocation;
+}
+
+global proc advancedSkeleton ()
+{
+global string $gMainProgressBar;
+global int $asFitModeScriptJobNr1;
+global int $asNoPrompt;
+global string $gSelect;
+global string $asRebuildChar;
+string $asScriptLocation=`asScriptLocation`;
+string $sourceAsProcedures=("source \""+$asScriptLocation+"asProcedures.mel\"");
+if (!`exists asCharSize`)
+	eval ($sourceAsProcedures);
+string $allBefore[]=`ls`;
+asSetRefreshOptionVar;
+optionVar -iv asRefresh 1;
+
+float $version=`asGetVersionFromHeader`;
+
+string $sel[]=`ls -sl`;
+if (size($sel)!=1 || `objectType $sel[0]`!="joint")
+	{
+	warning "Select 1 joint\n";
+	return;
+	}
+
+if (`objExists "FitSkeleton"` || `objExists "MotionSystem"` || `objExists "DeformationSystem"`)
+	error "AdvancedSkeleton already exists in the scene, use \"Rebuild\" instead if you want to re-generate the rig\n";
+
+if (`objExists "Group"`)
+	error "Object \"Group\" already exists !";
+
+float $temp[3]=`xform -q -ws -t $sel[0]`;
+if ($temp[0]<-0.01 || $temp[0]>0.01)
+	error "1st Joint must have translateX set to 0 !";
+
+string $tempString[]=`listRelatives -type joint -ad $sel[0]`;
+string $tempStringLong[]=`listRelatives -f -type joint -ad $sel[0]`;
+string $checkObjs[];
+for ($i=0;$i<size($tempString);$i++)
+	{
+	$temp=`xform -q -ws -t $tempStringLong[$i]`;
+	if ($temp[0]==0)
+		$checkObjs[size($checkObjs)]=$tempString[$i]+"_M";
+	else
+		{
+		$checkObjs[size($checkObjs)]=$tempString[$i]+"_L";
+		$checkObjs[size($checkObjs)]=$tempString[$i]+"_R";
+		}
+	}
+for ($i=0;$i<size($checkObjs);$i++)
+	if (`objExists $checkObjs[$i]`)
+			error ("A object named \""+$checkObjs[$i]+"\" already exist, please rename this before building AdvancedSkeleton");
+
+string $confirmResult;
+if ($asRebuildChar=="" && $asNoPrompt==0)
+	{
+	$confirmResult=`confirmDialog -t AdvancedSkeleton -m "Generate AdvancedSkeleton ?" -b "Ok" -b "Cancel" -db "Ok"`;
+	if ($confirmResult!="Ok")
+		return;
+	}
+
+string $currentUnit=`currentUnit -q -l`;
+if ($currentUnit!="cm")
+	currentUnit -l "cm";
+cycleCheck -e off;
+
+string $allTransforms[]=`ls -type transform`;
+for ($node in $allTransforms)
+	if ($node=="Main")
+		rename $node Main1;
+string $sel[]=`ls -sl`;
+string $topNode=$sel[0];
+string $allParents[]=`listRelatives -ap $topNode`;
+
+if (`objExists "AllSet"` && `objExists "Sets"`)
+	{
+	$tempString=`sets -q "Sets"`;
+	for ($set in $tempString)
+		delete (`sets -q $set`);
+	}
+
+setToolTo $gSelect;
+if (`exists softSelect`)
+	softSelect -e -softSelectEnabled 0;
+if ($asRebuildChar=="")
+	{
+	evalDeferred "progressBar -e -ep $gMainProgressBar";
+	int $asFitMode;
+	if ($asFitModeScriptJobNr1)
+		if (`scriptJob -ex $asFitModeScriptJobNr1`)
+			$asFitMode=1;
+	if ($asFitMode)
+		asFitMode;
+	else
+		{asFitMode;asFitMode;}
+	}
+float $height=`asCharSize $topNode`;
+if ($height<0.1)
+	$height=10;
+float $sideTreshold=0.0001*$height;
+
+int $closeCurve,$color,$manip,$cvs,$hasXalignedChild,$useCenterBtwFeet,$flip,$numIKhandles,$buildingMidIKSpine;
+int $lockedRotX,$lockedRotY,$lockedRotZ,$numCVs,$degree,$suffixNum,$numLetters;
+int $parentCount,$totalParentCount,$mirror;
+int $fitJointsTerminator[],$fitJointsGlobal[],$fitJointsAttach[],$fitJointsWheel[],$fitJointsDownTwist[],$fitJointsUpTwist[],$fitJointsBend[],$fitJointsFirstOffIK[];
+int $fitJointsRotOrder[],$FKControl[],$FKLocked[],$fitJointsBelowEye[],$fitJointsUnderFoot[],$IKstartJointRotOrder[],$IKendJointRotOrder[];
+int $fromBefore[],$atLeastOneChildLoc[],$midIK[];
+int $fitJointsLastInIk[],$fitJointsBelowNoFlip[],$fitJointsFirstInIk[],$fitJointsInRPIK[];
+int $fitJointsIkDown[],$fitJointsIkUp[],$fitJointsDownAxisY[],$fitJointsDownAxisZ[],$fitJointsInversScaleDisconnected[],$IKNoFlip[],$setLocks[];
+float $childTX,$childTY,$childTZ,$orientX,$orientY,$orientZ,$parentCountNormalized,$goalPP,$massPP,$distance,$poleVecX,$poleVecY,$poleVecZ;
+float $fitJointsPosX[],$fitJointsPosY[],$fitJointsPosZ[],$upVector[];
+float $fitJointsWSRotX[],$fitJointsWSRotY[],$fitJointsWSRotZ[];
+float $fitJointsRotX[],$fitJointsRotY[],$fitJointsRotZ[];
+float $fitJointsJointOrientX[],$fitJointsJointOrientY[],$fitJointsJointOrientZ[];
+float $fitJointsLenght[],$fitJointsGlobalValue[],$fitJointsWheelDiameter[],$IKlenght[];
+float $temp[3],$temp2[3];
+float $sdksMin[],$sdksMax[];
+float $sdksJointOrient[],$sdksRotate[];
+float $sdksJointOrientX[],$sdksJointOrientY[],$sdksJointOrientZ[],$sdksRotateX[],$sdksRotateY[],$sdksRotateZ[];
+string $fitJointsIkDownSide,$fitJointsIkUpSide,$heelToeBall,$target,$splineIkEnd,$deferredCmd,$loc1,$loc2,$loc3,$label,$childLabel,$newLabel,$hipSwingerJoint;
+string $sourceTypePrefix,$destinationTypePrefix,$orientConstraint,$constraint,$side,$parentSide,$altSide,$IKParentSide;
+string $centerBtwFeetPointConstraint,$parent,$curve,$curveShape,$curveParam,$firstLetter,$upperLabel,$child,$grandChild,$ikStartJoint,$ikEndJoint;
+string $expression,$cmd,$particleShape;
+string $existingUnitConversions[]=`ls -type unitConversion`;
+string $connectedNodes[],$attrs[],$fitJointsIkUpLabel[],$fitJointsInIk[],$fitJointsAttachTo[];
+string $sdks[],$sdkSourceSide[],$sdkDestinationSide[],$sdksSource[],$sdksSourceAttr[],$sdksDestination[],$sdksDestinationAttr[];
+string $sdksSourceType[],$sdksDestinationType[];
+string $tempString[],$tempString2[],$tempString3[];
+string $fitJointsLabel[],$fitJointsParent[],$fitJointsDownAxis[],$fitJointsParentDownAxis[],$fitJointsSide[],$fitJointsParentSide[],$fitJointsRotOrderString[],$fitJointsReverseAimTarget[];
+string $beforeObj[],$afterObj[];
+string $IKhandles[],$IKsolver[],$IKDownAxis[],$IKstartJoints[],$IKmiddleJoints[],$IKendJoints[],$IKheel[],$IKtoe[],$IKball[],$IKbigToe[],$IKpinkyToe[],$IKPlacePoleVecLoc[];
+string $IKcvs[],$IKcv[],$IKstartSide[],$IKendSide[],$IKparent[],$IKparentSide[],$fitJointsLegAim[];
+string $axis[]={"X","Y","Z"};
+string $fitNodes[],$fitSourceNode[],$fitNodeSourceConnect[],$fitDestNode[],$fitNodeDestConnect[];
+string $fitNodeBuffer[],$fitSourceNodeBuffer[],$fitDestNodeBuffer[],$fitNodeSourceConnectBuffer[],$fitNodeDestConnectBuffer[],$fitJointUAs[];
+string $sourcePrefix,$destPrefix,$string,$fkOffsetParent;
+int $backToFitSkeleton,$fitNodeNr;
+
+
+createNode -n "Group" transform;
+asLockAttr "Group" 1 1 1 0;
+$tempString=`circle -n "Main" -r ($height/5) -nr 0 1 0 -ch 0`;
+string $hierarchyTop=$tempString[0];
+parent $hierarchyTop "Group";
+addAttr -ln height -at double $hierarchyTop;
+setAttr -l 1 ($hierarchyTop+".height") $height;
+addAttr -ln version -at double $hierarchyTop;
+setAttr -l 1 ($hierarchyTop+".version") $version;
+
+
+//--Import Curves--//
+string $iconsFile=$asScriptLocation+"asIcons.ma";
+createNode -n "iconsGroup" transform;
+setAttr "iconsGroup.visibility" 0;
+
+if (`file -q -ex $iconsFile`)
+	asReadIconsFile $iconsFile;
+
+string $fitJoints[]=`listRelatives -ad -type joint $topNode`;
+string $fitJointsLong[]=`listRelatives -f -ad -type joint $topNode`;
+$fitJoints[size($fitJoints)]=$topNode;
+$tempString=`ls -l $topNode`;
+$fitJointsLong[size($fitJointsLong)]=$tempString[0];
+
+//--Unique name--//
+for ($i=0;$i<size($fitJoints);$i++)
+	$fitJoints[$i]=`asUniqueName $fitJointsLong[$i]`;
+for ($i=0;$i<size($fitJoints);$i++)
+	if ($fitJoints[$i]=="Arm" || $fitJoints[$i]=="Leg" || $fitJoints[$i]=="Spine" || $fitJoints[$i]=="Spline")
+		$fitJoints[$i]=`rename $fitJoints[$i] ($fitJoints[$i]+"A")`;
+if ($topNode!=$fitJoints[size($fitJoints)-1])
+	$topNode=$fitJoints[size($fitJoints)-1];
+string $allDescendents[]=`listRelatives -ad -type joint $topNode`;
+$allDescendents[size($allDescendents)]=$topNode;
+string $allDescendentsLong[]=`listRelatives -f -ad -type joint $topNode`;
+$allDescendentsLong[size($allDescendentsLong)]=$topNode;
+for ($i=0;$i<size($allDescendents);$i++)
+	$allDescendents[$i]=`asUniqueName $allDescendentsLong[$i]`;
+
+//--Unique label--//
+for ($i=0;$i<size($fitJoints);$i++)
+	$tempString[$i]=`asLabel $fitJoints[$i]`;
+for ($i=0;$i<size($fitJoints);$i++)
+	{
+	$label=`asLabel $fitJoints[$i]`;
+	if ($label=="None" || $label=="")
+		continue;
+
+	if (`gmatch $label "[0-9]*"`)
+		{
+		if (`gmatch $label "0*"`)
+			if (`stringArrayCount $label $tempString`>1)
+				{
+				$newLabel=$label;
+				$suffix="";
+				while (`stringArrayCount $newLabel $tempString`)
+					{
+					$suffix+="A";
+					$newLabel=$label+$suffix;
+					}
+				$tempString[$i]=$newLabel;
+				setAttr -type "string" ($fitJoints[$i]+".otherType") $newLabel;
+				}
+		}
+	else
+		{
+		$firstLetter=`substring $label 1 1`;
+		if (size($label)>1)
+			$upperLabel=`toupper $firstLetter`+`substring $label 2 99`;
+		else
+			$upperLabel=`toupper $firstLetter`;
+		if ($upperLabel!=$label)
+			{
+			$label=$tempString[$i]=$upperLabel;
+			setAttr -type "string" ($fitJoints[$i]+".otherType") $upperLabel;
+			}
+		$suffixNum=1;
+		$newLabel=$label;
+		for ($y=0;$y<99;$y++)
+			{
+			if (`stringArrayCount $newLabel $tempString`<2)
+				break;
+			$newLabel=$label+$suffixNum;
+			$tempString[$i]=$newLabel;
+			$suffixNum++;
+			}
+		if ($newLabel!=$label)
+			{
+			setAttr ($fitJoints[$i]+".type") 18;
+			setAttr -type "string" ($fitJoints[$i]+".otherType") $newLabel;
+			$tempString[$i]=$newLabel;
+			}
+		}
+	}
+
+//Reset any "rotateAxis" values, and warn user
+for ($i=0;$i<size($fitJoints);$i++)
+	{
+	$temp=`getAttr ($fitJoints[$i]+".rotateAxis")`;
+	if ($temp[0]!=0 || $temp[1]!=0 || $temp[2]!=0)
+		{
+		warning ("Found \"rotateAxis\" values on \""+$fitJoints[$i]+"\". Reseting these to zero");
+		setAttr -type float3 ($fitJoints[$i]+".rotateAxis") 0 0 0;
+		}
+	}
+
+//Find topGroup
+$tempString=`listRelatives -f -p $topNode`;
+tokenize $tempString[0] "|" $tempString;
+string $topGroup=$tempString[0];
+
+//Freeze scale
+string $allTransforms[]=`listRelatives -ad -type transform $topNode`;
+string $transforms[];
+for ($i=0;$i<size($allTransforms);$i++)
+	if (`objectType $allTransforms[$i]`!="joint")
+		$transforms[size($transforms)]=$allTransforms[$i];
+$transforms[size($transforms)]=$topNode;
+int $ltx[],$lty[],$ltz[],$lrx[],$lry[],$lrz[],$lsx[],$lsy[],$lsz[];
+string $parents[];
+for ($i=0;$i<size($transforms);$i++)
+	{
+	$ltx[$i]=`getAttr -l ($transforms[$i]+".tx")`;setAttr -l 0 ($transforms[$i]+".tx");
+	$lty[$i]=`getAttr -l ($transforms[$i]+".ty")`;setAttr -l 0 ($transforms[$i]+".ty");
+	$ltz[$i]=`getAttr -l ($transforms[$i]+".tz")`;setAttr -l 0 ($transforms[$i]+".tz");
+	$lrx[$i]=`getAttr -l ($transforms[$i]+".rx")`;setAttr -l 0 ($transforms[$i]+".rx");
+	$lry[$i]=`getAttr -l ($transforms[$i]+".ry")`;setAttr -l 0 ($transforms[$i]+".ry");
+	$lrz[$i]=`getAttr -l ($transforms[$i]+".rz")`;setAttr -l 0 ($transforms[$i]+".rz");
+	$lsx[$i]=`getAttr -l ($transforms[$i]+".sx")`;setAttr -l 0 ($transforms[$i]+".sx");
+	$lsy[$i]=`getAttr -l ($transforms[$i]+".sy")`;setAttr -l 0 ($transforms[$i]+".sy");
+	$lsz[$i]=`getAttr -l ($transforms[$i]+".sz")`;setAttr -l 0 ($transforms[$i]+".sz");
+	$tempString=`listRelatives -p $transforms[$i]`;
+	$parents[$i]=$tempString[0];
+	if (size($tempString))
+		parent -w $transforms[$i];
+	}
+for ($i=0;$i<size($transforms);$i++)
+	{
+	$tempString=`listRelatives -p $transforms[$i]`;
+	if (size($tempString))
+		{
+		makeIdentity -a 1 -t 0 -r 0 -s 1 $tempString[0];
+		parent -w $transforms[$i];
+		delete $tempString[0];
+		}
+	}
+for ($i=0;$i<size($transforms);$i++)
+	{
+	if ($transforms[$i]!=$topNode)
+		parent $transforms[$i] $parents[$i];
+	setAttr -l $ltx[$i] ($transforms[$i]+".tx");
+	setAttr -l $lty[$i] ($transforms[$i]+".ty");
+	setAttr -l $ltz[$i] ($transforms[$i]+".tz");
+	setAttr -l $lrx[$i] ($transforms[$i]+".rx");
+	setAttr -l $lry[$i] ($transforms[$i]+".ry");
+	setAttr -l $lrz[$i] ($transforms[$i]+".rz");
+	setAttr -l $lsx[$i] ($transforms[$i]+".sx");
+	setAttr -l $lsy[$i] ($transforms[$i]+".sy");
+	setAttr -l $lsz[$i] ($transforms[$i]+".sz");
+	}
+
+//removed topGroups
+if (`objExists $topGroup`)
+	delete $topGroup;
+
+//--Analyze--//
+for($i=0;$i<size($allDescendents);$i++)
+	{
+
+	//Analyze fitNodes
+	$tempString=`asFitNodeInfo $allDescendents[$i] name`;
+	for ($string in $tempString)
+		$fitNodes[$i]=$fitNodes[$i]+$string+";";
+
+	$tempString=`asFitNodeInfo $allDescendents[$i] sourceNode`;
+	for ($string in $tempString)
+		$fitSourceNode[$i]=$fitSourceNode[$i]+$string+";";
+
+	$tempString=`asFitNodeInfo $allDescendents[$i] sourceConnect`;
+	for ($string in $tempString)
+		$fitNodeSourceConnect[$i]=$fitNodeSourceConnect[$i]+$string+";";
+
+	$tempString=`asFitNodeInfo $allDescendents[$i] destNode`;
+	for ($string in $tempString)
+		$fitDestNode[$i]=$fitDestNode[$i]+$string+";";
+
+	$tempString=`asFitNodeInfo $allDescendents[$i] destConnect`;
+	for ($string in $tempString)
+		$fitNodeDestConnect[$i]=$fitNodeDestConnect[$i]+$string+";";
+	}
+
+progressBar -e -st "Analyzing FitSkeleton" -bp -ii 0 -min 0 -max (size($fitJoints)) $gMainProgressBar;
+for ($i=0;$i<size($fitJoints);$i++)
+	{
+	progressBar -e -s 1 $gMainProgressBar;
+
+	//Analyze label,rotOrder & Top
+	$fitJointsLabel[$i]=`asLabel $fitJoints[$i]`;
+	$fitJointsRotOrder[$i]=`getAttr ($fitJoints[$i]+".rotateOrder")`;
+	$fitJointsRotOrderString[$i]=`asRotOrderString $fitJointsRotOrder[$i]`;
+	$tempString=`listRelatives -c $fitJoints[$i]`;
+	for ($child in $tempString)
+		if (`gmatch $child "*Locator*"`)
+			$atLeastOneChildLoc[$i]=1;
+
+	//Analyze User Attributes
+	$tempString=`listAttr -k -ud $fitJoints[$i]`;
+	for ($y=0;$y<size($tempString);$y++)
+		$fitJointUAs[$i]=$fitJointUAs[$i]+$tempString[$y]+";";
+
+	//Analyze $fitJointsDownTwist
+	$fitJointsUpTwist[$i]=-1;
+	$fitJointsDownTwist[$i]=-1;
+	if (`attributeExists "twistJoints" $fitJoints[$i]` && $atLeastOneChildLoc[$i])
+		if (`getAttr ($fitJoints[$i]+".twistJoints")`>0)
+			$fitJointsDownTwist[$i]=`getAttr ($fitJoints[$i]+".twistJoints")`;
+
+	//Analyse bend
+	$fitJointsBend[$i]=1;
+	if (`attributeExists "twistJoints" $fitJoints[$i]` && $atLeastOneChildLoc[$i] && `attributeExists "bend" $fitJoints[$i]`)
+		$fitJointsBend[$i]=`getAttr ($fitJoints[$i]+".bend")`;
+
+	//Analyze Deform
+	$temp=`xform -q -ws -t $fitJoints[$i]`;
+	$fitJointsPosX[$i]=$temp[0];$fitJointsPosY[$i]=$temp[1];$fitJointsPosZ[$i]=$temp[2];
+	if ($fitJointsPosX[$i]<(-1*$sideTreshold))
+		$fitJointsSide[$i]="_R";
+	else if ($fitJointsPosX[$i]>$sideTreshold)
+		$fitJointsSide[$i]="_L";
+	else
+		$fitJointsSide[$i]="_M";
+	$temp=`xform -q -ws -ro $fitJoints[$i]`;
+	$fitJointsWSRotX[$i]=$temp[0];$fitJointsWSRotY[$i]=$temp[1];$fitJointsWSRotZ[$i]=$temp[2];
+	$temp=`getAttr ($fitJoints[$i]+".rotate")`;
+	$fitJointsRotX[$i]=$temp[0];$fitJointsRotY[$i]=$temp[1];$fitJointsRotZ[$i]=$temp[2];
+	$temp=`getAttr ($fitJoints[$i]+".jointOrient")`;
+	$fitJointsJointOrientX[$i]=$temp[0];$fitJointsJointOrientY[$i]=$temp[1];$fitJointsJointOrientZ[$i]=$temp[2];
+
+	//Analyze Parent
+	$tempString=`listRelatives -p $fitJoints[$i]`;
+	if ($fitJoints[$i]!=$topNode)
+		{
+		$tempString2=`ls -showType $tempString[0]`;
+		if ($tempString2[1]=="transform")
+			$tempString=`listRelatives -type joint -p $tempString[0]`;
+		$fitJointsParent[$i]=$tempString[0];
+		$fitJointsParentLabel[$i]=`asLabel $tempString[0]`;
+		}
+
+	//Analyze $fitJointsUpTwist
+	$tempString=`listConnections -skipConversionNodes 1 ($fitJoints[$i]+".translate")`;
+	if ($fitJointsParent[$i]!="")
+		if (`gmatch $tempString[0] "*multDiv*"`)
+			{
+			if (`attributeExists "twistJoints" $fitJointsParent[$i]`)
+				if (`getAttr ($fitJointsParent[$i]+".twistJoints")`>0)
+					$fitJointsUpTwist[$i]=`getAttr ($fitJointsParent[$i]+".twistJoints")`;
+			}
+
+	//Analyze BoneLength
+	$tempString=`listRelatives -c -type joint $fitJoints[$i]`;
+	if (size($tempString))
+		{
+		$temp=`xform -q -ws -t $tempString[0]`;
+		$fitJointsLenght[$i]=`mag <<($temp[0]-$fitJointsPosX[$i]),($temp[1]-$fitJointsPosY[$i]),($temp[2]-$fitJointsPosZ[$i])>>`;
+		}
+
+	if (`objExists $fitJointsParent[$i]`)
+		{
+		$temp=`xform -q -ws -t $fitJointsParent[$i]`;
+		if ($temp[0]<(-1*$sideTreshold))
+			$fitJointsParentSide[$i]="_R";
+		else if ($temp[0]>$sideTreshold)
+			$fitJointsParentSide[$i]="_L";
+		else
+			$fitJointsParentSide[$i]="_M";
+		}	
+
+	//Analyze FK
+	$tempString=`listRelatives -ad -type joint $fitJoints[$i]`;
+	if (!size($tempString))
+		if (size($fitJoints)>1)
+			$fitJointsTerminator[$i]=1;
+
+	$hasXalignedChild=0;
+	$lockedRotX=`getAttr -l ($fitJoints[$i]+".rotateX")`;
+	$lockedRotY=`getAttr -l ($fitJoints[$i]+".rotateY")`;
+	$lockedRotZ=`getAttr -l ($fitJoints[$i]+".rotateZ")`;
+	if ($lockedRotX || $lockedRotY || $lockedRotZ)
+		$FKLocked[$i]=1;
+	if (!$FKLocked[$i] && !$fitJointsTerminator[$i] && $fitJoints[$i]!=$topNode)
+		$FKControl[$i]=1;
+
+	$tempString=`listRelatives -c -type joint $fitJoints[$i]`;
+	$child=$tempString[0];
+	if (size($tempString))
+		{
+		for ($z=0;$z<size($tempString);$z++)
+			{
+			$childTY=`getAttr ($tempString[$z]+".translateY")`;
+			$childTZ=`getAttr ($tempString[$z]+".translateZ")`;
+			if ($childTY<0.1 && $childTY>-0.1 && $childTZ<0.1 && $childTZ>-0.1)
+				{
+				$hasXalignedChild=1;
+				$child=$tempString[$z];
+				break;
+				}
+			}
+		if (!$hasXalignedChild && !(`gmatch $fitJointsLabel[$i] "*Foot*"`))
+			{
+			setAttr ($fitJoints[$i]+".displayLocalAxis") 1;
+			if ($asRebuildChar=="")
+				if ($fitJointsLabel[$i]!="Chest")
+					refresh;
+			$deferredCmd+="setAttr "+$fitJoints[$i]+".displayLocalAxis 0;";
+			}
+		}
+
+	//Analyze Attach
+	if (`attributeExists "attach" $fitJoints[$i]`)
+		{
+		$fitJointsAttach[$i]=1;
+		$tempString[0]=`getAttr -asString ($fitJoints[$i]+".attach")`;
+		$fitJointsAttachTo[$i]=`substituteAllString $tempString[0] "__" ":"`;
+		}
+	//Analyze Global
+	if (`attributeExists "global" $fitJoints[$i]` && $atLeastOneChildLoc[$i] && !$fitJointsTerminator[$i])
+		{
+		$fitJointsGlobal[$i]=1;
+		$fitJointsGlobalValue[$i]=`getAttr ($fitJoints[$i]+".global")`;
+		}
+
+	//Analyze Wheel
+	if (`gmatch $fitJointsLabel[$i] "*Wheel*"` && !$fitJointsTerminator[$i])
+		$fitJointsWheel[$i]=1;
+
+	//Analyse belowEye
+	$tempString=`ls -l $fitJoints[$i]`;
+	tokenize $tempString[0] "|" $tempString;
+	for ($x=size($tempString)-1;$x>-1;$x--)
+		{
+		$label=`asLabel $tempString[$x]`;
+		if (`gmatch $label "Eye*"`)
+			$fitJointsBelowEye[$i]=1;
+		}
+
+
+	//Analyse `eye reverse aim` (head)
+	if (`gmatch $fitJointsLabel[$i] "Eye*"`)
+		{
+		$tempString=`ls -l $fitJoints[$i]`;
+		tokenize $tempString[0] "|" $tempString;
+		for ($x=size($tempString)-1;$x>-1;$x--)
+			{
+			$temp=`xform -q -ws -t $tempString[$x]`;
+			if ($temp[0]>(-1*$sideTreshold) && $temp[0]<$sideTreshold)
+				{
+				$fitJointsReverseAimTarget[$i]=$tempString[$x];
+				break;
+				}
+			}
+		}
+
+	//Analyse belowNoFlip
+	$tempString=`ls -l $fitJoints[$i]`;
+	tokenize $tempString[0] "|" $tempString;
+	for ($x=size($tempString)-1;$x>-1;$x--)
+		{
+		if (`attributeExists "drawLabel" $tempString[$x]`)
+			if (`getAttr ($tempString[$x]+".drawLabel")`)
+				if (`getAttr ($tempString[$x]+".side")`)
+					{
+					$fitJointsBelowNoFlip[$i]=1;
+					break;
+					}
+		}
+
+	//Analyze IK
+	$tempString=`ls -l $fitJoints[$i]`;
+	tokenize $tempString[0] "|" $tempString;
+	for ($x=size($tempString)-1;$x>-1;$x--)
+		{
+		if ($tempString[$x]=="")
+			continue;
+		if (`objectType $tempString[$x]`!="joint")
+			continue;
+		$fitJointsIkUpLabel[$i]=`asLabel $tempString[$x]`;
+		$temp=`xform -q -ws -t $tempString[$x]`;
+		if ($temp[0]<(-1*$sideTreshold))
+			$side="_R";
+		else if ($temp[0]>$sideTreshold)
+			$side="_L";
+		else
+			$side="_M";
+		if (`gmatch $fitJointsIkUpLabel[$i] "Shoulder*"`)
+			{$fitJointsIkUp[$i]=1;$fitJointsIkUpSide=$side;break;}
+		if (`gmatch $fitJointsIkUpLabel[$i] "Hip*"`)
+			{$fitJointsIkUp[$i]=2;$fitJointsIkUpSide=$side;break;}
+		if (`gmatch $fitJointsIkUpLabel[$i] "Root*"`)
+			{$fitJointsIkUp[$i]=3;$fitJointsIkUpSide=$side;break;}
+		if (`gmatch $fitJointsIkUpLabel[$i] "0*"`)
+			{$fitJointsIkUp[$i]=3;$fitJointsIkUpSide=$side;break;}
+		if ($tempString[$x]==$topNode)
+			break;
+		}
+
+	$tempString=`listRelatives -ad -type joint $fitJoints[$i]`;
+	$tempString[size($tempString)]=$fitJoints[$i];
+	for ($x=size($tempString)-1;$x>-1;$x--)
+		{
+		$label=`asLabel $tempString[$x]`;
+		$temp=`xform -q -ws -t $tempString[$x]`;
+		if ($temp[0]<(-1*$sideTreshold))
+			$side="_R";
+		else if ($temp[0]>$sideTreshold)
+			$side="_L";
+		else
+			$side="_M";
+		if (`gmatch $label "Hand*"` && `gmatch $fitJointsIkUpLabel[$i] "Shoulder*"`)
+			{$fitJointsIkDown[$i]=1;$fitJointsIkDownSide=$side;break;}
+		if (`gmatch $label "Foot*"` && `gmatch $fitJointsIkUpLabel[$i] "Hip*"`)
+			{$fitJointsIkDown[$i]=2;$fitJointsIkDownSide=$side;break;}
+		if (`gmatch $label "Chest*"` && `gmatch $fitJointsIkUpLabel[$i] "Root*"`)
+			{$fitJointsIkDown[$i]=3;$fitJointsIkDownSide=$side;break;}
+		if (`gmatch $label "[1-9]*"` && `gmatch $fitJointsIkUpLabel[$i] "0*"`)
+			{$fitJointsIkDown[$i]=3;$fitJointsIkDownSide=$side;break;}
+		}
+
+	if ($fitJointsIkDown[$i]>0 &&($fitJointsIkDown[$i]==$fitJointsIkUp[$i]))
+		if ($fitJointsIkDownSide==$fitJointsIkUpSide)
+			{
+			if (`gmatch $fitJointsIkUpLabel[$i] "Shoulder*"`)
+				$fitJointsInIk[$i]="Arm"+`substitute "Shoulder" $fitJointsIkUpLabel[$i] ""`;
+			if (`gmatch $fitJointsIkUpLabel[$i] "Hip*"`)
+				$fitJointsInIk[$i]="Leg"+`substitute "Hip" $fitJointsIkUpLabel[$i] ""`;
+			if (`gmatch $fitJointsIkUpLabel[$i] "Root*"`)
+				$fitJointsInIk[$i]="Spine"+`substitute "Root" $fitJointsIkUpLabel[$i] ""`;
+			if (`gmatch $fitJointsIkUpLabel[$i] "0*"`)
+				$fitJointsInIk[$i]="Spline"+`substitute "[0-9]*" $fitJointsIkUpLabel[$i] ""`;
+			}
+
+	if ($fitJointsInIk[$i]!="")
+		if (!`gmatch $fitJointsInIk[$i] "Sp*ine*"`)
+			$fitJointsInRPIK[$i]=1;
+
+	if ($fitJointsInIk[$i]!="")
+		{
+		if (`gmatch $fitJointsLabel[$i] "Shoulder*"` || `gmatch $fitJointsLabel[$i] "Hip*"` || `gmatch $fitJointsLabel[$i] "Root*"` || `gmatch $fitJointsLabel[$i] "0*"`)
+			$fitJointsFirstInIk[$i]=1;
+		if (`gmatch $fitJointsLabel[$i] "Hand*"` || `gmatch $fitJointsLabel[$i] "Foot*"` || `gmatch $fitJointsLabel[$i] "Chest*"`)
+			$fitJointsLastInIk[$i]=1;
+		if (`gmatch $fitJointsLabel[$i] "[0-9]*"`)
+			{
+			$tempString=`listRelatives -ad $fitJoints[$i]`;
+			$tempString[size($tempString)]=$fitJoints[$i];
+			for ($x=0;$x<size($tempString);$x++)
+				{
+				$tempString[$x]=`asLabel $tempString[$x]`;
+				//padd
+				if (`gmatch $tempString[$x] "[0-9]*"` && !`gmatch $tempString[$x] "[0-9][0-9]*"`)
+					$tempString[$x]="0"+$tempString[$x];
+				}
+			$tempString=`sort $tempString`;
+			if ($fitJointsLabel[$i]==$tempString[size($tempString)-1] || "0"+$fitJointsLabel[$i]==$tempString[size($tempString)-1])
+				$fitJointsLastInIk[$i]=1;
+			}
+		}
+
+	if ($fitJointsFirstInIk[$i] && ($fitJointsInIk[$i]!=""))
+		{
+		$numIKhandles=size($IKhandles);
+		$IKstartJoints[$numIKhandles]=$fitJoints[$i];
+		$IKstartJointRotOrder[$numIKhandles]=`getAttr ($IKstartJoints[$numIKhandles]+".rotateOrder")`;
+		$IKendJoints[$numIKhandles]=`asResolveIKendJoint $fitJoints[$i] $fitJointsLabel[$i]`;
+		$IKendJointRotOrder[$numIKhandles]=`getAttr ($IKendJoints[$numIKhandles]+".rotateOrder")`;
+		$tempString=`listRelatives -type joint -c $IKstartJoints[$numIKhandles]`;
+		$IKmiddleJoints[$numIKhandles]=$tempString[0];
+		$IKhandles[$numIKhandles]=$fitJointsInIk[$i];
+		$IKparent[$numIKhandles]=$fitJointsParent[$i];
+		$IKparentSide[$numIKhandles]=$fitJointsParentSide[$i];
+		$IKsolver[$numIKhandles]="ikRPsolver";
+		if (`gmatch $IKhandles[$numIKhandles] "Spine*"` || `gmatch $IKhandles[$numIKhandles] "Spline*"`)
+			$IKsolver[$numIKhandles]="ikSplineSolver";
+		if ($fitJointsBelowNoFlip[$i])
+			$IKNoFlip[$numIKhandles]=1;
+
+		$temp=`xform -q -ws -t $IKstartJoints[$numIKhandles]`;
+		if ($temp[0]<(-1*$sideTreshold))
+			$IKstartSide[$numIKhandles]="_R";
+		else if ($temp[0]>$sideTreshold)
+			$IKstartSide[$numIKhandles]="_L";
+		else
+			$IKstartSide[$numIKhandles]="_M";
+		$temp=`xform -q -ws -t $IKendJoints[$numIKhandles]`;
+		if ($temp[0]<(-1*$sideTreshold))
+			$IKendSide[$numIKhandles]="_R";
+		else if ($temp[0]>$sideTreshold)
+			$IKendSide[$numIKhandles]="_L";
+		else
+			$IKendSide[$numIKhandles]="_M";
+
+		if (`gmatch $IKhandles[$numIKhandles] "Leg*"`)
+			{
+			$useCenterBtwFeet=1;
+			$tempString=`listRelatives -ad $IKendJoints[$numIKhandles]`;
+			for ($child in $tempString)
+				{
+				$label=`asLabel $child`;
+				if (`gmatch $label "Heel*"`)
+					$IKheel[$numIKhandles]=$child;
+				if (`gmatch $label "Toe*"`)
+					$IKtoe[$numIKhandles]=$child;
+				if (`gmatch $label "Ball*"`)
+					$IKball[$numIKhandles]=$child;
+				}
+			}
+		if (`gmatch $IKhandles[$numIKhandles] "Spine*"`)
+			{
+			$tempString=`listRelatives -ad $IKstartJoints[$numIKhandles]`;
+			$tempString[size($tempString)]=$IKstartJoints[$numIKhandles];
+			for ($z=size($tempString);$z>-1;$z--)
+				{
+				$label=`asLabel $tempString[$z]`;
+				if (`gmatch $label "Mid*"`)
+					$midIK[$numIKhandles]=1;
+				if ($tempString[$z]==$IKendJoints[$numIKhandles])
+					break;
+				}
+			$tempString=`listRelatives -c -type joint $IKstartJoints[$numIKhandles]`;
+			for ($joint in $tempString)
+				{
+				$tempString2=`listRelatives -ad -type joint $joint`;
+				for ($joint2 in $tempString2)
+					{
+					if ($joint2==$IKendJoints[$numIKhandles])
+						$hipSwingerJoint=$joint;
+					}
+				if ($hipSwingerJoint!="")
+					break;
+				}
+
+			}
+		if (`gmatch $IKhandles[$numIKhandles] "Spline*"`)
+			{
+			$tempString=`listRelatives -ad $IKstartJoints[$numIKhandles]`;
+			$tempString[size($tempString)]=$IKstartJoints[$numIKhandles];
+			for ($z=size($tempString);$z>-1;$z--)
+				{
+				$label=`asLabel $tempString[$z]`;
+				if (`gmatch $label "[0-9]*"`)
+					$IKcvs[$numIKhandles]=$IKcvs[$numIKhandles]+$tempString[$z]+";";
+				if ($tempString[$z]==$IKendJoints[$numIKhandles])
+					break;
+				}
+			}
+
+		$tempString=`listRelatives -c $IKstartJoints[$numIKhandles]`;
+		for ($obj in $tempString)
+			if (`gmatch $obj "placePoleVecGrp*"`)
+				{
+				$tempString2=`listRelatives -c $obj`;
+				for ($obj2 in $tempString2)
+					if (`gmatch $obj2 "placePoleVecLoc*"`)
+						$IKPlacePoleVecLoc[$numIKhandles]=$obj2;
+				}
+
+		$tempString=`listRelatives -type transform -ad $IKendJoints[$numIKhandles]`;
+		for ($obj in $tempString)
+			{
+			$label=`asLabel $obj`;
+			if (`gmatch $label "BigToe*"`)
+				$IKbigToe[$numIKhandles]=$obj;
+			if (`gmatch $label "PinkyToe*"`)
+				$IKpinkyToe[$numIKhandles]=$obj;
+			}
+		}
+
+	//Analyze footRoll
+	$tempString=`ls -l $fitJoints[$i]`;
+	tokenize $tempString[0] "|" $tempString;
+	for ($parent in $tempString)
+		{
+		$label=`asLabel $parent`;
+		if (`gmatch $label "Foot*"` && (!`gmatch $fitJointsLabel[$i] "Foot*"`))
+			$fitJointsUnderFoot[$i]=1;
+		}
+
+	if ($fitJointsUnderFoot[$i])
+		{
+		if (`gmatch $label "Ball*"` || `gmatch $label "Toe*"`)
+			for ($parent in $tempString)
+				{
+				$label=`asLabel $parent`;
+				if (`gmatch $label "Hip*"`)
+					$fitJointsInIk[$i]="Leg"+`substitute "Hip" $label ""`;;
+				}
+		}
+
+
+	//Analyze LegAim
+	if (`gmatch $fitJointsLabel[$i] "LegAim*"`)
+		{
+		$tempString=`listRelatives -ad -f -type transform $fitJoints[$i]`;
+		for ($obj in $tempString)
+			{
+			$label=`asLabel $obj`;
+			if (`gmatch $label "Foot*"`)
+			$fitJointsLegAim[$numIKhandles]=$fitJoints[$i];
+			}
+		}
+	}
+progressBar -e -ep $gMainProgressBar;
+progressBar -e -st "Creating AdvancedSkeleton" -bp -ii 0 -min 0 -max (size($fitJoints)*5) $gMainProgressBar;
+
+//Analyze FirstOffIK
+for ($i=0;$i<size($fitJoints);$i++)
+	{
+	$tempString=`listRelatives -p $fitJoints[$i]`;
+	if (size($tempString) && !$fitJointsTerminator[$i])
+		{
+		for ($z=0;$z<size($fitJoints);$z++)
+			if ($tempString[0]==$fitJoints[$z])
+				{
+				if ($fitJointsInIk[$z]!="" && $fitJointsInIk[$z]!=$fitJointsInIk[$i])
+						$fitJointsFirstOffIK[$i]=1;
+				if (`gmatch $fitJointsLabel[$i] "Ball*"`)
+						$fitJointsFirstOffIK[$i]=1;
+				}
+		}
+	}
+
+//Analyze $fitJointsInversScaleDisconnected
+for ($i=0;$i<size($fitJoints);$i++)
+	{
+	$tempString=`listRelatives -p -type joint $fitJoints[$i]`;
+	if (size ($tempString[0]))
+		{
+		$tempString2=`listConnections -s 1 -d 0 ($fitJoints[$i]+".inverseScale")`;
+		if ($tempString2[0]=="")
+			$fitJointsInversScaleDisconnected[$i]=1;
+		}
+	}
+
+//--Auto orient joints--//
+for ($i=(size($fitJoints)-1);$i>-1;$i--)
+	{
+	$label=`asLabel $fitJoints[$i]`;
+	$tempString=`listRelatives -c -type joint $fitJoints[$i]`;
+	$child=$tempString[0];
+	string $children[]=$tempString;
+	if (size($tempString)!=1 || $fitJoints[$i]==$topNode)
+		continue;
+	if (`attributeExists freeOrient $fitJoints[$i]`)
+		continue;
+
+	$temp=`xform -q -ws -t $child`;
+	if (($temp[0]<(-1*$sideTreshold) || $temp[0]>$sideTreshold) && $fitJointsSide[$i]=="_M")
+		continue;
+
+	clear $tempString2;
+	$tempString2=`listConnections ($fitJoints[$i]+".r")`; if (size($tempString2)) continue;
+	$tempString2=`listConnections ($fitJoints[$i]+".rx")`; if (size($tempString2)) continue;
+	$tempString2=`listConnections ($fitJoints[$i]+".ry")`; if (size($tempString2)) continue;
+	$tempString2=`listConnections ($fitJoints[$i]+".rz")`; if (size($tempString2)) continue;
+
+	if ($child!="")
+		{
+		$tempString=`listRelatives -c -type joint $child`;
+		if ($tempString[0]!="")
+			$grandChild=$tempString[0];
+		}
+
+	spaceLocator -n TempUpVecLoc;
+	setAttr TempUpVecLoc.v 0;
+	parent TempUpVecLoc $fitJoints[$i];
+	setAttr -type float3 TempUpVecLoc.t 0 1 0;
+	parent -w TempUpVecLoc;
+
+	//IkPlaneOrient - the rest
+	{$upVector[0]=0;$upVector[1]=1;$upVector[2]=0;}
+	int $useStartIkUpVecJoint=0;
+	$tempString2=`listRelatives -ad -type joint $fitJoints[$i]`;
+	for ($y=0;$y<size($tempString2);$y++)
+		$childLabel=`asLabel $tempString2[$y]`;
+	if ($fitJointsInIk[$i]!="" && !`gmatch $label "*Hip*"` && !`gmatch $label "*Shoulder*"` && !`gmatch $label "0*"`)
+		{
+		for ($y=0;$y<size($IKhandles);$y++)
+			if ($fitJointsInIk[$i]==$IKhandles[$y])
+				{
+				$ikEndJoint=$IKendJoints[$y];
+				$ikStartJoint=$IKstartJoints[$y];
+				}
+		asAlign TempUpVecLoc $ikEndJoint 1 1 0 0;
+		$useStartIkUpVecJoint=1;
+		if (`gmatch $fitJointsInIk[$i] "*Hand*"`)
+			{$upVector[0]=0;$upVector[1]=0;$upVector[2]=-1;}
+		}
+
+	if (`gmatch $label "*Hip*"`)
+		{
+		//special case, LegAim to align with hip
+		$tempString2=`listRelatives -type joint -p $fitJoints[$i]`;
+		$parent=$tempString2[0];
+		string $parentLabel=`asLabel $parent`;
+		if (`gmatch $parentLabel "*LegAim*"`)
+			{
+			parent -w $fitJoints[$i];
+			aimConstraint -n tempAimConstraint -offset 0 0 0 -weight 1 -aimVector 1 0 0 -upVector 0 0 1 -worldUpType "objectrotation" -worldUpVector 0 0 1 -worldUpObject $fitJoints[$i] $fitJoints[$i] $parent;
+			delete tempAimConstraint;
+			parent $fitJoints[$i] $parent;
+			}
+		}
+
+	spaceLocator -n TempAimLoc;
+	setAttr TempAimLoc.v 0;
+	asAlign TempAimLoc $child 1 1 0 0;
+
+	parent -w $children;
+	if (`gmatch $label "*Hip*"`) // firstInIK - Hip
+		aimConstraint -n tempAimConstraint -offset 0 0 0 -weight 1 -aimVector 1 0 0 -upVector 0 1 0
+		-worldUpType "object" -worldUpObject $grandChild $child $fitJoints[$i];
+	if (`gmatch $label "*Shoulder*"`) // firstInIK - Shoulder
+		aimConstraint -n tempAimConstraint -offset 0 0 0 -weight 1 -aimVector 1 0 0 -upVector 0 0 -1
+		-worldUpType "object" -worldUpObject $grandChild $child $fitJoints[$i];
+	else if ($useStartIkUpVecJoint) //IK upvec
+		aimConstraint -n tempAimConstraint -offset 0 0 0 -weight 1 -aimVector 1 0 0 -upVector $upVector[0] (!$upVector[1]) (!$upVector[2])
+		-worldUpType "objectrotation" -worldUpVector $upVector[0] (!$upVector[1]) (!$upVector[2]) -worldUpObject $ikStartJoint TempAimLoc $fitJoints[$i];
+	else // FK upvec
+		aimConstraint -n tempAimConstraint -offset 0 0 0 -weight 1 -aimVector 1 0 0 -upVector $upVector[0] $upVector[1] $upVector[2]
+		-worldUpType "object" -worldUpObject TempUpVecLoc TempAimLoc $fitJoints[$i];
+	//Flip orientation for reverse legs/arms, so they appear to have same orientation as non-reversed
+	if (`gmatch $label "*Hip*"` || `gmatch $label "*Shoulder*"`)
+		{
+		createNode -n flipSampler transform;
+		parent flipSampler $fitJoints[$i];
+		if (`gmatch $label "*Hip*"`) setAttr -type float3 flipSampler.t 0 1 0;
+		if (`gmatch $label "*Shoulder*"`) setAttr -type float3 flipSampler.t 0 0 1;
+		float $posA[]=`xform -q -ws -t $fitJoints[$i]`;
+		float $posB[]=`xform -q -ws -t flipSampler`;
+		if ($posB[2]>$posA[2])
+			{
+			print ("Flipping orientation of reverse bend on \""+$fitJoints[$i]+"\"\n");
+			if (`gmatch $label "*Hip*"`) setAttr -type float3 flipSampler.t 0 -1 0;
+			if (`gmatch $label "*Shoulder*"`) setAttr -type float3 flipSampler.t 0 0 1;
+			float $posA[]=`xform -q -ws -t flipSampler`;
+			xform -ws -t $posA[0] $posA[1] $posA[2] TempUpVecLoc;
+			}
+		delete flipSampler;
+		}
+
+	setAttr -type float3 ($fitJoints[$i]+".jointOrient") 0 0 0;
+	delete tempAimConstraint;
+	parent $children $fitJoints[$i];
+	delete TempUpVecLoc TempAimLoc;
+	}
+
+//Orient Foot to align with world
+for ($i=(size($fitJoints)-1);$i>-1;$i--)
+	{
+	$upVector[0]=0;$upVector[1]=1;$upVector[2]=0;
+	$label=`asLabel $fitJoints[$i]`;
+	if (`gmatch $label "*Foot*"`)
+		{
+		if (`attributeExists freeOrient $fitJoints[$i]`)
+			continue;
+		$tempString=`listRelatives -c -type joint $fitJoints[$i]`;
+		if (size($tempString)<2)
+			continue;
+		spaceLocator -n TempUpVecLoc;
+		asAlign TempUpVecLoc $fitJoints[$i] 1 1 0 0;
+		spaceLocator -n TempAimLoc;
+		asAlign TempAimLoc $fitJoints[$i] 1 1 0 0;
+		setAttr TempAimLoc.ty -1;
+		parent -w $tempString;
+		$tempString2=`aimConstraint -offset 0 0 0 -weight 1 -aimVector 1 0 0 -upVector 0 1 0 -worldUpType "objectrotation" -worldUpObject TempUpVecLoc TempAimLoc $fitJoints[$i]`;
+		setAttr -type float3 ($fitJoints[$i]+".jointOrient") 0 0 0;
+		dgdirty -a;
+		delete $tempString2[0];
+		delete TempUpVecLoc TempAimLoc;
+		parent $tempString $fitJoints[$i];
+		}
+	}
+
+//Orient Ball to scene-up vector, to ensure non-sliding toes in Ik.roll
+for ($i=(size($fitJoints)-1);$i>-1;$i--)
+	{
+	$upVector[0]=0;$upVector[1]=1;$upVector[2]=0;
+	$label=`asLabel $fitJoints[$i]`;
+	if (`gmatch $label "*Ball*"`)
+		{
+		if (`attributeExists freeOrient $fitJoints[$i]`)
+			continue;
+		$tempString=`listRelatives -c -type joint $fitJoints[$i]`;
+		$toeJoint="";
+		for ($y=0;$y<size($tempString);$y++)
+			{
+			$label=`asLabel $tempString[$y]`;
+			if (`gmatch $label "Toe*"`)
+				$toeJoint=$tempString[$y];
+			}
+		if ($toeJoint=="")
+			continue;
+		parent -w $tempString;
+		$tempString2=`aimConstraint -offset 0 0 0 -weight 1 -aimVector 1 0 0 -upVector 0 -1 0 -worldUpType "scene" $toeJoint $fitJoints[$i]`;
+		setAttr -type float3 ($fitJoints[$i]+".jointOrient") 0 0 0;
+		dgdirty -a;
+		delete $tempString2[0];
+		parent $tempString $fitJoints[$i];
+		}
+	}
+
+//--Analyze Deform Update, as AutoOrient might have changed some values
+for ($i=0;$i<size($fitJoints);$i++)
+	{
+	$temp=`xform -q -ws -t $fitJoints[$i]`;
+	$fitJointsPosX[$i]=$temp[0];$fitJointsPosY[$i]=$temp[1];$fitJointsPosZ[$i]=$temp[2];
+	$temp=`xform -q -ws -ro $fitJoints[$i]`;
+	$fitJointsWSRotX[$i]=$temp[0];$fitJointsWSRotY[$i]=$temp[1];$fitJointsWSRotZ[$i]=$temp[2];
+	$temp=`getAttr ($fitJoints[$i]+".rotate")`;
+	$fitJointsRotX[$i]=$temp[0];$fitJointsRotY[$i]=$temp[1];$fitJointsRotZ[$i]=$temp[2];
+	$temp=`getAttr ($fitJoints[$i]+".jointOrient")`;
+	$fitJointsJointOrientX[$i]=$temp[0];$fitJointsJointOrientY[$i]=$temp[1];$fitJointsJointOrientZ[$i]=$temp[2];
+	}
+
+if (`objExists jointLayer`)
+	delete jointLayer;
+createNode -n jointLayer displayLayer;
+if (`objExists jointVisReverse`)
+	delete jointVisReverse;
+createNode -n jointVisReverse reverse;
+
+//--2nd level transforms--//
+createNode -n FitSkeleton transform;
+addAttr -ln run -dt "string" FitSkeleton;
+createNode -n MotionSystem transform;
+createNode -n DeformationSystem transform;
+if ($asRebuildChar=="")
+	{
+	createNode -n Geometry transform;
+	setAttr -l 1 Geometry.inheritsTransform 0;
+	parent Geometry "Group";
+	}
+parent FitSkeleton MotionSystem DeformationSystem $hierarchyTop;
+
+//--3rd level transforms--//
+createNode -n FKSystem -p MotionSystem transform;
+createNode -n IKSystem -p MotionSystem transform;
+createNode -n FKIKSystem -p MotionSystem transform;
+createNode -n BendSystem -p MotionSystem transform;
+createNode -n WagSystem -p MotionSystem transform;
+createNode -n AimSystem -p MotionSystem transform;
+createNode -n RootSystem -p MotionSystem transform;
+createNode -n TwistSystem -p MotionSystem transform;
+createNode -n GlobalSystem -p MotionSystem transform;
+createNode -n DynamicSystem -p MotionSystem transform;	
+setAttr BendSystem.inheritsTransform 0;
+
+//--4th level transforms--//
+createNode -n IKParentConstraint -p IKSystem transform;
+createNode -n IKHandle -p IKSystem transform;
+createNode -n IKStatic -p IKSystem transform;
+createNode -n IKCrv -p IKSystem transform;
+createNode -n IKMessure -p IKSystem transform;
+setAttr IKCrv.inheritsTransform 0;
+
+
+addAttr -k 1 -ln fkVis -at bool -dv 1 $hierarchyTop;
+connectAttr -f ($hierarchyTop+".fkVis") "FKSystem.v";
+addAttr -k 1 -ln ikVis -at bool -dv 1 $hierarchyTop;
+connectAttr -f ($hierarchyTop+".ikVis") "IKSystem.v";
+addAttr -k 1 -ln fkIkVis -at bool -dv 1 $hierarchyTop;
+connectAttr -f ($hierarchyTop+".fkIkVis") "FKIKSystem.v";
+addAttr -k 1 -ln aimVis -at bool -dv 1 $hierarchyTop;
+connectAttr -f ($hierarchyTop+".aimVis") "AimSystem.v";
+addAttr -k 1 -ln eyeVis -at bool -dv 1 $hierarchyTop;
+addAttr -k 1 -ln fingerVis -at bool -dv 1 $hierarchyTop;
+addAttr -k 1 -ln bendVis -at bool -dv 1 $hierarchyTop;
+addAttr -k 1 -ln arrowVis -at bool -dv 1 $hierarchyTop;
+connectAttr -f ($hierarchyTop+".bendVis") "BendSystem.v";
+addAttr -k 1 -ln jointVis -at bool -dv 1 $hierarchyTop;
+connectAttr ($hierarchyTop+".jointVis") jointVisReverse.inputX;
+
+string $uds[]=`listAttr -ud -k $hierarchyTop`;
+for ($attr in $uds)
+	setAttr -k 0 -cb 1 ($hierarchyTop+"."+$attr);
+
+//--Sets--//
+select -cl;
+sets -name ControlSet;
+sets -name DeformSet;
+sets -name AllSet;
+sets -name "Sets";
+sets -add "Sets" AllSet ControlSet DeformSet;
+sets -add ControlSet $hierarchyTop;
+
+
+//--Keep fitNodes--//
+$tempString=`listRelatives -p -type transform $topNode`;
+parent $topNode FitSkeleton;
+setAttr -l 1 ("FitSkeleton.visibility") 0;
+if (size($tempString))
+	delete $tempString[0];
+$tempString=`listRelatives -p -type transform $topNode`;
+if ($tempString[0]=="FitSkeleton")
+	{
+	createNode -n FitSkeletonOffset transform;
+	parent FitSkeletonOffset FitSkeleton;
+	parent $topNode FitSkeletonOffset;
+	}
+else
+	rename $tempString[0] "FitSkeletonOffset";
+
+
+//--Creation--//
+for ($b=1;$b>-2;$b=$b-2)
+	{
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		$parentSide=$fitJointsParentSide[$i];
+		$flip=1;
+		$mirror=0;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0){$side="_L";$flip=-1;$mirror=1;}
+		if ($fitJointsParentSide[$i]=="_R" && $b<0)	$parentSide="_L";
+		if (`gmatch $fitJointsLabel[$i] "Eye*"` || $fitJointsBelowEye[$i]){$flip=1;$mirror=0;}
+			select -cl;
+
+		//Creation Deform
+		asCreateNode joint ($fitJoints[$i]+$side)
+			($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+			$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+			$fitJointsRotOrder[$i] $mirror;
+	}
+
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		$parentSide=$fitJointsParentSide[$i];
+		$flip=1;
+		$mirror=0;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0){$side="_L";$flip=-1;$mirror=1;}
+		if ($fitJointsParentSide[$i]=="_R" && $b<0)	$parentSide="_L";
+		if (`gmatch $fitJointsLabel[$i] "Eye*"` || $fitJointsBelowEye[$i]){$flip=1;$mirror=0;}
+		select -cl;
+
+		if (!$fitJointsTerminator[$i])
+			sets -add ("DeformSet") ($fitJoints[$i]+$side);
+
+		//Creation FK
+		select -cl;
+		if (!$fitJointsTerminator[$i])
+			{
+			if ($fitJointsFirstOffIK[$i])
+				{
+				if (!`objExists ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide)`)
+				asCreateNode transform ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide)
+					0 0 0
+					0 0 0
+					0 0;
+				if (`objExists $fitJointsParent[$i]`)
+					{
+					asAlign ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide) ($fitJointsParent[$i]+$parentSide) 1 1 0 1;
+					$tempString[0]=`asLabel $fitJointsParent[$i]`;
+					if (`gmatch $tempString[0] "*Hand*"`)
+						if (!`isConnected Main.fingerVis ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide+".visibility")`)
+							connectAttr Main.fingerVis ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide+".visibility");
+					}
+				}
+			asCreateNode joint ("FKOffset"+$fitJoints[$i]+$side)
+				($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+				$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+				$fitJointsRotOrder[$i] $mirror;
+			if ($fitJointsGlobal[$i])
+				{
+				asCreateNode transform ("FKGlobalStatic"+$fitJoints[$i]+$side)
+					($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+					$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+					$fitJointsRotOrder[$i] $mirror;
+				asCreateNode transform ("FKGlobal"+$fitJoints[$i]+$side)
+					($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+					$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+					$fitJointsRotOrder[$i] $mirror;
+				}
+
+			if (`gmatch $fitJointsInIk[$i] "Spline*"`)
+				{
+				asCreateNode transform ("FKWag"+$fitJoints[$i]+$side)
+					($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+					$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+					$fitJointsRotOrder[$i] $mirror;
+				}
+			asCreateNode transform ("FKExtra"+$fitJoints[$i]+$side)
+				($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+				$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+				$fitJointsRotOrder[$i] $mirror;
+	
+			duplicate -n ("FK"+$fitJoints[$i]+$side) "FK_icon";
+			setAttr -type float3 ("FK"+$fitJoints[$i]+$side+".scale") ($fitJointsLenght[$i]/4+($height/31)/2) ($fitJointsLenght[$i]/4+($height/31)/2) ($fitJointsLenght[$i]/4+($height/31)/2);
+			setAttr -type float3 ("FK"+$fitJoints[$i]+$side+".rotate") 0 $fitJointsDownAxisY[$i] $fitJointsDownAxisZ[$i];
+			xform -p 1 -roo $fitJointsRotOrderString[$i] ("FK"+$fitJoints[$i]+$side);
+			makeIdentity -a 1 -t 0 -r 1 -s 1 ("FK"+$fitJoints[$i]+$side);
+			if ($FKControl[$i])
+				{
+				sets -add ("ControlSet") ("FK"+$fitJoints[$i]+$side);
+				sets -add ("ControlSet") ("FKExtra"+$fitJoints[$i]+$side);				
+				}
+			else
+				setAttr -l 1 ("FK"+$fitJoints[$i]+$side+"Shape.visibility") 0;
+			if (`gmatch $fitJointsLabel[$i] "Eye*"`)
+				connectAttr Main.eyeVis ("FK"+$fitJoints[$i]+$side+"Shape.visibility");
+	
+			//prop
+			if (`gmatch $fitJointsLabel[$i] "*Prop*"`)
+				{
+				xform -ws -t 0 0 0 ("FK"+$fitJoints[$i]+$side);
+				select ("FK"+$fitJoints[$i]+$side+"Shape.cv[1]") ("FK"+$fitJoints[$i]+$side+"Shape.cv[3]") ("FK"+$fitJoints[$i]+$side+"Shape.cv[5]") ("FK"+$fitJoints[$i]+$side+"Shape.cv[7]");
+				scale -r -p 0 0 0 ($fitJointsLenght[$i]/10) ($fitJointsLenght[$i]/10) ($fitJointsLenght[$i]/10);
+				select -cl;
+				setAttr -type float3 ("FK"+$fitJoints[$i]+$side+".scale") 2 2 2;
+				makeIdentity  -a 1 -t 0 -r 0 -s 1 ("FK"+$fitJoints[$i]+$side);
+				setAttr ("FK"+$fitJoints[$i]+$side+"Shape.overrideColor") 15;
+				asLockAttr ("FK"+$fitJoints[$i]+$side) 0 0 0 0;
+				}
+			asAlign ("FK"+$fitJoints[$i]+$side) ("FKExtra"+$fitJoints[$i]+$side) 1 1 0 0;
+			parent ("FK"+$fitJoints[$i]+$side) ("FKExtra"+$fitJoints[$i]+$side);
+			}
+
+		if ($fitJointsTerminator[$i])
+				asCreateNode joint ("FKX"+$fitJoints[$i]+$side)
+					($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+					$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+					$fitJointsRotOrder[$i] $mirror;
+		else
+			{
+			joint -n ("FKX"+$fitJoints[$i]+$side);
+			setAttr ("FKX"+$fitJoints[$i]+$side+".rotateOrder") $fitJointsRotOrder[$i];
+			xform -os -t 0 0 0 -ro 0 0 0 ("FKX"+$fitJoints[$i]+$side);
+			}
+
+		if ($fitJointsLastInIk[$i] && !`gmatch $fitJointsInIk[$i] "Spline*"`)
+			{
+			createNode -n ("AlignIKTo"+$fitJoints[$i]+$side) transform;
+			setAttr ("AlignIKTo"+$fitJoints[$i]+$side+".rotateOrder") $fitJointsRotOrder[$i];
+			parent ("AlignIKTo"+$fitJoints[$i]+$side) ("FKX"+$fitJoints[$i]+$side);
+			setAttr -type float3 ("AlignIKTo"+$fitJoints[$i]+$side+".t") 0 0 0;
+			}
+
+
+		//Creation IK
+		if ($fitJointsInIk[$i]!="")
+			{
+			select -cl;
+
+			if ($fitJointsFirstInIk[$i])
+				{
+				asCreateNode transform ("IKParentConstraint"+$fitJoints[$i]+$side)
+					($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+					$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+					$fitJointsRotOrder[$i] $mirror;
+				if (`objExists $fitJointsParent[$i]`)
+					asAlign ("IKParentConstraint"+$fitJoints[$i]+$side) ($fitJointsParent[$i]+$parentSide) 1 1 0 1;
+
+//				//zero out 1st IK in tail splineIk to minimize IkFlipping I
+//				if (`gmatch $fitJointsInIk[$i] "Spline*"`)
+					asCreateNode transform ("IKOffset"+$fitJoints[$i]+$side)
+						($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+						$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+						$fitJointsRotOrder[$i] $mirror;
+				}
+
+			asCreateNode joint ("IKX"+$fitJoints[$i]+$side)
+				($flip*$fitJointsPosX[$i]) $fitJointsPosY[$i] $fitJointsPosZ[$i]
+				$fitJointsWSRotX[$i] $fitJointsWSRotY[$i] $fitJointsWSRotZ[$i]
+				$fitJointsRotOrder[$i] $mirror;
+
+			//zero out 1st IK in tail splineIk to minimize IkFlipping II
+			if ($fitJointsFirstInIk[$i])
+//				if (`gmatch $fitJointsInIk[$i] "Spline*"`)
+					{
+					setAttr -type float3 ("IKX"+$fitJoints[$i]+$side+".rotate") 0 0 0;
+					setAttr -type float3 ("IKX"+$fitJoints[$i]+$side+".jointOrient") 0 0 0;
+					}
+			}
+
+		}
+
+	//--Parenting--//
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		$parentSide=$fitJointsParentSide[$i];
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+		if ($fitJointsParentSide[$i]=="_R" && $b<0)	$parentSide="_L";
+
+		//Parenting Deform
+		if (`objExists ($fitJointsParent[$i]+$parentSide)`)
+			parent ($fitJoints[$i]+$side) ($fitJointsParent[$i]+$parentSide);
+		else
+			parent ($fitJoints[$i]+$side) "DeformationSystem";
+		makeIdentity  -a 1 -t 0 -r 1 -s 0 ($fitJoints[$i]+$side);
+		if ($fitJointsInversScaleDisconnected[$i])
+			{
+			$tempString=`listConnections -p 1 -s 1 -d 0 ($fitJoints[$i]+$side+".inverseScale")`;
+			disconnectAttr $tempString[0] ($fitJoints[$i]+$side+".inverseScale");
+			}
+
+		if (`objExists ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide)` && $fitJointsFirstOffIK[$i])
+			{
+			$tempString=`listRelatives -p ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide)`;
+			if ($tempString[0]!="FKSystem")
+				parent ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide) ("FKSystem");
+			}
+		else if (`objExists ("FKOffset"+$fitJoints[$i]+$side)`)
+			{
+			if (`objExists ("FKX"+$fitJointsParent[$i]+$parentSide)`)
+				parent ("FKOffset"+$fitJoints[$i]+$side) ("FKX"+$fitJointsParent[$i]+$parentSide);
+			else
+				parent ("FKOffset"+$fitJoints[$i]+$side) ("FKSystem");
+			}
+		else if (`objExists ("FKGlobal"+$fitJoints[$i]+$side)`)
+			{
+			if (`objExists ("FKX"+$fitJointsParent[$i]+$parentSide)`)
+				parent ("FKGlobalStatic"+$fitJoints[$i]+$side) ("FKX"+$fitJointsParent[$i]+$parentSide);			
+			}
+		else if (`objExists ("FKExtra"+$fitJoints[$i]+$side)`)
+			{
+			if (`objExists ("FKX"+$fitJointsParent[$i]+$parentSide)`)
+				parent ("FKExtra"+$fitJoints[$i]+$side) ("FKX"+$fitJointsParent[$i]+$parentSide);
+			else
+				parent ("FKExtra"+$fitJoints[$i]+$side) "FKSystem";			
+			}
+		else if (`objExists ("FKX"+$fitJoints[$i]+$side)`)
+			if (`objExists ("FKX"+$fitJointsParent[$i]+$parentSide)`)
+				parent ("FKX"+$fitJoints[$i]+$side) ("FKX"+$fitJointsParent[$i]+$parentSide);
+
+
+		//Correcting the FKOffsets to match their orientation to the FitSkeleton
+		if ($fitJoints[$i]!="BackA" && $fitJoints[$i]!="Root" && `objExists ("FKOffset"+$fitJoints[$i]+$side)`)
+			{
+			setAttr -type float3 ("FKOffset"+$fitJoints[$i]+$side+".rotate") $fitJointsRotX[$i] $fitJointsRotY[$i] $fitJointsRotZ[$i];
+			setAttr -type float3 ("FKOffset"+$fitJoints[$i]+$side+".jointOrient") $fitJointsJointOrientX[$i] $fitJointsJointOrientY[$i] $fitJointsJointOrientZ[$i];
+			}
+
+		//Mirror
+		if ($side=="_L" && $fitJointsParentSide[$i]=="_M" && $fitJointsSide[$i]!="_L")
+			asMirrorByJointOrient ("FKOffset"+$fitJoints[$i]) $side;
+
+
+		//Locking FK
+		if (`objExists ("FK"+$fitJoints[$i]+$side)`)
+			asLockAttr ("FK"+$fitJoints[$i]+$side) 0 0 0 1;
+		if (`objExists ("FKExtra"+$fitJoints[$i]+$side)`)
+			asLockAttr ("FKExtra"+$fitJoints[$i]+$side) 0 0 0 1;
+
+		//Parenting IK
+		if ($fitJointsInIk[$i]!="")
+			{
+			if ($fitJointsFirstInIk[$i])
+				{
+				parent ("IKParentConstraint"+$fitJoints[$i]+$side) ("IKParentConstraint");
+				if (`objExists ($fitJointsParent[$i]+$parentSide)`)
+					if (!`gmatch $fitJointsInIk[$i] "Spine*"`)
+						parentConstraint ($fitJointsParent[$i]+$parentSide) ("IKParentConstraint"+$fitJoints[$i]+$side);
+				}
+			else
+				{
+				if (`objExists ("IKX"+$fitJointsParent[$i]+$parentSide)`)
+					parent ("IKX"+$fitJoints[$i]+$side) ("IKX"+$fitJointsParent[$i]+$parentSide);
+				else
+					parent ("IKX"+$fitJoints[$i]+$side) ("IKSystem");
+				}
+			if ($fitJoints[$i]!="BackA" && $fitJoints[$i]!="Root")
+				//exeption for 1st IK in Splines to avoid misaligned IK
+				if ($fitJointsInIk[$i]!="" && !$fitJointsFirstInIk[$i])
+					{
+					setAttr -type float3 ("IKX"+$fitJoints[$i]+$side+".rotate") $fitJointsRotX[$i] $fitJointsRotY[$i] $fitJointsRotZ[$i];
+					setAttr -type float3 ("IKX"+$fitJoints[$i]+$side+".jointOrient") $fitJointsJointOrientX[$i] $fitJointsJointOrientY[$i] $fitJointsJointOrientZ[$i];
+					}
+
+			//mirror
+			if ($side=="_L" && $fitJointsParentSide[$i]=="_M" && $fitJointsSide[$i]!="_L")
+				asMirrorByJointOrient ("IKX"+$fitJoints[$i]) $side;
+
+
+			//IK `stabalizing`
+			if (`gmatch $fitJointsInIk[$i] "Sp*ine*"`)
+				makeIdentity -a 1 -t 0 -r 1 -s 0 ("IKX"+$fitJoints[$i]+$side);	
+			}
+		}
+	}
+
+//--Advanced--//
+for ($b=1;$b>-2;$b=$b-2)
+	{
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		$parentSide=$fitJointsParentSide[$i];
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+		if ($fitJointsParentSide[$i]=="_R" && $b<0)	$parentSide="_L";
+
+		//Advanced HipSwinger
+		if (`gmatch $fitJointsLabel[$i] "Root*"` && $hipSwingerJoint!="")
+			{
+			createNode -n ("HipSwingerOffset"+$fitJoints[$i]+$side) transform;
+			asAlign ("HipSwingerOffset"+$fitJoints[$i]+$side) ($hipSwingerJoint+$side) 1 0 0 0;
+			asAlign ("HipSwingerOffset"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side) 0 1 0 0;
+			select ("HipSwingerOffset"+$fitJoints[$i]+$side);
+			xform -ws -r -t (-1*($height/4)) 0 0 ("HipSwingerOffset"+$fitJoints[$i]+$side);
+			select ("HipSwingerOffset"+$fitJoints[$i]+$side);
+
+			duplicate -n ("HipSwinger"+$fitJoints[$i]+$side) "FK_icon";
+			sets -add ("ControlSet") ("HipSwinger"+$fitJoints[$i]+$side);
+			setAttr -type float3 ("HipSwinger"+$fitJoints[$i]+$side+".scale") ($height/15) ($height/15) ($height/15);
+			makeIdentity -a 1 -t 0 -r 1 -s 1 ("HipSwinger"+$fitJoints[$i]+$side);
+			asAlign ("HipSwinger"+$fitJoints[$i]+$side) ("HipSwingerOffset"+$fitJoints[$i]+$side) 1 1 0 0;
+			parent ("HipSwinger"+$fitJoints[$i]+$side) ("HipSwingerOffset"+$fitJoints[$i]+$side);
+			asLockAttr ("HipSwinger"+$fitJoints[$i]+$side) 1 0 1 1;
+		
+			createNode -n ("HipSwingerGroup"+$fitJoints[$i]+$side) transform; 
+			asAlign ("HipSwingerGroup"+$fitJoints[$i]+$side) ($hipSwingerJoint+$side) 1 1 0 0;
+			parent ("HipSwingerGroup"+$fitJoints[$i]+$side) ("FK"+$fitJoints[$i]+$side);
+			orientConstraint ("HipSwinger"+$fitJoints[$i]+$side) ("HipSwingerGroup"+$fitJoints[$i]+$side);
+
+			parent ("FKX"+$fitJoints[$i]+$side) ("HipSwingerGroup"+$fitJoints[$i]+$side);
+
+			createNode -n ("HipSwingerStabalize"+$fitJoints[$i]+$side) transform;
+			asAlign ("HipSwingerStabalize"+$fitJoints[$i]+$side) ($hipSwingerJoint+$side) 1 0 0 0;
+
+			parent ("HipSwingerStabalize"+$fitJoints[$i]+$side) ("FKX"+$fitJoints[$i]+$side);
+			parent ("FKOffset"+$hipSwingerJoint+$side) ("HipSwingerStabalize"+$fitJoints[$i]+$side);
+			}
+
+		//Advanced Eye
+		if (`gmatch $fitJointsLabel[$i] "Eye*"`)
+			{
+			if ($side=="_L")
+				{
+				$temp=`xform -q -ws -t ($fitJoints[$i]+$side)`;
+				xform -ws -t (-1*$temp[0]) $temp[1] $temp[2] ($fitJoints[$i]+$side);
+				$temp=`xform -q -ws -t ("FKOffset"+$fitJoints[$i]+$side)`;
+				xform -ws -t (-1*$temp[0]) $temp[1] $temp[2] ("FKOffset"+$fitJoints[$i]+$side);
+				}
+
+			spaceLocator -n ("Aim"+$fitJoints[$i]+"LocatorChild"+$side);
+			parent ("Aim"+$fitJoints[$i]+"LocatorChild"+$side) ($fitJoints[$i]+$side);
+			setAttr -type float3 ("Aim"+$fitJoints[$i]+"LocatorChild"+$side+".translate") ($height/2.5) 0 0;
+			setAttr -type float3 ("Aim"+$fitJoints[$i]+"LocatorChild"+$side+".scale") 0.5 0.5 0.5;
+			parent -w ("Aim"+$fitJoints[$i]+"LocatorChild"+$side);
+			if ($side=="_L")
+				{
+				$temp=`xform -q -ws -t ("Aim"+$fitJoints[$i]+"LocatorChild_R")`;
+				xform -ws -t (-1*$temp[0]) $temp[1] $temp[2] ("Aim"+$fitJoints[$i]+"LocatorChild"+$side);
+				}
+
+			createNode -n ("Aim"+$fitJoints[$i]+"VisualCenter"+$side) transform;
+			asAlign ("Aim"+$fitJoints[$i]+"VisualCenter"+$side) ("FKOffset"+$fitJoints[$i]+$side) 1 1 0 0;
+
+			duplicate -n ("Aim"+$fitJoints[$i]+"LocatorVisualCenter"+$side) ("Aim"+$fitJoints[$i]+"LocatorChild"+$side);
+			parent ("Aim"+$fitJoints[$i]+"LocatorVisualCenter"+$side) ($fitJoints[$i]+$side);
+			setAttr -type float3 ("Aim"+$fitJoints[$i]+"LocatorVisualCenter"+$side+".translate") 0 0 0;
+			parent ("Aim"+$fitJoints[$i]+"LocatorVisualCenter"+$side) ("Aim"+$fitJoints[$i]+"VisualCenter"+$side);
+
+			duplicate -n ("Aim"+$fitJoints[$i]+"LocatorPupil"+$side) ("Aim"+$fitJoints[$i]+"LocatorVisualCenter"+$side);
+			parent ("Aim"+$fitJoints[$i]+"LocatorPupil"+$side) ("Aim"+$fitJoints[$i]+"LocatorVisualCenter"+$side);
+			setAttr -type float3 ("Aim"+$fitJoints[$i]+"LocatorPupil"+$side+".translate") ($height/10) 0 0;
+
+			if ($b==1)
+				{
+				createNode -n "VisualTrim" -p "AimSystem" transform;
+				setAttr -l 1 ("VisualTrim.visibility") 0;
+				if (`objExists ($fitJointsParent[$i]+$parentSide)`)
+					{
+					asAlign "VisualTrim" ($fitJointsReverseAimTarget[$i]+"_M") 1 1 0 0;
+					pointConstraint ($fitJointsReverseAimTarget[$i]+"_M") "VisualTrim";
+					orientConstraint ($fitJointsReverseAimTarget[$i]+"_M") "VisualTrim";
+					connectAttr ($fitJointsReverseAimTarget[$i]+"_M.scale") "VisualTrim.scale";
+					}
+				$temp=`xform -q -ws -t ("Aim"+$fitJoints[$i]+"LocatorChild"+$side)`;
+				createNode -n ("AimParentConstraint"+$fitJoints[$i]+"_M") transform;
+				xform -ws -t 0 $temp[1] $temp[2] ("AimParentConstraint"+$fitJoints[$i]+"_M");
+				parent ("AimParentConstraint"+$fitJoints[$i]+"_M") AimSystem;
+
+				duplicate -n ("Aim"+$fitJoints[$i]+"_M") "Aim_icon";
+				setAttr -type float3 ("Aim"+$fitJoints[$i]+"_M.scale") ($height/62) ($height/62) ($height/62);
+				setAttr ("Aim"+$fitJoints[$i]+"_M.rx") 90;
+				makeIdentity -a 1 -t 0 -r 0 -s 1 ("Aim"+$fitJoints[$i]+"_M");
+
+				parent ("Aim"+$fitJoints[$i]+"_M") ("AimParentConstraint"+$fitJoints[$i]+"_M");
+				xform -os -t 0 0 0 ("Aim"+$fitJoints[$i]+"_M");
+				addAttr -k 1 -ln cross -at double -dv 1 ("Aim"+$fitJoints[$i]+"_M");
+				setAttr ("Aim"+$fitJoints[$i]+"_M.showManipDefault") 1;
+				sets -add ("ControlSet") ("Aim"+$fitJoints[$i]+"_M");
+
+				createNode -n ("AimReverseAimConstraint"+$fitJoints[$i]+"_M") transform;
+				parent ("AimReverseAimConstraint"+$fitJoints[$i]+"_M") ("Aim"+$fitJoints[$i]+"_M");
+				xform -os -t 0 0 0 ("AimReverseAimConstraint"+$fitJoints[$i]+"_M");
+
+				aimConstraint -aimVector 0 0 -1 -upVector 1 0 0 -worldUpVector 1 0 0 -worldUpType "objectrotation" -worldUpObject ($fitJointsReverseAimTarget[$i]+"_M") ($fitJointsReverseAimTarget[$i]+"_M") ("AimReverseAimConstraint"+$fitJoints[$i]+"_M");
+				asLockAttr ("Aim"+$fitJoints[$i]+"_M") 0 1 1 1;
+				asFollow ("Aim"+$fitJoints[$i]+"_M") ("AimParentConstraint"+$fitJoints[$i]+"_M") ($fitJointsReverseAimTarget[$i]+"_M");
+				setAttr ("Aim"+$fitJoints[$i]+"_M.follow") 10;
+
+				createNode -n ("AimCross"+$fitJoints[$i]+"_M") transform;
+				parent ("AimCross"+$fitJoints[$i]+"_M") ("AimReverseAimConstraint"+$fitJoints[$i]+"_M");
+				xform -os -t 0 0 0 ("AimCross"+$fitJoints[$i]+"_M");
+				connectAttr ("Aim"+$fitJoints[$i]+"_M.cross") ("AimCross"+$fitJoints[$i]+"_M.scaleX");
+				setAttr -l 1 ("AimCross"+$fitJoints[$i]+"_M.visibility") 0;
+
+				$tempString=`aimConstraint -aimVector 0 0 -1 -upVector 0 1 0 -worldUpType "vector" -worldUpVector 0 1 0 ($fitJointsReverseAimTarget[$i]+"_M") ("AimCross"+$fitJoints[$i]+"_M")`;
+				delete $tempString[0];
+				}
+
+			parent ("Aim"+$fitJoints[$i]+"VisualCenter"+$side) "VisualTrim";
+			parent ("Aim"+$fitJoints[$i]+"LocatorChild"+$side) ("AimCross"+$fitJoints[$i]+"_M");
+			setAttr -type float3 ("Aim"+$fitJoints[$i]+"LocatorChild"+$side+".rotate") 0 0 0;
+			aimConstraint -aim 1 0 0 -upVector 0 1 0 -worldUpType "objectrotation" -worldUpObject ("Aim"+$fitJoints[$i]+"LocatorChild"+$side) ("Aim"+$fitJoints[$i]+"LocatorPupil"+$side) ("FKOffset"+$fitJoints[$i]+$side);
+			aimConstraint -aim 1 0 0 -upVector 0 1 0 -worldUpType "objectrotation" -worldUpObject ("Aim"+$fitJoints[$i]+"LocatorChild"+$side) ("Aim"+$fitJoints[$i]+"LocatorChild"+$side) ("Aim"+$fitJoints[$i]+"LocatorVisualCenter"+$side);
+			asAlign ("Aim"+$fitJoints[$i]+"VisualCenter"+$side) ("FKOffset"+$fitJoints[$i]+$side) 1 1 0 0;
+			pointConstraint ($fitJoints[$i]+$side) ("Aim"+$fitJoints[$i]+"LocatorVisualCenter"+$side);
+
+
+			//ReAlign Eye DeformJoints to match aim
+			$temp=`xform -q -ws -ro ("FKX"+$fitJoints[$i]+$side)`;
+			xform -ws -ro $temp[0] $temp[1] $temp[2] ($fitJoints[$i]+$side);
+			makeIdentity -a 1 -t 0 -r 1 -s 0 ($fitJoints[$i]+$side);
+
+			//annotateCurve for the Eyes
+			$temp=`xform -q -ws -t ("FKX"+$fitJoints[$i]+$side)`;
+			$tempString[0]=`annotate  -p $temp[0] $temp[1] $temp[2] ("AimReverseAimConstraint"+$fitJoints[$i]+"_M")`;
+			$tempString=`listRelatives -p $tempString[0]`;
+
+			rename $tempString[0] ("AimAnnotation"+$fitJoints[$i]+$side);
+			parent ("AimAnnotation"+$fitJoints[$i]+$side) ("FKX"+$fitJoints[$i]+$side);
+			setAttr ("AimAnnotation"+$fitJoints[$i]+$side+"Shape.overrideEnabled") 1;
+			setAttr ("AimAnnotation"+$fitJoints[$i]+$side+"Shape.overrideDisplayType") 2;
+			connectAttr "Main.arrowVis" ("AimAnnotation"+$fitJoints[$i]+$side+".visibility");
+			}
+		select -cl;
+		}
+	}
+
+for ($b=1;$b>-2;$b=$b-2)
+	{
+	for ($y=0;$y<size($IKhandles);$y++)
+		{
+		$side=$IKstartSide[$y];
+		$flip=1;
+		$mirror=0;
+		if ($b<0 && ($side=="_L" || $IKNoFlip[$y]))
+			continue;
+		$IKParentSide=$IKparentSide[$y];
+		if (($IKstartSide[$y]=="_M" || $IKendSide[$y]=="_M")&& $b<0)
+			continue;
+		if ($IKstartSide[$y]=="_R" && $b<0)	{$side="_L";$flip=-1;$mirror=1;}
+		if ($IKparentSide[$y]=="_R" && $b<0)	$IKParentSide="_L";
+
+		//Advanced IK
+		if ($IKsolver[$y]=="ikRPsolver")
+			{
+			joint -e -setPreferredAngles -children ("IKX"+$IKstartJoints[$y]+$side);
+			$tempString=`ikHandle -n ("IKX"+$IKhandles[$y]+"Handle"+$side) -ns 2 -sol $IKsolver[$y] -sj ("IKX"+$IKstartJoints[$y]+$side) -ee ("IKX"+$IKendJoints[$y]+$side)`;
+			setAttr -l 1 ("IKX"+$IKhandles[$y]+"Handle"+$side+".visibility") 0;
+			setAttr -l 1 ($tempString[1]+".visibility") 0;
+			setAttr ("IKX"+$IKhandles[$y]+"Handle"+$side+".rotateOrder") $IKendJointRotOrder[$y];
+
+			createNode -n ("IKParentConstraint"+$IKhandles[$y]+$side) transform;
+			setAttr ("IKParentConstraint"+$IKhandles[$y]+$side+".rotateOrder") $IKendJointRotOrder[$y];
+			asAlign ("IKParentConstraint"+$IKhandles[$y]+$side) ("IKX"+$IKendJoints[$y]+$side) 1 0 0 0;
+			parent ("IKParentConstraint"+$IKhandles[$y]+$side) ("IKHandle");
+
+			createNode -n ("IKExtra"+$IKhandles[$y]+$side) transform;
+			setAttr ("IKExtra"+$IKhandles[$y]+$side+".rotateOrder") $IKendJointRotOrder[$y];
+			asAlign ("IKExtra"+$IKhandles[$y]+$side) ("IKParentConstraint"+$IKhandles[$y]+$side) 1 0 0 0;
+			parent ("IKExtra"+$IKhandles[$y]+$side) ("IKParentConstraint"+$IKhandles[$y]+$side);
+			asLockAttr ("IKExtra"+$IKhandles[$y]+$side) 0 0 1 1;
+
+			duplicate -n ("IK"+$IKhandles[$y]+$side) "IK_icon";
+			setAttr ("IK"+$IKhandles[$y]+$side+".rotateOrder") $IKendJointRotOrder[$y];
+			setAttr -type float3 ("IK"+$IKhandles[$y]+$side+".scale") ($height/31) ($height/31) ($height/31);
+			asAlign ("IK"+$IKhandles[$y]+$side) ("IKExtra"+$IKhandles[$y]+$side) 1 0 0 0;
+			$tempString=`aimConstraint -aimVector 0 1 0 -upVector 1 0 0 -worldUpType "vector" -worldUpVector 1 0 0 ("IKX"+$IKstartJoints[$y]+$side) ("IK"+$IKhandles[$y]+$side)`;
+			delete $tempString[0];
+			$temp=`xform -q -ws -ro ("IK"+$IKhandles[$y]+$side)`;
+			xform -ws -ro `snapAngle ($temp[0])` `snapAngle ($temp[1])` `snapAngle ($temp[2])` ("IK"+$IKhandles[$y]+$side);
+			$allDescendents=`listRelatives -ad -type joint $IKendJoints[$y]`;
+			if (`gmatch $IKhandles[$y] "Leg*"` && size($allDescendents))
+				{
+				//adjust IKLeg curves					
+				$temp=`xform -q -ws -t ($IKendJoints[$y]+$side)`;
+//				setAttr ("IK"+$IKhandles[$y]+$side+".scaleY") ($temp[1]*0.8);
+				move -r 0 (-1*$temp[1]+(($height/31)/2.0)) 0 ("IK"+$IKhandles[$y]+$side+".cv[0:99]");
+				float $maxZ=$minZ=$temp[2];
+				for($i=0;$i<size($allDescendents);$i++)
+					{
+					$temp2=`xform -q -ws -t ($allDescendents[$i])`;
+					if ($temp2[2]>$maxZ)
+						$maxZ=$temp2[2];
+					if ($temp2[2]<$minZ)
+						$minZ=$temp2[2];
+					}
+				move -r 0 0 (($height/31)-($temp[2]-$minZ)) ("IK"+$IKhandles[$y]+$side+".cv[3:6]") ("IK"+$IKhandles[$y]+$side+".cv[9:12]");
+				move -r 0 0 ((-1*$height/31)-($temp[2]-$maxZ)) ("IK"+$IKhandles[$y]+$side+".cv[0:2]") ("IK"+$IKhandles[$y]+$side+".cv[7:8]") ("IK"+$IKhandles[$y]+$side+".cv[13:15]");
+				}
+			makeIdentity -a 1 -t 0 -r 1 -s 1 ("IK"+$IKhandles[$y]+$side);
+			asLockAttr ("IK"+$IKhandles[$y]+$side) 0 0 1 1;
+			parent ("IK"+$IKhandles[$y]+$side) ("IKExtra"+$IKhandles[$y]+$side);
+
+			createNode -n ("IKFKAligned"+$IKhandles[$y]+$side) transform;
+			setAttr ("IKFKAligned"+$IKhandles[$y]+$side+".rotateOrder") $IKendJointRotOrder[$y];
+			asAlign ("IKFKAligned"+$IKhandles[$y]+$side) ("FKX"+$IKendJoints[$y]+$side) 1 1 0 0;
+			parent ("IKFKAligned"+$IKhandles[$y]+$side) ("IKX"+$IKendJoints[$y]+$side);
+
+			sets -add ("ControlSet") ("IK"+$IKhandles[$y]+$side);
+			sets -add ("ControlSet") ("IKExtra"+$IKhandles[$y]+$side);
+			parent ("IKX"+$IKhandles[$y]+"Handle"+$side) ("IK"+$IKhandles[$y]+$side);
+
+			if (`gmatch $IKhandles[$y] "Arm*"`)
+				asFollow ("IK"+$IKhandles[$y]+$side) ("IKParentConstraint"+$IKhandles[$y]+$side) ($IKparent[$y]+$IKParentSide);
+
+			$tempString=`spaceLocator`;
+			$loc1=$tempString[0];
+			$tempString=`spaceLocator`;
+			$loc2=$tempString[0];
+			parent $loc2 $loc1;
+
+			aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpType "vector" -worldUpVector 0 1 0 ("IKX"+$IKmiddleJoints[$y]+$side) $loc1;
+
+			//placing the poleVector differently for a 1boneIK
+			$tempString=`spaceLocator`;
+			$loc3=$tempString[0];
+			asAlign $loc3 ("IKX"+$IKstartJoints[$y]+$side) 1 0 0 0;
+			$tempString=`spaceLocator`;
+			$loc4=$tempString[0];
+			asAlign $loc4 ("IKX"+$IKendJoints[$y]+$side) 1 0 0 0;
+			$tempString[0]=`createNode distanceDimShape`;
+			connectAttr -f ($loc3+".worldPosition[0]") ($tempString[0]+".startPoint");
+			connectAttr -f ($loc4+".worldPosition[0]") ($tempString[0]+".endPoint");
+			$temp[0]=`getAttr ($tempString[0]+".distance")`;
+			$tempString=`listRelatives -p $tempString[0]`;
+			delete $tempString[0] $loc3 $loc4;
+
+			if (("IKX"+$IKendJoints[$y]+$side)==("IKX"+$IKmiddleJoints[$y]+$side))
+				setAttr ($loc2+".translateY") ($temp[0]/2);
+			else
+				setAttr ($loc2+".translateX") $temp[0];
+
+			$temp=`xform -q -ws -t ("IKX"+$IKstartJoints[$y]+$side)`;
+			$temp2=`xform -q -ws -t ("IKX"+$IKendJoints[$y]+$side)`;
+			curve -n ("PoleGeoConstraintToCurve"+$IKhandles[$y]+$side) -d 3 -p $temp[0] $temp[1] $temp[2] -p $temp[0] $temp[1] $temp[2] -p $temp2[0] $temp2[1] $temp2[2] -p $temp2[0] $temp2[1] $temp2[2] -k 0 -k 0 -k 0 -k 1 -k 1 -k 1;
+			asAlign $loc1 ("IKX"+$IKmiddleJoints[$y]+$side) 1 0 0 0;
+			$tempString=`geometryConstraint -w 1 ("PoleGeoConstraintToCurve"+$IKhandles[$y]+$side) $loc1`;
+			delete $tempString[0] ("PoleGeoConstraintToCurve"+$IKhandles[$y]+$side);
+//			orientConstraint ("IKEndJointOrientTo"+$IKhandles[$y]+$side) ("IKX"+$IKendJoints[$y]+$side);
+			orientConstraint -mo ("IK"+$IKhandles[$y]+$side) ("IKX"+$IKendJoints[$y]+$side);
+
+			if (`gmatch $IKhandles[$y] "Leg*"`)
+				{
+				createNode -n ("PoleAim"+$IKhandles[$y]+$side) transform;
+				asAlign ("PoleAim"+$IKhandles[$y]+$side) ("IKX"+$IKstartJoints[$y]+$side) 1 0 0 0;
+				if ($fitJointsLegAim[$y]!="")
+					asAlign ("PoleAim"+$IKhandles[$y]+$side) ($fitJointsLegAim[$y]+$side) 1 0 0 0;
+				$tempString=`aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpVector 1 0 0 -worldUpType "objectrotation" -worldUpObject ("IK"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+$side) ("PoleAim"+$IKhandles[$y]+$side)`;
+				$constraint=$tempString[0];
+				parent ("PoleAim"+$IKhandles[$y]+$side) ("IKHandle");
+				addAttr -k 1 -ln swivel -at double -dv 0 ("IK"+$IKhandles[$y]+$side);
+				connectAttr ("IK"+$IKhandles[$y]+$side+".swivel") ($constraint+".offset.offsetX");
+				$tempString=`listConnections ($constraint+".offset.offsetX")`;
+				setAttr ($tempString[0]+".conversionFactor") 0.1;
+
+				if ($fitJointsLegAim[$y]!="")
+					{
+					$tempString=`listRelatives -p ($fitJointsLegAim[$y]+$side)`;
+					pointConstraint $tempString[0] ("PoleAim"+$IKhandles[$y]+$side);
+					}
+				else
+					pointConstraint ("IKX"+$IKstartJoints[$y]+$side) ("PoleAim"+$IKhandles[$y]+$side);
+				}
+
+			createNode -n ("PoleParentConstraint"+$IKhandles[$y]+$side) transform;
+			createNode -n ("PoleExtra"+$IKhandles[$y]+$side) transform;
+
+			//check for placePoleVecLoc
+			if ($IKPlacePoleVecLoc[$y]!="")
+				{
+				asAlign ("PoleParentConstraint"+$IKhandles[$y]+$side) $IKPlacePoleVecLoc[$y] 1 0 0 0;
+				if ($side=="_L")
+					setAttr ("PoleParentConstraint"+$IKhandles[$y]+$side+".translateX") (`getAttr ("PoleParentConstraint"+$IKhandles[$y]+$side+".translateX")`*-1);
+				}
+			else
+				asAlign ("PoleParentConstraint"+$IKhandles[$y]+$side) $loc2 1 0 0 0;
+
+
+			delete $loc1;
+
+			parent ("PoleParentConstraint"+$IKhandles[$y]+$side) ("IKHandle");
+			parent -r ("PoleExtra"+$IKhandles[$y]+$side) ("PoleParentConstraint"+$IKhandles[$y]+$side);
+			asLockAttr ("PoleExtra"+$IKhandles[$y]+$side) 0 1 1 1;
+
+			duplicate -n ("Pole"+$IKhandles[$y]+$side) "Pole_icon";
+			setAttr -type float3 ("Pole"+$IKhandles[$y]+$side+".scale") ($height/31) ($height/31) ($height/31);
+			makeIdentity -a 1 -t 0 -r 0 -s 1 ("Pole"+$IKhandles[$y]+$side);
+			asLockAttr ("Pole"+$IKhandles[$y]+$side) 0 1 1 1;
+			asAlign ("Pole"+$IKhandles[$y]+$side) ("PoleExtra"+$IKhandles[$y]+$side) 1 1 0 0;
+			parent ("Pole"+$IKhandles[$y]+$side) ("PoleExtra"+$IKhandles[$y]+$side);
+
+			sets -add ("ControlSet") ("Pole"+$IKhandles[$y]+$side);
+			sets -add ("ControlSet") ("PoleExtra"+$IKhandles[$y]+$side);
+			poleVectorConstraint ("Pole"+$IKhandles[$y]+$side) ("IKX"+$IKhandles[$y]+"Handle"+$side);
+
+			//poleVecConst can flip the IK joints, as it does not know `front` in a multiIK chain
+			float $ry=`getAttr ("IKX"+$IKstartJoints[$y]+$side+".ry")`;
+			if (abs($ry)>90) //probably flipped
+				{
+				print ("Flipping poleVectorConstraint on \""+$IKhandles[$y]+$side+"\"\n");
+				float $posA[]=`xform -q -ws -t ("PoleParentConstraint"+$IKhandles[$y]+$side)`;
+				parent ("PoleParentConstraint"+$IKhandles[$y]+$side) $IKstartJoints[$y];
+				setAttr ("PoleParentConstraint"+$IKhandles[$y]+$side+".ty") (`getAttr ("PoleParentConstraint"+$IKhandles[$y]+$side+".ty")`*-1);
+				parent ("PoleParentConstraint"+$IKhandles[$y]+$side) ("IKHandle");
+				setAttr ("PoleParentConstraint"+$IKhandles[$y]+$side+".ty") $posA[1];
+				}
+
+			//annotateCurve for the PoleVector
+			curve -n ("PoleAnnotateTarget"+$IKhandles[$y]+$side) -d 3 -p 0 0 0 -k 0 -k 0 -k 0 ;
+			$tempString=`listRelatives -s ("PoleAnnotateTarget"+$IKhandles[$y]+$side)`;
+			rename $tempString[0] ("PoleAnnotateTarget"+$IKhandles[$y]+$side+"Shape");
+			setAttr ("PoleAnnotateTarget"+$IKhandles[$y]+$side+".visibility") 0;
+			asLockAttr ("PoleAnnotateTarget"+$IKhandles[$y]+$side) 1 1 1 1;
+			parent -r ("PoleAnnotateTarget"+$IKhandles[$y]+$side) ("Pole"+$IKhandles[$y]+$side);
+			$temp=`xform -q -ws -t ("IKX"+$IKmiddleJoints[$y]+$side)`;
+			$tempString[0]=`annotate  -p $temp[0] $temp[1] $temp[2] ("PoleAnnotateTarget"+$IKhandles[$y]+$side)`;
+			$tempString=`listRelatives -p $tempString[0]`;
+			rename $tempString[0] ("PoleAnnotation"+$IKhandles[$y]+$side);
+			parent ("PoleAnnotation"+$IKhandles[$y]+$side) ("IKX"+$IKmiddleJoints[$y]+$side);
+			setAttr ("PoleAnnotation"+$IKhandles[$y]+$side+"Shape.overrideEnabled") 1;
+			setAttr ("PoleAnnotation"+$IKhandles[$y]+$side+"Shape.overrideDisplayType") 2;
+			connectAttr "Main.arrowVis" ("PoleAnnotation"+$IKhandles[$y]+$side+".visibility");
+
+			if (`gmatch $IKhandles[$y] "Leg*"`)
+				asFollow ("Pole"+$IKhandles[$y]+$side) ("PoleParentConstraint"+$IKhandles[$y]+$side) ("PoleAim"+$IKhandles[$y]+$side);
+			else
+				asFollow ("Pole"+$IKhandles[$y]+$side) ("PoleParentConstraint"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+$side);
+			if (`gmatch $IKhandles[$y] "Leg*"`)
+				setAttr ("Pole"+$IKhandles[$y]+$side+".follow") 10;
+
+			}
+		if ($IKsolver[$y]=="ikSplineSolver")
+			{
+			select -cl;
+			if (`gmatch $IKhandles[$y] "Spline*"`)
+				{
+				tokenize $IKcvs[$y] ";" $IKcv;
+				$tempString[0]="";
+				for ($z=0;$z<size($IKcv);$z++)
+					{
+					$temp=`xform -q -ws -t ($IKcv[$z]+$side)`;
+					$tempString[0]=$tempString[0]+"-p "+$temp[0]+" "+$temp[1]+" "+$temp[2]+" ";
+					}
+				$degree=3;
+				if (size($IKcv)<4)
+					$degree=2;
+				if (size($IKcv)<3)
+					$degree=1;
+				eval ("curve -n "+"IKX"+$IKhandles[$y]+"Curve"+$side+" -d "+$degree+" "+$tempString[0]);
+				parent ("IKX"+$IKhandles[$y]+"Curve"+$side) ("IKParentConstraint"+$IKstartJoints[$y]+$side);
+				}
+
+			if (`gmatch $IKhandles[$y] "Spline*"`)
+				{
+				ikHandle -n ("IKX"+$IKhandles[$y]+"Handle"+$side) -ccv 0 -sol $IKsolver[$y] -sj ("IKX"+$IKstartJoints[$y]+$side) -ee ("IKX"+$IKendJoints[$y]+$side);
+				connectAttr -f ("IKX"+$IKhandles[$y]+"Curve"+$side+".worldSpace[0]") ("IKX"+$IKhandles[$y]+"Handle"+$side+".inCurve");
+				}
+
+			if (`gmatch $IKhandles[$y] "Spine*"`)
+				{
+				$tempString=`listRelatives -p ("IKX"+$IKendJoints[$y]+$side)`;
+				select $tempString[0];
+				joint -n ("IKfake1"+$IKhandles[$y]+$side);
+				joint -n ("IKfake2"+$IKhandles[$y]+$side);
+				asAlign ("IKfake2"+$IKhandles[$y]+$side) ("IKX"+$IKendJoints[$y]+$side) 1 1 1 0;
+				$tempString=`listRelatives -p $tempString[0]`;
+				parent ("IKfake1"+$IKhandles[$y]+$side) $tempString[0];
+				setAttr -l 1 ("IKfake1"+$IKhandles[$y]+$side+".visibility") 0;
+				ikHandle -n ("IKX"+$IKhandles[$y]+"Handle"+$side) -ns 2 -sol $IKsolver[$y] -sj ("IKX"+$IKstartJoints[$y]+$side) -ee ("IKfake2"+$IKhandles[$y]+$side);
+				}
+			$tempString=`listConnections -s 1 -d 0 ("IKX"+$IKhandles[$y]+"Handle"+$side+".inCurve")`;
+			$IK=`rename $tempString[0] ("IKX"+$IKhandles[$y]+"Curve"+$side)`;
+			parent $IK ("IKCrv");
+			$tempString=`listRelatives -s ("IKX"+$IKhandles[$y]+"Curve"+$side)`;
+			rename $tempString[0] ("IKX"+$IKhandles[$y]+"Curve"+$side+"Shape");
+			setAttr -l 1 ("IKX"+$IKhandles[$y]+"Handle"+$side+".visibility") 0;
+			$numCVs=`getAttr ("IKX"+$IKhandles[$y]+"Curve"+$side+".spans")`+`getAttr ("IKX"+$IKhandles[$y]+"Curve"+$side+".degree")`;
+			for ($z=0;$z<$numCVs;$z++)
+				{
+				spaceLocator -n ("IKX"+$IKhandles[$y]+"Locator"+$z+$side);
+				setAttr -l 1 ("IKX"+$IKhandles[$y]+"Locator"+$z+$side+".visibility") 0;
+				$temp=`xform -q -ws -t ("IKX"+$IKhandles[$y]+"Curve"+$side+".cv["+$z+"]")`;
+				xform -ws -t $temp[0] $temp[1] $temp[2] ("IKX"+$IKhandles[$y]+"Locator"+$z+$side);
+				connectAttr ("IKX"+$IKhandles[$y]+"Locator"+$z+$side+"Shape.worldPosition[0]") ("IKX"+$IKhandles[$y]+"Curve"+$side+"Shape.controlPoints["+$z+"]");
+
+				$buildingMidIKSpine=0;
+				if ($midIK[$y] && ($z==($numCVs-1)/2))
+					$buildingMidIKSpine=1;
+
+				if (`gmatch $IKhandles[$y] "Spine*"`)
+					if ($z!=0 && !$buildingMidIKSpine && $z!=($numCVs-1))
+						continue;
+
+				createNode -n ("IKParentConstraint"+$IKhandles[$y]+$z+$side) transform;
+				setAttr ("IKParentConstraint"+$IKhandles[$y]+$z+$side+".rotateOrder") $IKendJointRotOrder[$y];
+				asAlign ("IKParentConstraint"+$IKhandles[$y]+$z+$side) ("IKX"+$IKhandles[$y]+"Locator"+$z+$side) 1 0 0 0;
+				parent ("IKParentConstraint"+$IKhandles[$y]+$z+$side) ("IKHandle");
+				if (`gmatch $IKhandles[$y] "Spline*"` && $z==0)
+					{
+					if (`objExists ($IKparent[$y]+$IKParentSide)`)
+						parentConstraint ($IKparent[$y]+$IKParentSide) ("IKParentConstraint"+$IKhandles[$y]+$z+$side);
+					parent ("IKX"+$IKhandles[$y]+"Locator"+$z+$side) ("IKParentConstraint"+$IKhandles[$y]+$z+$side);
+					continue;
+					}
+				if (`gmatch $IKhandles[$y] "Spline*"`)
+					if ($z==0)
+						parentConstraint ($IKparent[$y]+$IKParentSide) ("IKParentConstraint"+$IKhandles[$y]+"0"+$side);
+				createNode -n ("IKExtra"+$IKhandles[$y]+$z+$side) transform;
+				if ($z==0)
+					setAttr ("IKExtra"+$IKhandles[$y]+$z+$side+".rotateOrder") $IKstartJointRotOrder[$y];
+				else
+					setAttr ("IKExtra"+$IKhandles[$y]+$z+$side+".rotateOrder") $IKendJointRotOrder[$y];
+				asAlign ("IKExtra"+$IKhandles[$y]+$z+$side) ("IKParentConstraint"+$IKhandles[$y]+$z+$side) 1 1 0 0;
+				parent ("IKExtra"+$IKhandles[$y]+$z+$side) ("IKParentConstraint"+$IKhandles[$y]+$z+$side);
+	
+				duplicate -n ("IK"+$IKhandles[$y]+$z+$side) "IK_icon";
+				if ($z==0)
+					setAttr ("IK"+$IKhandles[$y]+$z+$side+".rotateOrder") $IKstartJointRotOrder[$y];
+				else
+					setAttr ("IK"+$IKhandles[$y]+$z+$side+".rotateOrder") $IKendJointRotOrder[$y];
+				if (`gmatch $IKhandles[$y] "Spine*"`)
+					setAttr -type float3 ("IK"+$IKhandles[$y]+$z+$side+".scale") ($height/12) ($height/12) ($height/12);
+				if (`gmatch $IKhandles[$y] "Spline*"`)
+					setAttr -type float3 ("IK"+$IKhandles[$y]+$z+$side+".scale") ($height/25) ($height/25) ($height/25);
+				asAlign ("IK"+$IKhandles[$y]+$z+$side) ("IKExtra"+$IKhandles[$y]+$z+$side) 1 1 0 0;
+				$tempString=`aimConstraint -aimVector 0 1 0 -upVector 1 0 0 -worldUpType "vector" -worldUpVector 1 0 0 ("IKX"+$IKendJoints[$y]+$side) ("IK"+$IKhandles[$y]+$z+$side)`;
+				delete $tempString[0];
+				makeIdentity -a 1 -t 0 -r 1 -s 1 ("IK"+$IKhandles[$y]+$z+$side);
+				if (`gmatch $IKhandles[$y] "Spline*"`)
+					asLockAttr ("IK"+$IKhandles[$y]+$z+$side) 0 1 1 1;
+				else
+					asLockAttr ("IK"+$IKhandles[$y]+$z+$side) 0 0 1 1;
+				parent ("IK"+$IKhandles[$y]+$z+$side) ("IKExtra"+$IKhandles[$y]+$z+$side);
+				parent ("IKX"+$IKhandles[$y]+"Locator"+$z+$side) ("IK"+$IKhandles[$y]+$z+$side);
+
+				sets -add ("ControlSet") ("IK"+$IKhandles[$y]+$z+$side);
+				sets -add ("ControlSet") ("IKExtra"+$IKhandles[$y]+$z+$side);
+				parent ("IKX"+$IKhandles[$y]+"Handle"+$side) ("IK"+$IKhandles[$y]+$z+$side);
+
+				if (`gmatch $IKhandles[$y] "Spine*"`)
+					{
+					addAttr -k 1 -ln stiff -at double -min -10 -max 10 -dv 0 ("IK"+$IKhandles[$y]+$z+$side);
+					createNode -n ("IKStiff"+$IKhandles[$y]+$z+$side) setRange;
+					setAttr ("IKStiff"+$IKhandles[$y]+$z+$side+".oldMinX") -10;
+					setAttr ("IKStiff"+$IKhandles[$y]+$z+$side+".oldMaxX") 10;
+					connectAttr ("IK"+$IKhandles[$y]+$z+$side+".stiff") ("IKStiff"+$IKhandles[$y]+$z+$side+".valueX");
+					}
+
+				if (`gmatch $IKhandles[$y] "Spline*"` && $z>0)
+					asFollow ("IK"+$IKhandles[$y]+$z+$side) ("IKParentConstraint"+$IKhandles[$y]+$z+$side) ($IKparent[$y]+$IKParentSide);
+				}
+			if (`gmatch $IKhandles[$y] "Spine*"`)
+				{
+				createNode -n ("IKStiffStartOrient"+$IKhandles[$y]+$side) transform;
+				asAlign ("IKStiffStartOrient"+$IKhandles[$y]+$side) ($IKstartJoints[$y]+$side) 1 1 0 0;
+				$tempString=`aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpVector 0 1 0 -worldUpType "objectrotation" -worldUpObject ($IKstartJoints[$y]+$side) ("IKX"+$IKhandles[$y]+"Locator"+"1"+$side) ("IKStiffStartOrient"+$IKhandles[$y]+$side)`;
+				delete $tempString[0];
+				parent ("IKX"+$IKhandles[$y]+"Locator"+"1"+$side) ("IKX"+$IKhandles[$y]+"Locator"+"2"+$side) ("IKStiffStartOrient"+$IKhandles[$y]+$side);
+				parent ("IKStiffStartOrient"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+"0"+$side);
+				createNode -n ("IKStiffEndOrient"+$IKhandles[$y]+$side) transform;
+				asAlign ("IKStiffEndOrient"+$IKhandles[$y]+$side) ($IKendJoints[$y]+$side) 1 1 0 0;
+				$tempString=`aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpVector 0 1 0 -worldUpType "objectrotation" -worldUpObject ($IKendJoints[$y]+$side) ("IKX"+$IKhandles[$y]+"Locator"+"3"+$side) ("IKStiffEndOrient"+$IKhandles[$y]+$side)`;
+				delete $tempString[0];
+				parent ("IKX"+$IKhandles[$y]+"Locator"+"3"+$side) ("IKStiffEndOrient"+$IKhandles[$y]+$side);
+				parent ("IKStiffEndOrient"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+"4"+$side); 
+			
+				if ($midIK[$y])
+					parent ("IKX"+$IKhandles[$y]+"Locator"+"2"+$side) ("IK"+$IKhandles[$y]+"2"+$side);
+				else
+					parentConstraint -mo ("IK"+$IKhandles[$y]+"0"+$side) ("IK"+$IKhandles[$y]+"4"+$side) ("IKX"+$IKhandles[$y]+"Locator"+"2"+$side);
+
+				$temp[0]=`getAttr ("IKX"+$IKhandles[$y]+"Locator"+"1"+$side+".translateX")`;
+				setAttr ("IKStiff"+$IKhandles[$y]+"0"+$side+".maxX") (2*$temp[0]);
+				connectAttr ("IKStiff"+$IKhandles[$y]+"0"+$side+".outValueX") ("IKX"+$IKhandles[$y]+"Locator"+"1"+$side+".translateX");
+				$temp[0]=`getAttr ("IKX"+$IKhandles[$y]+"Locator"+"3"+$side+".translateX")`;
+				setAttr ("IKStiff"+$IKhandles[$y]+"4"+$side+".maxX") (2*$temp[0]);
+				connectAttr ("IKStiff"+$IKhandles[$y]+"4"+$side+".outValueX") ("IKX"+$IKhandles[$y]+"Locator"+"3"+$side+".translateX");
+				}
+
+			createNode -n ("IKFKAligned"+$IKhandles[$y]+$side) transform;
+			setAttr ("IKFKAligned"+$IKhandles[$y]+$side+".rotateOrder") $IKendJointRotOrder[$y];
+			asAlign ("IKFKAligned"+$IKhandles[$y]+$side) ("FKX"+$IKendJoints[$y]+$side) 1 1 0 0;
+			parent ("IKFKAligned"+$IKhandles[$y]+$side) ("IKX"+$IKendJoints[$y]+$side);
+
+			createNode -n ("IKEndJointOrientTo"+$IKhandles[$y]+$side) transform;
+			setAttr ("IKEndJointOrientTo"+$IKhandles[$y]+$side+".rotateOrder") $IKendJointRotOrder[$y];
+			asAlign ("IKEndJointOrientTo"+$IKhandles[$y]+$side) ("IKX"+$IKendJoints[$y]+$side) 1 1 0 0;
+			parent ("IKEndJointOrientTo"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+($numCVs-1)+$side);
+
+			if (`gmatch $IKhandles[$y] "Spline*"` && $z>0)
+				{
+				addAttr -k 1 -ln twist -at double -dv 0 ("IK"+$IKhandles[$y]+($numCVs-1)+$side);
+				connectAttr ("IK"+$IKhandles[$y]+($numCVs-1)+$side+".twist") ("IKX"+$IKhandles[$y]+"Handle"+$side+".twist");
+				}
+			addAttr -k 1 -ln stretchy -at double  -min 0 -max 10 -dv 10 ("IK"+$IKhandles[$y]+($numCVs-1)+$side);
+			if (`gmatch $IKhandles[$y] "Spline*"`)
+				setAttr ("IK"+$IKhandles[$y]+($numCVs-1)+$side+".stretchy") 0;
+			createNode -n ("IKCurveInfo"+$IKhandles[$y]+$side) curveInfo;
+			connectAttr ("IKX"+$IKhandles[$y]+"Curve"+$side+"Shape.worldSpace[0]") ("IKCurveInfo"+$IKhandles[$y]+$side+".inputCurve");
+			createNode -n ("IKCurveInfoNormalize"+$IKhandles[$y]+$side) multiplyDivide;
+			setAttr ("IKCurveInfoNormalize"+$IKhandles[$y]+$side+".operation") 2;
+			createNode -n ("IKCurveInfoAllMultiply"+$IKhandles[$y]+$side) multiplyDivide;
+			setAttr ("IKCurveInfoAllMultiply"+$IKhandles[$y]+$side+".operation") 2;
+			connectAttr ("IKCurveInfoNormalize"+$IKhandles[$y]+$side+".outputX") ("IKCurveInfoAllMultiply"+$IKhandles[$y]+$side+".input1X");
+			connectAttr ("Main.scaleX") ("IKCurveInfoAllMultiply"+$IKhandles[$y]+$side+".input2X");
+
+			connectAttr ("IKCurveInfo"+$IKhandles[$y]+$side+".arcLength") ("IKCurveInfoNormalize"+$IKhandles[$y]+$side+".input1X");
+			setAttr ("IKCurveInfoNormalize"+$IKhandles[$y]+$side+".input2X") `getAttr ("IKCurveInfo"+$IKhandles[$y]+$side+".arcLength")`;
+			createNode -n ("stretchy"+$IKhandles[$y]+"UnitConversion"+$side) unitConversion;
+			setAttr ("stretchy"+$IKhandles[$y]+"UnitConversion"+$side+".conversionFactor") 0.1;
+			connectAttr ("IK"+$IKhandles[$y]+($numCVs-1)+$side+".stretchy") ("stretchy"+$IKhandles[$y]+"UnitConversion"+$side+".input");
+			createNode -n ("stretchy"+$IKhandles[$y]+"Reverse"+$side) reverse;
+			connectAttr ("stretchy"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("stretchy"+$IKhandles[$y]+"Reverse"+$side+".inputX");
+			select `listRelatives -ad -type joint ("IKX"+$IKstartJoints[$y]+$side)`;
+			select -d ("IKX"+$IKendJoints[$y]+$side);
+			$tempString=`ls -sl`;
+			for ($x=0;$x<size($tempString);$x++)
+				{
+				createNode -n ("stretchy"+$IKhandles[$y]+"MultiplyDivide"+$x+$side) multiplyDivide;
+				setAttr ("stretchy"+$IKhandles[$y]+"MultiplyDivide"+$x+$side+".input1X") `getAttr ($tempString[$x]+".translateX")`;
+				connectAttr ("IKCurveInfoAllMultiply"+$IKhandles[$y]+$side+".outputX") ("stretchy"+$IKhandles[$y]+"MultiplyDivide"+$x+$side+".input2X");
+
+				createNode -n ("stretchy"+$IKhandles[$y]+"BlendTwo"+$x+$side) blendTwoAttr;
+				connectAttr ("stretchy"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("stretchy"+$IKhandles[$y]+"BlendTwo"+$x+$side+".attributesBlender");
+				setAttr ("stretchy"+$IKhandles[$y]+"BlendTwo"+$x+$side+".input[0]") `getAttr ($tempString[$x]+".translateX")`;
+				connectAttr ("stretchy"+$IKhandles[$y]+"MultiplyDivide"+$x+$side+".outputX") ("stretchy"+$IKhandles[$y]+"BlendTwo"+$x+$side+".input[1]");
+				connectAttr ("stretchy"+$IKhandles[$y]+"BlendTwo"+$x+$side+".output") ($tempString[$x]+".translateX");
+				}
+
+			if (`gmatch $IKhandles[$y] "Spine*"`)
+				{
+				$tempString=`spaceLocator -n ("IKFake1UpLoc"+$IKhandles[$y]+$side)`;
+				$loc1=$tempString[0];
+				asAlign $loc1 ("IKfake1"+$IKhandles[$y]+$side) 1 1 0 0;
+				parent $loc1 ("IKfake1"+$IKhandles[$y]+$side);
+				setAttr ($loc1+".translateY") 1;
+				$tempString=`listRelatives -p ("IKX"+$IKendJoints[$y]+$side)`;
+				$tempString=`aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpType "object" -worldUpObject $loc1 ("IKfake2"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+"4"+$side) $tempString[0]`;
+				$constraint=$tempString[0];
+				$attrs=`listAttr -k -ud $constraint`;
+				connectAttr ("stretchy"+$IKhandles[$y]+"Reverse"+$side+".outputX") ($tempString[0]+"."+$attrs[0]);
+				connectAttr ("stretchy"+$IKhandles[$y]+"UnitConversion"+$side+".output") ($tempString[0]+"."+$attrs[1]);
+//				$tempString=`listConnections -s 1 -d 0 -p 1 ("IKX"+$IKendJoints[$y]+$side+".translateX")`;
+//				disconnectAttr $tempString[0] ("IKX"+$IKendJoints[$y]+$side+".translateX");
+				createNode -n ("IK"+$IKhandles[$y]+"4AlignTo"+$side) transform;
+				asAlign ("IK"+$IKhandles[$y]+"4AlignTo"+$side) ("IKfake2"+$IKhandles[$y]+$side) 1 1 0 0;
+				parent ("IK"+$IKhandles[$y]+"4AlignTo"+$side) ("IK"+$IKhandles[$y]+"4"+$side);
+
+				createNode -n ("IK"+$IKhandles[$y]+"4AlignUnTwistToOffset"+$side) transform;
+				asAlign ("IK"+$IKhandles[$y]+"4AlignUnTwistToOffset"+$side) ("IKfake2"+$IKhandles[$y]+$side) 1 0 0 0;
+				asAlign ("IK"+$IKhandles[$y]+"4AlignUnTwistToOffset"+$side) ("IKX"+$IKstartJoints[$y]+$side) 0 1 0 0;
+				parent ("IK"+$IKhandles[$y]+"4AlignUnTwistToOffset"+$side) ("IK"+$IKhandles[$y]+"4"+$side);
+
+				createNode -n ("IK"+$IKhandles[$y]+"4AlignUnTwistTo"+$side) transform;
+				asAlign ("IK"+$IKhandles[$y]+"4AlignUnTwistTo"+$side) ("IK"+$IKhandles[$y]+"4AlignUnTwistToOffset"+$side) 1 1 0 0;
+				parent ("IK"+$IKhandles[$y]+"4AlignUnTwistTo"+$side) ("IK"+$IKhandles[$y]+"4AlignUnTwistToOffset"+$side);
+
+				createNode -n ("IK"+$IKhandles[$y]+"0AlignTo"+$side) transform;
+				asAlign ("IK"+$IKhandles[$y]+"0AlignTo"+$side) ("IKX"+$IKstartJoints[$y]+$side) 1 1 0 0;
+				parent ("IK"+$IKhandles[$y]+"0AlignTo"+$side) ("IK"+$IKhandles[$y]+"0"+$side);
+				$tempString=`parentConstraint ("IKfake2"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+"4AlignTo"+$side) ("IKX"+$IKendJoints[$y]+$side)`;
+				$constraint=$tempString[0];
+				$attrs=`listAttr -k -ud $constraint`;
+				connectAttr ("stretchy"+$IKhandles[$y]+"Reverse"+$side+".outputX") ($tempString[0]+"."+$attrs[0]);
+				connectAttr ("stretchy"+$IKhandles[$y]+"UnitConversion"+$side+".output") ($tempString[0]+"."+$attrs[1]);
+
+				//Spine twist
+				createNode -n ("TwistFollow"+$IKstartJoints[$y]+$side) transform;
+				parent ("TwistFollow"+$IKstartJoints[$y]+$side) TwistSystem;
+				setAttr -l 1 ("TwistFollow"+$IKstartJoints[$y]+$side+".visibility") 0;
+				setAttr ("TwistFollow"+$IKstartJoints[$y]+$side+".rotateOrder") $IKstartJointRotOrder[$y];
+				parentConstraint ("IK"+$IKhandles[$y]+"0"+$side) ("TwistFollow"+$IKstartJoints[$y]+$side);
+				select ($IKstartJoints[$y]+$side);
+				joint -n ("UnTwist"+$IKstartJoints[$y]+$side);
+				setAttr ("UnTwist"+$IKstartJoints[$y]+$side+".rotateOrder") $IKstartJointRotOrder[$y];
+				parent ("UnTwist"+$IKstartJoints[$y]+$side) ("TwistFollow"+$IKstartJoints[$y]+$side);
+				$tempString=`aimConstraint  -aimVector 1 0 0 -upVector 0 1 0 -worldUpType "objectrotation" -worldUpObject ($IKstartJoints[$y]+$side) ("IKX"+$IKendJoints[$y]+$side) ("UnTwist"+$IKstartJoints[$y]+$side)`;
+				delete $tempString[0];
+				joint -n ("UnTwistEnd"+$IKstartJoints[$y]+$side);
+				setAttr ("UnTwistEnd"+$IKstartJoints[$y]+$side+".rotateOrder") $IKstartJointRotOrder[$y];
+				asAlign ("UnTwistEnd"+$IKstartJoints[$y]+$side) $IKendJoints[$y] 1 0 0 0;
+				ikHandle -n ("UnTwistIK"+$IKstartJoints[$y]+$side) -ns 2 -sol "ikSCsolver" -sj ("UnTwist"+$IKstartJoints[$y]+$side) -ee ("UnTwistEnd"+$IKstartJoints[$y]+$side);
+				parent ("UnTwistIK"+$IKstartJoints[$y]+$side) ("TwistFollow"+$IKstartJoints[$y]+$side);
+				pointConstraint ("IK"+$IKhandles[$y]+"4"+$side) ("UnTwistIK"+$IKstartJoints[$y]+$side);
+				orientConstraint ("IK"+$IKhandles[$y]+"4"+"AlignUnTwistTo"+$side) ("UnTwistEnd"+$IKstartJoints[$y]+$side);
+				createNode -n ("IKTwist"+$IKhandles[$y]+"UnitConversion"+$side) unitConversion;
+				setAttr ("IKTwist"+$IKhandles[$y]+"UnitConversion"+$side+".conversionFactor") 0.75;
+				connectAttr ("UnTwistEnd"+$IKstartJoints[$y]+$side+".rotateX") ("IKTwist"+$IKhandles[$y]+"UnitConversion"+$side+".input");
+				connectAttr ("IKTwist"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("IKX"+$IKhandles[$y]+"Handle"+$side+".twist");
+				setAttr ("IK"+$IKhandles[$y]+"0"+$side+".rotateOrder") $IKendJointRotOrder[$y];
+				setAttr ("IKExtra"+$IKhandles[$y]+"0"+$side+".rotateOrder") $IKendJointRotOrder[$y];
+				}
+
+			//Last IK control in tails
+			if (`gmatch $IKhandles[$y] "Spline*"`)
+				{
+				$tempString=`listConnections -p 0 -s 1 -d 0 ("IKX"+$IKhandles[$y]+"Handle"+$side+".endEffector")`;
+				string $effector=$tempString[0];
+				disconnectAttr ("IKX"+$IKendJoints[$y]+$side+".tx") ($effector+".tx");
+				disconnectAttr ("IKX"+$IKendJoints[$y]+$side+".ty") ($effector+".ty");
+				disconnectAttr ("IKX"+$IKendJoints[$y]+$side+".tz") ($effector+".tz");
+				asLockAttr ("IK"+$IKhandles[$y]+($numCVs-1)+$side) 0 0 1 1;
+				parentConstraint ("IKEndJointOrientTo"+$IKhandles[$y]+$side) $effector ("IKX"+$IKendJoints[$y]+$side);
+				connectAttr ("stretchy"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("IKX"+$IKendJoints[$y]+$side+"_parentConstraint1.IKEndJointOrientTo"+$IKhandles[$y]+$side+"W0");
+				connectAttr ("stretchy"+$IKhandles[$y]+"Reverse"+$side+".outputX") ("IKX"+$IKendJoints[$y]+$side+"_parentConstraint1."+$effector+"W1");
+				}
+
+			}
+
+		//Advanced FKIK
+		duplicate -n ("FKIK"+$IKhandles[$y]+$side) "FKIK_icon";
+		xform -ws -t 0 0 0 -ro 0 0 0 ("FKIK"+$IKhandles[$y]+$side);
+		setAttr -type float3 ("FKIK"+$IKhandles[$y]+$side+".scale") ($height/62) ($height/62) ($height/62);
+		setAttr ("FKIK"+$IKhandles[$y]+$side+".rotateY") 90;
+		makeIdentity -a 1 -t 1 -r 1 -s 1 ("FKIK"+$IKhandles[$y]+$side);
+		sets -add ("ControlSet") ("FKIK"+$IKhandles[$y]+$side);
+
+		createNode -n ("FKIKParentConstraint"+$IKhandles[$y]+$side) transform;
+		parent ("FKIKParentConstraint"+$IKhandles[$y]+$side) ("FKIKSystem");
+		parent ("FKIK"+$IKhandles[$y]+$side) ("FKIKParentConstraint"+$IKhandles[$y]+$side);
+		asLockAttr ("FKIK"+$IKhandles[$y]+$side) 1 1 1 1;
+
+		$tempString=`spaceLocator`;
+		$loc1=$tempString[0];
+		$tempString=`spaceLocator`;
+		$loc2=$tempString[0];
+		parent $loc2 $loc1;
+		$tempString=`pointConstraint ("IKX"+$IKstartJoints[$y]+$side) ("IKX"+$IKendJoints[$y]+$side) $loc1`;
+		setAttr ($tempString[0]+"."+"IKX"+$IKstartJoints[$y]+$side+"W0") 3;
+		$tempString=`listRelatives -c ("IKX"+$IKstartJoints[$y]+$side)`;
+		if ($IKsolver[$y]=="ikRPsolver")
+			{
+			aimConstraint  -aimVector 1 0 0 -upVector 0 1 0 -worldUpType "object" -worldUpObject ("IKX"+$IKstartJoints[$y]+$side) $tempString[0] $loc1;
+			if (`gmatch $IKhandles[$y] "Arm*"`)
+				setAttr ($loc2+".translateZ") (-1*$b*$height/10);
+			else
+				setAttr ($loc2+".translateZ") ($b*$height/10);
+			}
+		if ($IKsolver[$y]=="ikSplineSolver")
+			setAttr ($loc2+".translateX") ($b*$height/10);
+		$temp=`xform -q -ws -t $loc2`;
+		xform -ws -t $temp[0] $temp[1] $temp[2] ("FKIKParentConstraint"+$IKhandles[$y]+$side);
+		delete $loc1;
+		$parent=($IKstartJoints[$y]+$side);
+		$tempString=`listRelatives -p -type joint ($IKstartJoints[$y]+$side)`;
+		if (size($tempString))
+			$parent=$tempString[0];
+		else if (`objExists ("FK"+$topNode+"_M")`)
+			$parent=("FK"+$topNode+"_M");
+		else
+			$parent=$IKstartJoints[$y]+$side;
+		parentConstraint -mo $parent ("FKIKParentConstraint"+$IKhandles[$y]+$side);
+
+		addAttr -k 1 -ln FKIKBlend -at double -min 0 -max 10 -dv 0 ("FKIK"+$IKhandles[$y]+$side);
+		addAttr -k 1 -ln autoVis -at bool -dv 1 ("FKIK"+$IKhandles[$y]+$side);
+		setAttr -k 0 -cb 1 ("FKIK"+$IKhandles[$y]+$side+".autoVis");
+		addAttr -k 1 -ln FKVis -at bool -dv 1 ("FKIK"+$IKhandles[$y]+$side);
+		addAttr -k 1 -ln IKVis -at bool -dv 1 ("FKIK"+$IKhandles[$y]+$side);
+		addAttr -ln startJoint -dt "string"  ("FKIK"+$IKhandles[$y]+$side);
+		setAttr -l 1 -type "string" ("FKIK"+$IKhandles[$y]+$side+".startJoint") $IKstartJoints[$y];
+		addAttr -ln middleJoint -dt "string"  ("FKIK"+$IKhandles[$y]+$side);
+		setAttr -l 1 -type "string" ("FKIK"+$IKhandles[$y]+$side+".middleJoint") $IKmiddleJoints[$y];
+		addAttr -ln endJoint -dt "string"  ("FKIK"+$IKhandles[$y]+$side);
+		setAttr -l 1 -type "string" ("FKIK"+$IKhandles[$y]+$side+".endJoint") $IKendJoints[$y];
+
+		createNode -n ("FKIKBlend"+$IKhandles[$y]+"UnitConversion"+$side) unitConversion;
+		setAttr ("FKIKBlend"+$IKhandles[$y]+"UnitConversion"+$side+".conversionFactor") 0.1;
+		connectAttr ("FKIK"+$IKhandles[$y]+$side+".FKIKBlend") ("FKIKBlend"+$IKhandles[$y]+"UnitConversion"+$side+".input");
+		createNode -n ("FKIKBlend"+$IKhandles[$y]+"Reverse"+$side) reverse;
+		connectAttr ("FKIKBlend"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("FKIKBlend"+$IKhandles[$y]+"Reverse"+$side+".inputX");
+
+		createNode -n ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side) condition;
+		createNode -n ("FKIKBlend"+$IKhandles[$y]+"setRange"+$side) setRange;
+		setAttr ("FKIKBlend"+$IKhandles[$y]+"setRange"+$side+".minX") 10;
+		setAttr ("FKIKBlend"+$IKhandles[$y]+"setRange"+$side+".oldMaxX") 10;
+
+		connectAttr ("FKIK"+$IKhandles[$y]+$side+".autoVis") ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".firstTerm");
+		connectAttr ("FKIK"+$IKhandles[$y]+$side+".IKVis") ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".colorIfTrueR");
+		connectAttr ("FKIK"+$IKhandles[$y]+$side+".FKVis") ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".colorIfTrueG");
+		connectAttr ("FKIK"+$IKhandles[$y]+$side+".FKIKBlend") ("FKIKBlend"+$IKhandles[$y]+"setRange"+$side+".valueX");
+		connectAttr ("FKIK"+$IKhandles[$y]+$side+".FKIKBlend") ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".colorIfFalseR");
+		connectAttr ("FKIKBlend"+$IKhandles[$y]+"setRange"+$side+".outValueX") ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".colorIfFalseG");
+
+
+		if ($IKsolver[$y]=="ikRPsolver")
+			{
+			connectAttr -f ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".outColorR") ("IKParentConstraint"+$IKhandles[$y]+$side+".visibility");
+			connectAttr -f ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".outColorR") ("PoleParentConstraint"+$IKhandles[$y]+$side+".visibility");
+			}
+		if ($IKsolver[$y]=="ikSplineSolver")
+			{
+			for ($z=0;$z<$numCVs;$z++)
+				{
+				$buildingMidIKSpine=0;
+				if ($midIK[$y] && ($z==($numCVs-1)/2))
+					$buildingMidIKSpine=1;
+
+				if (`gmatch $IKhandles[$y] "Spine*"`)
+					if ($z!=0 && !$buildingMidIKSpine && $z!=($numCVs-1))
+						continue;
+				connectAttr -f ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".outColorR") ("IKParentConstraint"+$IKhandles[$y]+$z+$side+".visibility");
+				}
+			connectAttr -f ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".outColorR") ("IKX"+$IKhandles[$y]+"Curve"+$side+".visibility");
+			setAttr ("IKX"+$IKhandles[$y]+"Curve"+$side+".overrideEnabled") 1;
+			setAttr ("IKX"+$IKhandles[$y]+"Curve"+$side+".overrideDisplayType") 1;
+			}
+		connectAttr -f ("FKIKBlend"+$IKhandles[$y]+"Condition"+$side+".outColorR")  ("IKParentConstraint"+$IKstartJoints[$y]+$side+".visibility");
+
+		//Advanced FootRoll
+		if (`gmatch $IKhandles[$y] "Leg*"`)
+			{
+			if (`objExists ($IKheel[$y]+$side)` || `objExists ($IKball[$y]+$side)` || `objExists ($IKtoe[$y]+$side)`)
+				{
+				createNode -n ("IKFootRoll"+$IKhandles[$y]+$side) transform;
+				asAlign ("IKFootRoll"+$IKhandles[$y]+$side) ("IKX"+$IKendJoints[$y]+$side) 1 0 0 0;
+				parent ("IKFootRoll"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+$side);
+				if (`objExists ($IKball[$y]+$side)`)
+					{
+					createNode -n "tempAimTarget" transform;
+					if (`objExists ($IKtoe[$y]+$side)`)
+						$temp=`xform -q -ws -t ($IKtoe[$y]+$side)`;
+					else
+						$temp=`xform -q -ws -t ($IKball[$y]+$side)`;
+					$temp2=`xform -q -ws -t ("IKFootRoll"+$IKhandles[$y]+$side)`;
+					xform -ws -t $temp[0] $temp2[1] $temp[2] "tempAimTarget";
+					$tempString=`aimConstraint -aimVector 0 0 1 -upVector 0 1 0 -worldUpType "vector" -worldUpVector 0 1 0 "tempAimTarget" ("IKFootRoll"+$IKhandles[$y]+$side)`;
+					delete $tempString[0];
+					delete "tempAimTarget";
+					}
+				}
+
+			for ($z=0;$z<3;$z++)
+				{
+				$target="";
+				if ($z==0)	{$heelToeBall="Heel";$target=$IKheel[$y];$orientX=0;$orientY=-90;$orientZ=0;}
+				if ($z==1)	{$heelToeBall="Toe";$target=$IKtoe[$y];$orientX=0;$orientY=90;$orientZ=180;}
+				if ($z==2)	{$heelToeBall="Ball";$target=$IKball[$y];$orientX=0;$orientY=90;$orientZ=-45;}
+
+				if ($target=="")
+					continue;
+
+				createNode -n ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) transform;
+				asAlign ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) ($target+$side) 1 0 0 0;
+				asAlign ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) ("IKFootRoll"+$IKhandles[$y]+$side) 0 1 0 0;
+				parent ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) ("IKFootRoll"+$IKhandles[$y]+$side);
+				if ($heelToeBall=="Ball")
+					{
+					if (`objExists ("IKRoll"+$IKhandles[$y]+"Toe"+$side)`)
+						parent ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) ("IK"+$IKhandles[$y]+"Toe"+$side);
+					else if (`objExists ("IKRoll"+$IKhandles[$y]+"Heel"+$side)`)
+						{
+						parent ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) ("IK"+$IKhandles[$y]+"Heel"+$side);
+						}
+					}
+				if ($heelToeBall=="Toe" && `objExists ("IKRoll"+$IKhandles[$y]+"Heel"+$side)`)
+					parent ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) ("IK"+$IKhandles[$y]+"Heel"+$side);
+				asLockAttr ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) 1 0 1 1;
+
+				createNode -n ("IKExtra"+$IKhandles[$y]+$heelToeBall+$side) transform;
+				asAlign ("IKExtra"+$IKhandles[$y]+$heelToeBall+$side) ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) 1 0 0 0;
+				asAlign ("IKExtra"+$IKhandles[$y]+$heelToeBall+$side) ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side) 0 1 0 0;
+				parent ("IKExtra"+$IKhandles[$y]+$heelToeBall+$side) ("IKRoll"+$IKhandles[$y]+$heelToeBall+$side);
+				asLockAttr ("IKExtra"+$IKhandles[$y]+$heelToeBall+$side) 1 0 1 1;
+
+				duplicate -n ("IK"+$IKhandles[$y]+$heelToeBall+$side) "Roll_icon";
+				xform -ws -t 0 0 0 -ro $orientX $orientY $orientZ ("IK"+$IKhandles[$y]+$heelToeBall+$side);			
+				setAttr -type float3 ("IK"+$IKhandles[$y]+$heelToeBall+$side+".scale") ($height/31) ($height/31) ($height/31);
+				makeIdentity -a 1 -t 0 -r 0 -s 1 ("IK"+$IKhandles[$y]+$heelToeBall+$side);
+				asLockAttr ("IK"+$IKhandles[$y]+$heelToeBall+$side) 1 0 1 1;
+				asAlign ("IK"+$IKhandles[$y]+$heelToeBall+$side) ("IKExtra"+$IKhandles[$y]+$heelToeBall+$side) 1 1 0 0;
+				parent ("IK"+$IKhandles[$y]+$heelToeBall+$side) ("IKExtra"+$IKhandles[$y]+$heelToeBall+$side);
+				setAttr ("IK"+$IKhandles[$y]+$heelToeBall+$side+"Shape.overrideEnabled") 1;
+				setAttr ("IK"+$IKhandles[$y]+$heelToeBall+$side+"Shape.overrideColor") 13;
+				setAttr ("IK"+$IKhandles[$y]+$heelToeBall+$side+".showManipDefault") 1;
+				sets -add ("ControlSet") ("IK"+$IKhandles[$y]+$heelToeBall+$side);
+				sets -add ("ControlSet") ("IKExtra"+$IKhandles[$y]+$heelToeBall+$side);
+				parent ("IKX"+$IKhandles[$y]+"Handle"+$side) ("IK"+$IKhandles[$y]+$heelToeBall+$side);
+
+				if ($heelToeBall=="Ball" || $heelToeBall=="Toe")
+					{
+					if ($heelToeBall=="Ball")
+						$tempString[0]=("IKX"+$IKendJoints[$y]+$side);
+					if ($heelToeBall=="Toe")
+						{
+						$tempString[0]=("IKX"+$IKball[$y]+$side);
+						if (!`objExists $tempString[0]`)
+							continue;
+						}
+
+					$tempString=`ikHandle -n ("IKX"+$IKhandles[$y]+"Handle"+$heelToeBall+$side) -s "sticky" -sol ikSCsolver -sj $tempString[0] -ee ("IKX"+$target+$side)`;
+					setAttr -l 1 ("IKX"+$IKhandles[$y]+"Handle"+$heelToeBall+$side+".visibility") 0;
+					setAttr -l 1 ($tempString[1]+".visibility") 0;
+					parent ("IKX"+$IKhandles[$y]+"Handle"+$heelToeBall+$side) ("IK"+$IKhandles[$y]+$heelToeBall+$side);
+					$poleVecX=$poleVecY=$poleVecZ=0;
+					$temp=`getAttr ("IKX"+$IKhandles[$y]+"Handle"+$side+".poleVector")`;
+					if ($temp[0]>$temp[1] && $temp[0]>$temp[2] && $temp[0]>0) $poleVecX=1;if ($temp[0]<$temp[1] && $temp[0]<$temp[2] && $temp[0]<0) $poleVecX=-1;
+					if ($temp[1]>$temp[2] && $temp[1]>$temp[0] && $temp[1]>0) $poleVecY=1;if ($temp[1]<$temp[2] && $temp[1]<$temp[0] && $temp[1]<0) $poleVecY=-1;
+					if ($temp[2]>$temp[1] && $temp[2]>$temp[0] && $temp[2]>0) $poleVecZ=1;if ($temp[2]<$temp[1] && $temp[2]<$temp[0] && $temp[2]<0) $poleVecZ=-1;
+					}
+				if ($heelToeBall=="Ball")
+					{
+					setAttr -k 0 ("IK"+$IKhandles[$y]+$heelToeBall+$side+".rotateY");
+					setAttr -k 0 ("IK"+$IKhandles[$y]+$heelToeBall+$side+".rotateZ");
+					transformLimits -ry 0 0 -ery 1 1 ("IK"+$IKhandles[$y]+$heelToeBall+$side);
+					transformLimits -rz 0 0 -erz 1 1 ("IK"+$IKhandles[$y]+$heelToeBall+$side);
+					}
+				if ($heelToeBall=="Toe")
+					{
+					addAttr -k 1 -ln toe -at double ("IK"+$IKhandles[$y]+$side);
+					createNode -n ("IKLiftToe"+$IKhandles[$y]+$heelToeBall+$side) transform;
+					asAlign ("IKLiftToe"+$IKhandles[$y]+$heelToeBall+$side) ("IKX"+$IKball[$y]+$side) 1 0 0 0;
+					asAlign ("IKLiftToe"+$IKhandles[$y]+$heelToeBall+$side) ("IK"+$IKhandles[$y]+$heelToeBall+$side) 0 1 0 0;
+					parent ("IKLiftToe"+$IKhandles[$y]+$heelToeBall+$side) ("IK"+$IKhandles[$y]+$heelToeBall+$side);
+					parent ("IKX"+$IKhandles[$y]+"Handle"+$heelToeBall+$side) ("IKLiftToe"+$IKhandles[$y]+$heelToeBall+$side);
+					createNode -n ("IKLiftToe"+$IKhandles[$y]+"UnitConversion"+$side) unitConversion;
+					setAttr ("IKLiftToe"+$IKhandles[$y]+"UnitConversion"+$side+".conversionFactor") 0.1;
+					connectAttr ("IK"+$IKhandles[$y]+$side+".toe") ("IKLiftToe"+$IKhandles[$y]+"UnitConversion"+$side+".input");
+					connectAttr ("IKLiftToe"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("IKLiftToe"+$IKhandles[$y]+$heelToeBall+$side+".rotateX");
+					}
+				}
+
+			//Advanced FootRoll - pivot
+			if (`objExists ($IKball[$y]+$side)`)
+				{
+				createNode -n ("IKFootPivotBallReverse"+$IKhandles[$y]+$side) transform;
+				asAlign ("IKFootPivotBallReverse"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+"Ball"+$side) 1 0 0 0;
+				parent ("IKFootPivotBallReverse"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+"Ball"+$side);
+				parent `listRelatives -type transform -c ("IK"+$IKhandles[$y]+"Ball"+$side)` ("IKFootPivotBallReverse"+$IKhandles[$y]+$side);
+
+				if (`objExists ($IKbigToe[$y])` && `objExists ($IKpinkyToe[$y])`)
+					{
+					createNode -n ("IKFootIndexPivot"+$IKhandles[$y]+$side) transform;
+					$temp=`xform -q -ws -t $IKbigToe[$y]`;
+					xform -ws -t ($b*$temp[0]) $temp[1] $temp[2]  ("IKFootIndexPivot"+$IKhandles[$y]+$side);
+					parent ("IKFootIndexPivot"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+$side);
+					createNode -n ("IKFootPinkyPivot"+$IKhandles[$y]+$side) transform;
+					$temp=`xform -q -ws -t $IKpinkyToe[$y]`;
+					xform -ws -t ($b*$temp[0]) $temp[1] $temp[2] ("IKFootPinkyPivot"+$IKhandles[$y]+$side);
+					parent ("IKFootPinkyPivot"+$IKhandles[$y]+$side) ("IKFootIndexPivot"+$IKhandles[$y]+$side);
+					parent ("IKFootRoll"+$IKhandles[$y]+$side) ("IKFootPinkyPivot"+$IKhandles[$y]+$side);
+					createNode -n ("IKFootPivot"+$IKhandles[$y]+$side) clamp;
+					connectAttr ("IK"+$IKhandles[$y]+"Ball"+$side+".rotateZ") ("IKFootPivot"+$IKhandles[$y]+$side+".inputR");
+					connectAttr ("IK"+$IKhandles[$y]+"Ball"+$side+".rotateZ") ("IKFootPivot"+$IKhandles[$y]+$side+".inputG");
+					setAttr -k 1 ("IK"+$IKhandles[$y]+"Ball"+$side+".rotateZ");
+					transformLimits -rz 0 0 -erz 0 0 ("IK"+$IKhandles[$y]+"Ball"+$side);
+					if ($b==1)
+						{
+						setAttr ("IKFootPivot"+$IKhandles[$y]+$side+".minR") -200;
+						setAttr ("IKFootPivot"+$IKhandles[$y]+$side+".maxG") 200;
+						}
+					else
+						{
+						setAttr ("IKFootPivot"+$IKhandles[$y]+$side+".maxR") 200;
+						setAttr ("IKFootPivot"+$IKhandles[$y]+$side+".minG") -200;
+						}	
+					connectAttr ("IKFootPivot"+$IKhandles[$y]+$side+".outputR") ("IKFootIndexPivot"+$IKhandles[$y]+$side+".rotateZ");
+					connectAttr ("IKFootPivot"+$IKhandles[$y]+$side+".outputG") ("IKFootPinkyPivot"+$IKhandles[$y]+$side+".rotateZ");
+
+					createNode -n ("IKFootPivotBallReverseMD"+$IKhandles[$y]+$side) multiplyDivide;
+					connectAttr ("IK"+$IKhandles[$y]+"Ball"+$side+".rotateZ") ("IKFootPivotBallReverseMD"+$IKhandles[$y]+$side+".input1Z");
+					setAttr ("IKFootPivotBallReverseMD"+$IKhandles[$y]+$side+".input2Z") -1;
+					connectAttr ("IKFootPivotBallReverseMD"+$IKhandles[$y]+$side+".outputZ") ("IKFootPivotBallReverse"+$IKhandles[$y]+$side+".rotateZ");
+					}
+				}
+
+			//Advanced FootRoll - rollAngle
+			if (`objExists ($IKheel[$y]+$side)` || `objExists ($IKball[$y]+$side)` || `objExists ($IKtoe[$y]+$side)`)
+				{
+				addAttr -k 1 -ln roll -at double -min -5 -max 10 ("IK"+$IKhandles[$y]+$side);
+				addAttr -k 1 -ln rollAngle -at double -dv 25 ("IK"+$IKhandles[$y]+$side);
+
+				createNode -n ($IKhandles[$y]+$side+"AngleReverse") multiplyDivide;
+				connectAttr ("IK"+$IKhandles[$y]+$side+".rollAngle") ($IKhandles[$y]+$side+"AngleReverse.input1X");
+				setAttr ($IKhandles[$y]+$side+"AngleReverse.input2X") -1;
+
+				createNode -n ("IKRollAngle"+$IKhandles[$y]+$side) setRange;
+				connectAttr ("IK"+$IKhandles[$y]+$side+".roll") ("IKRollAngle"+$IKhandles[$y]+$side+".valueX");
+				connectAttr ("IK"+$IKhandles[$y]+$side+".roll") ("IKRollAngle"+$IKhandles[$y]+$side+".valueY");
+				connectAttr ("IK"+$IKhandles[$y]+$side+".roll") ("IKRollAngle"+$IKhandles[$y]+$side+".valueZ");
+				connectAttr ($IKhandles[$y]+$side+"AngleReverse.output.outputX") ("IKRollAngle"+$IKhandles[$y]+$side+".minX");
+				connectAttr ("IK"+$IKhandles[$y]+$side+".rollAngle") ("IKRollAngle"+$IKhandles[$y]+$side+".maxY");
+				connectAttr ("IK"+$IKhandles[$y]+$side+".rollAngle") ("IKRollAngle"+$IKhandles[$y]+$side+".maxZ");
+				setAttr ("IKRollAngle"+$IKhandles[$y]+$side+".oldMinX") -5;
+				setAttr ("IKRollAngle"+$IKhandles[$y]+$side+".oldMaxY") 5;
+				setAttr ("IKRollAngle"+$IKhandles[$y]+$side+".oldMinZ") 5;
+				setAttr ("IKRollAngle"+$IKhandles[$y]+$side+".oldMaxZ") 10;
+
+				if (`objExists ($IKheel[$y]+$side)`)
+					connectAttr ("IKRollAngle"+$IKhandles[$y]+$side+".outValueX") ("IKRoll"+$IKhandles[$y]+"Heel"+$side+".rotateX");
+				if (`objExists ($IKball[$y]+$side)`)
+					connectAttr ("IKRollAngle"+$IKhandles[$y]+$side+".outValueY") ("IKRoll"+$IKhandles[$y]+"Ball"+$side+".rotateX");
+				if (`objExists ($IKtoe[$y]+$side)`)
+					connectAttr ("IKRollAngle"+$IKhandles[$y]+$side+".outValueZ") ("IKRoll"+$IKhandles[$y]+"Toe"+$side+".rotateX");
+				}
+
+			//Advanced FootRoll - hide IK ankle
+			if (`gmatch $IKhandles[$y] "Leg*"`)
+				setAttr ("IKX"+$IKendJoints[$y]+$side+".visibility") 1;
+
+			//Advanced FootRoll - IKBall -> FKBall
+			if (`objExists ($IKball[$y]+$side)` && `objExists ("FKOffset"+$IKball[$y]+$side)`)
+				{
+				createNode -n ("IKBallToFKBall"+$IKball[$y]+"blendTwoAttr"+$side) blendTwoAttr;
+				setAttr ("IKBallToFKBall"+$IKball[$y]+"blendTwoAttr"+$side+".input[0]") (`getAttr ("FKOffset"+$IKball[$y]+$side+".rz")`);
+				connectAttr ("IKX"+$IKball[$y]+$side+".rz") ("IKBallToFKBall"+$IKball[$y]+"blendTwoAttr"+$side+".input[1]");
+				connectAttr ("FKIKBlend"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("IKBallToFKBall"+$IKball[$y]+"blendTwoAttr"+$side+".attributesBlender");
+				connectAttr ("IKBallToFKBall"+$IKball[$y]+"blendTwoAttr"+$side+".output") ("FKOffset"+$IKball[$y]+$side+".rz");
+				}
+
+			//$fitJointsLegAim
+			if ($fitJointsLegAim[$y]!="")
+				{
+				addAttr -k 1 -ln legAim -at double -dv 10 -min 0 -max 10 ("IK"+$IKhandles[$y]+$side);
+				createNode -n ("IKLegAim"+$IKhandles[$y]+"UnitConversion"+$side) unitConversion;
+				setAttr ("IKLegAim"+$IKhandles[$y]+"UnitConversion"+$side+".conversionFactor") 0.1;
+				connectAttr ("IK"+$IKhandles[$y]+$side+".legAim") ("IKLegAim"+$IKhandles[$y]+"UnitConversion"+$side+".input");
+				createNode -n ("IKLegAim"+$IKhandles[$y]+"Reverse"+$side) reverse;
+
+				createNode -n ("IKX"+$IKhandles[$y]+"Aim"+$side) transform;
+				asAlign ("IKX"+$IKhandles[$y]+"Aim"+$side) ($fitJointsLegAim[$y]+$side) 1 1 0 0;
+				$tempString=`listRelatives -p ("FKOffset"+$fitJointsLegAim[$y]+$side)`;
+				$parent=$tempString[0];
+				parent ("IKX"+$IKhandles[$y]+"Aim"+$side) $parent;
+
+				createNode -n ("IKX"+$IKhandles[$y]+"UnAim"+$side) transform;
+				parent ("IKX"+$IKhandles[$y]+"UnAim"+$side) $parent;
+
+				$tempString=`aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpVector 1 0 0 -worldUpType "object" -worldUpObject ("Pole"+$IKhandles[$y]+$side) ("IK"+$IKhandles[$y]+$side) ("IKX"+$IKhandles[$y]+"Aim"+$side)`;
+				$constraint=$tempString[0];
+				asAlign ("IKX"+$IKhandles[$y]+"UnAim"+$side) ("IKX"+$IKhandles[$y]+"Aim"+$side) 1 1 0 0;
+
+				createNode -n ("IKX"+$IKhandles[$y]+"AimBlend"+$side) transform;
+				asAlign ("IKX"+$IKhandles[$y]+"AimBlend"+$side) ("IKX"+$IKhandles[$y]+"Aim"+$side) 1 1 0 0;
+				parent ("IKX"+$IKhandles[$y]+"AimBlend"+$side) $parent;
+
+				$tempString=`orientConstraint ("IKX"+$IKhandles[$y]+"Aim"+$side) ("IKX"+$IKhandles[$y]+"UnAim"+$side) ("IKX"+$IKhandles[$y]+"AimBlend"+$side)`;
+				$constraint=$tempString[0];
+				$attrs=`listAttr -k -ud $constraint`;
+
+				createNode -n ("IKLegAim"+$IKhandles[$y]+"MultiplyDivide"+$side) multiplyDivide;
+				connectAttr ("IKLegAim"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("IKLegAim"+$IKhandles[$y]+"MultiplyDivide"+$side+".input1X");
+				connectAttr ("FKIKBlend"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("IKLegAim"+$IKhandles[$y]+"MultiplyDivide"+$side+".input2X");
+				connectAttr ("IKLegAim"+$IKhandles[$y]+"MultiplyDivide"+$side+".outputX") ($constraint+"."+$attrs[0]);
+
+				connectAttr ("IKLegAim"+$IKhandles[$y]+"MultiplyDivide"+$side+".outputX") ("IKLegAim"+$IKhandles[$y]+"Reverse"+$side+".inputX");
+				connectAttr ("IKLegAim"+$IKhandles[$y]+"Reverse"+$side+".outputX") ($constraint+"."+$attrs[1]);
+
+				parent ("FKOffset"+$fitJointsLegAim[$y]+$side) ("IKX"+$IKhandles[$y]+"AimBlend"+$side);
+				}
+			}
+		}
+
+	//Advanced Constraining
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		$parentSide=$fitJointsParentSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+		if ($fitJointsParentSide[$i]=="_R" && $b<0)	$parentSide="_L";
+
+
+		//.FKVis
+		if ($fitJointsFirstInIk[$i])
+			{
+			if (`objExists ("FKOffset"+$fitJoints[$i]+$side)`)
+				{
+				connectAttr ("FKIKBlend"+$fitJointsInIk[$i]+"Condition"+$side+".outColorG") ("FKOffset"+$fitJoints[$i]+$side+".visibility");
+				setAttr -l 1 ("FKOffset"+$fitJoints[$i]+$side+".visibility");
+				}
+			}
+
+		//Advanced Constraining to FK
+		if (`gmatch $fitJointsInIk[$i] "Spine*"` || $i==size($fitJoints)-1)
+			pointConstraint ("FKX"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side);
+
+		if ($fitJointsDownTwist[$i]>-1 || $fitJointsUpTwist[$i]>-1)
+			{
+			createNode -n ("FKIKMixOffset"+$fitJoints[$i]+$side) transform;
+			select -cl;
+			joint -n ("FKIKMix"+$fitJoints[$i]+$side);
+			parent ("FKIKMix"+$fitJoints[$i]+$side) ("FKIKMixOffset"+$fitJoints[$i]+$side);
+			asAlign ("FKIKMixOffset"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side) 1 1 0 1;
+			setAttr ("FKIKMix"+$fitJoints[$i]+$side+".rotateOrder") $fitJointsRotOrder[$i];			
+			parentConstraint ("FKX"+$fitJoints[$i]+$side) ("FKIKMix"+$fitJoints[$i]+$side);
+			}
+		else if (!$fitJointsTerminator[$i] || `gmatch $fitJointsInIk[$i] "Spline*"`)
+			{
+			if (`gmatch $fitJointsInIk[$i] "Spine*"` || $fitJoints[$i]==$topNode || $fitJointsBelowEye[$i])
+				orientConstraint ("FKX"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side);
+			else
+				parentConstraint ("FKX"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side);
+			}
+		if ($fitJointsDownTwist[$i]>-1 && $fitJointsUpTwist[$i]==-1)
+			pointConstraint ("FKIKMix"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side);
+
+		//Advanced Constraining to IK
+		if ($fitJointsInIk[$i]!="" && (!$fitJointsTerminator[$i] || `gmatch $fitJointsInIk[$i] "Spline*"`) && !`gmatch $fitJointsLabel[$i] "Ball*"`)
+			{
+			if (`gmatch $fitJointsLabel[$i] "Root*"`)
+				{
+				createNode -n ("IKOrientTo"+$fitJointsInIk[$i]+$side) transform;
+				asAlign ("IKOrientTo"+$fitJointsInIk[$i]+$side) ("FKX"+$fitJoints[$i]+$side) 1 1 0 0;
+				parent ("IKOrientTo"+$fitJointsInIk[$i]+$side) ("IK"+$fitJointsInIk[$i]+"0"+$side);
+				$tempString=`orientConstraint ("IKOrientTo"+$fitJointsInIk[$i]+$side) ($fitJoints[$i]+$side)`;
+				}
+			else
+				{
+				if ($fitJointsDownTwist[$i]>-1 || $fitJointsUpTwist[$i]>-1)
+					{
+					if ($fitJointsLastInIk[$i])
+						$tempString=`parentConstraint ("IKFKAligned"+$fitJointsInIk[$i]+$side) ("FKIKMix"+$fitJoints[$i]+$side)`;
+					else
+						$tempString=`parentConstraint ("IKX"+$fitJoints[$i]+$side) ("FKIKMix"+$fitJoints[$i]+$side)`;
+					}
+				else if (`gmatch $fitJointsInIk[$i] "Spine*"`)
+					$tempString=`orientConstraint ("IKX"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side)`;
+				else
+					$tempString=`parentConstraint ("IKX"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side)`;
+				}
+			$constraint=$tempString[0];
+			$attrs=`listAttr -k -ud $constraint`;
+			//Advanced Connecting to FKIK
+			connectAttr ("FKIKBlend"+$fitJointsInIk[$i]+"Reverse"+$side+".outputX") ($constraint+"."+$attrs[0]);
+			connectAttr ("FKIKBlend"+$fitJointsInIk[$i]+"UnitConversion"+$side+".output") ($constraint+"."+$attrs[1]);
+			}
+
+		//IKSpine pointConstraint
+		if (`gmatch $fitJointsInIk[$i] "Spine*"`)
+			{
+			$tempString=`pointConstraint ("IKX"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side)`;
+			$constraint=$tempString[0];
+			$attrs=`listAttr -k -ud $constraint`;
+			//Advanced Connecting to FKIK
+			connectAttr ("FKIKBlend"+$fitJointsInIk[$i]+"Reverse"+$side+".outputX") ($constraint+"."+$attrs[0]);
+			connectAttr ("FKIKBlend"+$fitJointsInIk[$i]+"UnitConversion"+$side+".output") ($constraint+"."+$attrs[1]);
+			}
+
+
+		//Advanced Scaling
+		if ($fitJointsInIk[$i]!="" && !$fitJointsUnderFoot[$i] && !$fitJointsTerminator[$i])
+			{
+			//scale from fk
+			createNode -n ("ScaleBlend"+$fitJoints[$i]+$side) blendColors;
+			setAttr -type float3 ("ScaleBlend"+$fitJoints[$i]+$side+".color1") 1 1 1;
+			connectAttr ("FK"+$fitJoints[$i]+$side+".scale") ("ScaleBlend"+$fitJoints[$i]+$side+".color2");
+			connectAttr ("ScaleBlend"+$fitJoints[$i]+$side+".output") ($fitJoints[$i]+$side+".scale");
+			connectAttr ("FKIKBlend"+$fitJointsInIk[$i]+"UnitConversion"+$side+".output") ("ScaleBlend"+$fitJoints[$i]+$side+".blender");
+			}
+		else if (!$fitJointsTerminator[$i])
+			connectAttr ("FK"+$fitJoints[$i]+$side+".scale") ($fitJoints[$i]+$side+".scale");
+
+		//Advanced Constraining of FKParentConstraint
+		if (`objExists ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide)`)
+				if (`objExists ($fitJointsParent[$i]+$parentSide)`)
+					{
+					parentConstraint ($fitJointsParent[$i]+$parentSide) ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide);
+					//scale connect if child has inverseScale disconnected
+					$tempString=`listRelatives -c -type joint $fitJointsParent[$i]`;
+					if (size($tempString))
+						{
+						$tempString2=`listConnections -s 1 -d 0 ($tempString[0]+".inverseScale")`;
+						if ($tempString2[0]=="")
+							if (!`isConnected ($fitJointsParent[$i]+$parentSide+".scale") ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide+".scale")`)
+							connectAttr ($fitJointsParent[$i]+$parentSide+".scale") ("FKParentConstraintTo"+$fitJointsParent[$i]+$parentSide+".scale");
+						}
+					}
+		}
+
+	//Advanced Twist
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+
+		if ($fitJointsDownTwist[$i]>-1)
+			{
+			//bend
+			$tempString=`listRelatives -c -type joint ($fitJoints[$i])`;
+			$child=$tempString[0];
+			$tempString[0]=`curve -d 3 
+				-p 0 0 0 -p 0 0 0 -p 0 0 0 -p 0 0 0 -p 0 0 0  
+				-k 0 -k 0 -k 0 -k 1 -k 2 -k 2 -k 2`;
+			rename $tempString[0] ($fitJoints[$i]+"BendCurve"+$side);
+			setAttr -l 1 ($fitJoints[$i]+"BendCurve"+$side+".visibility") 0;
+
+			$tempString=`spaceLocator`;
+			rename $tempString[0] ($fitJoints[$i]+"BendCurveStart"+$side);
+			setAttr -l 1 ($fitJoints[$i]+"BendCurveStart"+$side+".visibility") 0;
+			connectAttr ($fitJoints[$i]+"BendCurveStart"+$side+"Shape.worldPosition[0]") ($fitJoints[$i]+"BendCurve"+$side+".controlPoints[0]");
+			connectAttr ($fitJoints[$i]+"BendCurveStart"+$side+"Shape.worldPosition[0]") ($fitJoints[$i]+"BendCurve"+$side+".controlPoints[1]");
+			parentConstraint ($fitJoints[$i]+$side) ($fitJoints[$i]+"BendCurveStart"+$side);
+
+			$tempString=`spaceLocator`;
+			rename $tempString[0] ($fitJoints[$i]+"BendCurveEnd"+$side);
+			setAttr -l 1 ($fitJoints[$i]+"BendCurveEnd"+$side+".visibility") 0;
+			connectAttr ($fitJoints[$i]+"BendCurveEnd"+$side+"Shape.worldPosition[0]") ($fitJoints[$i]+"BendCurve"+$side+".controlPoints[3]");
+			connectAttr ($fitJoints[$i]+"BendCurveEnd"+$side+"Shape.worldPosition[0]") ($fitJoints[$i]+"BendCurve"+$side+".controlPoints[4]");
+			parentConstraint ("FKIKMix"+$child+$side) ($fitJoints[$i]+"BendCurveEnd"+$side);
+
+			$tempString=`spaceLocator`;
+			rename $tempString[0] ($fitJoints[$i]+"BendCurveMid"+$side);
+			setAttr -l 1 ($fitJoints[$i]+"BendCurveMid"+$side+".visibility") 0;
+			connectAttr ($fitJoints[$i]+"BendCurveMid"+$side+"Shape.worldPosition[0]") ($fitJoints[$i]+"BendCurve"+$side+".controlPoints[2]");
+			$tempString=`parentConstraint ($fitJoints[$i]+$side) ("FKIKMix"+$child+$side) ($fitJoints[$i]+"BendCurveMid"+$side)`;
+			delete $tempString[0];
+
+			parent ($fitJoints[$i]+"BendCurve"+$side) ($fitJoints[$i]+"BendCurveStart"+$side) ($fitJoints[$i]+"BendCurveEnd"+$side) ($fitJoints[$i]+"BendCurveMid"+$side) BendSystem;
+			select -cl;
+			}
+
+		if ($fitJointsDownTwist[$i]>-1)
+			{
+			//BendScale
+			createNode -n ("BendAddScale"+$fitJoints[$i]+$side) plusMinusAverage;
+			if ($fitJointsInIk[$i]!="")
+				connectAttr ("ScaleBlend"+$fitJoints[$i]+$side+".output") ("BendAddScale"+$fitJoints[$i]+$side+".input3D[0]");
+			else
+				connectAttr ($fitJoints[$i]+$side+".scale") ("BendAddScale"+$fitJoints[$i]+$side+".input3D[0]");
+
+			$tempString=`listRelatives -c -type joint ($fitJoints[$i]+$side)`;
+			$child=$tempString[0];
+			$temp=`getAttr ($child+".translate")`;
+			$temp[0]=$temp[0]/($fitJointsDownTwist[$i]+1);
+			$temp[1]=$temp[1]/($fitJointsDownTwist[$i]+1);
+			$temp[2]=$temp[2]/($fitJointsDownTwist[$i]+1);
+			for ($y=1;$y<($fitJointsDownTwist[$i]+1);$y++)
+				{
+				if ($y>1)
+					select ($fitJoints[$i]+"Part"+($y-1)+$side);
+				else
+					select ($fitJoints[$i]+$side);
+				joint -n ($fitJoints[$i]+"Part"+$y+$side);
+				sets -add ("DeformSet") ($fitJoints[$i]+"Part"+$y+$side);
+				if ($y==1)
+					if (!`isConnected ($fitJoints[$i]+$side+".scale") ($fitJoints[$i]+"Part"+$y+$side+".inverseScale")`)
+						connectAttr ($fitJoints[$i]+$side+".scale") ($fitJoints[$i]+"Part"+$y+$side+".inverseScale");
+
+				setAttr -type float3 ($fitJoints[$i]+"Part"+$y+$side+".jointOrient") 0 0 0;
+				setAttr -type float3 ($fitJoints[$i]+"Part"+$y+$side+".translate") ($temp[0]*$y) ($temp[1]*$y) ($temp[2]*$y);
+
+				//Not connecting scale on last twistJoint as this causes shifty feet with stretchy volume
+				int $lastInIKTwist=0;
+				$tempString=`listRelatives -c -type joint ($fitJoints[$i])`;
+				$label=`asLabel $tempString[0]`;
+				if (`gmatch $label "Hand*"` || `gmatch $label "Foot*"`)
+					if ($y==$fitJointsDownTwist[$i])
+						$lastInIKTwist=1;
+				if (!$lastInIKTwist)
+					connectAttr ("BendAddScale"+$fitJoints[$i]+$side+".output3D")  ($fitJoints[$i]+"Part"+$y+$side+".scale");
+
+				$tempString=`listRelatives -c -type joint ($fitJoints[$i])`;
+				$temp[0]=`getAttr ($tempString[0]+".tx")`;
+				setAttr ($fitJoints[$i]+"Part"+$y+$side+".translateX") ($b*$temp[0]/($fitJointsDownTwist[$i]+1.0));
+				}
+			parent $child ($fitJoints[$i]+"Part"+$fitJointsDownTwist[$i]+$side);
+
+
+			for ($y=1;$y<($fitJointsDownTwist[$i]+1);$y++)
+				{
+				//bend hookup
+				createNode -n ($fitJoints[$i]+"PointOnCurveInfo"+$y+$side) pointOnCurveInfo;
+				connectAttr -f ($fitJoints[$i]+"BendCurve"+$side+"Shape.worldSpace[0]") ($fitJoints[$i]+"PointOnCurveInfo"+$y+$side+".inputCurve");
+				createNode -p BendSystem -n ($fitJoints[$i]+"PointOnCurveXform"+$y+$side) transform;
+				connectAttr -f ($fitJoints[$i]+"PointOnCurveInfo"+$y+$side+".positionX") ($fitJoints[$i]+"PointOnCurveXform"+$y+$side+".translateX");
+				connectAttr -f ($fitJoints[$i]+"PointOnCurveInfo"+$y+$side+".positionY") ($fitJoints[$i]+"PointOnCurveXform"+$y+$side+".translateY");
+				connectAttr -f ($fitJoints[$i]+"PointOnCurveInfo"+$y+$side+".positionZ") ($fitJoints[$i]+"PointOnCurveXform"+$y+$side+".translateZ");
+
+				//tmp surface to determine correct U value
+				extrude -n tmpSurface -ch 0 -rn 0 -po 0 -et 0 -upn 1 -length 1 -rotation 0 -scale 1 -dl 3 ($fitJoints[$i]+"BendCurve"+$side);
+				createNode -n tempClosestPointOnSurface closestPointOnSurface;
+				connectAttr -f tmpSurfaceShape.worldSpace[0] tempClosestPointOnSurface.inputSurface;
+				$tempString=`spaceLocator`;
+				rename $tempString[0] tempLocator;
+				connectAttr -f tempLocatorShape.worldPosition[0] tempClosestPointOnSurface.inPosition;
+				asAlign tempLocator ($fitJoints[$i]+"Part"+$y+$side) 1 1 0 0;
+				setAttr ($fitJoints[$i]+"PointOnCurveInfo"+$y+$side+".parameter") `getAttr tempClosestPointOnSurface.parameterU`;
+				pointConstraint ($fitJoints[$i]+"PointOnCurveXform"+$y+$side) ($fitJoints[$i]+"Part"+$y+$side);
+				delete tmpSurface tempClosestPointOnSurface tempLocator;
+				}
+			//bend controls
+			createNode -n ("BendParentConstraint"+$fitJoints[$i]+$side) transform;
+			parent ("BendParentConstraint"+$fitJoints[$i]+$side) BendSystem;
+			connectAttr Main.sx("BendParentConstraint"+$fitJoints[$i]+$side+".sx");
+			connectAttr Main.sy("BendParentConstraint"+$fitJoints[$i]+$side+".sy");
+			connectAttr Main.sz("BendParentConstraint"+$fitJoints[$i]+$side+".sz");
+			createNode -n ("BendExtra"+$fitJoints[$i]+$side) transform;
+			parent ("BendExtra"+$fitJoints[$i]+$side) ("BendParentConstraint"+$fitJoints[$i]+$side);
+			duplicate -n ("Bend"+$fitJoints[$i]+$side) "Bend_icon";
+			xform -ws -t 0 0 0 -ro 0 0 0 ("Bend"+$fitJoints[$i]+$side);
+			if ($fitJointsBend[$i])
+				{
+				sets -add ("ControlSet") ("Bend"+$fitJoints[$i]+$side);	
+				sets -add ("ControlSet") ("BendExtra"+$fitJoints[$i]+$side);	
+				}
+			else
+				setAttr -l 1 ("Bend"+$fitJoints[$i]+$side+".v") 0;
+			setAttr -type float3 ("Bend"+$fitJoints[$i]+$side+".scale") ($height/31) ($height/31) ($height/31);
+			parent ("Bend"+$fitJoints[$i]+$side) ("BendExtra"+$fitJoints[$i]+$side);
+			asAlign ("BendParentConstraint"+$fitJoints[$i]+$side) ($fitJoints[$i]+"BendCurveMid"+$side) 1 0 0 0;
+			asAlign ("BendParentConstraint"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side) 0 1 0 0;
+			if ($fitJoints[$i]=="Neck" && `objExists ("FKIKMixHead"+$side)`)
+				pointConstraint -mo ("FKIKMix"+$fitJoints[$i]+$side) ("FKIKMixHead"+$side) ("BendParentConstraint"+$fitJoints[$i]+$side);
+			else
+				parentConstraint -mo ("FKIKMix"+$fitJoints[$i]+$side) ("BendParentConstraint"+$fitJoints[$i]+$side);
+			makeIdentity -a 1 -t 0 -r 1 -s 1 ("Bend"+$fitJoints[$i]+$side);
+			asLockAttr ("Bend"+$fitJoints[$i]+$side) 0 1 0 1;
+			asLockAttr ("BendExtra"+$fitJoints[$i]+$side) 0 1 0 1;
+			parent ($fitJoints[$i]+"BendCurveMid"+$side) ("Bend"+$fitJoints[$i]+$side);
+
+			createNode -n ("BendAimerAt"+$fitJoints[$i]+$side) transform;
+			parent ("BendAimerAt"+$fitJoints[$i]+$side) ("BendParentConstraint"+$fitJoints[$i]+$side);
+			xform -os -t 0 0 0 -ro 0 0 0 ("BendAimerAt"+$fitJoints[$i]+$side);
+			pointConstraint -skip x -weight 1 ("Bend"+$fitJoints[$i]+$side) ("BendAimerAt"+$fitJoints[$i]+$side);
+
+			connectAttr ("Bend"+$fitJoints[$i]+$side+".scale") ("BendAddScale"+$fitJoints[$i]+$side+".input3D[1]");
+			setAttr -type float3 ("BendAddScale"+$fitJoints[$i]+$side+".input3D[2]") -1 -1 -1;
+			}
+		}
+
+	//Bend0
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+
+		if ($fitJointsUpTwist[$i]>-1 && $fitJointsDownTwist[$i]>-1)
+			{
+			createNode -n ("Bend0Offset"+$fitJoints[$i]+$side) transform;
+			parent ("Bend0Offset"+$fitJoints[$i]+$side) ("BendParentConstraint"+$fitJoints[$i]+$side);
+			createNode -n ("Bend0Extra"+$fitJoints[$i]+$side) transform;
+			parent ("Bend0Extra"+$fitJoints[$i]+$side) ("Bend0Offset"+$fitJoints[$i]+$side);
+			duplicate -n ("Bend0"+$fitJoints[$i]+$side) "Bend_icon";
+			xform -ws -t 0 0 0 -ro 0 0 0 ("Bend0"+$fitJoints[$i]+$side);
+			if ($fitJointsBend[$i])
+				{
+				sets -add ("ControlSet") ("Bend0"+$fitJoints[$i]+$side);	
+				sets -add ("ControlSet") ("Bend0Extra"+$fitJoints[$i]+$side);	
+				}
+			else
+				setAttr -l 1 ("Bend0"+$fitJoints[$i]+$side+".v") 0;
+			setAttr -type float3 ("Bend0"+$fitJoints[$i]+$side+".scale") ($height/31) ($height/31) ($height/31);
+			parent ("Bend0"+$fitJoints[$i]+$side) ("Bend0Extra"+$fitJoints[$i]+$side);
+			asAlign ("Bend0Offset"+$fitJoints[$i]+$side) ($fitJoints[$i]+"BendCurveStart"+$side) 1 1 0 0;
+			$tempString=`aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpType "vector" -worldUpVector 0 1 0 ($fitJoints[$i]+"BendCurveEnd"+$side) ("Bend0"+$fitJoints[$i]+$side)`;
+			delete $tempString[0];
+			makeIdentity -a 1 -t 0 -r 1 -s 1 ("Bend0"+$fitJoints[$i]+$side);
+			asLockAttr ("Bend0"+$fitJoints[$i]+$side) 0 1 1 1;
+			parent ($fitJoints[$i]+"BendCurveStart"+$side) ($fitJointsParent[$i]+"BendCurveEnd"+$side) ("Bend0"+$fitJoints[$i]+$side);
+			delete ($fitJoints[$i]+"BendCurveStart"+$side+"_parentConstraint1") ($fitJointsParent[$i]+"BendCurveEnd"+$side+"_parentConstraint1");
+			pointConstraint -mo ("Bend0"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side);
+			}
+		}
+
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+		}
+
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		$parentSide=$fitJointsParentSide[$i];
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+		if ($fitJointsParentSide[$i]=="_R" && $b<0)	$parentSide="_L";
+
+		if (($fitJointsDownTwist[$i]>-1 || $fitJointsUpTwist[$i]>-1))
+			{
+			createNode -n ("TwistFollow"+$fitJoints[$i]+$side) transform;
+			parent ("TwistFollow"+$fitJoints[$i]+$side) TwistSystem;
+			setAttr -l 1 ("TwistFollow"+$fitJoints[$i]+$side+".visibility") 0;
+			parentConstraint ("FKIKMix"+$fitJoints[$i]+$side) ("TwistFollow"+$fitJoints[$i]+$side);
+			createNode -n ("TwistFollowParent"+$fitJoints[$i]+$side) transform;
+			parent ("TwistFollowParent"+$fitJoints[$i]+$side) TwistSystem;
+			setAttr -l 1 ("TwistFollowParent"+$fitJoints[$i]+$side+".visibility") 0;
+			if (`objExists ($fitJointsParent[$i]+$parentSide)`)
+				asAlign ("TwistFollowParent"+$fitJoints[$i]+$side) ($fitJointsParent[$i]+$parentSide) 1 1 0 0;
+			parent ("FKIKMixOffset"+$fitJoints[$i]+$side) ("TwistFollowParent"+$fitJoints[$i]+$side);
+			
+			joint -n ("UnTwist"+$fitJoints[$i]+$side);
+			parent ("UnTwist"+$fitJoints[$i]+$side) ("TwistFollowParent"+$fitJoints[$i]+$side);
+			//wrist/head migh be already rotated, so the untwister needs to be straight
+			if ($fitJointsUpTwist[$i]>-1 && $fitJointsDownTwist[$i]==-1)
+				{
+				setAttr -type float3 ("UnTwist"+$fitJoints[$i]+$side+".jointOrient") 0 0 0;
+				setAttr -type float3 ("UnTwist"+$fitJoints[$i]+$side+".rotate") 0 0 0;
+				}
+			joint -n ("UnTwistEnd"+$fitJoints[$i]+$side);
+			setAttr ("UnTwistEnd"+$fitJoints[$i]+$side+".translateX") ($b*$height/31);
+			ikHandle -n ("UnTwistIK"+$fitJoints[$i]+$side) -ns 2 -sol "ikRPsolver" -sj ("UnTwist"+$fitJoints[$i]+$side) -ee ("UnTwistEnd"+$fitJoints[$i]+$side);
+			parent ("UnTwistIK"+$fitJoints[$i]+$side) ("TwistFollow"+$fitJoints[$i]+$side);
+/* this was added in v 3.87, as it fixed some neckFlipping, but it turned out to cause new bug of hip flipping
+			$tempString=`listRelatives -type joint -c $fitJoints[$i]`;
+			if (size($tempString)==1)
+				{
+				if (`objExists ("FK"+$tempString[0]+$side)`)
+					pointConstraint ("FK"+$tempString[0]+$side) ("UnTwistIK"+$fitJoints[$i]+$side);
+				}
+*/
+			createNode -n ("UnTwistPoleVector"+$fitJoints[$i]+$side) transform;
+			parent ("UnTwistPoleVector"+$fitJoints[$i]+$side) ("TwistFollowParent"+$fitJoints[$i]+$side);
+			$temp=`xform -q -ws -t ("UnTwist"+$fitJoints[$i]+$side)`;
+			xform -ws -t $temp[0] $temp[1] $temp[2] ("UnTwistPoleVector"+$fitJoints[$i]+$side);
+			poleVectorConstraint ("UnTwistPoleVector"+$fitJoints[$i]+$side) ("UnTwistIK"+$fitJoints[$i]+$side);
+
+			pointConstraint ("FKIKMix"+$fitJoints[$i]+$side) ("UnTwist"+$fitJoints[$i]+$side);
+			pointConstraint ("FKIKMix"+$fitJoints[$i]+$side) ("UnTwistPoleVector"+$fitJoints[$i]+$side);
+
+			select ("UnTwist"+$fitJoints[$i]+$side);
+			joint -n ("TwistBalancer"+$fitJoints[$i]+$side);
+			$tempString=`orientConstraint -mo ("FKIKMix"+$fitJoints[$i]+$side) ("TwistBalancer"+$fitJoints[$i]+$side)`;
+
+
+			if ($fitJointsUpTwist[$i]>-1 && $fitJointsDownTwist[$i]==-1)
+					parentConstraint ("FKIKMix"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side);
+			}
+
+		if ($fitJointsDownTwist[$i]>-1)
+			{
+			for ($y=0;$y<($fitJointsDownTwist[$i]+1);$y++)
+				{
+				if ($y==0)
+					$joint=$fitJoints[$i]+$side;
+				else
+					$joint=$fitJoints[$i]+"Part"+$y+$side;
+				addAttr -k 1 -ln twistAmount -at double -min 0 -max 1 $joint;
+				addAttr -k 1 -ln twistAddition -at double $joint;
+				setAttr ($joint+".twistAmount") ((1.00/($fitJointsDownTwist[$i]+2))*($y+1));
+				createNode -n ("twistAmountDivide"+$fitJoints[$i]+"Part"+$y+$side) multiplyDivide;
+				createNode -n ("twistAddition"+$fitJoints[$i]+"Part"+$y+$side) plusMinusAverage;
+/*
+				$tempString=`listRelatives -c -type joint $fitJoints[$i]`;
+				connectAttr ("TwistBalancer"+$tempString[0]+$side+".rotateX") ("twistAmountDivide"+$fitJoints[$i]+"Part"+$y+$side+".input1X");
+				connectAttr ($joint+".twistAmount") ("twistAmountDivide"+$fitJoints[$i]+"Part"+$y+$side+".input2X");
+*/
+			//Modified in 3.97 to avoid `leaking` twist distribution(
+			//Before twisting of the upArm was driven by twisting of the loArm, which is fine and neat when elbow is straight..
+				if ($fitJointsUpTwist[$i]==-1)
+					connectAttr ("TwistBalancer"+$fitJoints[$i]+$side+".rotateX") ("twistAmountDivide"+$fitJoints[$i]+"Part"+$y+$side+".input1X");
+				else
+					{
+					$tempString=`listRelatives -c -type joint $fitJoints[$i]`;
+					connectAttr ("TwistBalancer"+$tempString[0]+$side+".rotateX") ("twistAmountDivide"+$fitJoints[$i]+"Part"+$y+$side+".input1X");
+					}
+				connectAttr ($joint+".twistAmount") ("twistAmountDivide"+$fitJoints[$i]+"Part"+$y+$side+".input2X");
+
+				createNode -n ("Twister"+$fitJoints[$i]+$y+$side) transform;
+				if ($fitJointsUpTwist[$i]>-1 && $fitJointsDownTwist[$i]>-1)
+					parent ("Twister"+$fitJoints[$i]+$y+$side) ("FKIKMix"+$fitJoints[$i]+$side);
+				else
+					parent ("Twister"+$fitJoints[$i]+$y+$side) ("UnTwist"+$fitJoints[$i]+$side);
+				xform -os -t 0 0 0 -ro 0 0 0 ("Twister"+$fitJoints[$i]+$y+$side);
+//				connectAttr ("twistAmountDivide"+$fitJoints[$i]+"Part"+$y+$side+".outputX") ("Twister"+$fitJoints[$i]+$y+$side+".rotateX");
+				connectAttr ("twistAmountDivide"+$fitJoints[$i]+"Part"+$y+$side+".outputX") ("twistAddition"+$fitJoints[$i]+"Part"+$y+$side+".input1D[0]");
+				connectAttr ($joint+".twistAddition") ("twistAddition"+$fitJoints[$i]+"Part"+$y+$side+".input1D[1]");
+				connectAttr ("twistAddition"+$fitJoints[$i]+"Part"+$y+$side+".output1D") ("Twister"+$fitJoints[$i]+$y+$side+".rotateX");
+
+				if ($y==0)
+					{
+					createNode -n ("Aimer"+$fitJoints[$i]+$y+$side) transform;
+					parent ("Aimer"+$fitJoints[$i]+$y+$side) ("UnTwist"+$fitJoints[$i]+$side);
+					xform -os -t 0 0 0 -ro 0 0 0 ("Aimer"+$fitJoints[$i]+$y+$side);
+					if ($fitJointsUpTwist[$i]>-1 && $fitJointsDownTwist[$i]>-1)
+						aimConstraint -offset 0 0 0 -weight 1 -aimVector $b 0 0 -upVector 0 1 0 -worldUpType "objectrotation" -worldUpObject ("FKIKMix"+$fitJoints[$i]+$side) ("BendAimerAt"+$fitJoints[$i]+$side) ("Aimer"+$fitJoints[$i]+$y+$side);
+					else
+						aimConstraint -offset 0 0 0 -weight 1 -aimVector $b 0 0 -upVector 0 1 0 -worldUpType "objectrotation" -worldUpObject ("UnTwist"+$fitJoints[$i]+$side) ("BendAimerAt"+$fitJoints[$i]+$side) ("Aimer"+$fitJoints[$i]+$y+$side);
+					orientConstraint ("Aimer"+$fitJoints[$i]+$y+$side) ($fitJoints[$i]+$side);
+//					connectAttr ("twistAmountDivide"+$fitJoints[$i]+"Part"+$y+$side+".outputX") ($joint+"_orientConstraint1.offsetX");
+					connectAttr ("twistAddition"+$fitJoints[$i]+"Part"+$y+$side+".output1D") ($joint+"_orientConstraint1.offsetX");
+					}
+				else
+					tangentConstraint -weight 1 -aimVector $b 0 0 -upVector 0 1 0 -worldUpType "objectrotation" -worldUpVector 0 1 0 -worldUpObject ("Twister"+$fitJoints[$i]+$y+$side) ($fitJoints[$i]+"BendCurve"+$side) ($fitJoints[$i]+"Part"+$y+$side);
+				}
+			}
+		}
+
+
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		$parentSide=$fitJointsParentSide[$i];
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+		if ($fitJointsParentSide[$i]=="_R" && $b<0)	$parentSide="_L";
+
+		if (($fitJointsDownTwist[$i]>-1 || $fitJointsUpTwist[$i]>-1))
+			if (`objExists ($fitJointsParent[$i]+$parentSide)`)
+				{
+				//upTwisters except if parent is dualTwister
+				if ($fitJointsUpTwist[$i]>-1 && !`objExists ("Bend0Extra"+$fitJointsParent[$i]+$parentSide)`)
+					parentConstraint ("UnTwist"+$fitJointsParent[$i]+$parentSide) ("TwistFollowParent"+$fitJoints[$i]+$side);
+				else if ($fitJointsUpTwist[$i]>-1)
+					parentConstraint ("FKIKMix"+$fitJointsParent[$i]+$parentSide) ("TwistFollowParent"+$fitJoints[$i]+$side);
+				else
+					parentConstraint ($fitJointsParent[$i]+$parentSide) ("TwistFollowParent"+$fitJoints[$i]+$side);
+				}
+			else
+				parentConstraint "Main" ("TwistFollowParent"+$fitJoints[$i]+$side);
+		}
+
+
+	//Advanced fitNodes creation
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+
+		if ($fitNodes[$i]=="")
+			continue;
+		tokenize $fitNodes[$i] ";" $fitNodeBuffer;
+		for ($y=0;$y<size($fitNodeBuffer);$y++)
+			{
+			if (!`objExists ($fitNodeBuffer[$y]+$side)`)
+				if (`objectType $fitNodeBuffer[$y]`!="joint")
+					{
+					$tempString=`duplicate $fitNodeBuffer[$y]`;
+					rename $tempString[0] ($fitNodeBuffer[$y]+$side);
+					$tempString=`listRelatives -s ($fitNodeBuffer[$y]+$side)`;
+					if (`objExists $tempString[0]`)
+						if (`objectType $tempString[0]`=="nurbsCurve")
+							sets -add ("ControlSet") ($fitNodeBuffer[$y]+$side);
+						
+					$tempString=`listRelatives -p ($fitNodeBuffer[$y]+$side)`;
+					if (`objExists ($tempString[0]+$side)`)
+						{
+						$setLocks=`asLockXform ($fitNodeBuffer[$y]+$side) {}`;
+						if ($side=="_L")
+							{
+							$temp=`xform -q -ws -t $fitNodeBuffer[$y]`;
+							xform -s -1 1 1 ($fitNodeBuffer[$y]+$side);
+							makeIdentity -a 1 -t 0 -r 0 -s 1 ($fitNodeBuffer[$y]+$side);
+							xform -ws -t ($temp[0]*-1) $temp[1] $temp[2] ($fitNodeBuffer[$y]+$side);
+							rotate -r -ws 180 0 0 ($fitNodeBuffer[$y]+$side);
+							$temp=`xform -q -r -os -s $fitNodeBuffer[$y]`;
+							xform -os -s $temp[0] $temp[1] $temp[2] ($fitNodeBuffer[$y]+$side);
+							}
+						createNode -n ("FKParentConstraint"+$fitNodeBuffer[$y]+$side) transform;
+						parent ("FKParentConstraint"+$fitNodeBuffer[$y]+$side) FKSystem;
+						parentConstraint ($tempString[0]+$side) ("FKParentConstraint"+$fitNodeBuffer[$y]+$side);
+						createNode -n ("FKOffset"+$fitNodeBuffer[$y]+$side) transform;
+						asAlign ("FKOffset"+$fitNodeBuffer[$y]+$side) ($fitNodeBuffer[$y]+$side) 1 1 0 1;
+						parent ("FKOffset"+$fitNodeBuffer[$y]+$side) ("FKParentConstraint"+$fitNodeBuffer[$y]+$side);
+						parent ($fitNodeBuffer[$y]+$side) ("FKOffset"+$fitNodeBuffer[$y]+$side);
+						asLockXform ($fitNodeBuffer[$y]+$side) $setLocks;
+						}
+					}
+			}
+		}
+
+	//Advanced fitNodes connection
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		$altSide=$side;
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+
+		if ($fitNodes[$i]=="")
+			continue;
+		tokenize $fitSourceNode[$i] ";" $fitSourceNodeBuffer;
+		tokenize $fitNodeSourceConnect[$i] ";" $fitNodeSourceConnectBuffer;
+		tokenize $fitDestNode[$i] ";" $fitDestNodeBuffer;
+		tokenize $fitNodeDestConnect[$i] ";" $fitNodeDestConnectBuffer;
+		for ($y=0;$y<size($fitSourceNodeBuffer);$y++)
+			{
+			$altSide=$side;
+			if (`objectType $fitSourceNodeBuffer[$y]`=="joint")
+				$sourcePrefix="FK";
+			else
+				$sourcePrefix="";
+			if (`objectType $fitDestNodeBuffer[$y]`=="joint")
+				{
+				$destPrefix="FKOffset";
+				if (`gmatch $fitNodeDestConnectBuffer[$y] "translate*"`)
+					if (!`isConnected ("FKOffset"+$fitJoints[$i]+$side+".translate") ($fitJoints[$i]+$side+".translate")`)
+						connectAttr -f ("FKOffset"+$fitJoints[$i]+$side+".translate") ($fitJoints[$i]+$side+".translate");
+				}
+			else
+				$destPrefix="";
+
+			if ($fitNodeDestConnectBuffer[$y]=="globalConnect")
+				continue;
+
+			if (`objectType $fitSourceNodeBuffer[$y]`=="joint")
+				{
+				$temp=`xform -q -ws -t $fitSourceNodeBuffer[$y]`;
+				if ($temp[0]>(-1*$sideTreshold))
+					$altSide="_M";
+				if (`objExists ($sourcePrefix+$fitSourceNodeBuffer[$y]+$altSide)`)
+					if (!`attributeExists $fitNodeSourceConnectBuffer[$y] ($sourcePrefix+$fitSourceNodeBuffer[$y]+$altSide)`)
+						{
+						$temp[0]=`getAttr ($fitSourceNodeBuffer[$y]+"."+$fitNodeSourceConnectBuffer[$y])`;
+						addAttr -k 1 -dv $temp[0] -ln $fitNodeSourceConnectBuffer[$y] -at double ($sourcePrefix+$fitSourceNodeBuffer[$y]+$altSide);
+						if (`attributeQuery -re -n ($fitSourceNodeBuffer[$y]) $fitNodeSourceConnectBuffer[$y]`)
+							{
+							$temp=`attributeQuery -r -n ($fitSourceNodeBuffer[$y]) $fitNodeSourceConnectBuffer[$y]`;
+							addAttr -e -min $temp[0] -max $temp[1] ($sourcePrefix+$fitSourceNodeBuffer[$y]+$altSide+"."+$fitNodeSourceConnectBuffer[$y]);
+							}
+						}
+				}
+			if (`objExists ($sourcePrefix+$fitSourceNodeBuffer[$y]+$altSide)` && `objExists ($destPrefix+$fitDestNodeBuffer[$y]+$side)`)
+				if (!`isConnected ($sourcePrefix+$fitSourceNodeBuffer[$y]+$altSide+"."+$fitNodeSourceConnectBuffer[$y]) ($destPrefix+$fitDestNodeBuffer[$y]+$side+"."+$fitNodeDestConnectBuffer[$y])`)
+					connectAttr ($sourcePrefix+$fitSourceNodeBuffer[$y]+$altSide+"."+$fitNodeSourceConnectBuffer[$y]) ($destPrefix+$fitDestNodeBuffer[$y]+$side+"."+$fitNodeDestConnectBuffer[$y]);
+			}
+		}
+
+	//Advanced Scale-FK
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		$parentSide=$fitJointsParentSide[$i];
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+		if ($fitJointsParentSide[$i]=="_R" && $b<0)	$parentSide="_L";
+
+		if ($fitJointsFirstOffIK[$i])
+			continue;
+		if (`objExists ("FK"+$fitJointsParent[$i]+$parentSide)`)
+			if (!$fitJointsFirstInIk[$i])
+				connectAttr -f ("FK"+$fitJointsParent[$i]+$parentSide+".scale") ("FKX"+$fitJoints[$i]+$side+".inverseScale");
+//		Commented out for Maya2014
+//		if ($fitJointsUpTwist[$i]>-1)
+//			connectAttr -f ($fitJointsParent[$i]+"Part"+$fitJointsUpTwist[$i]+$parentSide+".scale") ($fitJoints[$i]+$side+".inverseScale");
+		}
+
+	//Advanced Scale-IK
+	for ($y=0;$y<size($IKhandles);$y++)
+		{
+		$side=$IKstartSide[$y];
+		if ($b<0 && ($side=="_L" || $IKNoFlip[$y]))
+			continue;
+		$IKParentSide=$IKparentSide[$y];
+		if (($IKstartSide[$y]=="_M" || $IKendSide[$y]=="_M")&& $b<0)
+			continue;
+		if ($IKstartSide[$y]=="_R" && $b<0)	$side="_L";
+		if ($IKparentSide[$y]=="_R" && $b<0)	$IKParentSide="_L";
+
+		if ($IKsolver[$y]!="ikRPsolver")
+			continue;
+
+		$tempString[0]=("IKX"+$IKstartJoints[$y]+$side);
+		$IKlenght[$y]=0;
+		for ($a=0;$a<99;$a++)
+			{
+			$tempString=`listConnections -type joint ($tempString[0])`;
+/*
+			if (`getAttr ($tempString[0]+".translateY")`<-0.01 || `getAttr ($tempString[0]+".translateY")`>0.01
+			|| `getAttr ($tempString[0]+".translateZ")`<-0.01 || `getAttr ($tempString[0]+".translateZ")`>0.01)
+				{
+				$IKlenght[$y]=99;
+				break;
+				}
+*/
+			$IKlenght[$y]=$IKlenght[$y]+`getAttr ($tempString[0]+".translateX")`;
+			if ($tempString[0]==("IKX"+$IKendJoints[$y]+$side))
+				break;
+			}
+			$IKlenght[$y]=abs($IKlenght[$y]);
+
+//		if ($IKlenght[$y]==99)
+//			continue;
+
+		addAttr -k 1 -ln stretchy -at double  -min 0 -max 10 -dv 0 ("IK"+$IKhandles[$y]+$side);
+		addAttr -k 1 -ln antiPop -at double  -min 0 -max 10 -dv 0 ("IK"+$IKhandles[$y]+$side);
+		createNode -n ("IKSetRangeStretch"+$IKhandles[$y]+$side) setRange;
+		createNode -n ("IKSetRangeAntiPop"+$IKhandles[$y]+$side) setRange;
+		setAttr ("IKSetRangeStretch"+$IKhandles[$y]+$side+".maxX") 1;
+		setAttr ("IKSetRangeAntiPop"+$IKhandles[$y]+$side+".maxX") 1;
+		setAttr ("IKSetRangeStretch"+$IKhandles[$y]+$side+".oldMaxX") 10;
+		setAttr ("IKSetRangeAntiPop"+$IKhandles[$y]+$side+".oldMaxX") 10;
+		connectAttr ("IK"+$IKhandles[$y]+$side+".stretchy") ("IKSetRangeStretch"+$IKhandles[$y]+$side+".valueX");
+		connectAttr ("IK"+$IKhandles[$y]+$side+".antiPop") ("IKSetRangeAntiPop"+$IKhandles[$y]+$side+".valueX");
+
+		$tempString=`spaceLocator`;
+		rename $tempString[0] ("IKmessureLoc1"+$IKhandles[$y]+$side);
+		setAttr -l 1 ("IKmessureLoc1"+$IKhandles[$y]+$side+".visibility") 0;
+		pointConstraint ("IKX"+$IKstartJoints[$y]+$side)  ("IKmessureLoc1"+$IKhandles[$y]+$side);
+		parent ("IKmessureLoc1"+$IKhandles[$y]+$side) ("IKMessure");
+		$tempString=`spaceLocator`;
+		rename $tempString[0] ("IKmessureLoc2"+$IKhandles[$y]+$side);
+		setAttr -l 1 ("IKmessureLoc2"+$IKhandles[$y]+$side+".visibility") 0;
+		asAlign ("IKmessureLoc2"+$IKhandles[$y]+$side) ("IKX"+$IKhandles[$y]+"Handle"+$side) 1 0 0 0;
+		parent ("IKmessureLoc2"+$IKhandles[$y]+$side) ("IKmessureLoc1"+$IKhandles[$y]+$side);
+
+		createNode -n ("IKmessureConstrainTo"+$IKhandles[$y]+$side) transform;
+		asAlign ("IKmessureConstrainTo"+$IKhandles[$y]+$side) ("IKX"+$IKhandles[$y]+"Handle"+$side) 1 1 0 0;
+		$tempString=`listRelatives -p ("IKX"+$IKhandles[$y]+"Handle"+$side)`;
+		parent ("IKmessureConstrainTo"+$IKhandles[$y]+$side) $tempString[0];
+		pointConstraint ("IKmessureConstrainTo"+$IKhandles[$y]+$side)  ("IKmessureLoc2"+$IKhandles[$y]+$side);
+
+		createNode -n ("IKdistance"+$IKhandles[$y]+$side+"_Shape") distanceDimShape;
+		$tempString=`listRelatives -p ("IKdistance"+$IKhandles[$y]+$side+"_Shape")`;
+		rename $tempString[0] ("IKdistance"+$IKhandles[$y]+$side);
+		parent ("IKdistance"+$IKhandles[$y]+$side) ("IKMessure");
+		setAttr -l 1 ("IKdistance"+$IKhandles[$y]+$side+".visibility") 0;
+		connectAttr ("IKmessureLoc2"+$IKhandles[$y]+$side+".translate") ("IKdistance"+$IKhandles[$y]+$side+".endPoint");
+		createNode -n ("IKmessureDiv"+$IKhandles[$y]+$side) multiplyDivide;
+		setAttr ("IKmessureDiv"+$IKhandles[$y]+$side+".operation") 2;
+		setAttr ("IKmessureDiv"+$IKhandles[$y]+$side+".input2X") $IKlenght[$y];
+
+		$distance=`getAttr ("IKdistance"+$IKhandles[$y]+$side+".distance")`;
+		createNode -n ("IKmessureBlendAntiPop"+$IKhandles[$y]+$side) blendTwoAttr;
+		connectAttr ("IKSetRangeAntiPop"+$IKhandles[$y]+$side+".outValueX") ("IKmessureBlendAntiPop"+$IKhandles[$y]+$side+".attributesBlender");
+		addAttr -ln antiPop -at double ("IKdistance"+$IKhandles[$y]+$side+"Shape");
+		setDrivenKeyframe -itt "linear" -ott "linear" -v $IKlenght[$y] -dv $IKlenght[$y] -cd ("IKdistance"+$IKhandles[$y]+$side+".distance") ("IKdistance"+$IKhandles[$y]+$side+"Shape.antiPop");
+		setKeyframe -itt "linear" -ott "linear" -v $IKlenght[$y] -float ($IKlenght[$y]*0.1) ("IKdistance"+$IKhandles[$y]+$side+"Shape_antiPop");
+		setKeyframe -itt "linear" -ott "linear" -v ($IKlenght[$y]*1.2) -float ($IKlenght[$y]*1.2) ("IKdistance"+$IKhandles[$y]+$side+"Shape_antiPop");
+		setKeyframe -itt "linear" -ott "linear" -i -f ($IKlenght[$y]*0.25) ("IKdistance"+$IKhandles[$y]+$side+"Shape_antiPop");
+
+		selectKey ("IKdistance"+$IKhandles[$y]+$side+"Shape_antiPop");
+		setInfinity -poi linear;
+		duplicate -n ("IKdistance"+$IKhandles[$y]+$side+"Shape_normal") ("IKdistance"+$IKhandles[$y]+$side+"Shape_antiPop");
+		connectAttr ("IKdistance"+$IKhandles[$y]+$side+".distance") ("IKdistance"+$IKhandles[$y]+$side+"Shape_normal.input");
+		keyTangent -e -weightedTangents 0  ("IKdistance"+$IKhandles[$y]+$side+"Shape_antiPop");
+		keyTangent -e -a -l 0 -in 1 -outAngle -2.466655 -outWeight 1 ("IKdistance"+$IKhandles[$y]+$side+"Shape_antiPop");
+		keyTangent -e -a -l 0 -in 2 -inAngle 2.671251 -inWeight 1 ("IKdistance"+$IKhandles[$y]+$side+"Shape_antiPop");
+
+		connectAttr ("IKdistance"+$IKhandles[$y]+$side+"Shape_normal.output") ("IKmessureBlendAntiPop"+$IKhandles[$y]+$side+".input[0]");
+		connectAttr ("IKdistance"+$IKhandles[$y]+$side+"Shape_antiPop.output") ("IKmessureBlendAntiPop"+$IKhandles[$y]+$side+".input[1]");
+
+		createNode -n ("IKdistanceClamp"+$IKhandles[$y]+$side) clamp;
+		setAttr ("IKdistanceClamp"+$IKhandles[$y]+$side+".maxR") $IKlenght[$y];
+		connectAttr ("IKmessureBlendAntiPop"+$IKhandles[$y]+$side+".output") ("IKdistanceClamp"+$IKhandles[$y]+$side+".inputR");
+		createNode -n ("IKmessureBlendStretch"+$IKhandles[$y]+$side) blendTwoAttr;
+		connectAttr ("IKSetRangeStretch"+$IKhandles[$y]+$side+".outValueX") ("IKmessureBlendStretch"+$IKhandles[$y]+$side+".attributesBlender");
+		connectAttr ("IKdistanceClamp"+$IKhandles[$y]+$side+".outputR") ("IKmessureBlendStretch"+$IKhandles[$y]+$side+".input[0]");
+		connectAttr ("IKmessureBlendAntiPop"+$IKhandles[$y]+$side+".output") ("IKmessureBlendStretch"+$IKhandles[$y]+$side+".input[1]");
+		connectAttr ("IKmessureBlendStretch"+$IKhandles[$y]+$side+".output") ("IKmessureDiv"+$IKhandles[$y]+$side+".input1X");
+
+		$tempString[0]=("IKX"+$IKstartJoints[$y]+$side);
+		for ($a=0;$a<99;$a++)
+			{
+			$tempString=`listConnections -type joint ($tempString[0])`;
+			$temp[0]=`getAttr ($tempString[0]+".translateX")`;
+			createNode -n ($tempString[0]+"_IKmessureDiv"+$side) multiplyDivide;
+			setAttr ($tempString[0]+"_IKmessureDiv"+$side+".input2X") $temp[0];
+			connectAttr ("IKmessureDiv"+$IKhandles[$y]+$side+".output.outputX") ($tempString[0]+"_IKmessureDiv"+$side+".input1X");
+			connectAttr ($tempString[0]+"_IKmessureDiv"+$side+".output.outputX") ($tempString[0]+".translateX");
+			//IkLengtControl
+			addAttr -k 1 -ln ("Lenght"+($a+1)) -at double -dv 1 ("IK"+$IKhandles[$y]+$side);
+			createNode -n ($tempString[0]+"_IKLenght"+$side) multiplyDivide;
+			connectAttr ("IK"+$IKhandles[$y]+$side+".Lenght"+($a+1)) ($tempString[0]+"_IKLenght"+$side+".input1X");
+			setAttr ($tempString[0]+"_IKLenght"+$side+".input2X") $temp[0];
+			connectAttr ($tempString[0]+"_IKLenght"+$side+".output.outputX") ($tempString[0]+"_IKmessureDiv"+$side+".input2X");
+			if ($a==1)
+				{
+				createNode -n ("ScaleBlendAddX"+$IKmiddleJoints[$y]+$side) plusMinusAverage;
+				connectAttr ("IK"+$IKhandles[$y]+$side+".Lenght"+($a+1)) ("ScaleBlendAddX"+$IKmiddleJoints[$y]+$side+".input1D[0]");
+				connectAttr ("IKmessureDiv"+$IKhandles[$y]+$side+".outputX") ("ScaleBlendAddX"+$IKmiddleJoints[$y]+$side+".input1D[1]");
+				setAttr ("ScaleBlendAddX"+$IKmiddleJoints[$y]+$side+".input1D[2]") -1;
+				connectAttr ("ScaleBlendAddX"+$IKmiddleJoints[$y]+$side+".output1D") ("ScaleBlend"+$IKmiddleJoints[$y]+$side+".color1R");
+				}
+
+			if ($tempString[0]==("IKX"+$IKendJoints[$y]+$side))
+				break;
+			}
+		}
+
+	//volume (Squash Scaling) - `IK setup` part
+	for ($y=0;$y<size($IKhandles);$y++)
+		{
+		$side=$IKendSide[$y];
+		if ($b<0 && ($side=="_L" || $IKNoFlip[$y]))
+			continue;
+		if ($IKendSide[$y]=="_M" && $b<0)	continue;
+		if ($IKendSide[$y]=="_R" && $b<0)	$side="_L";
+
+		$ikHandle = ("IK"+$IKhandles[$y]+$side);
+		if ($IKsolver[$y]=="ikSplineSolver")
+			{
+			$numCVs=`getAttr ("IKX"+$IKhandles[$y]+"Curve"+$side+".spans")`+`getAttr ("IKX"+$IKhandles[$y]+"Curve"+$side+".degree")`;
+			$ikHandle = ("IK"+$IKhandles[$y]+($numCVs-1)+$side);
+			}
+		addAttr -k 1 -ln volume -at double -smn 0 -hsn 1 -smx 10 -hsx 1 -dv 10 $ikHandle;
+		createNode -n ("volume"+$IKhandles[$y]+"UnitConversion"+$side) unitConversion;
+		setAttr ("volume"+$IKhandles[$y]+"UnitConversion"+$side+".conversionFactor") 0.1;
+		connectAttr ($ikHandle+".volume") ("volume"+$IKhandles[$y]+"UnitConversion"+$side+".input");
+		createNode -n ("multWithStretchy"+$IKhandles[$y]+$side) multiplyDivide;
+		connectAttr ("volume"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("multWithStretchy"+$IKhandles[$y]+$side+".input1X");
+		if ($IKsolver[$y]=="ikSplineSolver")
+			connectAttr ("stretchy"+$IKhandles[$y]+"UnitConversion"+$side+".output") ("multWithStretchy"+$IKhandles[$y]+$side+".input2X");
+		createNode -n ("volume1Over"+$IKhandles[$y]+$side) multiplyDivide;
+		setAttr ("volume1Over"+$IKhandles[$y]+$side+".operation") 2;
+		if ($IKsolver[$y]=="ikSplineSolver")
+			connectAttr ("IKCurveInfoAllMultiply"+$IKhandles[$y]+$side+".outputX") ("volume1Over"+$IKhandles[$y]+$side+".input2X");
+		else
+			connectAttr ("IKmessureDiv"+$IKhandles[$y]+$side+".outputX") ("volume1Over"+$IKhandles[$y]+$side+".input2X");			
+		setAttr ("volume1Over"+$IKhandles[$y]+$side+".input1X") 1;
+		createNode -n ("volumepow"+$IKhandles[$y]+$side) multiplyDivide;
+		setAttr ("volumepow"+$IKhandles[$y]+$side+".operation") 3;
+		connectAttr ("volume1Over"+$IKhandles[$y]+$side+".outputX") ("volumepow"+$IKhandles[$y]+$side+".input1X");
+		setAttr ("volumepow"+$IKhandles[$y]+$side+".input2X") 0.5;
+		createNode -n ("volumeBlend"+$IKhandles[$y]+"BlendTwo"+$side) blendTwoAttr;
+		connectAttr ("multWithStretchy"+$IKhandles[$y]+$side+".outputX") ("volumeBlend"+$IKhandles[$y]+"BlendTwo"+$side+".attributesBlender");
+		setAttr ("volumeBlend"+$IKhandles[$y]+"BlendTwo"+$side+".input[0]") 1;
+		connectAttr ("volumepow"+$IKhandles[$y]+$side+".outputX") ("volumeBlend"+$IKhandles[$y]+"BlendTwo"+$side+".input[1]");
+		}
+
+	//volume (Squash Scaling) - `Connect to scale` part
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+
+		if ($fitJointsInIk[$i]!="" && !$fitJointsUnderFoot[$i] && !$fitJointsTerminator[$i] && !$fitJointsLastInIk[$i])
+			if (!(`gmatch $fitJointsInIk[$i] "Spine*"` && $fitJointsFirstInIk[$i]))//not connect to Root
+				{
+				connectAttr ("volumeBlend"+$fitJointsInIk[$i]+"BlendTwo"+$side+".output") ("ScaleBlend"+$fitJoints[$i]+$side+".color1.color1G");
+				connectAttr ("volumeBlend"+$fitJointsInIk[$i]+"BlendTwo"+$side+".output") ("ScaleBlend"+$fitJoints[$i]+$side+".color1.color1B");
+				}
+		}
+
+
+	//Advanced Attach
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		$flip=1;
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		$parentSide=$fitJointsParentSide[$i];
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	{$side="_L";$flip=-1;}
+		if (!$fitJointsAttach[$i])
+			continue;
+		
+		if (`objExists closestSampler`)
+			delete closestSampler;
+		createNode -n closestSampler closestPointOnMesh;
+		connectAttr -f ($fitJointsAttachTo[$i]+".outMesh") closestSampler.inMesh;
+		float $temp[]=`xform -q -ws -t $fitJoints[$i]`;
+		setAttr closestSampler.inPosition ($temp[0]*$flip) $temp[1] $temp[2];
+		int $closestFaceIndex=`getAttr closestSampler.closestFaceIndex`;
+		delete closestSampler;
+		$tempString=`listRelatives -p ("FKOffset"+$fitJoints[$i]+$side)`;
+		string $offsetParent=$tempString[0];
+//		createNode -n ("FKAttach"+$fitJoints[$i]+$side) transform;
+		createNode -n ("FKAttachOffset"+$fitJoints[$i]+$side) transform;
+		asAlign ("FKAttachOffset"+$fitJoints[$i]+$side) $offsetParent 1 1 0 0;
+		select -r ($fitJointsAttachTo[$i]+".f["+$closestFaceIndex+"]");
+//		doCreatePointOnPolyConstraintArgList 1 { "0","0","0","1","","1" };
+		cMuscleSurfAttachSetup();
+		$tempString=`listRelatives -c grpSurfAttachRIG`;
+		rename $tempString[`size($tempString)`-1] ("FKAttach"+$fitJoints[$i]+$side);
+		setAttr ("FKAttach"+$fitJoints[$i]+$side+"Shape.v") 0;
+		parent ("FKAttach"+$fitJoints[$i]+$side) $offsetParent;
+		$tempString=`listRelatives -c grpSurfAttachRIG`;
+		if (!size($tempString))
+			delete grpSurfAttachRIG;
+		parent ("FKAttachOffset"+$fitJoints[$i]+$side) ("FKAttach"+$fitJoints[$i]+$side);
+		parent ("FKOffset"+$fitJoints[$i]+$side) ("FKAttachOffset"+$fitJoints[$i]+$side);
+		}
+
+	//Advanced Global
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		$parentSide=$fitJointsParentSide[$i];
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+		if ($fitJointsParentSide[$i]=="_R" && $b<0)	$parentSide="_L";
+
+
+		if (!$fitJointsGlobal[$i])
+			continue;
+
+		createNode -n ("GlobalOffset"+$fitJoints[$i]+$side) transform;
+		asAlign ("GlobalOffset"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side) 1 1 0 0;
+		parent ("GlobalOffset"+$fitJoints[$i]+$side) "GlobalSystem";
+		createNode -n ("Global"+$fitJoints[$i]+$side) transform;
+		setAttr ("Global"+$fitJoints[$i]+$side+".rotateOrder") $fitJointsRotOrder[$i];
+		asAlign ("Global"+$fitJoints[$i]+$side) ($fitJoints[$i]+$side) 1 1 0 0;
+		parent ("Global"+$fitJoints[$i]+$side) ("GlobalOffset"+$fitJoints[$i]+$side);
+		$tempString=`orientConstraint ("Global"+$fitJoints[$i]+$side) ("FKGlobalStatic"+$fitJoints[$i]+$side) ("FKGlobal"+$fitJoints[$i]+$side)`;
+		$constraint=$tempString[0];
+		$attrs=`listAttr -k -ud $constraint`;
+		setAttr ($constraint+".interpType") 2;
+		addAttr -k 1 -ln "Global" -at double  -min 0 -max 10 -dv $fitJointsGlobalValue[$i] ("FK"+$fitJoints[$i]+$side);
+		createNode -n ("Global"+$fitJoints[$i]+"_unitConversion"+$side) unitConversion;
+		createNode -n ("Global"+$fitJoints[$i]+"_reverse"+$side) reverse;
+		setAttr ("Global"+$fitJoints[$i]+"_unitConversion"+$side+".conversionFactor") 0.1;
+		connectAttr ("FK"+$fitJoints[$i]+$side+".Global") ("Global"+$fitJoints[$i]+"_unitConversion"+$side+".input");
+		connectAttr ("Global"+$fitJoints[$i]+"_unitConversion"+$side+".output") ("Global"+$fitJoints[$i]+"_reverse"+$side+".inputX");
+		connectAttr ("Global"+$fitJoints[$i]+"_unitConversion"+$side+".output") ($constraint+"."+$attrs[0]);
+		connectAttr ("Global"+$fitJoints[$i]+"_reverse"+$side+".outputX") ($constraint+"."+$attrs[1]);
+		}
+
+	//Advanced Wheel
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		$flip=1;
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	{$side="_L";$flip=-1;}
+
+		if (!$fitJointsWheel[$i])
+			continue;
+
+		if (!`objExists WheelSystem`)
+			{
+			createNode -n WheelSystem -p MotionSystem transform;
+			setAttr -l 1 WheelSystem.inheritsTransform 0;
+			}
+
+		$fitJointsWheelDiameter[$i]=$fitJointsPosY[$i] * 2;
+		float $scaleFactor= $fitJointsWheelDiameter[$i] * 1.1054;// 1.1054->nurbs
+		xform -ws -s $scaleFactor $scaleFactor $scaleFactor ("FK"+$fitJoints[$i]+$side+"Shape.cv[0:999]");
+		addAttr -k 1 -ln "diameter" -at double -dv $fitJointsWheelDiameter[$i] ("FK"+$fitJoints[$i]+$side);
+		addAttr -k 1 -ln "autoRoll" -at double -smn 0 -hsn 1 -smx 1 -hsx 1 -dv 1 ("FK"+$fitJoints[$i]+$side);
+		addAttr -k 0 -ln "prevPosX" -at double -dv $fitJointsWheelDiameter[$i] ("FK"+$fitJoints[$i]+$side);
+		addAttr -k 0 -ln "prevPosY" -at double -dv $fitJointsWheelDiameter[$i] ("FK"+$fitJoints[$i]+$side);
+		addAttr -k 0 -ln "prevPosZ" -at double -dv $fitJointsWheelDiameter[$i] ("FK"+$fitJoints[$i]+$side);
+
+		createNode -n ("prevPosOffset"+$fitJoints[$i]+$side) -p WheelSystem transform;
+		createNode -n ("prevPos"+$fitJoints[$i]+$side) -p ("prevPosOffset"+$fitJoints[$i]+$side) transform;
+		createNode -n ("prevPosAngler"+$fitJoints[$i]+$side) -p ("prevPos"+$fitJoints[$i]+$side) transform;
+		createNode -n ("nowPos"+$fitJoints[$i]+$side) -p WheelSystem transform;
+		pointConstraint ("FK"+$fitJoints[$i]+$side) ("nowPos"+$fitJoints[$i]+$side);
+		asAlign ("prevPosOffset"+$fitJoints[$i]+$side) ("FK"+$fitJoints[$i]+$side) 1 0 0 0;
+		$temp=`xform -q -ws -ro ("FK"+$fitJoints[$i]+$side)`;
+		setAttr ("prevPosOffset"+$fitJoints[$i]+$side+".rz") 90;
+		setAttr ("prevPosOffset"+$fitJoints[$i]+$side+".rx") $temp[1];
+		duplicate -n ("prevPosSteer"+$fitJoints[$i]+$side) ("prevPosAngler"+$fitJoints[$i]+$side);
+		parent ("prevPosSteer"+$fitJoints[$i]+$side) ("FK"+$fitJoints[$i]+$side);
+		orientConstraint ("prevPosSteer"+$fitJoints[$i]+$side) ("prevPosAngler"+$fitJoints[$i]+$side);
+		aimConstraint -offset 0 0 0 -weight 1 -aimVector 0 1 0 -upVector 1 0 0 -worldUpType "vector" -worldUpVector 0 1 0 ("FK"+$fitJoints[$i]+$side) ("prevPos"+$fitJoints[$i]+$side);
+
+
+		string $exp="";
+		$exp+="float $diameter = FK"+$fitJoints[$i]+$side+".diameter;\n";
+		$exp+="float $autoRoll = FK"+$fitJoints[$i]+$side+".autoRoll;\n";
+		$exp+="float $sideAngle=prevPosAngler"+$fitJoints[$i]+$side+".rotateX;\n";
+		$exp+="float $prevPosX=FK"+$fitJoints[$i]+$side+".prevPosX;\n";
+		$exp+="float $prevPosY=FK"+$fitJoints[$i]+$side+".prevPosY;\n";
+		$exp+="float $prevPosZ=FK"+$fitJoints[$i]+$side+".prevPosZ;\n";
+		$exp+="prevPosOffset"+$fitJoints[$i]+$side+".translateX=$prevPosX;\n";
+		$exp+="prevPosOffset"+$fitJoints[$i]+$side+".translateY=$prevPosY;\n";
+		$exp+="prevPosOffset"+$fitJoints[$i]+$side+".translateZ=$prevPosZ;\n";
+		$exp+="float $nowPosX=nowPos"+$fitJoints[$i]+$side+".translateX;\n";
+		$exp+="float $nowPosY=nowPos"+$fitJoints[$i]+$side+".translateY;\n";
+		$exp+="float $nowPosZ=nowPos"+$fitJoints[$i]+$side+".translateZ;\n";
+		$exp+="float $distance=`mag<<$nowPosX-$prevPosX,$nowPosY-$prevPosY,$nowPosZ-$prevPosZ>>`;\n";
+		$exp+="float $curRotX=FKX"+$fitJoints[$i]+$side+".rotateX;\n";
+		$exp+="float $piD = 3.14 * $diameter;\n";
+		$exp+="FKX"+$fitJoints[$i]+$side+".rotateX=$curRotX+($distance/$piD)*360 * $autoRoll * "+($flip*-1)+" * sin(deg_to_rad($sideAngle));\n";
+		$exp+="FK"+$fitJoints[$i]+$side+".prevPosX=$nowPosX;\n";
+		$exp+="FK"+$fitJoints[$i]+$side+".prevPosY=$nowPosY;\n";
+		$exp+="FK"+$fitJoints[$i]+$side+".prevPosZ=$nowPosZ;\n";
+
+		expression -n ($fitJoints[$i]+"WheelExpression"+$side) -s $exp -o ("FKX"+$fitJoints[$i]+$side) -ae 1 -uc all ;
+
+		}
+
+	}
+
+
+//--Root--//
+createNode -n ("CenterOffset_M") transform; 
+asAlign ("CenterOffset_M") $topNode 1 0 0 0;
+setAttr ("CenterOffset_M.translateX") 0;
+parent ("CenterOffset_M") "FKSystem";
+createNode -n ("CenterExtra_M") transform;
+asAlign ("CenterExtra_M") ("CenterOffset_M") 1 0 0 0;
+parent ("CenterExtra_M") ("CenterOffset_M");
+sets -add ("ControlSet") ("CenterExtra_M");
+duplicate -n ("Center_M") "Root_icon";
+asAlign ("Center_M") ("CenterExtra_M") 1 0 0 0;
+setAttr -type float3 ("Center_M"+".scale") ($fitJointsLenght[size($fitJointsSide)-1]/4+($height/31)/2) ($fitJointsLenght[size($fitJointsSide)-1]/4+($height/31)/2) ($fitJointsLenght[size($fitJointsSide)-1]/4+($height/31)/2);
+makeIdentity -a 1 -t 0 -r 0 -s 1 ("Center_M");
+parent ("Center_M") ("CenterExtra_M");
+asLockAttr ("Center_M") 0 0 1 1;
+asLockAttr ("CenterExtra_M") 0 0 1 1;
+sets -add ("ControlSet") ("Center_M");
+setAttr ("Center_M.showManipDefault") 4;
+setAttr ("Center_M.rotateOrder") `getAttr ("FK"+$topNode+"_M.rotateOrder")`;
+
+//connect uda`s
+$attrs=`listAttr -ud ("FK"+$topNode+"_M")`;
+for ($i=0;$i<size($attrs);$i++)
+	{
+	if (`attributeQuery -n ("FK"+$topNode+"_M") -re $attrs[$i]`)
+		$temp=`attributeQuery -n ("FK"+$topNode+"_M") -r $attrs[$i]`;
+	$temp[0]=`getAttr ("FK"+$topNode+"_M."+$attrs[$i])`;
+	addAttr -dv $temp[0] -k 1 -ln $attrs[$i] -at double ("Center_M");
+	if (`attributeQuery -n ("FK"+$topNode+"_M") -re $attrs[$i]`)
+		{
+		$temp=`attributeQuery -r -n ("FK"+$topNode+"_M") $attrs[$i]`;
+		addAttr -e -min $temp[0] -max $temp[1] ("Center_M."+$attrs[$i]);
+		}
+	connectAttr ("Center_M."+$attrs[$i]) ("FK"+$topNode+"_M."+$attrs[$i]);
+	}
+
+for ($b=1;$b>-2;$b=$b-2)
+	{
+	$side=$fitJointsSide[size($fitJointsSide)-1];
+	if ($b<0 && $side=="_L")
+		continue;
+	if ($side=="_M" && $b<0)	continue;
+	if ($side=="_R" && $b<0)	$side="_L";
+	if (`objExists ("FKParentConstraint"+$topNode+$side)`)
+		parent ("FKParentConstraint"+$topNode+$side) ("Center_M");
+	else
+		parent ("FKOffset"+$topNode+$side) ("Center_M");
+	}
+
+if ($useCenterBtwFeet)
+	{
+	createNode -n ($topNode+"Center"+"_M") transform;
+	setAttr ($topNode+"Center"+"_M"+".rotateOrder") $fitJointsRotOrder[size($fitJointsSide)-1];
+	asAlign ($topNode+"Center"+"_M") ($topNode+$side) 1 0 0 0;
+	setAttr ($topNode+"Center"+"_M.translateX") 0;
+	parent ($topNode+"Center"+"_M") ("RootSystem");
+	duplicate -n ($topNode+"CenterBtwLegs"+"_M") ($topNode+"Center"+"_M");
+	duplicate -n ($topNode+"CenterBtwLegsOffset"+"_M") ($topNode+"Center"+"_M");
+	duplicate -n ($topNode+"CenterBtwLegsBlended"+"_M") ($topNode+"Center"+"_M");
+	parent ($topNode+"CenterBtwLegsBlended"+"_M") "FKSystem";
+	parent ("CenterOffset_M") ($topNode+"CenterBtwLegsBlended"+"_M");
+	
+	for ($c=1;$c>-2;$c=$c-2)
+		{
+		for ($z=0;$z<size($IKhandles);$z++)
+			{
+			$altSide=$IKstartSide[$z];
+			if (($IKendSide[$z]=="_M" && $c<0) || $IKNoFlip[$z])	continue;
+			if ($IKendSide[$z]=="_R" && $c<0)	$altSide="_L";
+	
+			if (`gmatch $IKhandles[$z] "Leg*"`)
+				{
+				orientConstraint -skip x -skip z ("IK"+$IKhandles[$z]+$altSide) ($topNode+"CenterBtwLegs"+"_M");
+				$tempString=`pointConstraint -skip y ("IK"+$IKhandles[$z]+$altSide) ($topNode+"CenterBtwLegs"+"_M")`;
+				$centerBtwFeetPointConstraint=$tempString[0];
+				}
+			}
+		}
+	parent ($topNode+"CenterBtwLegsOffset"+"_M") ($topNode+"CenterBtwLegs"+"_M");
+	$tempString=`parentConstraint ($topNode+"Center"+"_M") ($topNode+"CenterBtwLegsOffset"+"_M") ($topNode+"CenterBtwLegsBlended"+"_M")`;
+	$constraint=$tempString[0];
+	$attrs=`listAttr -k -ud $constraint`;
+	
+	addAttr -k 1 -ln "CenterBtwFeet" -at double  -min 0 -max 10 -dv 0 ("Center_M");
+	createNode -n ("CenterBtwFeet"+"_M") setRange;
+	setAttr ("CenterBtwFeet"+"_M"+".minX") 2;
+	setAttr ("CenterBtwFeet"+"_M"+".oldMaxX") 0.1;
+	connectAttr ("Center_M"+".CenterBtwFeet") ("CenterBtwFeet"+"_M"+".valueX");
+	if (`objExists $centerBtwFeetPointConstraint`)
+		{
+		connectAttr ("CenterBtwFeet_M"+".outValueX") ($centerBtwFeetPointConstraint+".nodeState");
+		//Force this node to update whenever a scene is opened
+		setAttr ("CenterBtwFeet_M.valueY") 1;
+		}
+	
+	createNode -n ($topNode+"CenterBtwFeetUnitConversion"+"_M") unitConversion;
+	setAttr ($topNode+"CenterBtwFeetUnitConversion"+"_M"+".conversionFactor") 0.1;
+	connectAttr ("Center_M"+".CenterBtwFeet") ($topNode+"CenterBtwFeetUnitConversion"+"_M"+".input");
+	createNode -n ($topNode+"CenterBtwFeetReverse"+"_M") reverse;
+	connectAttr ($topNode+"CenterBtwFeetUnitConversion"+"_M"+".output") ($topNode+"CenterBtwFeetReverse"+"_M"+".inputX");
+	connectAttr ($topNode+"CenterBtwFeetReverse"+"_M"+".outputX") ($constraint+"."+$attrs[0]);
+	connectAttr ($topNode+"CenterBtwFeetUnitConversion"+"_M"+".output") ($constraint+"."+$attrs[1]);
+	}
+
+
+
+for ($b=1;$b>-2;$b=$b-2)
+	{
+	//--CleanUp--//
+	for ($i=0;$i<size($fitJoints);$i++)
+		{
+		$side=$fitJointsSide[$i];
+		if ($b<0 && ($side=="_L" || $fitJointsBelowNoFlip[$i]))
+			continue;
+		if ($fitJointsSide[$i]=="_M" && $b<0)	continue;
+		if ($fitJointsSide[$i]=="_R" && $b<0)	$side="_L";
+
+		//CleanUp UA orders
+		tokenize $fitJointUAs[$i] ";" $tempString;
+		if (size($tempString)>1)
+			for ($y=0;$y<size($tempString);$y++)
+				{
+				if (`attributeExists $tempString[$y] ("FK"+$fitJoints[$i]+$side)`)
+					{
+					renameAttr ("FK"+$fitJoints[$i]+$side+"."+$tempString[$y]) ($tempString[$y]+"Two");
+					renameAttr ("FK"+$fitJoints[$i]+$side+"."+$tempString[$y]+"Two") $tempString[$y];
+					}
+				}
+
+		//CleanUp HipSwinger
+		if (`gmatch $fitJointsLabel[$i] "Root*"` && $hipSwingerJoint!="")
+			{
+			orientConstraint ("Center_M") ("HipSwingerStabalize"+$fitJoints[$i]+$side);
+			parent ("HipSwingerOffset"+$fitJoints[$i]+$side) ("Center_M");
+			setAttr -l 0 ("HipSwinger"+$fitJoints[$i]+$side+".visibility");
+			if (`objExists ("FKIK"+$fitJointsInIk[$i]+$side)`)
+				connectAttr ("FKIKBlend"+$fitJointsInIk[$i]+"Condition"+$side+".outColorG") ("HipSwinger"+$fitJoints[$i]+$side+".visibility");
+			setAttr -l 1 ("HipSwinger"+$fitJoints[$i]+$side+".visibility");
+			}
+
+		//CleanUp remove heel(s) with no children
+		if (`gmatch $fitJointsLabel[$i] "Heel*"`)
+			if (!size(`listRelatives -ad ($fitJoints[$i]+$side)`))
+				delete ($fitJoints[$i]+$side);
+
+		//CleanUp scale up spineFKs
+		if (`gmatch $fitJointsInIk[$i] "Spine*"` && !$fitJointsTerminator[$i])
+			{
+			$numCVs=`getAttr ("FK"+$fitJoints[$i]+$side+".spans")`+`getAttr ("FK"+$fitJoints[$i]+$side+".degree")`;
+			$tempString=`listRelatives -s ("FK"+$fitJoints[$i]+$side)`;
+			$temp=`xform -q -ws -t ("FK"+$fitJoints[$i]+$side)`;
+			select -r ($tempString[0]+".cv[0:"+$numCVs+"]");
+			scale -r -p $temp[0] $temp[1] $temp[2] 3 3 3;
+			}
+
+		//CleanUp scale / move head
+		if ($fitJoints[$i]=="Head")
+			{
+			$numCVs=`getAttr ("FK"+$fitJoints[$i]+$side+".spans")`+`getAttr ("FK"+$fitJoints[$i]+$side+".degree")`;
+			$tempString=`listRelatives -s ("FK"+$fitJoints[$i]+$side)`;
+			$temp=`xform -q -ws -t ("FK"+$fitJoints[$i]+$side)`;
+			select -r ($tempString[0]+".cv[0:"+$numCVs+"]");
+			scale -r -p $temp[0] $temp[1] $temp[2] 1.5 1.5 1.5;
+			move -r -os -wd ($height/10.0) 0 0 ;
+			}
+
+		//CleanUp `loose` IK chains
+		if ($fitJointsFirstInIk[$i])
+			if (!`objExists ("IKParentConstraint"+$fitJoints[$i]+$side+"_parentConstraint1")`)
+				if (`objExists ("IK"+$fitJointsInIk[$i]+"0AlignTo"+$side)`)
+					parentConstraint -mo ("IK"+$fitJointsInIk[$i]+"0AlignTo"+$side) ("IKParentConstraint"+$fitJoints[$i]+$side);
+		}
+
+	for ($y=0;$y<size($IKhandles);$y++)
+		{
+		$side=$IKendSide[$y];
+		if ($b<0 && ($side=="_L" || $IKNoFlip[$y]))
+			continue;
+		if ($IKendSide[$y]=="_M" && $b<0)	continue;
+		if ($IKendSide[$y]=="_R" && $b<0)	$side="_L";
+
+		//CleanUp set default FKIK attrs
+		if (`gmatch $IKhandles[$y] "Leg*"`)
+			{
+			setAttr ("FKIK"+$IKhandles[$y]+$side+".FKIKBlend") 10;
+			setAttr ("FKIK"+$IKhandles[$y]+$side+".FKVis") 0;
+			}
+		else
+			{
+			setAttr ("FKIK"+$IKhandles[$y]+$side+".FKIKBlend") 0;
+			setAttr ("FKIK"+$IKhandles[$y]+$side+".IKVis") 0;
+			}
+
+		//CleanUp Spine IK follow root
+		if (`gmatch $IKhandles[$y] "Spine*"`)
+			{
+			parentConstraint -mo ("Center_M") ("IKParentConstraint"+$IKhandles[$y]+"0"+$side);
+			parentConstraint -mo ("Center_M") ("IKParentConstraint"+$IKhandles[$y]+"4"+$side);
+			if ($midIK[$y])
+				parentConstraint -mo ("Center_M") ("IKParentConstraint"+$IKhandles[$y]+"2"+$side);
+			}
+		}
+	}
+
+//jointLayer
+string $allTransforms[]=`listRelatives -ad -type transform "Group"`;
+for ($i=0;$i<size($allTransforms);$i++)
+	{
+	if (`objectType $allTransforms[$i]`=="joint")
+		connectAttr -f jointLayer.drawInfo ($allTransforms[$i]+".drawOverride");
+
+	if (`objectType $allTransforms[$i]`=="nurbsCurve")
+		{
+		$tempString=`listRelatives -p $allTransforms[$i]`;
+		setAttr ($tempString[0]+".overrideEnabled") 1;
+		}
+	}
+connectAttr -f jointVisReverse.outputX "jointLayer.levelOfDetail";
+
+createNode -n "buildPose" dagPose;
+select `sets -q ("ControlSet")`;
+string $controlSetMembers[]=`ls -sl`;
+string $setAttrCmd;
+for ($i=0;$i<size($controlSetMembers);$i++)
+	{
+	$tempString=`listAttr -k $controlSetMembers[$i]`;
+	for ($y=0;$y<size($tempString);$y++)
+		$setAttrCmd+="setAttr "+$controlSetMembers[$i]+"."+$tempString[$y]+" "+`getAttr ($controlSetMembers[$i]+"."+$tempString[$y])`+";";
+	}
+if (!`attributeExists udAttr buildPose`)
+	addAttr -ln udAttr -dt "string"  ("buildPose");
+setAttr -type "string" ("buildPose.udAttr") $setAttrCmd;
+
+//Allset
+string $allAfter[]=`ls`;
+string $allNew[];
+for ($i=0;$i<size($allAfter);$i++)
+	if (!`stringArrayCount $allAfter[$i] $allBefore`)
+		{
+		if ($allAfter[$i]=="AllSet" || $allAfter[$i]=="Sets" || $allAfter[$i]=="Geometry" || `gmatch $allAfter[$i] "*olver"`)
+			continue;
+		$allNew[size($allNew)]=$allAfter[$i];
+		}
+sets -add AllSet $allNew;
+sets -rm AllSet `listRelatives -ad FitSkeleton`;
+
+delete "iconsGroup";
+select -cl;
+if ($deferredCmd!="")
+	eval ($deferredCmd);
+if ($currentUnit!="cm")
+	currentUnit -l $currentUnit;
+dgdirty -a;
+cycleCheck -e on;
+progressBar -e -ep $gMainProgressBar;
+
+//Enable buttons
+if (`columnLayout -q -ex asByColumnLayout`)
+	{
+	string $layoutsA[]=`columnLayout -q -ca asByColumnLayout`;
+	for ($i=0;$i<size($layoutsA);$i++)
+		{
+		if (`frameLayout -q -ex $layoutsA[$i]`)
+			if (`frameLayout -q -l $layoutsA[$i]`=="Corrective")
+				continue;
+		string $layoutsB[]=`layout -q -ca $layoutsA[$i]`;
+		for ($y=0;$y<size($layoutsB);$y++)
+		if (`columnLayout -q -ex $layoutsB[$y]`)
+			{
+			string $layoutsC[]=`layout -q -ca $layoutsB[$y]`;
+			for ($z=0;$z<size($layoutsC);$z++)
+			if (`layout -q -ex $layoutsC[$z]`)
+				{
+				string $ctrls[]=`layout -q -ca $layoutsC[$z]`;
+				for ($a=0;$a<size($ctrls);$a++)
+				if (`control -q -ex $ctrls[$a]`)
+					if (!`control -q -en $ctrls[$a]`)
+						control -e -en 1 $ctrls[$a];
+				}
+			}
+	}
+}
+
+
+}

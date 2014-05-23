@@ -1,0 +1,216 @@
+global proc shelf_advancedSkeleton () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "bodySetup" 
+        -enableBackground 0
+        -align "center" 
+        -label "bodySetup" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asBody.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asBody.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source \"AdvancedSkeleton/asBody.mel\";asBody;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "faceSetup" 
+        -enableBackground 0
+        -align "center" 
+        -label "faceSetup" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asFace.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asFace.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source \"AdvancedSkeleton/asFace.mel\";asFace;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "UI" 
+        -enableBackground 0
+        -align "center" 
+        -label "UI" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asUI.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asUI.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source \"AdvancedSkeleton/asSelectorDesigner.mel\";asSelectorDesigner;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Poser" 
+        -enableBackground 0
+        -align "center" 
+        -label "Poser" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asPoser.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asPoser.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source \"AdvancedSkeleton/asPoserDesigner.mel\";asPoserDesigner;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Help" 
+        -enableBackground 0
+        -align "center" 
+        -label "Help" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asHelp.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asHelp.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source \"AdvancedSkeleton/asHelp.mel\";asHelp;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Selector:biped" 
+        -enableBackground 0
+        -align "center" 
+        -label "Selector:biped" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asBiped.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asBiped.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source \"AdvancedSkeleton/Selector/biped.mel\";asSelectorbiped;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Selector:biped" 
+        -enableBackground 0
+        -align "center" 
+        -label "Selector:biped" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asFaceSelector.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asFaceSelector.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source \"AdvancedSkeleton/Selector/face.mel\";asSelectorface;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "WalkDesigner" 
+        -enableBackground 0
+        -align "center" 
+        -label "WalkDesigner" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asWalkDesigner.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/AdvancedSkeleton/asWalkDesigner.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source \"AdvancedSkeleton/asWalkDesigner.mel\";asWalkDesigner;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+
+} 

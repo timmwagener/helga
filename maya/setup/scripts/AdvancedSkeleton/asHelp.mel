@@ -1,0 +1,26 @@
+//     AdvancedSkeleton
+//     Version 3.9.93
+// 
+// 
+// AdvancedSkeleton is is a collection of Maya tools for doing character setup.
+//   
+// INSTALLATION: 
+// Run the SETUP file (setup.exe) 
+// Choose the Destination Folder.
+// NOTE: destination folder must be your Maya user directory 
+// eg: C:\Users\$user\Documents\maya\2014\
+// Continue installation.
+// Start Maya. 
+// Now you will find a new Shelf called 'advancedSkeleton':  
+// 
+// For detailed instructions go to: www.animationstudios.com.au
+// 
+// Copyright (C)2014 Animation Studios
+// 
+// email: support@animationstudios.com.au
+// Last Modified 17/04/2014
+
+global proc asHelp ()
+{
+showHelp -a "http://www.animationstudios.com.au/advancedskeleton/help";
+}

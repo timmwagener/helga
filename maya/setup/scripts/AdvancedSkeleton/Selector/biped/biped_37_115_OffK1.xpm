@@ -1,0 +1,32 @@
+/* XPM */
+static char *biped_37_115_OffK1[] = {
+/* columns rows colors chars-per-pixel */
+"10 15 11 1",
+"  c gray75",
+". c #FF9F9F",
+"X c #FFA1A2",
+"o c #FFA4A4",
+"O c #FFA6A6",
+"+ c #FFA7A8",
+"@ c #FFA8A8",
+"# c #FFA9A9",
+"$ c #FFA9AA",
+"% c #FFAAA9",
+"& c #FFAAAA",
+/* pixels */
+"          ",
+" &&&&&&&o ",
+" &&&&&&&o ",
+" &&&&&&&& ",
+" &&&&&&&& ",
+" &&&&&&&& ",
+" &&&&&&&& ",
+" &&&&&&&& ",
+" &&&&&&&& ",
+" O&&&&&&& ",
+" o&&&&&&& ",
+" o&&&&&&& ",
+" X&&&&&&& ",
+" X&&&&&&& ",
+"          "
+};

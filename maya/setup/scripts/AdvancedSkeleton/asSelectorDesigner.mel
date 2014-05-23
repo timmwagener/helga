@@ -1,0 +1,990 @@
+//     AdvancedSkeleton
+//     Version 3.9.93
+// 
+// 
+// AdvancedSkeleton is is a collection of Maya tools for doing character setup.
+//   
+// INSTALLATION: 
+// Run the SETUP file (setup.exe) 
+// Choose the Destination Folder.
+// NOTE: destination folder must be your Maya user directory 
+// eg: C:\Users\$user\Documents\maya\2014\
+// Continue installation.
+// Start Maya. 
+// Now you will find a new Shelf called 'advancedSkeleton':  
+// 
+// For detailed instructions go to: www.animationstudios.com.au
+// 
+// Copyright (C)2014 Animation Studios
+// 
+// email: support@animationstudios.com.au
+// Last Modified 17/04/2014
+
+global proc asScriptLocator (){}
+
+global proc string asScriptLocation ()
+{
+string $whatIs=`whatIs asScriptLocator`;
+string $fullPath=`substring $whatIs 25 999`;
+string $buffer[];
+int $numTok=`tokenize $fullPath "/" $buffer`;
+int $numLetters=size($fullPath);
+int $numLettersLastFolder=size($buffer[$numTok-1]);
+string $scriptLocation=`substring $fullPath 1 ($numLetters-$numLettersLastFolder)`;
+return $scriptLocation;
+}
+
+global proc asSelectorDesigner ()
+{
+global int $asfileLoading;
+$asfileLoading=0;
+string $asScriptLocation=`asScriptLocation`;
+string $sourceAsToolProcedures=("source \""+$asScriptLocation+"asToolProcedures.mel\"");
+string $sourceAsProcedures=("source \""+$asScriptLocation+"asProcedures.mel\"");
+eval ($sourceAsToolProcedures);
+if (!`exists asCharSize`)
+	eval ($sourceAsProcedures);
+asShowSelJob;
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Selector/untitled/";
+if (!`file -q -ex $iconDir`)
+	sysFile -md $iconDir;
+string $fileList[]=`getFileList -fld ($iconDir+"/")`;
+for ($file in $fileList)
+	eval ("sysFile -del \""+$iconDir+"/"+$file+"\"");
+
+float $color[3]=`displayRGBColor -q "background"`;;
+if (!`optionVar -ex asSelectorBGColor`)
+	{
+	optionVar -fv asSelectorBGColor $color[0];
+	optionVar -fva asSelectorBGColor $color[1];
+	optionVar -fva asSelectorBGColor $color[2];
+	}
+if (!`optionVar -ex asSelectorDefaultColor`)
+	{
+	optionVar -fv asSelectorDefaultColor 1;
+	optionVar -fva asSelectorDefaultColor 1;
+	optionVar -fva asSelectorDefaultColor 1;
+	}
+if (!`optionVar -ex asSelectorSelColor`)
+	{
+	optionVar -fv asSelectorSelColor 0.2;
+	optionVar -fva asSelectorSelColor 0.8;
+	optionVar -fva asSelectorSelColor 0.2;
+	}
+if (!`optionVar -ex asSelectorKeyColor`)
+	{
+	optionVar -fv asSelectorKeyColor 1;
+	optionVar -fva asSelectorKeyColor 0.4;
+	optionVar -fva asSelectorKeyColor 0.4;
+	}
+float $bgColor[3]=`optionVar -q asSelectorBGColor`;
+
+int $showCenter=`optionVar -q asSelectorshowCenter`;
+int $mirrorButtons=`optionVar -q asSelectorMirrorButtons`;
+string $controlSets[]=`asGetControlSets`;
+
+if (`window -q -ex asSelectorDefault`)
+	deleteUI asSelectorDefault;
+if (`window -q -ex asSelectorNumericInput`)
+	deleteUI asSelectorNumericInput;
+window -mb 1 -t "SelectorDesigner :untitled" asSelectorDefault;
+if (`about -mac` || `about -linux`)
+	{
+	columnLayout;
+	if (`about -mac`)
+		text -l "Not avaiable on Mac platform";
+	if (`about -linux`)
+		text -l "Not avaiable on Linux platform";
+	showWindow;
+	return;
+	}
+menu "File";
+	menuItem -c asSelectorDesigner "New";
+	menuItem -c "asfileBrowse Selector Open" "Open";
+	menuItem -d 1;
+	menuItem -sm 1 -l "ControlSets" asSelectorControlSetsMenu;
+		menuItem -cb 1 ControlSet;
+		for ($i=0;$i<size($controlSets);$i++)
+			if ($controlSets[$i]!="ControlSet")
+				menuItem -cb 0 $controlSets[$i];
+		setParent -menu ..;
+	menuItem -d 1;
+	menuItem -c "asSave Selector" "Save";
+	menuItem -c "asfileBrowse Selector SaveAs" "Save As";
+	menuItem -c "astoShelf Selector" "Put on shelf";
+	setParent -menu ..;
+	menuItem -d 1;
+	menuItem -c "deleteUI asSelectorDefault" "Close";
+	setParent -menu ..;
+menu "Edit";
+	menuItem -sm 1 "Background";
+		menuItem -c "asfileBrowse Selector Import" "import";
+		menuItem -c "asSelectorBackgroundFromRenderView" "grab from Render View";
+		setParent -menu ..;
+	menuItem -sm 1 "Colors";
+		menuItem -c "asSelectorBackgroundSetColor asSelectorDefaultColor" "set Default Color";
+		menuItem -c "asSelectorBackgroundSetColor asSelectorSelColor" "set Selected Color";
+		menuItem -c "asSelectorBackgroundSetColor asSelectorKeyColor" "set Keyed Color";
+		menuItem -c "asSelectorBackgroundSetColor asSelectorBGColor" "set Background Color";
+		setParent -menu ..;
+	menuItem -c asSelectorResizeUI "Resize";
+	setParent -menu ..;
+menu "Options";
+	menuItem -cb $showCenter -c asSelectorRefresh "Show Center";
+	menuItem -cb $mirrorButtons -c asSelectorRefresh "Mirror Buttons";
+	setParent -menu ..;
+	
+
+columnLayout -adj 1;
+rowLayout -nc 4 -adj 1 -cat 1 right 0 -cw 2 30 -cw 3 80 -cw 4 60;
+optionMenu -cc asSelChange asSelectorDefaultOptionMenu;
+button -l "set" -c "asSetNameSpaceFromSelection asSelectorDefault";
+checkBox -v `optionVar -q asShowSelection` -onc "asSelChangeToggle;optionVar -iv asShowSelection 1;" -ofc "asSelChangeToggle;optionVar -iv asShowSelection 0;" -l Selection asSelectorSelectionCheckBox;
+checkBox -v `optionVar -q asShowKeyed` -onc "asSelChangeToggle;optionVar -iv asShowKeyed 1;" -ofc "asSelChangeToggle;optionVar -iv asShowKeyed 0;" -l Keyed asSelectorKeyedCheckBox;
+setParent..;
+formLayout -bgc $bgColor[0] $bgColor[1] $bgColor[2] asSelectorDefaultFormLayout;
+image -w 320 -h 240 -dgc asSelectorDgc -dpc asSelectorDpc asSelectorBGImage;
+separator -m $showCenter -w 1 -h 240 -bgc 0 0 0 -hr 1 asSelectorSeparator;
+formLayout -e
+	-af asSelectorSeparator "left" 160
+	asSelectorDefaultFormLayout;
+
+columnLayout -m 0 asSelectorColumnLayout;
+	text -l (`internalVar -utd`+"AdvancedSkeleton/Selector/") asSelectorProjectPath;
+	text -l "untitled" asSelectorProjectName;
+	text -l "320" asSelectorBackgroundWidth;
+	text -l "240" asSelectorBackgroundHeight;
+
+showWindow;
+
+asSelectorBackgroundImport "" "";
+asPopulateNameSpaceMenu "asSelectorDefault";
+}
+
+global proc asSelectorBackgroundSetColor(string $optionVar)
+{
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Selector/untitled/";
+float $temp[3]=`optionVar -q $optionVar`;
+string $currentColor=$temp[0]+" "+$temp[1]+" "+$temp[2];
+string $return=`eval ("colorEditor -rgb "+$currentColor)`;
+if (!`colorEditor -q -r`)
+	return;
+string $buffer[];
+tokenize $return $buffer;
+
+eval ("optionVar -fv "+$optionVar+" "+$buffer[0]);
+eval ("optionVar -fva "+$optionVar+" "+$buffer[1]);
+eval ("optionVar -fva "+$optionVar+" "+$buffer[2]);
+
+string $projectName=`text -q -l asSelectorProjectName`;
+string $bgTgaImageFile=$iconDir+$projectName+"_background.tga";
+$uniqueBgTgaImageFile=`asUniqueFile $bgTgaImageFile`;
+asSelectorBackgroundImport $uniqueBgTgaImageFile "BGcolor";
+sysFile -del $uniqueBgTgaImageFile;
+}
+
+global proc asSelectorBackgroundFromRenderView ()
+{
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Selector/untitled/";
+string $projectName=`text -q -l asSelectorProjectName`;
+string $bgTgaImageFile=$iconDir+$projectName+"_background.tga";
+
+if (`renderWindowEditor -q -nim renderView`<0)
+	error ("No Image In RenderView\n");
+int $currFormat=`getAttr "defaultRenderGlobals.imageFormat"`;
+setAttr defaultRenderGlobals.imageFormat 19;
+eval ("renderWindowEditor -e -wi \""+$bgTgaImageFile+"\" renderView");
+setAttr defaultRenderGlobals.imageFormat $currFormat;
+asSelectorBackgroundImport $bgTgaImageFile "image";
+}
+
+global proc asGetWindowHeightBorder ()
+{
+global int $asWindowHeightBorder;
+window -h 1 -w 1 asTempWindow;
+$asWindowHeightBorder=`window -q -h asTempWindow`-1;
+deleteUI asTempWindow;
+}
+
+global proc int asSelectorBackgroundImport (string $fileName, string $fileType)
+{
+global string $gMainProgressBar;
+global int $asWindowHeightBorder;
+if (!$asWindowHeightBorder)
+	asGetWindowHeightBorder;
+progressBar -e -st "Calculating Background" $gMainProgressBar;
+evalDeferred -lp ("progressBar -e -st \"\" "+$gMainProgressBar);
+string $sel[]=`ls -sl`;
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Selector/untitled/";
+string $buttonImageFileExt="xpm";
+if (`asMayaVersionAsFloat`>=2011)
+	$buttonImageFileExt="png";
+if (`about -mac`)
+	$buttonImageFileExt="iff";
+string $bgImageFile=$iconDir+"untitled_background."+$buttonImageFileExt;
+string $bgImageFile32=$iconDir+"untitled_background32."+$buttonImageFileExt;
+string $bgTgaImageFile=$iconDir+"untitled_background.tga";
+float $bgColor[3]=`optionVar -q asSelectorBGColor`;
+
+string $uniqueFileName=`asUniqueFile $fileName`;
+
+string $fileNode=`createNode file`;
+setAttr -type "string" ($fileNode+".fileTextureName") $uniqueFileName;
+if ($fileName!="" && $fileType!="BGcolor" && $fileType!="Resize")
+	{
+	text -e -l `getAttr ($fileNode+".outSizeX")` asSelectorBackgroundWidth;
+	text -e -l `getAttr ($fileNode+".outSizeY")` asSelectorBackgroundHeight;
+	}
+float $width=`text -q -l asSelectorBackgroundWidth`;
+float $height=`text -q -l asSelectorBackgroundHeight`;
+string $layeredTexture=`createNode layeredTexture`;
+setAttr ($layeredTexture+".inputs[0].blendMode") 0;
+setAttr ($layeredTexture+".inputs[0].color") -type double3 $bgColor[0] $bgColor[1] $bgColor[2];
+if ($fileName=="")
+	setAttr ($layeredTexture+".inputs[0].alpha") 0;
+else
+	{
+	connectAttr ($fileNode+".outColor") ($layeredTexture+".inputs[0].color");
+	}
+if (`getAttr ($fileNode+".fileHasAlpha")`)
+	{
+	connectAttr ($fileNode+".outAlpha") ($layeredTexture+".inputs[0].alpha");
+	setAttr ($layeredTexture+".inputs[1].color") -type double3 $bgColor[0] $bgColor[1] $bgColor[2];
+	setAttr ($layeredTexture+".inputs[0].blendMode") 1;
+	}
+eval ("convertSolidTx -sp 1 -al 1 -rx "+$width+" -ry "+$height+" -n asTempSolidTx -fil \""+$buttonImageFileExt+"\" -fin \""+$bgImageFile+"\"");
+//32x32
+eval ("convertSolidTx -sp 1 -al 1 -rx 32 -ry 32 -n asTempSolidTx32 -fil \""+$buttonImageFileExt+"\" -fin \""+$bgImageFile32+"\"");
+
+if ($fileName=="")
+	$fileName=$bgImageFile;
+
+if ($fileType!="Resize" && $bgTgaImageFile!=$fileName)
+	{
+	if (`file -q -ex $fileName`)
+		sysFile -cp $bgTgaImageFile $fileName;
+	else
+		eval ("convertSolidTx -sp 1 -al 1 -rx "+$width+" -ry "+$height+" -n asTempSolidTx -fil \"tga\" -fin \""+$bgTgaImageFile+"\"");
+	}
+delete $fileNode $layeredTexture "asTempSolidTx" "asTempSolidTx32";
+
+image -e -w $width -h ($height) -i $bgImageFile asSelectorBGImage;
+window -e -w ($width+8) -h ($height+$asWindowHeightBorder+45) asSelectorDefault;
+
+string $ctls[]=`formLayout -q -ca asSelectorDefaultFormLayout`;
+for ($ctl in $ctls)
+	if (`iconTextButton -q -ex $ctl`)
+		if ($ctl!="asSelectorSeparator")
+			{
+			asSelectorupdateButton $ctl;
+			reloadImage `iconTextButton -q -i $ctl` $ctl;
+			}
+asSelectorRefresh;
+sysFile -del $uniqueFileName;
+select $sel;
+return 1;
+}
+
+global proc string[] asSelectorDgc (string $dragControl, int $x, int $y, int $mods) 
+{
+string $return[];
+$return[0]=$x;
+$return[1]=$y;
+$return[5]=$mods;
+return $return;
+}
+
+global proc string asSelectorDpc (string $dragControl, string $dropControl, string $msgs[], int $x, int $y, int $type) 
+{
+//print ("$dragControl="+$dragControl+" $dropControl="+$dropControl+" $msgs[5]="+$msgs[5]+" $msgs[1]="+$msgs[1]+" $x="+$x+" $y="+$y+" $type="+$type+"\n");
+global int $asfileLoading;
+int $left=$msgs[0];
+int $top=$msgs[1];
+if (`asMayaVersionAsFloat`>=2011 && $type!=99 && `gmatch $dragControl "*asSelectorBGImage"` && `gmatch $dropControl "*asSelectorBGImage"`)
+	{
+	$left=$left-2;
+	$top=$top-3;
+	$x=$x+2;
+	$y=$y+2;
+	}
+string $iol,$ann,$cmd;
+if ($asfileLoading)
+	{
+	$iol=$msgs[2];
+	$cmd=$msgs[3];
+	}
+if (`gmatch $dropControl "*asSelector:*"` && $dragControl!=$dropControl)
+	return "error0";
+string $sel[]=`ls -sl`;
+for ($obj in $sel)
+	if (`gmatch $obj "*|*"`)
+		error ("Object \""+$obj+"\" contains illegal character:\"|\"");
+int $creating;
+if (`gmatch $dragControl "*asSelectorBGImage"` && `gmatch $dropControl "*asSelectorBGImage"`)
+	$creating=1;
+int $scaling;
+if ($msgs[5]=="2")
+	$scaling=1;
+if ($scaling && $creating)
+	return "error1";
+string $buffer[],$objBuffer[];
+int $numTok=`tokenize $dragControl ":" $buffer`;
+int $existingLeft,$existingTop,$existingWidth,$existingHeight;
+if ($numTok>2)
+	{
+	$existingLeft=$buffer[$numTok-2];
+	$existingTop=$buffer[$numTok-1];
+	}
+if (`iconTextButton -q -ex $dragControl`)
+	{
+	$existingWidth=`iconTextButton -q -w $dragControl`;
+	$existingHeight=`iconTextButton -q -h $dragControl`;
+	if (!$scaling)
+		{
+		if (`gmatch $dropControl "*asSelectorBGImage"`)
+			{
+			$left=$x-$left;
+			$top=$y-$top;
+			}
+		else
+			{
+			$left=$existingLeft-$left+$x;
+			$top=$existingTop-$top+$y;
+			}
+		}
+	}
+int $width,$height;
+int $mirrorButtons=`optionVar -q asSelectorMirrorButtons`;
+int $mirrorOffset,$mirrorX,$mirrorY;
+string $mirrorMsgs[];
+int $pictureWidth=`text -q -l asSelectorBackgroundWidth`;
+int $pictureHeight=`text -q -l asSelectorBackgroundHeight`;
+
+string $buttonName="asSelector";
+string $ctls[]=`formLayout -q -ca asSelectorDefaultFormLayout`;
+if ($creating)
+	{
+	$width=abs ($x-$left);
+	$height=abs ($y-$top);
+	if ($left>$x)
+		$left=$x;
+	if ($top>$y)
+		$top=$y;
+	if ($mirrorButtons)
+		if (($left<($pictureWidth/2)) && (($left+$width)>($pictureWidth/2)))
+			$width=(($pictureWidth/2)-$left)*2;
+	}
+else if ($scaling)
+	{
+	if ($type==99)
+		{
+		$width=$x;
+		$height=$y;
+		}	
+	else
+		{
+		$left=$existingLeft;
+		$top=$existingTop;
+		if (`gmatch $dropControl "*asSelector:*"`)
+			{
+			$width=$x;
+			$height=$y;
+			}
+		else
+			{
+			$width=abs ($x-$existingLeft);
+			$height=abs ($y-$existingTop);
+			}	
+		}
+	}
+else
+	{
+	$width=$existingWidth;
+	$height=$existingHeight;
+	}
+//Stay within the picture
+if ($left<0)
+	$left=0;
+if ($top<0)
+	$top=0;
+if (($left+$width)>$pictureWidth)
+	$left=$pictureWidth-$width;
+if (($top+$height)>$pictureHeight)
+	$top=$pictureHeight-$height;
+
+//minimum button size requirements
+if ($width<1)
+	error ("Button must be more that \""+$width+"\" pixels wide !");
+if ($height<1)
+	error ("Button must be more that \""+$height+"\" pixels high !");
+
+int $numLetters;
+if ($creating)
+	{
+	for ($i=0;$i<size($sel);$i++)
+		{
+		tokenize $sel[$i] ":" $objBuffer;
+		$sel[$i]=$objBuffer[`size $objBuffer`-1];
+		if ($type==99)
+			{
+			$numLetters=size($sel[$i]);
+			if (`gmatch $sel[$i] "*_L"`)
+				$sel[$i]=`substring $sel[$i] 1 ($numLetters-2)`+"_R";
+			else if (`gmatch $sel[$i] "*_R"`)
+				$sel[$i]=`substring $sel[$i] 1 ($numLetters-2)`+"_L";
+			}
+		$ann+=$sel[$i]+";";
+		}
+	}
+/*
+else
+	for ($i=1;$i<$numTok-2;$i++)
+		$buttonName+=":"+$buffer[$i];
+*/
+
+$buttonName+=":"+$left+":"+$top;
+if (`iconTextButton -q -ex $buttonName`)
+	if (!$scaling)
+		return "";
+
+if ($asfileLoading)
+	if ($msgs[4]!="")
+		{
+		$buttonName=$msgs[4];
+		$ann=$msgs[6];
+		}
+
+if (`iconTextButton -q -ex $dragControl` && $scaling)
+	{
+	//Scaling
+	if ($type==99)
+		if (!`iconTextButton -q -ex $buttonName`)
+			evalEcho ("renameUI \""+$dragControl+"\" \""+$buttonName+"\"");
+	iconTextButton -e -w $width -h $height $buttonName;
+	if ($mirrorButtons && $type!=99)
+		for ($ctl in $ctls)
+			if (!`gmatch $dragControl ("*"+$ctl)`)
+				if (`gmatch $ctl ("*"+($pictureWidth-$existingLeft-$existingWidth)+":"+$existingTop)`)
+					{
+					$mirrorMsgs[0]=$pictureWidth-$existingLeft-$width;
+					$mirrorMsgs[1]=$existingTop;
+					$mirrorX=$width;
+					$mirrorY=$height;
+					evalDeferred ("asSelectorDpc \""+$ctl+"\" asSelectorBGImage {\""+$mirrorMsgs[0]+"\",\""+$mirrorMsgs[1]+"\",\"\",\"\",\"\",\"2\"} "+$mirrorX+" "+$mirrorY+" 99");	
+					}
+	}
+if (`iconTextButton -q -ex $dragControl` && !$scaling)
+	{
+	//Moving
+	renameUI $dragControl $buttonName;
+	if ($mirrorButtons && $type!=99)
+		for ($ctl in $ctls)
+			if (!`gmatch $dragControl ("*"+$ctl)`)
+				if (`gmatch $ctl ("*"+($pictureWidth-$existingLeft-$width)+":"+$existingTop)`)
+					{
+					$mirrorMsgs[0]="0";
+					$mirrorMsgs[1]="0";
+					$mirrorX=$pictureWidth-$left-$width;
+					$mirrorY=$top;
+					evalDeferred ("asSelectorDpc \""+$ctl+"\" asSelectorBGImage {\""+$mirrorMsgs[0]+"\",\""+$mirrorMsgs[1]+"\"} "+$mirrorX+" "+$mirrorY+" 99");
+					}
+	}
+if ($creating)
+	{
+	//Creating
+	setParent asSelectorDefaultFormLayout;
+	iconTextButton -w $width -h $height -dgc asSelectorDgc -dpc asSelectorDpc -iol $iol -c $cmd -ann $ann $buttonName;
+	if ($mirrorButtons && $type!=99)
+		{
+		if ((($left+$width)<($pictureWidth/2)) || ($left>($pictureWidth/2)))
+			{
+			$mirrorMsgs[0]=$pictureWidth-$left-$width;
+			$mirrorMsgs[1]=$top;
+			$mirrorX=$pictureWidth-$left;
+			$mirrorY=$top+$height;
+			evalDeferred ("asSelectorDpc asSelectorBGImage asSelectorBGImage {\""+$mirrorMsgs[0]+"\",\""+$mirrorMsgs[1]+"\"} "+$mirrorX+" "+$mirrorY+" 99");
+			}
+		}
+	}
+
+asSelectorupdateButton $buttonName;
+if (!$asfileLoading)
+	evalDeferred -lp asSelectorRefresh;
+return $buttonName;
+}
+
+global proc asSelectorupdateButton (string $buttonName)
+{
+global string $gMainProgressBar;
+progressBar -e -st "Calculating Icons" $gMainProgressBar;
+string $sel[]=`ls -sl`;
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Selector/untitled/";
+if (!`file -q -ex $iconDir`)
+	sysFile -md $iconDir;
+string $ann=`iconTextButton -q -ann $buttonName`;
+string $buffer[];
+int $numTok=`tokenize $buttonName ":" $buffer`;
+if ($numTok<2)
+	error ("Parsing error $buttonName:\""+$buttonName+"\"!");
+int $left=$buffer[$numTok-2];
+int $top=$buffer[$numTok-1];
+//maya2011 workaround, thinks the ctrl is minimum 100px
+if (`asMayaVersionAsFloat`>=2011)
+	iconTextButton -e -m 0 $buttonName;iconTextButton -e -m 1 $buttonName;
+int $width=`iconTextButton -q -w $buttonName`;
+int $height=`iconTextButton -q -h $buttonName`;
+
+float $defaultColor[3]=`optionVar -q asSelectorDefaultColor`;
+float $selColor[3]=`optionVar -q asSelectorSelColor`;
+float $keyColor[3]=`optionVar -q asSelectorKeyColor`;
+
+//All ?
+if (`iconTextButton -q -iol $buttonName`=="All")
+	control -e -ann "ControlSet" $buttonName;
+
+string $annBuffer[];
+string $ann=`iconTextButton -q -ann $buttonName`;
+int $numAnnTok=`tokenize $ann ";" $annBuffer`;
+
+//Update cmd, popUp
+string $cmd,$keyCmd,$linearKeyCmd;
+string $alignFK2IKCmd,$alignIK2FKCmd,$switchFK2IKCmd,$switchIK2FKCmd;
+if ($numAnnTok==1 && `gmatch $annBuffer[0] "FKIK*"`)
+	if (!`gmatch $annBuffer[0] "FKIKSp*ine*"`)
+		{
+		$alignFK2IKCmd="asAlignFK2IK \"Default\" {\""+$annBuffer[0]+"\"}";
+		$alignIK2FKCmd="asAlignIK2FK \"Default\" {\""+$annBuffer[0]+"\"}";
+		$switchFK2IKCmd="asSwitchFK2IK \"Default\" {\""+$annBuffer[0]+"\"}";
+		$switchIK2FKCmd="asSwitchIK2FK \"Default\" {\""+$annBuffer[0]+"\"}";
+		}
+
+for ($i=0;$i<$numAnnTok;$i++)
+	{
+	if ($i==0)
+		$cmd="asSelect \"Default\" {";
+	$cmd+="\""+$annBuffer[$i]+"\"";
+	if ($i<$numAnnTok-1)
+		$cmd+=",";
+	if ($i==$numAnnTok-1)
+		$cmd+="};";
+	}
+$keyCmd=`substitute "asSelect " $cmd "asKey "`;
+$linearKeyCmd=`substitute "asSelect " $cmd "asLinearKey "`;
+
+//Remove Old Icons
+string $existingIcon=`iconTextButton -q -i $buttonName`;
+int $numTok=`tokenize $existingIcon "/" $buffer`;
+if ($existingIcon!="" && `file -q -ex $existingIcon`)
+	{
+	int $numChar=`size($buffer[$numTok-1])`;
+	string $matchName=`substring $buffer[$numTok-1] 1 ($numChar-9)`+"*";
+	string $fileList[]=`getFileList -fld $iconDir`;
+	for ($file in $fileList)
+		if (`gmatch $file $matchName`)
+			sysFile -del ($iconDir+$file);
+	}
+
+//Create New Icons
+string $buttonImageFile=$iconDir+"untitled";
+string $buttonImageFileExt="xpm";
+if (`asMayaVersionAsFloat`>=2011)
+	$buttonImageFileExt="png";
+if (`about -mac`)
+	$buttonImageFileExt="iff";
+string $tempFile=$iconDir+"untitled_background."+$buttonImageFileExt;
+$tempFile=`asUniqueFile $tempFile`;
+string $rampNodeU=`createNode ramp`;
+string $rampNodeV=`createNode ramp`;
+string $fileNode=`createNode file`;
+setAttr -type "string" ($fileNode+".fileTextureName") $tempFile;
+float $pictureWidth=`getAttr ($fileNode+".outSizeX")`;
+float $pictureHeight=`getAttr ($fileNode+".outSizeY")`;
+string $uv=`createNode place2dTexture`;
+connectAttr ($uv+".outUV") ($fileNode+".uvCoord"); connectAttr -f ($uv+".outUvFilterSize") ($fileNode+".uvFilterSize"); 
+connectAttr -f ($uv+".coverage") ($fileNode+".coverage"); connectAttr -f ($uv+".translateFrame") ($fileNode+".translateFrame"); 
+connectAttr -f ($uv+".rotateFrame") ($fileNode+".rotateFrame"); connectAttr -f ($uv+".mirrorU") ($fileNode+".mirrorU"); 
+connectAttr -f ($uv+".mirrorV") ($fileNode+".mirrorV"); connectAttr -f ($uv+".stagger") ($fileNode+".stagger"); 
+connectAttr -f ($uv+".wrapU") ($fileNode+".wrapU"); connectAttr -f ($uv+".wrapV") ($fileNode+".wrapV"); 
+connectAttr -f ($uv+".repeatUV") ($fileNode+".repeatUV"); connectAttr -f ($uv+".vertexUvOne") ($fileNode+".vertexUvOne"); 
+connectAttr -f ($uv+".vertexUvTwo") ($fileNode+".vertexUvTwo"); connectAttr -f ($uv+".vertexUvThree") ($fileNode+".vertexUvThree"); 
+connectAttr -f ($uv+".vertexCameraOne") ($fileNode+".vertexCameraOne"); connectAttr -f ($uv+".noiseUV") ($fileNode+".noiseUV"); 
+connectAttr -f ($uv+".offset") ($fileNode+".offset"); connectAttr -f ($uv+".rotateUV") ($fileNode+".rotateUV");
+setAttr ($uv+".offsetU") (($left+1)/$pictureWidth);
+if (`asMayaVersionAsFloat`>=2011)
+	{
+	setAttr ($uv+".offsetV") (($pictureHeight-($top-1+$height))/$pictureHeight);
+	setAttr ($uv+".repeatV") (($height-2)/$pictureHeight);
+	setAttr ($uv+".repeatU") (($width-2)/$pictureWidth);
+	}
+else
+	{
+	setAttr ($uv+".offsetV") (($pictureHeight-($top+1+$height))/$pictureHeight);
+	setAttr ($uv+".repeatV") ($height/$pictureHeight);
+	setAttr ($uv+".repeatU") (($width-0)/$pictureWidth);
+	}
+
+setAttr ($rampNodeU+".type") 1;
+setAttr ($rampNodeU+".interpolation") 0;
+setAttr ($rampNodeU+".colorEntryList[1].color") -type double3 0.75 0.75 0.75;
+if ($width>2)
+	if (`asMayaVersionAsFloat`>=2011)
+		setAttr ($rampNodeU+".colorEntryList[1].position") (1-(1.00000/$width));
+	else
+		setAttr ($rampNodeU+".colorEntryList[1].position") (1-(2.00000/$width));
+connectAttr ($fileNode+".outColor") ($rampNodeU+".colorEntryList[0].color");
+setAttr ($rampNodeV+".type") 0;
+setAttr ($rampNodeV+".interpolation") 0;
+setAttr ($rampNodeV+".colorEntryList[0].color") -type double3 0.75 0.75 0.75;
+if ($height>2)
+	if (`asMayaVersionAsFloat`>=2011)
+		setAttr ($rampNodeV+".colorEntryList[1].position") (1.00000/$height);
+	else
+		setAttr ($rampNodeV+".colorEntryList[1].position") (2.00000/$height);
+connectAttr ($rampNodeU+".outColor") ($rampNodeV+".colorEntryList[1].color");
+
+//upper/left boarders
+if (`asMayaVersionAsFloat`>=2011)
+	{
+	setAttr ($rampNodeU+".colorEntryList[0].position") (1.00000/$width);
+	setAttr ($rampNodeU+".colorEntryList[2].color") -type double3 0.75 0.75 0.75;
+	setAttr ($rampNodeV+".colorEntryList[0].position") (1-(1.00000/$height));
+	setAttr ($rampNodeV+".colorEntryList[2].color") -type double3 0.75 0.75 0.75;
+	}
+
+string $buttonImageFileOffK0=$buttonImageFile+"_"+$left+"_"+$top+"_OffK0."+$buttonImageFileExt;
+string $buttonImageFileOffK1=$buttonImageFile+"_"+$left+"_"+$top+"_OffK1."+$buttonImageFileExt;
+string $buttonImageFileOnK0=$buttonImageFile+"_"+$left+"_"+$top+"_OnK0."+$buttonImageFileExt;
+string $buttonImageFileOnK1=$buttonImageFile+"_"+$left+"_"+$top+"_OnK1."+$buttonImageFileExt;
+
+
+//Off K0 version
+select $rampNodeV;
+if ($defaultColor[0]==1 && $defaultColor[1]==1 && $defaultColor[2]==1)
+	;
+else
+	{
+	setAttr ($fileNode+".colorOffset") -type double3 0.27 0.27 0.27;
+	setAttr ($fileNode+".colorGain") -type double3 $defaultColor[0] $defaultColor[1] $defaultColor[2];
+	}
+eval ("convertSolidTx -aa 0 -sp 1 -al 1 -rx "+$width+" -ry "+$height+" -n asTempSolidTx -fil \""+$buttonImageFileExt+"\" -fin \""+$buttonImageFileOffK0+"\"");
+delete asTempSolidTx;
+
+//Off K1 version
+setAttr ($fileNode+".colorOffset") -type double3 0.27 0.27 0.27;
+setAttr ($fileNode+".colorGain") -type double3 $keyColor[0] $keyColor[1] $keyColor[2];
+eval ("convertSolidTx -aa 0 -sp 1 -al 1 -rx "+$width+" -ry "+$height+" -n asTempSolidTx -fil \""+$buttonImageFileExt+"\" -fin \""+$buttonImageFileOffK1+"\"");
+delete asTempSolidTx;
+
+//On K0 version
+setAttr ($fileNode+".colorOffset") -type double3 0.27 0.27 0.27;
+setAttr ($fileNode+".colorGain") -type double3 $selColor[0] $selColor[1] $selColor[2];
+eval ("convertSolidTx -aa 0 -sp 1 -al 1 -rx "+$width+" -ry "+$height+" -n asTempSolidTx -fil \""+$buttonImageFileExt+"\" -fin \""+$buttonImageFileOnK0+"\"");
+delete asTempSolidTx;
+
+//On K1 version
+setAttr ($fileNode+".colorOffset") -type double3 $keyColor[0] $keyColor[1] $keyColor[2];
+setAttr ($fileNode+".colorGain") -type double3 $selColor[0] $selColor[1] $selColor[2];
+eval ("convertSolidTx -aa 0 -sp 1 -al 1 -rx "+$width+" -ry "+$height+" -n asTempSolidTx -fil \""+$buttonImageFileExt+"\" -fin \""+$buttonImageFileOnK1+"\"");
+delete asTempSolidTx;
+delete $rampNodeV;
+
+sysFile -del $tempFile;
+
+//Updates
+if (`iconTextButton -q -c $buttonName`=="")
+	iconTextButton -e -c $cmd $buttonName;
+
+if (`file -q -ex $buttonImageFileOffK0`)
+	iconTextButton -e -i $buttonImageFileOffK0 $buttonName;
+//evalEcho ("iconTextButton -e -i \""+$buttonImageFileOffK0+"\" \""+$buttonName+"\"");
+
+formLayout -e -af $buttonName "left" $left -af $buttonName "top" $top asSelectorDefaultFormLayout;
+
+string $existingPopUpMenus[]=`iconTextButton -q -pma $buttonName`;
+for ($pop in $existingPopUpMenus)
+	deleteUI $pop;
+popupMenu -p $buttonName;
+	menuItem -l "Key" -c $keyCmd;
+	menuItem -l "LinearKey" -c $linearKeyCmd;
+	menuItem -d 1;
+	menuItem -l "Label Button" -c ("asLabelButton \""+$buttonName+"\"");
+	menuItem -l "Numeric Input" -c ("asNumericInputUI \""+$buttonName+"\"");
+	menuItem -l "Remove Button" -c ("asDeleteButton \""+$buttonName+"\"");
+	if ($alignFK2IKCmd!="")
+		{
+		menuItem -d 1;
+		menuItem -sm 1 -l "Align";
+			menuItem -l "FK2IK" -c $alignFK2IKCmd;
+			menuItem -l "IK2FK" -c $alignIK2FKCmd;
+			setParent -menu ..;
+		menuItem -sm 1 -l "Switch";
+			menuItem -l "FK2IK" -c $switchFK2IKCmd;
+			menuItem -l "IK2FK" -c $switchIK2FKCmd;
+		}
+
+select $sel;
+}
+
+global proc asDeleteButton (string $button)
+{
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Selector/untitled/";
+string $buffer[];
+string $matchString;
+string $buttonImageFileExt="xpm";
+if (`asMayaVersionAsFloat`>=2011)
+	$buttonImageFileExt="png";
+if (`about -mac`)
+	$buttonImageFileExt="iff";
+string $fileList[]=`getFileList -fld $iconDir -fs ("*."+$buttonImageFileExt)`;
+string $buttonImage=`iconTextButton -q -i $button`;
+for ($file in $fileList)
+	{
+	$matchString="";
+	tokenize $buttonImage "/" $buffer;
+	int $numTok=`tokenize $buffer[size($buffer)-1] "_" $buffer`;
+	for ($i=0;$i<($numTok-1);$i++)
+		$matchString+=$buffer[$i]+"_";
+	if (`gmatch $file ($matchString+"*")`)
+		sysFile -del ($iconDir+$file);
+	}
+evalDeferred ("deleteUI \""+$button+"\"");
+}
+
+global proc asLabelButton (string $button)
+{
+string $result=`promptDialog -t "Label" -b "Ok"  -b "Cancel" -db "Ok" -cb "Cancel" -ds "Cancel"`;
+if ($result!="Ok")
+	return;
+iconTextButton -e -iol (`promptDialog -q -tx`) $button;
+if (`promptDialog -q -tx`=="All")
+	iconTextButton -e -ann "ControlSet" $button;
+asSelectorRefresh;
+}
+
+global proc asNumericInputUI (string $button)
+{
+int $numTok;
+string $buffer[];
+$numTok=`tokenize $button ":" $buffer`;
+int $existingLeft=$buffer[$numTok-2];
+int $existingTop=$buffer[$numTok-1];
+int $existingWidth=`iconTextButton -q -w $button`;
+int $existingHeight=`iconTextButton -q -h $button`;
+
+if (`window -q -ex asSelectorNumericInput`)
+	deleteUI asSelectorNumericInput;
+window -t "Numeric Input" asSelectorNumericInput;
+columnLayout;
+	rowLayout -nc 8 -cw 1 30 -cw 2 30 -cw 3 30 -cw 4 30 -cw 5 30 -cw 6 30 -cw 7 30 -cw 8 30;
+		text -l "left";
+		intField -w 30 -v $existingLeft -ann $existingLeft existingLeft;
+		text -l "top";
+		intField -w 30 -v $existingTop -ann $existingTop existingTop;
+		text -l "width";
+		intField -w 30 -v $existingWidth -ann $existingWidth existingWidth;
+		text -l "height";
+		intField -w 30 -v $existingHeight -ann $existingHeight existingHeight;
+		setParent..;
+	separator -h 10 -st "none";
+	button -w 240 -l "Update Button" -c ("asNumericInput \""+$button+"\"");
+showWindow;
+}
+
+global proc asNumericInput (string $button)
+{
+if (!`control -q -ex $button`)
+	error ("button \""+$button+"\" not found !\n");
+string $ctls[]=`formLayout -q -ca asSelectorDefaultFormLayout`;
+int $pictureWidth=`text -q -l asSelectorBackgroundWidth`;
+int $left=`intField -q -v existingLeft`;
+int $existingLeft=`intField -q -ann existingLeft`;
+int $top=`intField -q -v existingTop`;
+int $existingTop=`intField -q -ann existingTop`;
+int $x=`intField -q -v existingWidth`;
+int $existingWidth=`intField -q -ann existingWidth`;
+int $y=`intField -q -v existingHeight`;
+int $type=22;
+string $dragControl="asSelectorBGImage";
+string $dropControl="asSelectorBGImage";
+string $msgs[];
+$msgs[0]=$left;
+$msgs[1]=$top;
+string $cmd=`iconTextButton -q -c $button`;
+string $iol=`iconTextButton -q -iol $button`;
+
+string $newButtonName=$button;
+if ($left!=$existingLeft || $top!=$existingTop)
+	{
+	$newButtonName=`substitute (":"+$existingLeft+":"+$existingTop) $button (":"+$left+":"+$top)`;
+	renameUI $button $newButtonName;
+	}
+iconTextButton -e -w $x -h $y $newButtonName;
+asSelectorupdateButton $newButtonName;
+
+//mirror
+string $newMirrorButton;
+if (`optionVar -q asSelectorMirrorButtons`)
+	{
+	for ($ctl in $ctls)
+		{
+		if ($ctl==$button)
+			continue;
+		if (`gmatch $ctl ("*"+($pictureWidth-$existingLeft-$existingWidth)+":"+$existingTop)`)
+			{
+			$newMirrorButton=$ctl;
+			if (($pictureWidth-$existingLeft-$existingWidth)!=($pictureWidth-$left-$x) || $top!=$existingTop)
+				{
+				$newMirrorButton=`substitute (":"+($pictureWidth-$existingLeft-$existingWidth)+":"+$existingTop) $ctl (":"+($pictureWidth-$left-$x)+":"+$top)`;
+				renameUI $ctl $newMirrorButton;
+				}
+			iconTextButton -e -w $x -h $y $newMirrorButton;
+			asSelectorupdateButton $newMirrorButton;
+			break;
+			}
+		}
+	}
+
+deleteUI asSelectorNumericInput;
+}
+
+global proc asSelectorRefresh ()
+{
+if (!`formLayout -q -ex asSelectorDefaultFormLayout`)
+	return;
+
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Selector/untitled/";
+int $showCenter=`menuItem -q -cb "Show_Center"`;
+optionVar -iv asSelectorshowCenter $showCenter;
+int $mirrorButtons=`menuItem -q -cb "Mirror_Buttons"`;
+optionVar -iv asSelectorMirrorButtons $mirrorButtons;
+
+int $pictureWidth=`text -q -l asSelectorBackgroundWidth`;
+int $pictureHeight=`text -q -l asSelectorBackgroundHeight`;
+string $buttonImageFileExt="xpm";
+if (`asMayaVersionAsFloat`>=2011)
+	$buttonImageFileExt="png";
+if (`about -mac`)
+	$buttonImageFileExt="iff";
+string $pictureFile=$iconDir+"untitled_background."+$buttonImageFileExt;
+
+separator -e -m $showCenter -h $pictureHeight asSelectorSeparator;
+formLayout -e
+	-af asSelectorSeparator "left" ($pictureWidth/2)
+	asSelectorDefaultFormLayout;
+
+if (`asMayaVersionAsFloat`>=2011)
+	return;
+
+deleteUI asSelectorBGImage;
+setParent asSelectorDefaultFormLayout;
+image -w $pictureWidth -h $pictureHeight -i $pictureFile -dgc asSelectorDgc -dpc asSelectorDpc asSelectorBGImage;
+
+string $ctls[]=`formLayout -q -ca asSelectorDefaultFormLayout`;
+string $existingIOL;
+for ($ctl in $ctls)
+	if (`iconTextButton -q -ex $ctl`)
+		{
+		$existingIOL=`iconTextButton -q -iol $ctl`;
+		evalDeferred ("iconTextButton -e -iol \""+$existingIOL+"\" \""+$ctl+"\"");
+		}
+}
+
+
+//---- Resize Procs ----//
+
+global proc asSelectorResizeUI ()
+{
+if (`window -q -ex asSelectorResizeUI`)
+	deleteUI asSelectorResizeUI;
+int $pictureWidth=`text -q -l asSelectorBackgroundWidth`;
+int $pictureHeight=`text -q -l asSelectorBackgroundHeight`;
+float $ratio=($pictureHeight+0.00)/($pictureWidth+0.00);
+string $currRatio=$ratio;
+
+window -t "ResizeUI" asSelectorResizeUI;
+columnLayout;
+rowLayout -nc 2 -cw2 50 100;
+	separator -st "none";
+	checkBox -l "Maintain Ratio" -v 1 -ann $currRatio asSelectorResizeMaintain;
+	setParent..;
+intFieldGrp -cw2 50 40 -l "Width" -v1 $pictureWidth -cc "asSelectorResizeUIMaintain Width" asSelectorResizeWidth;
+intFieldGrp -cw2 50 40 -l "Height" -v1 $pictureHeight -cc "asSelectorResizeUIMaintain Height" asSelectorResizeHeight;
+separator -h 5 -st "none";
+rowLayout -nc 2 -cw2 50 100;
+	separator -st "none";
+	button -l "Resize" -c asSelectorResize;
+showWindow;
+}
+
+global proc asSelectorResizeUIMaintain (string $widthHeight)
+{
+if (!`checkBox -q -v asSelectorResizeMaintain`)
+	return;
+float $ratio=`checkBox -q -ann asSelectorResizeMaintain`;
+int $width=`intFieldGrp -q -v1 asSelectorResizeWidth`;
+int $height=`intFieldGrp -q -v1 asSelectorResizeHeight`;
+int $newHeight=`trunc ($width*$ratio)`;
+int $newWidth=`trunc ($height/$ratio)`;
+if ($widthHeight=="Width")
+	intFieldGrp -e -v1 $newHeight asSelectorResizeHeight;
+if ($widthHeight=="Height")
+	intFieldGrp -e -v1 $newWidth asSelectorResizeWidth;
+}
+
+global proc asSelectorResize ()
+{
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Selector/untitled/";
+int $newPictureWidth=`intFieldGrp -q -v1 asSelectorResizeWidth`;
+int $newPictureHeight=`intFieldGrp -q -v1 asSelectorResizeHeight`;
+int $pictureWidth=`text -q -l asSelectorBackgroundWidth`;
+int $pictureHeight=`text -q -l asSelectorBackgroundHeight`;
+text -e -l $newPictureWidth asSelectorBackgroundWidth;
+text -e -l $newPictureHeight asSelectorBackgroundHeight;
+string $buttonImageFileExt="tga";
+if (`about -mac`)
+	$buttonImageFileExt="iff";
+string $pictureFile=$iconDir+"untitled_background."+$buttonImageFileExt;
+deleteUI asSelectorResizeUI;
+if ($newPictureWidth==$pictureWidth && $newPictureHeight==$pictureHeight)
+	return;
+if ($newPictureWidth<1 || $pictureHeight<1)
+	error "Can Not Scale Less Than 1\n";
+float $widthChangeFactor=($pictureWidth+0.00)/($newPictureWidth+0.00);
+float $heightChangeFactor=($pictureHeight+0.00)/($newPictureHeight+0.00);
+
+
+string $buffer[];
+int $numTok;
+int $existingLeft,$existingTop,$existingWidth,$existingHeight;
+int $newLeft,$newTop,$newWidth,$newHeight;
+string $newButtonName;
+string $ctls[]=`formLayout -q -ca asSelectorDefaultFormLayout`;
+for ($ctl in $ctls)
+	if (`iconTextButton -q -ex $ctl`)
+		if ($ctl!="asSelectorSeparator")
+			{
+			$numTok=`tokenize $ctl ":" $buffer`;
+			$existingLeft=$buffer[$numTok-2];
+			$existingTop=$buffer[$numTok-1];
+			$existingWidth=`iconTextButton -q -w $ctl`;
+			$existingHeight=`iconTextButton -q -h $ctl`;
+
+			$newLeft=$existingLeft/$widthChangeFactor;
+			$newTop=$existingTop/$widthChangeFactor;
+			$newWidth=$existingWidth/$widthChangeFactor;
+			$newHeight=$existingHeight/$widthChangeFactor;
+
+			$newButtonName="asSelector";
+			$buffer[$numTok-2]=$newLeft;
+			$buffer[$numTok-1]=$newTop;
+			for ($i=1;$i<$numTok;$i++)
+				$newButtonName+=":"+$buffer[$i];
+
+			renameUI $ctl $newButtonName;
+			iconTextButton -e -w $newWidth -h $newHeight $newButtonName;
+			}
+asSelectorBackgroundImport $pictureFile ("Resize");
+}
+
+
+

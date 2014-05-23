@@ -1,0 +1,27 @@
+/* XPM */
+static char *biped_261_114_OnK0[] = {
+/* columns rows colors chars-per-pixel */
+"10 16 5 1",
+"  c #8AFF44",
+". c #8BFF44",
+"X c #8CFF44",
+"o c #8FFF44",
+"O c gray75",
+/* pixels */
+"OOOOOOOOOO",
+"O oooooooO",
+"O oooooooO",
+"OooooooooO",
+"O oooooooO",
+"OooooooooO",
+"OooooooooO",
+"O oooooooO",
+"O oooooooO",
+"O oooooooO",
+"O oooooooO",
+"O oooooooO",
+"O oooooooO",
+"OooooooooO",
+"OooooooooO",
+"OOOOOOOOOO"
+};

@@ -1,0 +1,518 @@
+//     AdvancedSkeleton
+//     Version 3.9.93
+// 
+// 
+// AdvancedSkeleton is is a collection of Maya tools for doing character setup.
+//   
+// INSTALLATION: 
+// Run the SETUP file (setup.exe) 
+// Choose the Destination Folder.
+// NOTE: destination folder must be your Maya user directory 
+// eg: C:\Users\$user\Documents\maya\2014\
+// Continue installation.
+// Start Maya. 
+// Now you will find a new Shelf called 'advancedSkeleton':  
+// 
+// For detailed instructions go to: www.animationstudios.com.au
+// 
+// Copyright (C)2014 Animation Studios
+// 
+// email: support@animationstudios.com.au
+// Last Modified 17/04/2014
+
+global proc asScriptLocator (){}
+
+global proc string asScriptLocation ()
+{
+string $whatIs=`whatIs asScriptLocator`;
+string $fullPath=`substring $whatIs 25 999`;
+string $buffer[];
+int $numTok=`tokenize $fullPath "/" $buffer`;
+int $numLetters=size($fullPath);
+int $numLettersLastFolder=size($buffer[$numTok-1]);
+string $scriptLocation=`substring $fullPath 1 ($numLetters-$numLettersLastFolder)`;
+return $scriptLocation;
+}
+
+global proc asPoserDesigner ()
+{
+string $asScriptLocation=`asScriptLocation`;
+string $sourceAsToolProcedures=("source \""+$asScriptLocation+"asToolProcedures.mel\"");
+string $sourceAsProcedures=("source \""+$asScriptLocation+"asProcedures.mel\"");
+eval ($sourceAsToolProcedures);
+if (!`exists asCharSize`)
+	eval ($sourceAsProcedures);
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Poser/untitled/";
+if (!`file -q -ex $iconDir`)
+	sysFile -md $iconDir;
+string $fileList[]=`getFileList -fld ($iconDir+"/")`;
+for ($file in $fileList)
+	eval ("sysFile -del \""+$iconDir+"/"+$file+"\"");
+string $buttonImageFileExt="xpm";
+if (`asMayaVersionAsFloat`>=2011)
+	$buttonImageFileExt="png";
+int $nc=`optionVar -q asPoserNc`;
+if ($nc<1)
+	$nc=4;
+int $nr=`optionVar -q asPoserNr`;
+if ($nr<1)
+	$nr=2;
+string $poserText=`optionVar -q asPoserText`;
+if ($poserText=="0")
+	$poserText="Pose";
+int $onlySel=`optionVar -q asPoserOnlySel`;
+int $anim=`optionVar -q asPoserAnim`;
+int $renderView=`optionVar -q asPoserRenderView`;
+string $controlSets[]=`asGetControlSets`;
+
+if (`window -q -ex asPoserDefault`)
+	deleteUI asPoserDefault;
+window -mb 1 -t "PoserDesigner :untitled" asPoserDefault;
+menu "File";
+	menuItem -c asPoserDesigner "New";
+	menuItem -c "asfileBrowse Poser Open" "Open";
+	menuItem -sm 1 -l "ControlSets" asPoserControlSetsMenu;
+		menuItem -cb 1 -l ControlSet asPoserControlSetsMenuItemControlSet;
+		for ($i=0;$i<size($controlSets);$i++)
+			if ($controlSets[$i]!="ControlSet")
+				menuItem -cb 0 -l $controlSets[$i] ("asPoserControlSetsMenuItem"+$controlSets[$i]);
+		setParent -menu ..;
+	menuItem -d 1;
+	menuItem -c "asSave Poser" "Save";
+	menuItem -c "asfileBrowse Poser SaveAs" "Save As";
+	menuItem -c "astoShelf Poser" "Put on shelf";
+	setParent -menu ..;
+	menuItem -d 1;
+	menuItem -c "deleteUI asPoserDefault" "Close";
+	setParent -menu ..;
+formLayout asPoserDefaultFormLayout;
+	text -vis 0 -l (`internalVar -utd`+"AdvancedSkeleton/Poser/") asPoserProjectPath;
+	text -vis 0 -l ("untitled") asPoserProjectName;
+	rowLayout -adj 1 -nc 8 -cw 2 90 -cw 3 80 -cw 4 90 -cw 5 50 -cw 6 20 -cw 7 25 asPoserDefaultRowLayout;
+		optionMenu asPoserDefaultOptionMenu;
+		button -l "    New Pose    " -c "asNewPose {} 0";
+		textField -w 70 -tx $poserText -cc asPoserUpdateGrid asPoserTextField;
+		checkBox -v $onlySel -l "only selected" -cc asPoserUpdateGrid asPoserOnlySel;
+		checkBox -v $anim -l "anim" -cc asPoserUpdateGrid asPoserAnim;
+		intField -w 20 -v $nc -cc asPoserUpdateGrid asPoserNc;
+		intField -w 20 -v $nr -cc asPoserUpdateGrid asPoserNr;
+		checkBox -v $renderView -l "renderView" -cc asPoserUpdateGrid asPoserRenderView;
+		setParent..;
+//	scrollLayout -dgc asPoserDgc -dpc asPoserDpc asPoserDefaultScrollayout;
+//	cannot use scrollLayout cause it returns incorrect drop coordinates when scrolled.
+	columnLayout -dgc asPoserDgc -dpc asPoserDpc asPoserDefaultScrollayout;
+		gridLayout -h (90*$nr) -bgc .75 .75 .75 -nc $nc -nr $nr -cw 110 -ch 90 asPoserDefaultGridLayout;
+
+formLayout -e
+	-af asPoserDefaultRowLayout "top" 0
+	-ac asPoserDefaultScrollayout "top" 0 asPoserDefaultRowLayout
+	-af asPoserDefaultScrollayout "bottom" 0
+	-af asPoserDefaultScrollayout "left" 0
+	-af asPoserDefaultScrollayout "right" 0
+	asPoserDefaultFormLayout;
+
+asPopulateNameSpaceMenu "asPoserDefault";
+
+//Remove Old Icons
+string $oldFilesList[]=`getFileList -fld $iconDir`;
+for ($file in $oldFilesList)
+	sysFile -del ($iconDir+$file);
+
+showWindow asPoserDefault;
+}
+
+global proc asNewPose (string $loadData[], int $anim)
+{
+global int $asfileLoading;
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Poser/untitled/";
+if (!`file -q -ex $iconDir`)
+	sysFile -md $iconDir;
+string $setParent=`setParent -q`;
+string $uiName,$image,$label,$cmd,$mayaFile,$loadingMayaFile;
+int $nc,$nr,$numTok,$singleAttr;
+float $range[2]={0,1};
+string $buffer[];
+if ($loadData[0]=="" || $asfileLoading)
+	{
+	$nc=`intField -q -v asPoserNc`;
+	$nr=`intField -q -v asPoserNr`;
+	$uiName="asPoserDefault";
+	}
+else
+	$uiName=$loadData[0];
+string $ext="xpm";
+if (`asMayaVersionAsFloat`>=2011)
+	$ext="png";
+string $gridOrder[]=`gridLayout -q -go ($uiName+"GridLayout")`;
+int $lastFilled,$childNum;
+//Find Last filled
+for ($i=1;$i<size($gridOrder)+1;$i++)
+	if (`gmatch $gridOrder[$i-1] "asPoser*"`)
+		$lastFilled=$i;
+$childNum=$lastFilled+1;
+/*
+//If last grid is filled, then fill gaps
+if ($lastFilled==($nc*$nr))
+	for ($i=1;$i<size($gridOrder)+1;$i++)
+		if (!`gmatch $gridOrder[$i-1] "asPoser*"`)
+			{
+			$childNum=$i;
+			break;
+			}
+*/
+//Total full
+if ($childNum>($nc*$nr) && $loadData[0]=="")
+	error "Grid is full, extend rows or columns !\n";
+
+if ($loadData[0]=="")
+	{
+	if (`optionMenu -q -v asPoserDefaultOptionMenu`=="None")
+		error "No Character In The Scene\n";
+	$anim=`checkBox -q -v asPoserAnim`;
+	$cmd=`asPoserGetCmd $uiName $anim`;
+	if ($cmd=="")
+		error "No valid objects !\n";
+	$image=`asPoserSnapShoot $uiName $childNum $anim 1 1`;
+	if ($anim && $cmd!="")
+		$cmd+=" "+$childNum;
+	if (`about -mac`)
+		showWindow asPoserDefault;
+	$label=`textField -q -tx asPoserTextField`;
+	}
+else
+	{
+	$childNum=$loadData[4];
+	$numTok=`tokenize $loadData[1] "/" $buffer`;
+	$image=$iconDir+"untitled_"+$childNum+"."+$ext;
+	sysFile -cp $image $loadData[1];
+	$mayaFile=`substitute "[.][a-z][a-z][a-z]" $image ".ma"`;
+	$loadingMayaFile=`substitute "[.][a-z][a-z][a-z]" $loadData[1] ".ma"`;
+	if (`file -q -ex $loadingMayaFile`)
+		sysFile -cp $mayaFile $loadingMayaFile;
+	$jpg=`substitute "[.][a-z][a-z][a-z]" $image ".jpg"`;
+	$loadingJpg=`substitute "[.][a-z][a-z][a-z]" $loadData[1] ".jpg"`;
+	if (`file -q -ex $loadingJpg`)
+		sysFile -cp $jpg $loadingJpg;
+	$avi=`substitute "[.][a-z][a-z][a-z]" $image ".avi"`;
+	$loadingAvi=`substitute "[.][a-z][a-z][a-z]" $loadData[1] ".avi"`;
+	if (`file -q -ex $loadingAvi`)
+		sysFile -cp $avi $loadingAvi;
+	$label=$loadData[2];
+	$cmd=$loadData[3];
+	if ($asfileLoading)
+		$cmd=`substitute $loadData[0] $cmd $uiName`;
+	$anim=$loadData[5];
+	}
+$numTok=`tokenize $cmd ";" $buffer`;
+if ($numTok==2)
+	$singleAttr=1;
+setParent ($uiName+"GridLayout");
+columnLayout ($uiName+"ColumnLayout"+$childNum);
+gridLayout -e -pos ($uiName+"ColumnLayout"+$childNum) $childNum ($uiName+"GridLayout");
+rowColumnLayout -ann $anim -nc 2 -cw 1 100 -cw 2 15 ($uiName+"RowColumnLayout"+$childNum);
+	iconTextButton -w 100 -h 75 -i $image -c $cmd ($uiName+"IconTextButton"+$childNum);
+	floatSlider -m 0 -w 10 -h 75 -hr 0 ($uiName+"FloatSlider"+$childNum);
+	text -h 15 -al "center" -fn "smallBoldLabelFont" -l $label ($uiName+"Text"+$childNum);
+if ($anim)
+	text -e -bgc 1 0 0 ($uiName+"Text"+$childNum);
+if ($loadData[0]=="" || $asfileLoading)
+	{
+	asPoserupdateGridBlock $uiName $childNum;
+	iconTextButton -e -dgc asPoserDgc -dpc asPoserDpc ($uiName+"IconTextButton"+$childNum);
+	}
+
+//connectControl
+string $connectToObj,$connectToAttr,$resolvedDestination;
+string $allKeyableAttrs[];
+if ($singleAttr)
+	{
+	tokenize $cmd "\"" $buffer;
+	tokenize $buffer[1]  $buffer;
+	tokenize $buffer[0] "." $buffer;
+	$connectToObj=$buffer[0];
+	$connectToAttr=$buffer[1];
+	$resolvedObj=`asPoserResolveNameSpace $uiName $connectToObj`;
+	if (`objExists $resolvedObj`)
+		$allKeyableAttrs=`listAttr -k -m -sn $resolvedObj`;
+
+	for ($allKeyableAttr in $allKeyableAttrs)
+		if ($connectToAttr==$allKeyableAttr)
+			if (`getAttr -se ($resolvedObj+"."+$connectToAttr)`)
+					{
+					if (`attributeQuery -n $resolvedObj -ex $connectToAttr`)
+						if (!`attributeQuery -n $resolvedObj -re $connectToAttr`)
+							break;
+					if (`attributeQuery -n $resolvedObj -ex $connectToAttr`)
+						$range=`attributeQuery -n $resolvedObj -r $connectToAttr`;
+					else
+						//probably a muli attr  e.g. blenShape target..using range 0->1
+						$range={0,1};
+					floatSlider -ann ($connectToObj+"."+$connectToAttr) -e -m 1 -min $range[0] -max $range[1] ($uiName+"FloatSlider"+$childNum);
+					connectControl ($uiName+"FloatSlider"+$childNum) ($resolvedObj+"."+$connectToAttr);
+					text -e -l $connectToAttr ($uiName+"Text"+$childNum);
+					}
+	}
+setParent $setParent;
+}
+
+global proc asPoserUpdateGrid ()
+{
+int $nc=`intField -q -v asPoserNc`;
+optionVar -iv asPoserNc $nc;
+int $nr=`intField -q -v asPoserNr`;
+optionVar -iv asPoserNr $nr;
+string $poserText=`textField -q -tx asPoserTextField`;
+optionVar -sv asPoserText $poserText;
+int $onlySel=`checkBox -q -v asPoserOnlySel`;
+optionVar -iv asPoserOnlySel $onlySel;
+int $anim=`checkBox -q -v asPoserAnim`;
+optionVar -iv asPoserAnim $anim;
+int $renderView=`checkBox -q -v asPoserRenderView`;
+optionVar -iv asPoserRenderView $renderView;
+
+if ($nc<1)
+	{
+	intField -e -v 1 asPoserNc;
+	asPoserUpdateGrid;
+	return;
+	}
+if ($nr<1)
+	{
+	intField -e -v 1 asPoserNr;
+	asPoserUpdateGrid;
+	return;
+	}
+gridLayout -e -nc $nc -nr $nr -w (110*$nc) -h (90*$nr) asPoserDefaultGridLayout;
+}
+
+global proc asPoserRename (int $childNum)
+{
+if (!`text -q -ex ("asPoserDefaultText"+$childNum)`)
+	error "Cant find `text` uiElement\n";
+string $oldname=`text -q -l ("asPoserDefaultText"+$childNum)`;
+string $result=`promptDialog -m "Name:" -tx $oldname -t ("AdvancedSkeleton") -b "Ok" -b "Cancel" -db "Ok" -cb "Cancel" -ds "Cancel"`;
+if ($result=="Cancel")
+	return;
+string $newName=`promptDialog -q -tx`;
+text -e -l $newName ("asPoserDefaultText"+$childNum);
+}
+
+global proc asPoserDeletePose (string $uiName, int $num)
+{
+string $image=`iconTextButton -q -i ($uiName+"IconTextButton"+$num)`;
+$jpgImage=`substitute "[.]png" $image ".jpg"`;
+$jpgImage=`substitute "[.]xpm" $jpgImage ".jpg"`;
+sysFile -del $image;
+sysFile -del $jpgImage;
+
+evalDeferred ("deleteUI "+$uiName+"ColumnLayout"+$num);
+}
+
+global proc string asPoserSnapShoot (string $uiName, int $childNum, int $anim, int $updateIcon, int $updateMovie)
+{
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Poser/untitled/";
+int $renderView=`checkBox -q -v asPoserRenderView`;
+if (!`file -q -ex $iconDir`)
+	sysFile -md $iconDir;
+
+int $curFrame=`currentTime -q`;
+int $startFrame=$endFrame=$curFrame;
+int $currFormat=`getAttr "defaultRenderGlobals.imageFormat"`;
+string $huds[]=`headsUpDisplay -listHeadsUpDisplays`;
+int $hudStates[];
+for ($i=0;$i<size($huds);$i++)
+	{
+	$hudStates[$i]=`headsUpDisplay -q -vis $huds[$i]`;
+	headsUpDisplay -e -vis 0 $huds[$i];
+	}
+string $ext;
+if (`asMayaVersionAsFloat`>=2011)
+	{
+	$ext="png";
+	setAttr "defaultRenderGlobals.imageFormat" 32;
+	}
+else
+	{
+	$ext="xpm";
+	setAttr -type "string" defaultRenderGlobals.imfPluginKey "xpm";
+	setAttr defaultRenderGlobals.imageFormat 50;
+	}
+string $fileName=$iconDir+"untitled_"+$childNum;
+string $iconImage=$fileName+"."+$ext;
+string $blastImage=$fileName+"."+`asDoPadd $curFrame 4`;
+string $blastMovie=$fileName+".avi";
+string $largeImage=$fileName+".jpg";
+string $bgImageFile32=$iconDir+"untitled_background32."+$ext;
+int $iconExists;
+if (`file -q -ex $iconImage`)
+	$iconExists=1;
+		
+if ($renderView && $updateIcon)
+	{
+	if (`renderWindowEditor -q -nim renderView`<0)
+		error ("No Image In RenderView\n");
+	eval ("renderWindowEditor -e -wi \""+$iconImage+"\" renderView");
+	asPoserResizeImage 100 75 $iconImage $iconImage;
+	setAttr defaultRenderGlobals.imageFormat 8;
+	eval ("renderWindowEditor -e -wi \""+$largeImage+"\" renderView");
+	}
+if ($updateIcon)
+	{
+	playblast -w 100 -h 75 -p 100 -st $curFrame -et $curFrame -f $fileName -fmt image -fo -clearCache 0 -viewer 0 -showOrnaments 0;
+	sysFile -ren $iconImage ($blastImage+"."+$ext);
+	}
+
+setAttr defaultRenderGlobals.imageFormat 8;
+
+if ($anim && $updateMovie)
+	playblast -p 100 -st `playbackOptions -q -min` -et `playbackOptions -q -max` -f $fileName -fmt movie -fo -clearCache 0 -viewer 0 -showOrnaments 0;
+else if ($updateIcon)
+	{
+	playblast -p 100 -st $curFrame -et $curFrame -f $fileName -fmt image -fo -clearCache 0 -viewer 0 -showOrnaments 0;
+	sysFile -ren $largeImage ($blastImage+".jpg");
+	}
+setAttr defaultRenderGlobals.imageFormat $currFormat;
+for ($i=0;$i<size($huds);$i++)
+	headsUpDisplay -e -vis $hudStates[$i] $huds[$i];
+
+
+if (`about -linux`)
+	$iconImage=`asConvertToXpm $iconImage`;
+
+//32x32
+if (!`file -q -ex $bgImageFile32`)
+	{
+	asPoserResizeImage 32 32 $iconImage $bgImageFile32;
+	if (`about -linux`)
+		asConvertToXpm $bgImageFile32;
+	}
+
+if ($iconExists)
+	reloadImage $iconImage ($uiName+"IconTextButton"+$childNum);
+return $iconImage;
+}
+
+global proc asPoserResizeImage (int $x, int $y, string $inputImage, string $outputImage)
+{
+string $sel[]=`ls -sl`;
+string $buttonImageFileExt="xpm";
+if (`asMayaVersionAsFloat`>=2011)
+	$buttonImageFileExt="png";
+string $uniqueFileName=`asUniqueFile $inputImage`;
+string $fileNode=`createNode file`;
+setAttr -type "string" ($fileNode+".fileTextureName") $uniqueFileName;
+eval ("convertSolidTx -sp 1 -al 1 -rx "+$x+" -ry "+$y+" -n asTempSolidTx32 -fil \""+$buttonImageFileExt+"\" -fin \""+$outputImage+"\"");
+delete $fileNode asTempSolidTx32;
+sysFile -del $uniqueFileName;
+select $sel;
+}
+
+global proc string asDoPadd (int $frameNr,int $padding)
+{
+string $frameName;
+string $padd="";
+string $neg="";
+string $frameNrAsString=$frameNr;
+for ($i=0;$i<$padding;$i++)
+	$padd=$padd+"0";
+//--move the negative symbol to start of string--//
+if ($frameNr<0)
+	$neg="-";
+int $nr=`size ($frameNrAsString)`;
+if ($padding>$nr)
+	$frameName=$neg+`substring $padd ($nr+1) 999`+abs($frameNr);
+else
+	$frameName=$frameNr;
+return $frameName;
+}
+
+global proc string[] asPoserDgc (string $dragControl, int $x, int $y, int $mods) 
+{
+string $return[];
+$return[0]=$x;
+$return[1]=$y;
+$return[2]=$mods;
+return $return;
+}
+
+global proc asPoserDpc (string $dragControl, string $dropControl, string $msgs[], int $x, int $y, int $type) 
+{
+//print ("$dragControl="+$dragControl+" $dropControl="+$dropControl+" $msgs[3]="+$msgs[3]+" $msgs[1]="+$msgs[1]+" $x="+$x+" $y="+$y+" $type="+$type+"\n");
+string $iconDir=`internalVar -utd`+"AdvancedSkeleton/Poser/untitled/";
+if (`gmatch $dropControl "*IconTextButton*"`)
+	return;
+int $left=$msgs[0];
+int $top=$msgs[1];
+
+int $nc=`intField -q -v asPoserNc`;
+int $nr=`intField -q -v asPoserNr`;
+	
+string $match=`match "[0-9]+$" $dragControl`;
+int $oldChildNum=$match;
+int $newRowNum=ceil(($x+0.00)/110);
+int $newColNum=ceil(($y+0.00)/90);
+int $newChildNum=$newRowNum+(($newColNum-1)*$nc);
+if ($newChildNum==$oldChildNum)
+	return;
+if ($newChildNum>($nc*$nr))
+	error "out of grid, extend rows or columns !\n";
+string $gridOrder[]=`gridLayout -q -go asPoserDefaultGridLayout`;
+if (`gmatch $gridOrder[$newChildNum-1] "asPoser*"`)
+	error "grid position is occupied !\n";
+gridLayout -e -pos ("asPoserDefaultColumnLayout"+$oldChildNum) $newChildNum asPoserDefaultGridLayout;
+
+//rename UI elements
+string $children[]=`layout -q -ca ("asPoserDefaultColumnLayout"+$oldChildNum)`;
+$children[size($children)]="asPoserDefaultColumnLayout"+$oldChildNum;
+string $grandChildren[]=`layout -q -ca $children[0]`;
+string $allChildren[]=`stringArrayCatenate $children $grandChildren`;
+string $tempString[];
+string $cmd;
+int $numDigitsInIldChildNum=size($match);
+int $numDigitsInChild;
+int $numDigitsInImage;
+string $newChildName,$image,$animFile,$newAnimFile;
+string $ext="xpm";
+if (`asMayaVersionAsFloat`>=2011)
+	$ext="png";
+for ($child in $allChildren)
+	{
+	$numDigitsInChild=size($child);
+	string $newChildName=`substring $child 1 ($numDigitsInChild-$numDigitsInIldChildNum)`+$newChildNum;
+	renameUI $child $newChildName;
+
+	//rename bitmaps
+	if (!`iconTextButton -q -ex $newChildName`)
+		continue;
+	$image=`iconTextButton -q -i $newChildName`;
+	$numDigitsInImage=size($image);
+	$newImage=`substring ("\""+$image+"\"") 2 ($numDigitsInImage-3-$numDigitsInIldChildNum)`+$newChildNum+"."+$ext;
+	if (`file -q -ex $image` && $newImage!=$image)
+		{
+		eval ("sysFile -ren \""+$newImage+"\"  \""+$image+"\"");
+		iconTextButton -e -i $newImage $newChildName;
+		reloadImage $newImage $newChildName;
+		$jpg=`substitute "[.][a-z][a-z][a-z]" $image ".jpg"`;
+		if (`file -q -ex $jpg`)
+			sysFile -ren `substitute "[.][a-z][a-z][a-z]" $newImage ".jpg"` `substitute "[.][a-z][a-z][a-z]" $image ".jpg"`;
+		$avi=`substitute "[.][a-z][a-z][a-z]" $image ".avi"`;
+		if (`file -q -ex $avi`)
+			sysFile -ren `substitute "[.][a-z][a-z][a-z]" $newImage ".avi"` `substitute "[.][a-z][a-z][a-z]" $image ".avi"`;
+		}
+	//rename anim files
+	$animFile=$iconDir+"untitled_"+$oldChildNum+".ma";
+	$newAnimFile=$iconDir+"untitled_"+$newChildNum+".ma";
+	if (`file -q -ex $animFile` && $newAnimFile!=$animFile)
+		eval ("sysFile -ren \""+$newAnimFile+"\"  \""+$animFile+"\"");
+	//update animation command
+	$cmd=`iconTextButton -q -c $newChildName`;
+	tokenize $cmd $tempString;
+	if ($tempString[0]=="asLoadAttrs")
+		{
+		$cmd=$tempString[0]+" "+$tempString[1]+" "+$newChildNum;
+		iconTextButton -e -c $cmd $newChildName;
+		}
+	}
+string $uiName="asPoserDefault";
+asPoserupdateGridBlock $uiName $newChildNum;
+}

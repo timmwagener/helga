@@ -1,0 +1,38 @@
+/* XPM */
+static char *biped_196_35_OnK1[] = {
+/* columns rows colors chars-per-pixel */
+"11 11 21 1",
+"  c #FFE166",
+". c #FFE266",
+"X c #FFE366",
+"o c #FFE466",
+"O c #FFE566",
+"+ c #FFE866",
+"@ c #FFE966",
+"# c #FFEA66",
+"$ c #FFEB66",
+"% c #FFEC66",
+"& c #FFED66",
+"* c #FFEE66",
+"= c #FFEF66",
+"- c #FFF666",
+"; c #FFF766",
+": c #FFF866",
+"> c #FFF966",
+", c #FFFA66",
+"< c #FFFC66",
+"1 c #FFFF66",
+"2 c gray75",
+/* pixels */
+"22222222222",
+"211:#X#:112",
+"21:&XXX&:12",
+"21&X XXX&12",
+"2&X     X&2",
+"2X      XX2",
+"2X      XX2",
+"2&X     X#2",
+"2:#X   X&:2",
+"21-# X X-12",
+"22222222222"
+};

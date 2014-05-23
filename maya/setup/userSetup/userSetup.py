@@ -130,7 +130,7 @@ except:
 
 try:
 	source_shelf_dir = SCRIPTS_ROOT_PATH + r'/helga/maya/setup/shelf'
-	source_shelf_name_list = ['shelf_helga.mel']
+	source_shelf_name_list = ['shelf_helga.mel', 'shelf_advancedSkeleton.mel']
 
 	shelf_destination_dir = get_shelf_destination_dir()
 

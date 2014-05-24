@@ -25,6 +25,21 @@ import mock
 
 
 
+# -- setup ------------------------------------------------
+
+#debug
+debug = True
+
+def setup(app):
+  """setup function. Special function in sphinx extensions. conf.py is itself an extension, 
+  therefore it is valid to call it"""
+  
+  #add_config_value for ifconfig extension
+  app.add_config_value('debug', '', True)
+
+
+
+
 
 # -- Append custom pathes ------------------------------------------------
 
@@ -82,6 +97,7 @@ for module_name in mock_modules_list:
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
@@ -321,3 +337,8 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None}
+
+
+
+
+

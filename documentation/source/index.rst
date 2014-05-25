@@ -23,28 +23,32 @@ Helga pipeline documentation
 
 Welcome to the Helga pipeline documentation. Here you can find almost all answers to questions about how we do things within the Helga pipeline. It is the first place to look for answers if you have a questions. The second option is to ask me (Timm Wagener) or write me an `email <mailto:wagenertimm@gmail.com?Subject=[Helga]%20Pipeline%20issue>`_.
 
-**Important:** It's always better to communicate! I want you to come and ask if you are unsure. (Don't be afraid that your question is dumb! Even if it's dumb, it's probably not half as dumb as the questions i managed to ask to people... ;) ). 
+**Important:** 
+It's always better to communicate! I want you to come and ask if you are unsure. (Don't be afraid that your question is dumb! Even if it's dumb, it's probably not half as dumb as the questions i managed to ask to people... ;) ). 
 
 
 Manual
 ------
 
 .. toctree::
-	:maxdepth: 2
+	:maxdepth: 1
 	
+	manual/golden_rules
 	manual/naming_convention
 	manual/work_and_publish
 	manual/faq
 	manual/i_am_a/i_am_a
 
 
+
 API Documentation
 -----------------
 
-.. toctree::
-   :maxdepth: 1
+..
+	.. toctree::
+	   :maxdepth: 1
 
-   apidoc/modules
+	   apidoc/modules
 
 
 .. autosummary::
@@ -55,6 +59,7 @@ API Documentation
 	helga.nuke
 
 
+-----------------------
 
 
 .. Debug Mode
@@ -63,15 +68,12 @@ API Documentation
 	
 	Debug mode: On
 
-.. ifconfig:: debug == False
-	
-	Debug mode: Off
-
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
+
+.. * :ref:`search`
 

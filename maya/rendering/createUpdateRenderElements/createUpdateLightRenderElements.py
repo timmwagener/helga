@@ -1,21 +1,40 @@
 
+"""
+createUpdateLightRenderElements
+==========================================
 
+Automatic setup of the following VRay Render Elements in Maya.
+They are also the names of the channels in the multichannel exr.
+You can call this function as often as you want. It will not duplicate 
+existing elements, only add missing ones.
+The light is split into light select elements and GI. To use these passes in
+Nuke with the :mod:`helga.nuke.reconstruction.renderReconstruct` module you
+need a diffuse pass from :mod:`helga.maya.rendering.createUpdateRenderElements.createFrameBufferContributions`.
 
+The following elements are created:
+	
+	* Gi
+	* Lighting
+	* SelfIllum
+	* Light Selects for each light where possible
 
+-----------------------
 
-#createUpdateLightRenderElements Module
-#------------------------------------------------------------------
+Usage
+-----
 
-'''
-Description:
-Creates and updates all neccessary Vray Light RenderElements according to our pipeline standards.
-Gi and Light Selects for all direct Lights
-'''
+::
+	
+	from helga.maya.rendering.createUpdateRenderElements import createUpdateLightRenderElements
+	reload(createUpdateLightRenderElements)
 
-'''
-ToDo:
+	#Create instance
+	createUpdateLightRenderElementsInstance = createUpdateLightRenderElements.CreateUpdateLightRenderElements()
+	#Create/Update shadow passes
+	createUpdateLightRenderElementsInstance.createUpdateLightRenderElements()
 
-'''
+-----------------------
+"""
 
 
 
@@ -58,6 +77,9 @@ class CreateUpdateLightRenderElements():
 	
 	#createUpdateLightRenderElements
 	def createUpdateLightRenderElements(self):
+		"""
+		Function to create/update light render elements (see above for AOV types).
+		"""
 		
 		
 		

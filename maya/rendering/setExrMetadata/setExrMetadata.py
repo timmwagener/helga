@@ -1,20 +1,32 @@
 
+"""
+setExrMetadata
+==========================================
 
+Module that will parse the scene and add exr metadata to the rendersettings node.
+The module is designed to work with VRay for Maya exclusively.
+You can import and run it as a Pre-Frame script while batch rendering (on the farm).
 
+-----------------------
 
+Usage
+-----
 
-#setExrMetadata Module
-#------------------------------------------------------------------
+::
+	
+	from helga.maya.rendering.setExrMetadata import setExrMetadata
+	reload(setExrMetadata)
 
-'''
-Description:
-Adds metadata to the exr images from within a pre-render script.
-'''
+	#run
+	setExrMetadata.run()
 
-'''
-ToDo:
+.. warning::
+	
+	Module is known to cause crashes when rendering.
+	Use with caution
 
-'''
+-----------------------
+"""
 
 
 

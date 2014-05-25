@@ -1,7 +1,5 @@
-helga.maya.rendering.setExrMetadata.setExrMetadata module
-=========================================================
+
+.. Documentation comes from package __init__
 
 .. automodule:: helga.maya.rendering.setExrMetadata.setExrMetadata
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    :members: run

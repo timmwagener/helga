@@ -1,20 +1,46 @@
 
+"""
+createDataPasses
+==========================================
 
+Automatic setup of the following VRay Render Elements in Maya.
+They are also the names of the channels in the multichannel exr.
+You can call this function as often as you want. It will not duplicate 
+existing elements, only add missing ones.
 
+The following elements are created:
+	
+	* Normals
+	* BumpNormals
+	* VelocityFiltered
+	* VelocityUnfiltered
+	* ZDepth.filtered
+	* ZDepth.unfiltered
+	* EtAmbOcc (Ambient Occlusion from extra tex)
+	* EtWorldPos (World Position from extra tex)
+	* EtSTMap
+	* EtFresnelLarge
+	* EtFresnelSmall
+	* RenderId.index
 
+-----------------------
 
-#createDataPasses Module
-#------------------------------------------------------------------
+Usage
+-----
 
-'''
-Description:
-Creates Data Pass VrayRenderElements according to our pipeline standards
-'''
+::
+	
+	from helga.maya.rendering.createUpdateRenderElements import createDataPasses
+	reload(createDataPasses)
 
-'''
-ToDo:
+	#Create instance
+	createDataPassesInstance = createDataPasses.CreateDataPasses()
+	#Create/Update data passes
+	createDataPassesInstance.createDataPasses()
 
-'''
+-----------------------
+"""
+
 
 
 
@@ -59,6 +85,9 @@ class CreateDataPasses():
 	
 	#createDataPasses
 	def createDataPasses(self):
+		"""
+		Function to create/update data passes.
+		"""
 		
 		
 		

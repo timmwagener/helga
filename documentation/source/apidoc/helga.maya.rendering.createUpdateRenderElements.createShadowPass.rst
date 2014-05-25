@@ -1,5 +1,5 @@
-helga.maya.rendering.createUpdateRenderElements.createShadowPass module
-=======================================================================
+
+.. Documentation comes from package __init__
 
 .. automodule:: helga.maya.rendering.createUpdateRenderElements.createShadowPass
     :members:

@@ -1,10 +1,18 @@
-helga.maya package
-==================
 
-Subpackages
------------
+.. Documentation comes from package __init__
 
-.. toctree::
+.. automodule:: helga.maya
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+
+Packages
+--------
+
+.. autosummary::
+    :toctree:
 
     helga.maya.animation
     helga.maya.arash
@@ -15,10 +23,8 @@ Subpackages
     helga.maya.rigging
     helga.maya.setup
 
-Module contents
----------------
 
-.. automodule:: helga.maya
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    
+
+
+

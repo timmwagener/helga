@@ -1,17 +1,17 @@
-helga.maya.rendering.setExrMetadata package
-===========================================
 
-Submodules
-----------
 
-.. toctree::
-
-   helga.maya.rendering.setExrMetadata.setExrMetadata
-
-Module contents
----------------
+.. Documentation comes from package __init__
 
 .. automodule:: helga.maya.rendering.setExrMetadata
     :members:
     :undoc-members:
     :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+	:maxdepth: 1
+
+	helga.maya.rendering.setExrMetadata.setExrMetadata
+

@@ -1,20 +1,31 @@
 
 
+"""
+setVrayRenderGlobals
+==========================================
 
+Set the VRay Render Globals according to pipeline standards.
 
+-----------------------
 
-#setVrayRenderGlobals Module
-#------------------------------------------------------------------
+Usage
+-----
 
-'''
-Description:
-Set the Vray Rendersettings according to pipeline standard
-'''
+::
+	
+	from helga.maya.rendering.setVrayRenderGlobals import setVrayRenderGlobals
+	reload(setVrayRenderGlobals)
 
-'''
-ToDo:
+	#Create instance
+	setVrayRenderGlobalsInstance = setVrayRenderGlobals.SetVrayRenderGlobals()
+	
+	#set render globals completely
+	setVrayRenderGlobalsInstance.setVrayRenderSettings()
+	#set render globals linear light settings only
+	setVrayRenderGlobalsInstance.setVrayRenderSettingsLinear()
 
-'''
+-----------------------
+"""
 
 
 
@@ -57,8 +68,13 @@ class SetVrayRenderGlobals():
 	#------------------------------------------------------------------
 	
 	#setVrayRenderSettings
-	def setVrayRenderSettings(self):
-		"""Set Vray Rendersettings"""
+	def setVrayRenderSettings(self, set_pre_render_mel_script = False):
+		"""
+		Set Vray Rendersettings
+
+		:param set_pre_render_mel_script: Set the pre render MEL script. Default is False.
+		:type set_pre_render_mel_script: bool
+		"""
 		
 		
 		#exit if vray for maya plugin is not loaded
@@ -74,7 +90,7 @@ class SetVrayRenderGlobals():
 			
 			
 		#setVrayRenderSettings
-		self.setVrayRenderSettingsParameter()
+		self.setVrayRenderSettingsParameter(linearOnly = False, set_pre_render_mel_script = set_pre_render_mel_script)
 			
 			
 		#printStatus
@@ -84,7 +100,8 @@ class SetVrayRenderGlobals():
 	
 	#setVrayRenderSettingsLinear
 	def setVrayRenderSettingsLinear(self):
-		
+		"""Set Vray Rendersettings, linear light settings only"""
+
 		#exit if vray for maya plugin is not loaded
 		if not(self.vrayLoaded()):
 			openMaya.MGlobal.displayWarning('Vray for Maya Plugin not loaded')
@@ -111,8 +128,8 @@ class SetVrayRenderGlobals():
 	
 	
 	#setVrayRenderSettings
-	def setVrayRenderSettingsParameter(self, linearOnly = False):
-		"""Set Vray Renedrsettings"""
+	def setVrayRenderSettingsParameter(self, linearOnly = False, set_pre_render_mel_script = False):
+		"""Set Vray Rendersettings. Never use this method directly."""
 		
 		#methodVars
 		verbose = True
@@ -140,7 +157,8 @@ class SetVrayRenderGlobals():
 			pm.setAttr(vraySettingsNode.pixelAspect, 1)
 			pm.setAttr(vraySettingsNode.sRGBOn, 1)
 			pm.setAttr(vraySettingsNode.vfbOn, 1)
-			pm.setAttr("defaultRenderGlobals.preRenderMel", PRE_RENDER_MEL_SCRIPT)
+			if(set_pre_render_mel_script):
+				pm.setAttr("defaultRenderGlobals.preRenderMel", PRE_RENDER_MEL_SCRIPT)
 			
 			if(verbose): print('Vray Common Parms set')
 			

@@ -1,20 +1,35 @@
 
+"""
+createShadowPass
+==========================================
 
+Automatic setup of the following VRay Render Elements in Maya.
+They are also the names of the channels in the multichannel exr.
+You can call this function as often as you want. It will not duplicate 
+existing elements, only add missing ones.
 
+The following elements are created:
+	
+	* RawShadow
+	* Shadow
 
+-----------------------
 
-#createShadowPass Module
-#------------------------------------------------------------------
+Usage
+-----
 
-'''
-Description:
-Creates a Shadow Pass VrayRenderElement according to our pipeline standards
-'''
+::
+	
+	from helga.maya.rendering.createUpdateRenderElements import createShadowPass
+	reload(createShadowPass)
 
-'''
-ToDo:
+	#Create instance
+	createShadowPassInstance = createShadowPass.CreateShadowPass()
+	#Create/Update shadow passes
+	createShadowPassInstance.createShadowPass()
 
-'''
+-----------------------
+"""
 
 
 
@@ -56,7 +71,9 @@ class CreateShadowPass():
 	
 	#createShadowPass
 	def createShadowPass(self):
-		
+		"""
+		Function to create/update shadow passes (see above for AOV types).
+		"""
 		
 		
 		#Check if Vray Loaded, else set Status and return

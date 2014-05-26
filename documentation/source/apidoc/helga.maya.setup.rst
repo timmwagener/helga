@@ -1,8 +1,5 @@
-helga.maya.setup package
-========================
 
-Module contents
----------------
+.. Documentation comes from package __init__
 
 .. automodule:: helga.maya.setup
     :members:

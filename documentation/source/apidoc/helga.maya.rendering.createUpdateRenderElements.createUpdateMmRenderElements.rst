@@ -1,5 +1,5 @@
-helga.maya.rendering.createUpdateRenderElements.createUpdateMmRenderElements module
-===================================================================================
+
+.. Documentation comes from package __init__
 
 .. automodule:: helga.maya.rendering.createUpdateRenderElements.createUpdateMmRenderElements
     :members:

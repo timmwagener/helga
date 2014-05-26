@@ -1,20 +1,32 @@
 
+"""
+createUpdateMmRenderElements
+==========================================
 
+Automatic setup of multimatte VRay Render Elements in Maya.
+The script parses the scene for object ids on objects and creates
+multi matte render elements from them. The object ids are sorted
+numerically.
+You can call this function as often as you want. It will not duplicate 
+existing elements, only add missing ones.
 
+-----------------------
 
+Usage
+-----
 
-#createUpdateMmRenderElements Module
-#------------------------------------------------------------------
+::
+	
+	from helga.maya.rendering.createUpdateRenderElements import createUpdateMmRenderElements
+	reload(createUpdateMmRenderElements)
 
-'''
-Description:
-Creates/Updates Multi Matte VrayRenderElements according to our pipeline standards
-'''
+	#Create instance
+	createUpdateMmRenderElementsInstance = createUpdateMmRenderElements.CreateUpdateMmRenderElements()
+	#Create/Update shadow passes
+	createUpdateMmRenderElementsInstance.createUpdateMmRenderElements()
 
-'''
-ToDo:
-
-'''
+-----------------------
+"""
 
 
 
@@ -57,7 +69,9 @@ class CreateUpdateMmRenderElements():
 	
 	#createUpdateMultiMatteElements
 	def createUpdateMultiMatteElements(self):
-		
+		"""
+		Function to create/update multi matte render elements.
+		"""
 		
 		
 		#Check if Vray Loaded, else set Status and return

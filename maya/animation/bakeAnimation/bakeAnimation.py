@@ -1,20 +1,31 @@
 
+"""
+bakeAnimation
+==========================================
 
+Module with methods to bake the movement/channels of one object
+to another. Transform baking can be either in local or world space.
+This can be usefull to bake camera movement resulting from hierarchies
+into camera movement without hierarchies etc.
 
+-----------------------
 
+Usage
+-----
 
-#bakeAnimation Module
-#------------------------------------------------------------------
+::
+	
+	from helga.maya.animation.bakeAnimation import bakeAnimation
+	reload(bakeAnimation)
 
-'''
-Description:
-Bakes the movement from one transform object to another in worldspace or local
-'''
+	#Create instance
+	bakeAnimationInstance = bakeAnimation.BakeAnimation()
+	#Select object_a and object_b and execute bakeAnimationTransformOnly
+	#to bake the animation from object_a to object_b for the frames 1 - 100
+	bakeAnimationInstance.bakeAnimationTransformOnly(1, 100)
 
-'''
-ToDo:
-
-'''
+-----------------------
+"""
 
 
 
@@ -52,7 +63,23 @@ class BakeAnimation():
 	
 	#bakeAnimationTransformOnly
 	def bakeAnimationTransformOnly(self, animationStartTime = 0, animationEndTime = 0, localSpace = False):
+		"""
+		Bake animation of two objects but only bake channels that contribute
+		to the transformation matrix (translate, rotate, scale). Shear is omitted
+		since it has never been used in the history of animation. The selection order
+		is the same as with constraints:
 		
+		1. Master: Source of Movement
+		2. Slave: Gets baked to movement of master
+
+		:param animationStartTime: Beginning of sequence to bake
+		:type animationStartTime: int
+		:param animationEndTime: End of sequence to bake
+		:type animationEndTime: int
+		:param localSpace: If True, only the immediate values of the object are baked. If False bake complete transformation hierarchy (WorldSpace).
+		:type localSpace: bool
+		"""
+
 		#getSelection
 		selectedObjectsList = self.getSelection()
 		pm.select(cl = True)
@@ -157,7 +184,19 @@ class BakeAnimation():
 	
 	#bakeAnimation
 	def bakeAnimation(self, animationStartTime = 0, animationEndTime = 0):
+		"""
+		Bake animation of two objects (or master - slave pairs). Bakes animation of all
+		channels that are *keyable* and *not locked*. Also the channels need to be presents
+		in both objects. The selection order is the same as with constraints:
 		
+		1. Master: Source of Movement
+		2. Slave: Gets baked to movement of master
+
+		:param animationStartTime: Beginning of sequence to bake
+		:type animationStartTime: int
+		:param animationEndTime: End of sequence to bake
+		:type animationEndTime: int
+		"""
 		
 		#check if start and end time are equal
 		if(animationStartTime == animationEndTime):

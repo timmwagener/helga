@@ -1,10 +1,19 @@
-helga.nuke package
-==================
 
-Subpackages
------------
 
-.. toctree::
+.. Documentation comes from package __init__
+
+.. automodule:: helga.nuke
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+
+Packages
+--------
+
+.. autosummary::
+    :toctree:
 
     helga.nuke.arash
     helga.nuke.hanna
@@ -12,11 +21,3 @@ Subpackages
     helga.nuke.manuel
     helga.nuke.reconstruction
     helga.nuke.setup
-
-Module contents
----------------
-
-.. automodule:: helga.nuke
-    :members:
-    :undoc-members:
-    :show-inheritance:

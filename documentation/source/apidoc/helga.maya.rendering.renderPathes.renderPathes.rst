@@ -1,5 +1,5 @@
-helga.maya.rendering.renderPathes.renderPathes module
-=====================================================
+
+.. Documentation comes from package __init__
 
 .. automodule:: helga.maya.rendering.renderPathes.renderPathes
     :members:

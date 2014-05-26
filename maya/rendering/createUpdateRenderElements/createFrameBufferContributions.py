@@ -1,20 +1,38 @@
 
+"""
+createFrameBufferContributions
+==========================================
 
+Automatic setup of the following VRay Render Elements in Maya.
+They are also the names of the channels in the multichannel exr.
+You can call this function as often as you want. It will not duplicate 
+existing elements, only add missing ones.
 
+The following elements are created:
+	
+	* Diffuse
+	* Reflection
+	* Refraction
+	* Specular
+	* Subsurface
 
+-----------------------
 
-#createFrameBufferContributions Module
-#------------------------------------------------------------------
+Usage
+-----
 
-'''
-Description:
-Creates Framebuffer Contributions (Refl., Refr., Spec. etc.) VrayRenderElements according to our pipeline standards
-'''
+::
+	
+	from helga.maya.rendering.createUpdateRenderElements import createFrameBufferContributions
+	reload(createFrameBufferContributions)
 
-'''
-ToDo:
+	#Create instance
+	createFrameBufferContributionsInstance = createFrameBufferContributions.CreateFrameBufferContributions()
+	#Create/Update framebuffer passes
+	createFrameBufferContributionsInstance.createFrameBufferContributions()
 
-'''
+-----------------------
+"""
 
 
 
@@ -60,7 +78,9 @@ class CreateFrameBufferContributions():
 	
 	#createFrameBufferContributions
 	def createFrameBufferContributions(self):
-		
+		"""
+		Function to create/update framebuffer passes (see above for AOV types).
+		"""
 		
 		
 		#Check if Vray Loaded, else set Status and return

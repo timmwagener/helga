@@ -1,15 +1,5 @@
-helga.nuke.setup package
-========================
 
-Subpackages
------------
-
-.. toctree::
-
-    helga.nuke.setup.plugins
-
-Module contents
----------------
+.. Documentation comes from package __init__
 
 .. automodule:: helga.nuke.setup
     :members:

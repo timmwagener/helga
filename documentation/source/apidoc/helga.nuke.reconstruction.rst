@@ -1,18 +1,18 @@
-helga.nuke.reconstruction package
-=================================
 
-Subpackages
------------
 
-.. toctree::
-
-    helga.nuke.reconstruction.renderReconstruct
-    helga.nuke.reconstruction.sceneReconstruct
-
-Module contents
----------------
+.. Documentation comes from package __init__
 
 .. automodule:: helga.nuke.reconstruction
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+Packages
+-----------
+
+.. autosummary::
+    :toctree:
+
+    helga.nuke.reconstruction.renderReconstructVRay
+    helga.nuke.reconstruction.sceneReconstructVRay

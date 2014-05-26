@@ -1,19 +1,32 @@
 
+"""
+renderPathes
+==========================================
 
+Automatic setup of the correct rendering pathes for images according
+to Pipeline standards. It is ment to work with VRay for Maya exclusively.
+This is a very simple module, it basically only determines where renderings
+will go to.
 
+-----------------------
 
+Usage
+-----
 
-#renderPathes Module
-#----------------------------------------------------
+::
+	
+	from helga.maya.rendering.renderPathes import renderPathes
+	reload(renderPathes)
 
-'''
-Description:
-Set correct render pathes for lighting file output and rnd
+	#Create instance
+	renderPathesInstance = renderPathes.RenderPathes()
+	#set render pathes for final lighting
+	renderPathesInstance.setPathLighting()
+	#set render pathes for testing
+	renderPathesInstance.setPathTesting()
 
-ToDo:
--
-
-'''
+-----------------------
+"""
 
 
 
@@ -70,6 +83,9 @@ class RenderPathes():
 	
 	#setPathLighting
 	def setPathLighting(self):
+		"""
+		Render path for images. The output here should be copied and used by compositing.
+		"""
 		
 		
 		#Check if vray is loaded
@@ -117,6 +133,10 @@ class RenderPathes():
 	
 	#setPathTesting
 	def setPathTesting(self):
+		"""
+		Render path for testing images. The output here is purely for your own testing
+		and could be deleted anytime. If you want to keep it, then copy it to your rnd folder.
+		"""
 		
 		
 		#Check if vray is loaded
@@ -180,6 +200,10 @@ class RenderPathes():
 	
 	#vrayLoaded
 	def vrayLoaded(self):
+		"""
+		Check if the VRay for Maya Plugin is loaded.
+		"""
+
 		#Get list of all loaded plugIns
 		plugInList = pm.pluginInfo( query=True, listPlugins=True )
 		
@@ -214,25 +238,21 @@ class RenderPathes():
 	
 	
 	
-#Execute Temp
+#Testing
+#----------------------------------------------------
 #----------------------------------------------------
 
-'''
-from rugbyBugs.maya.rbRenderPathes import rbRenderPathes
+if (__name__ is '__main__'):
+	from rugbyBugs.maya.rbRenderPathes import rbRenderPathes
 
-#Reload if true
-doReload = True
-if(doReload): reload(rbRenderPathes)
+	#Reload if true
+	doReload = True
+	if(doReload): reload(rbRenderPathes)
 
-#Create Instance
-rbRenderPathesInstance = rbRenderPathes.RbRenderPathes()
+	#Create Instance
+	rbRenderPathesInstance = rbRenderPathes.RbRenderPathes()
 
-#set final path
-#rbRenderPathesInstance.setPathLighting()
-rbRenderPathesInstance.setPathTesting()
-'''
+	#set final path
+	#rbRenderPathesInstance.setPathLighting()
+	rbRenderPathesInstance.setPathTesting()
 
-
-	
-	
-	

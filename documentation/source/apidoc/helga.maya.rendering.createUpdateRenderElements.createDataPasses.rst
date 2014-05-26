@@ -1,5 +1,5 @@
-helga.maya.rendering.createUpdateRenderElements.createDataPasses module
-=======================================================================
+
+.. Documentation comes from package __init__
 
 .. automodule:: helga.maya.rendering.createUpdateRenderElements.createDataPasses
     :members:

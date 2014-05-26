@@ -119,7 +119,7 @@ class Color():
     green = (0.0, 1.0, 0.0)
     blue = (1.0, 0.0, 1.0)
     purple = (1.0, 0.0, 0.0)
-    colorConstant = 255
+    colorConstant = 255.0
     @staticmethod
     def cl(val):
         return val / Color.colorConstant

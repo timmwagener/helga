@@ -4,7 +4,7 @@ import maya.cmds as cmds
 import os
 import time
 
-Version= '0.5'
+Version= '0.6'
 #zu_eigene_pfad_wechseln!!!
 
 projects_scene_dir = "Y:/Production/3d/"
@@ -407,7 +407,7 @@ class cleanSave_UI:
         overwrite_text=cmds.text(label="Overwrite File?", align="center")
         cmds.separator(h=5, vis=True, st='none')
         button_overwrite_no=cmds.button(label="Dont Save",bgc=(0.3,0.5,0.3), h=30, command=self.dontSave)
-        button_overwrite_yes=cmds.button(label="Yes, Overwrite exists File",bgc=(0.7,0.2,0.3),h=30, command=self.saveSceneOverwrite)
+        button_overwrite_yes=cmds.button(label="Yes, Overw rite exists File",bgc=(0.7,0.2,0.3),h=30, command=self.saveSceneOverwrite)
         cmds.showWindow()
 
     def cleanTextFields(self, *args):

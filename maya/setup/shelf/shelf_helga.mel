@@ -12,21 +12,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "set_vray_globals" 
+        -annotation "set_vray_globals"
         -enableBackground 0
-        -align "center" 
-        -label "set_vray_globals" 
+        -align "center"
+        -label "set_vray_globals"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobals.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobals.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobals.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobals.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "\n#Reload boolean\ndoReload = True\n\n#Import\nfrom helga.maya.rendering.setVrayRenderGlobals import setVrayRenderGlobals\nif(doReload): reload(setVrayRenderGlobals)\n\n#Execute\nsetVrayRenderGlobals.SetVrayRenderGlobals().setVrayRenderSettings()" 
-        -sourceType "python" 
+        -command "\n#Reload boolean\ndoReload = True\n\n#Import\nfrom helga.maya.rendering.setVrayRenderGlobals import setVrayRenderGlobals\nif(doReload): reload(setVrayRenderGlobals)\n\n#Execute\nsetVrayRenderGlobals.SetVrayRenderGlobals().setVrayRenderSettings()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -38,21 +38,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "set_vray_globals_linear_only" 
+        -annotation "set_vray_globals_linear_only"
         -enableBackground 0
-        -align "center" 
-        -label "set_vray_globals_linear_only" 
+        -align "center"
+        -label "set_vray_globals_linear_only"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobalsLinear.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobalsLinear.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobalsLinear.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobalsLinear.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "\n#Reload boolean\ndoReload = True\n\n#Import\nfrom helga.maya.rendering.setVrayRenderGlobals import setVrayRenderGlobals\nif(doReload): reload(setVrayRenderGlobals)\n\n#Execute\nsetVrayRenderGlobals.SetVrayRenderGlobals().setVrayRenderSettingsLinear()" 
-        -sourceType "python" 
+        -command "\n#Reload boolean\ndoReload = True\n\n#Import\nfrom helga.maya.rendering.setVrayRenderGlobals import setVrayRenderGlobals\nif(doReload): reload(setVrayRenderGlobals)\n\n#Execute\nsetVrayRenderGlobals.SetVrayRenderGlobals().setVrayRenderSettingsLinear()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -64,21 +64,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "create_update_light_REs" 
+        -annotation "create_update_light_REs"
         -enableBackground 0
-        -align "center" 
-        -label "create_update_light_REs" 
+        -align "center"
+        -label "create_update_light_REs"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfLightRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfLightRE.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfLightRE.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfLightRE.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Light Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createUpdateLightRenderElements\nif(doReload): reload(createUpdateLightRenderElements)\n\n\n#Execute\ncreateUpdateLightRenderElements.CreateUpdateLightRenderElements().createUpdateLightRenderElements()" 
-        -sourceType "python" 
+        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Light Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createUpdateLightRenderElements\nif(doReload): reload(createUpdateLightRenderElements)\n\n\n#Execute\ncreateUpdateLightRenderElements.CreateUpdateLightRenderElements().createUpdateLightRenderElements()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -90,21 +90,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "create_update_framebuffer_REs" 
+        -annotation "create_update_framebuffer_REs"
         -enableBackground 0
-        -align "center" 
-        -label "create_update_framebuffer_REs" 
+        -align "center"
+        -label "create_update_framebuffer_REs"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfFramebufferRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfFramebufferRE.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfFramebufferRE.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfFramebufferRE.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Light Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createFrameBufferContributions\nif(doReload): reload(createFrameBufferContributions)\n\n\n#Execute\ncreateFrameBufferContributions.CreateFrameBufferContributions().createFrameBufferContributions()" 
-        -sourceType "python" 
+        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Light Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createFrameBufferContributions\nif(doReload): reload(createFrameBufferContributions)\n\n\n#Execute\ncreateFrameBufferContributions.CreateFrameBufferContributions().createFrameBufferContributions()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -116,21 +116,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "create_update_data_REs" 
+        -annotation "create_update_data_REs"
         -enableBackground 0
-        -align "center" 
-        -label "create_update_data_REs" 
+        -align "center"
+        -label "create_update_data_REs"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDataRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDataRE.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDataRE.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDataRE.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Data Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createDataPasses\nif(doReload): reload(createDataPasses)\n\n\n#Execute\ncreateDataPasses.CreateDataPasses().createDataPasses()" 
-        -sourceType "python" 
+        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Data Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createDataPasses\nif(doReload): reload(createDataPasses)\n\n\n#Execute\ncreateDataPasses.CreateDataPasses().createDataPasses()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -142,21 +142,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "create_update_multi_matte_REs" 
+        -annotation "create_update_multi_matte_REs"
         -enableBackground 0
-        -align "center" 
-        -label "create_update_multi_matte_REs" 
+        -align "center"
+        -label "create_update_multi_matte_REs"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfMmRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfMmRE.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfMmRE.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfMmRE.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Light Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createUpdateMmRenderElements\nif(doReload): reload(createUpdateMmRenderElements)\n\n\n#Execute\ncreateUpdateMmRenderElements.CreateUpdateMmRenderElements().createUpdateMultiMatteElements()" 
-        -sourceType "python" 
+        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Light Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createUpdateMmRenderElements\nif(doReload): reload(createUpdateMmRenderElements)\n\n\n#Execute\ncreateUpdateMmRenderElements.CreateUpdateMmRenderElements().createUpdateMultiMatteElements()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -168,21 +168,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "create_update_shadow_REs" 
+        -annotation "create_update_shadow_REs"
         -enableBackground 0
-        -align "center" 
-        -label "create_update_shadow_REs" 
+        -align "center"
+        -label "create_update_shadow_REs"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfShadowRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfShadowRE.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfShadowRE.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfShadowRE.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Light Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createShadowPass\nif(doReload): reload(createShadowPass)\n\n\n#Execute\ncreateShadowPass.CreateShadowPass().createShadowPass()" 
-        -sourceType "python" 
+        -command "\n#Reload boolean\ndoReload = True\n\n\n#Import and reload Light Render Elements\nfrom helga.maya.rendering.createUpdateRenderElements import createShadowPass\nif(doReload): reload(createShadowPass)\n\n\n#Execute\ncreateShadowPass.CreateShadowPass().createShadowPass()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -194,21 +194,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "render_path_testing" 
+        -annotation "render_path_testing"
         -enableBackground 0
-        -align "center" 
-        -label "render_path_testing" 
+        -align "center"
+        -label "render_path_testing"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathTesting.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathTesting.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathTesting.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathTesting.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "\nfrom helga.maya.rendering.renderPathes import renderPathes \n\n#Reload if true\ndoReload = True\nif(doReload): reload(renderPathes)\n\n#Create Instance\nrenderPathesInstance = renderPathes.RenderPathes()\n\n#set final path\n#renderPathesInstance.setPathLighting()\nrenderPathesInstance.setPathTesting()" 
-        -sourceType "python" 
+        -command "\nfrom helga.maya.rendering.renderPathes import renderPathes \n\n#Reload if true\ndoReload = True\nif(doReload): reload(renderPathes)\n\n#Create Instance\nrenderPathesInstance = renderPathes.RenderPathes()\n\n#set final path\n#renderPathesInstance.setPathLighting()\nrenderPathesInstance.setPathTesting()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -220,21 +220,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "render_path_lighting" 
+        -annotation "render_path_lighting"
         -enableBackground 0
-        -align "center" 
-        -label "render_path_lighting" 
+        -align "center"
+        -label "render_path_lighting"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathLighting.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathLighting.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathLighting.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathLighting.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "\nfrom helga.maya.rendering.renderPathes import renderPathes \n\n#Reload if true\ndoReload = True\nif(doReload): reload(renderPathes)\n\n#Create Instance\nrenderPathesInstance = renderPathes.RenderPathes()\n\n#set final path\nrenderPathesInstance.setPathLighting()\n#renderPathesInstance.setPathTesting()" 
-        -sourceType "python" 
+        -command "\nfrom helga.maya.rendering.renderPathes import renderPathes \n\n#Reload if true\ndoReload = True\nif(doReload): reload(renderPathes)\n\n#Create Instance\nrenderPathesInstance = renderPathes.RenderPathes()\n\n#set final path\nrenderPathesInstance.setPathLighting()\n#renderPathesInstance.setPathTesting()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -246,21 +246,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "header_third_party" 
+        -annotation "header_third_party"
         -enableBackground 0
-        -align "center" 
-        -label "header_third_party" 
+        -align "center"
+        -label "header_third_party"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/icons/iconDummy.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/icons/iconDummy.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/icons/iconDummy.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/icons/iconDummy.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "print(\"User defined macro\");" 
-        -sourceType "mel" 
+        -command "print(\"User defined macro\");"
+        -sourceType "mel"
         -commandRepeatable 1
         -flat 1
     ;
@@ -272,21 +272,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "pr_select" 
+        -annotation "pr_select"
         -enableBackground 0
-        -align "center" 
-        -label "pr_select" 
+        -align "center"
+        -label "pr_select"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfPrSel.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfPrSel.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfPrSel.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfPrSel.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "import prSelectionUi \nreload(prSelectionUi)\nprSelectionUi.UI()" 
-        -sourceType "python" 
+        -command "import prSelectionUi \nreload(prSelectionUi)\nprSelectionUi.UI()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -298,21 +298,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "carla_h_skinweights_editor" 
+        -annotation "carla_h_skinweights_editor"
         -enableBackground 0
-        -align "center" 
-        -label "carla_h_skinweights_editor" 
+        -align "center"
+        -label "carla_h_skinweights_editor"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCarlaHSkinweights.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCarlaHSkinweights.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCarlaHSkinweights.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCarlaHSkinweights.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "carlaH_skinWeightsEditor;" 
-        -sourceType "mel" 
+        -command "carlaH_skinWeightsEditor;"
+        -sourceType "mel"
         -commandRepeatable 1
         -flat 1
     ;
@@ -324,21 +324,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "dj_rivet" 
+        -annotation "dj_rivet"
         -enableBackground 0
-        -align "center" 
-        -label "dj_rivet" 
+        -align "center"
+        -label "dj_rivet"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDjRivet.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDjRivet.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDjRivet.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDjRivet.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "djRivet;" 
-        -sourceType "mel" 
+        -command "djRivet;"
+        -sourceType "mel"
         -commandRepeatable 1
         -flat 1
     ;
@@ -350,21 +350,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "ab_sym_mesh" 
+        -annotation "ab_sym_mesh"
         -enableBackground 0
-        -align "center" 
-        -label "ab_sym_mesh" 
+        -align "center"
+        -label "ab_sym_mesh"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSymMesh.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSymMesh.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSymMesh.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSymMesh.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "abSymMesh();" 
-        -sourceType "mel" 
+        -command "abSymMesh();"
+        -sourceType "mel"
         -commandRepeatable 1
         -flat 1
     ;
@@ -376,21 +376,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "cv_shape_inverter" 
+        -annotation "cv_shape_inverter"
         -enableBackground 0
-        -align "center" 
-        -label "cv_shape_inverter" 
+        -align "center"
+        -label "cv_shape_inverter"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCvShapeInverter.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCvShapeInverter.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCvShapeInverter.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCvShapeInverter.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "import cvShapeInverter \n\ncvShapeInverter.invert()" 
-        -sourceType "python" 
+        -command "import cvShapeInverter \n\ncvShapeInverter.invert()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
@@ -402,21 +402,21 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "header_arash" 
+        -annotation "header_arash"
         -enableBackground 0
-        -align "center" 
-        -label "header_icons" 
+        -align "center"
+        -label "header_icons"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDummy.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDummy.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDummy.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDummy.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "print(\"User defined macro\");" 
-        -sourceType "mel" 
+        -command "print(\"User defined macro\");"
+        -sourceType "mel"
         -commandRepeatable 1
         -flat 1
     ;
@@ -428,23 +428,49 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "arash_clean_save" 
+        -annotation "arash_clean_save"
         -enableBackground 0
-        -align "center" 
-        -label "arash_clean_save" 
+        -align "center"
+        -label "arash_clean_save"
         -labelOffset 0
-        -font "plainLabelFont" 
-        -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.2 
-        -image "commandButton.png" 
-        -image1 "commandButton.png" 
-        -style "iconOnly" 
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/icon_ShelfCleanSave.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/icon_ShelfCleanSave.png"
+        -style "iconOnly"
         -marginWidth 1
         -marginHeight 1
-        -command "from helga.maya.arash.clean_save import clean_save\nreload(clean_save)\n\nclean_save_ui = clean_save.cleanSave_UI()" 
-        -sourceType "python" 
+        -command "from helga.maya.arash.clean_save import clean_save\nreload(clean_save)\n\nclean_save_ui = clean_save.cleanSave_UI()"
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+    ;
+        shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "helga_cms"
+        -enableBackground 0
+        -align "center"
+        -label "helga_cms"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.2
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/icon_ShelfHelgaCms.png"
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/icon_ShelfHelgaCms.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -command "from helga.maya.arash.helga_login import helga_login\nreload(helga_login)\n\nhelga_login_ui = helga_login.helga_cms_login_UI()"
+        -sourceType "python"
         -commandRepeatable 1
         -flat 1
     ;
 
-} 
+}

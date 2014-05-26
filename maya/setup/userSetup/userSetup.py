@@ -36,12 +36,29 @@ import maya.utils
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 
+#helga filmaka project globals
 SCRIPTS_ROOT_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy'
 MAYA_PROJECT_DIR = r'//bigfoot/grimmhelga/Production/3d/maya'
 MAYA_VERSION = '2014-x64'
 STARTUP_RENDERER = 'vray' #Possible options: 'mayaSoftware', 'mayaHardware', 'mayaHardware2', 'vray', 'mentalRay'
 
+#check for home office
+home_office_timm_scripts_root_path = os.getenv('HELGA_HOME_OFFICE_TIMM_SCRIPTS_ROOT_PATH', False)
+home_office_timm_maya_project_dir = os.getenv('HELGA_HOME_OFFICE_TIMM_MAYA_PROJECT_DIR', False)
 
+#if true, reroot
+if (home_office_timm_scripts_root_path and
+	home_office_timm_maya_project_dir):
+	
+	#change root variables to home office
+	SCRIPTS_ROOT_PATH = home_office_timm_scripts_root_path
+	MAYA_PROJECT_DIR = home_office_timm_maya_project_dir
+
+	#log
+	print('Set home office environment for {0}'.format('Timm Wagener'))
+	print('SCRIPTS_ROOT_PATH: {0}'.format(SCRIPTS_ROOT_PATH))
+	print('MAYA_PROJECT_DIR: {0}'.format(MAYA_PROJECT_DIR))
+	print('------------------------------------------------------------------')
 
 
 

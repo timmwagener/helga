@@ -113,18 +113,18 @@ class helga_cms_login_UI(base):
 
 
 class Color():
-    def __init__(self):
-        print ("red")
+    def __init__():
+        print "Nnjnjnj"
     red = (Color.cl(219), Color.cl(152), Color.cl(21))
     green = (0.0, 1.0, 0.0)
     blue = (1.0, 0.0, 1.0)
     purple = (1.0, 0.0, 0.0)
-    colorConstant = 255.0
+    colorConstant = 255
     @staticmethod
     def cl(val):
         return val / Color.colorConstant
 
-class helga_cms_td_UI(base):
+class helga_cms_td_UI(base, Color):
     def __init__(self):
         self.tdUIs = {}
         self.delete_window('helga_td_window')

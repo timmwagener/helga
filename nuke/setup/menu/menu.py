@@ -27,17 +27,18 @@ import functools
 #Reload Bool
 doReload = True
 
-from helga.nuke.reconstruction.renderReconstruct import renderReconstruct
-if(doReload): reload(renderReconstruct)
+from helga.nuke.reconstruction.renderReconstructVRay import renderReconstruct as renderReconstructVRay
+if(doReload): reload(renderReconstructVRay)
 
-from helga.nuke.reconstruction.sceneReconstruct import sceneReconstruct
-if(doReload): reload(sceneReconstruct)
+from helga.nuke.reconstruction.sceneReconstructVRay import sceneReconstruct as sceneReconstructVRay
+if(doReload): reload(sceneReconstructVRay)
 
 
 
 #Globals
 #------------------------------------------------------------------
-ICONS_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy/helga/nuke/setup/icons/'
+SCRIPTS_ROOT_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy'
+ICONS_PATH = SCRIPTS_ROOT_PATH + r'/helga/nuke/setup/icons/'
 
 
 
@@ -60,28 +61,55 @@ ICONS_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy/helga/nuke/setup/i
 
 try:
 	#Main Menubar
-	helga_main_menu = nuke.menu('Nodes').addMenu('Helga', icon= ICONS_PATH + r'iconKugeltiereMenuMain.png' )
+	helga_main_menu = nuke.menu('Nodes').addMenu('Helga', icon= ICONS_PATH + r'iconHelgaMenuMain.png' )
 
 
 	#reconstruction_menu
 	reconstruction_menu = helga_main_menu.addMenu('Reconstruction')
 
-	#RenderReconstruct Menu
-	renderReconstructMenu = reconstruction_menu.addMenu('RenderReconstruction')
+	#render_reconstruct_menu
+	render_reconstruct_menu = reconstruction_menu.addMenu('RenderReconstruction')
+
+	
+	#render_reconstruct_menu_vray
+	render_reconstruct_menu_vray = render_reconstruct_menu.addMenu('VRay')
+	
 	#cmds
-	renderReconstructMenu.addCommand( 'Reconstruct all Elements', lambda: renderReconstruct.RenderReconstruct().reconstructAll())
-	renderReconstructMenu.addCommand( 'Reconstruct Light Elements', lambda: renderReconstruct.RenderReconstruct().reconstructLightREs())
-	renderReconstructMenu.addCommand( 'Reconstruct Framebuffer Elements', lambda: renderReconstruct.RenderReconstruct().reconstructFramebufferREs())
-	renderReconstructMenu.addCommand( 'Reconstruct Data Elements', lambda: renderReconstruct.RenderReconstruct().reconstructDataREs())
-	renderReconstructMenu.addCommand( 'Reconstruct Multi Matte Elements', lambda: renderReconstruct.RenderReconstruct().reconstructMultiMatteREs())
-	renderReconstructMenu.addCommand( 'Reconstruct Shadow Elements', lambda: renderReconstruct.RenderReconstruct().reconstructShadowREs())
+	render_reconstruct_menu_vray.addCommand('Reconstruct all Elements', lambda: renderReconstructVRay.RenderReconstruct().reconstructAll())
+	render_reconstruct_menu_vray.addCommand('Reconstruct Light Elements', lambda: renderReconstructVRay.RenderReconstruct().reconstructLightREs())
+	render_reconstruct_menu_vray.addCommand('Reconstruct Framebuffer Elements', lambda: renderReconstructVRay.RenderReconstruct().reconstructFramebufferREs())
+	render_reconstruct_menu_vray.addCommand('Reconstruct Data Elements', lambda: renderReconstructVRay.RenderReconstruct().reconstructDataREs())
+	render_reconstruct_menu_vray.addCommand('Reconstruct Multi Matte Elements', lambda: renderReconstructVRay.RenderReconstruct().reconstructMultiMatteREs())
+	render_reconstruct_menu_vray.addCommand('Reconstruct Shadow Elements', lambda: renderReconstructVRay.RenderReconstruct().reconstructShadowREs())
+
+
+	#render_reconstruct_menu_mantra
+	render_reconstruct_menu_mantra = render_reconstruct_menu.addMenu('Mantra')
+
+	#cmds
+	render_reconstruct_menu_mantra.addCommand('Dummy')
+
 
 	#SceneReconstruct Menu
-	sceneReconstructMenu = reconstruction_menu.addMenu('SceneReconstruction')
+	scene_reconstruct_menu = reconstruction_menu.addMenu('SceneReconstruction')
+
+
+	#scene_reconstruct_menu_vray
+	scene_reconstruct_menu_vray = scene_reconstruct_menu.addMenu('VRay')
+	
 	#cmds
-	sceneReconstructMenu.addCommand( 'Reconstruct Alembic', lambda: sceneReconstruct.SceneReconstruct().reconstruct_alembic())
-	sceneReconstructMenu.addCommand( 'Reconstruct Camera from Vray exr', lambda: sceneReconstruct.SceneReconstruct().create_exr_cam_vray())
-	sceneReconstructMenu.addCommand( 'Reconstruct Light', lambda: sceneReconstruct.SceneReconstruct().reconstruct_light())
+	scene_reconstruct_menu_vray.addCommand('Reconstruct Alembic', lambda: sceneReconstructVRay.SceneReconstruct().reconstruct_alembic())
+	scene_reconstruct_menu_vray.addCommand('Reconstruct Camera from Vray exr', lambda: sceneReconstructVRay.SceneReconstruct().create_exr_cam_vray())
+	scene_reconstruct_menu_vray.addCommand('Reconstruct Light', lambda: sceneReconstructVRay.SceneReconstruct().reconstruct_light())
+
+
+	#scene_reconstruct_menu_mantra
+	scene_reconstruct_menu_mantra = scene_reconstruct_menu.addMenu('Mantra')
+
+	#cmds
+	scene_reconstruct_menu_mantra.addCommand('Dummy')
+
+	
 
 	#SuccessMsg
 	print('Successfully set Helga Menu')

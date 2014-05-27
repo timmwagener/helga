@@ -55,7 +55,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=['houdini', 'maya', 'nuke'],
+    packages=find_packages(),
 
     #zip_safe
     zip_safe=False,

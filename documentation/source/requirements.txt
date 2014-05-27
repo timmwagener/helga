@@ -1,6 +1,0 @@
-
-
-sphinx_rtd_theme
-sphinx_bootstrap_theme
-mock
-git+https://github.com/timmwagener/helga.git

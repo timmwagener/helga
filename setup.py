@@ -55,7 +55,10 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(),
+    packages=find_packages('houdini', 'maya', 'nuke'),
+
+    #zip_safe
+    zip_safe=False,
 
     # List run-time dependencies here.  These will be installed by pip when your
     # project is installed.

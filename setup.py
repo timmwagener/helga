@@ -16,7 +16,7 @@ setup(
     # http://packaging.python.org/en/latest/tutorial.html#version
     version='1.0.0',
 
-    description="Helga Documentation",
+    description="Helga Pipeline Modules and Documentation",
     long_description="Pipeline repo for our diploma movie with the working title Helga. Contains the script environment for our DCCs like Maya, Houdini, Nuke etc.",
 
     # The project's main homepage.
@@ -55,7 +55,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages('helga'),
+    packages=find_packages(),
 
     # List run-time dependencies here.  These will be installed by pip when your
     # project is installed.

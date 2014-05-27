@@ -9,7 +9,7 @@ from setuptools import find_packages
 setup(
 
     #name
-    name="helga_documentation",
+    name="helga",
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see

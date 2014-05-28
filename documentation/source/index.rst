@@ -33,9 +33,10 @@ Manual
 .. toctree::
 	:maxdepth: 1
 	
-	manual/golden_rules
+	manual/quick_guide
 	manual/naming_convention
 	manual/work_and_publish
+	manual/pipeline
 	manual/faq
 	manual/i_am_a/i_am_a
 
@@ -44,11 +45,14 @@ Manual
 API Documentation
 -----------------
 
-..
-	.. toctree::
-	   :maxdepth: 1
+.. toctree::
+   :maxdepth: 2
 
-	   apidoc/modules
+   manual/apidoc/apidoc_overview
+   manual/apidoc/apidoc_coding_convention
+
+
+-----------------------
 
 
 .. autosummary::

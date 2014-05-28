@@ -66,7 +66,7 @@ helga_docs_version = helga.__version__
 #------------------------------------------------
 
 #debug
-debug = True
+debug = False
 
 def setup(app):
   """setup function. Special function in sphinx extensions. conf.py is itself an extension, 

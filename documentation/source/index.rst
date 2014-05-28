@@ -61,6 +61,7 @@ API Documentation
 	helga.houdini
 	helga.maya
 	helga.nuke
+	helga.general
 
 
 -----------------------

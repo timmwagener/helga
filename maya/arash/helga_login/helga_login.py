@@ -198,7 +198,7 @@ class Helga_cms_td_UI(Base):
         self.parent_width = parent_width
 
         self.tdUIs["td_modules_layout_a"] = cmds.columnLayout('td_modules_layout_a',columnAttach = ('both',0), rowSpacing = 1,  adjustableColumn=True)
-        self.tdUIs["td_modules_frame_a"] = cmds.frameLayout('td_modules_frame_a',label='Modules', bgc=Color.gray_a ,cll = True, borderStyle ='in', w=self.parent_width)
+        self.tdUIs["td_modules_frame_a"] = cmds.frameLayout('td_modules_frame_a',cl=True,label='Modules', bgc=Color.gray_a ,cll = True, borderStyle ='in', w=self.parent_width)
         self.tdUIs["td_modules_rowColumn_a"] = cmds.rowColumnLayout( numberOfColumns=3, columnWidth=[(1, 20), (2, 150), (3, 120)])
         self.tdUIs["td_modules_button_a"] = cmds.button(h=30, label = '?',  vis=True, command = (lambda message: self.show_helper(helper_arm_module)))
         self.tdUIs["td_modules_image_a"] = cmds.image(h=30, image = "icons/icon_helgaCMS_armModule.png")
@@ -217,17 +217,17 @@ class Helga_cms_td_UI(Base):
         self.tdUIs["td_modules_button_j"] = cmds.button(h=30, label = "create biped Module",  vis=True, command =self.create_check_module_biped)
         cmds.setParent('..')
         cmds.setParent('..')
-        self.tdUIs["td_modules_frame_b"] = cmds.frameLayout('td_modules_frame_b',label='Check Modules',bgc=Color.gray_a , cll = True, borderStyle ='in', w=self.parent_width)
+        self.tdUIs["td_modules_frame_b"] = cmds.frameLayout('td_modules_frame_b',cl=True,label='Check Modules',bgc=Color.gray_a , cll = True, borderStyle ='in', w=self.parent_width)
         self.tdUIs["td_modules_button_delete_module_a"] = cmds.button('td_modules_button_delete_module_a',label="Delete selected Module", command=self.delete_module)
         self.tdUIs["td_check_modules_rowColumn_a"] = cmds.rowColumnLayout( numberOfColumns=3, columnWidth=[(1, 180), (2,50), (3, 50)])
         cmds.setParent('..')
         cmds.setParent('..')
-        self.tdUIs["td_modules_frame_c"] = cmds.frameLayout('td_modules_frame_c',label='Options',bgc=Color.gray_a ,  cll = True, borderStyle ='in', w=self.parent_width)
+        self.tdUIs["td_modules_frame_c"] = cmds.frameLayout('td_modules_frame_c',cl=True,label='Options',bgc=Color.gray_a ,  cll = True, borderStyle ='in', w=self.parent_width)
         self.tdUIs["td_modules_rowColumn_b"] = cmds.rowColumnLayout( numberOfColumns=2, columnWidth=[(1, 150), (2, 150)])
         self.tdUIs["td_modules_checkBox_a"] = cmds.checkBox('td_modules_checkBox_a', label = "Show Joint after Rigging" )
         cmds.setParent('..')
         cmds.setParent('..')
-        self.tdUIs["td_modules_frame_d"] = cmds.frameLayout('td_modules_frame_d',label='Rig Modules',bgc=Color.gray_a ,  cll = True, borderStyle ='in', w=self.parent_width)
+        self.tdUIs["td_modules_frame_d"] = cmds.frameLayout('td_modules_frame_d',cl=True,label='Rig Modules',bgc=Color.gray_a ,  cll = True, borderStyle ='in', w=self.parent_width)
         self.tdUIs["td_modules_layout_e"] = cmds.columnLayout('td_modules_layout_e', columnAttach = ('both', 0), rowSpacing = 1)
         self.tdUIs["space_a"]=cmds.separator(h=5, vis=True, st='none',w=self.child_width)
         self.tdUIs["td_rig_modules_button_a"] = cmds.button('td_rig_modules_button_a', bgc = Color.blue_a,label='Rig all Modules', h=30, w=self.child_width)
@@ -236,7 +236,7 @@ class Helga_cms_td_UI(Base):
         self.tdUIs["space_c"]=cmds.separator(h=5, vis=True, st='none',w=self.child_width)
         cmds.setParent('..')
         cmds.setParent('..')
-        self.tdUIs["td_modules_frame_e"] = cmds.frameLayout('td_modules_frame_e',label='Skinning',bgc=Color.gray_a ,  cll = True, borderStyle ='in', w=self.parent_width)
+        self.tdUIs["td_modules_frame_e"] = cmds.frameLayout('td_modules_frame_e',cl=True,label='Skinning',bgc=Color.gray_a ,  cll = True, borderStyle ='in', w=self.parent_width)
         self.tdUIs["td_modules_rowColumn_c"] = cmds.rowColumnLayout( numberOfColumns=2, columnWidth=[(1, 150), (2, 130)])
         self.tdUIs["td_modules_checkBox_b"] = cmds.checkBox('td_modules_checkBox_b', label = "Helga CMS Joints")
         self.tdUIs["td_modules_checkBox_c"] = cmds.checkBox('td_modules_checkBox_c', label = "Scene Joints")
@@ -255,7 +255,7 @@ class Helga_cms_td_UI(Base):
         cmds.setParent('..')
         cmds.setParent('..')
         cmds.setParent('..')
-        self.tdUIs["td_modules_frame_f"] = cmds.frameLayout('td_modules_frame_f',label='Tools',bgc=Color.gray_a ,  cll = True, borderStyle ='in', w=self.parent_width)
+        self.tdUIs["td_modules_frame_f"] = cmds.frameLayout('td_modules_frame_f',cl=True,label='Tools',bgc=Color.gray_a ,  cll = True, borderStyle ='in', w=self.parent_width)
         self.tdUIs["td_modules_layout_g"] = cmds.columnLayout('td_modules_layout_g', columnAttach = ('both', 0), rowSpacing = 1)
         self.tdUIs["color_a"] = cmds.symbolButton(h=50, vis=True, w=self.child_width )
         self.tdUIs["color_a"] = cmds.symbolButton(h=50, vis=True, w=self.child_width )
@@ -403,31 +403,46 @@ class Helga_cms_td_UI(Base):
             cmds.button(name, edit=True, label="S", bgc=Color.green_a)
 
     def delete_module(self, *args):
-        query_select_button_a = cmds.button('td_check_modules_button_a', q=True, label=True)
-        query_select_button_c = cmds.button('td_check_modules_button_c', q=True, label=True)
-        query_select_button_e = cmds.button('td_check_modules_button_e', q=True, label=True)
-        query_select_button_g = cmds.button('td_check_modules_button_g', q=True, label=True)
-        query_select_button_i = cmds.button('td_check_modules_button_i', q=True, label=True)
-        if query_select_button_a =="S":
-            cmds.deleteUI('td_check_modules_text_a','td_check_modules_button_a','td_check_modules_button_b')
+        if cmds.button('td_check_modules_button_a', exists =True):
+            query_select_button_a = cmds.button('td_check_modules_button_a', q=True, label=True)
+            if query_select_button_a =="S":
+                cmds.deleteUI('td_check_modules_text_a','td_check_modules_button_a','td_check_modules_button_b')
         else:
             pass
-        if query_select_button_c =="S":
-            cmds.deleteUI('td_check_modules_text_b','td_check_modules_button_c','td_check_modules_button_d')
+        if cmds.button('td_check_modules_button_c', exists =True):
+            query_select_button_c = cmds.button('td_check_modules_button_c', q=True, label=True)
+            if query_select_button_c =="S":
+                cmds.deleteUI('td_check_modules_text_b','td_check_modules_button_c','td_check_modules_button_d')
         else:
             pass
-        if query_select_button_e =="S":
-            cmds.deleteUI('td_check_modules_text_c','td_check_modules_button_e','td_check_modules_button_f' )
+        if cmds.button('td_check_modules_button_e', exists =True):
+            query_select_button_e = cmds.button('td_check_modules_button_e', q=True, label=True)
+            if query_select_button_e =="S":
+                cmds.deleteUI('td_check_modules_text_c','td_check_modules_button_e','td_check_modules_button_f' )
         else:
             pass
-        if query_select_button_g =="S":
-            cmds.deleteUI('td_check_modules_text_d','td_check_modules_button_g','td_check_modules_button_h' )
+        if cmds.button('td_check_modules_button_g', exists =True):
+            query_select_button_g = cmds.button('td_check_modules_button_g', q=True, label=True)
+            if query_select_button_g =="S":
+                cmds.deleteUI('td_check_modules_text_d','td_check_modules_button_g','td_check_modules_button_h' )
         else:
             pass
-        if query_select_button_i =="S":
-            cmds.deleteUI('td_check_modules_text_e','td_check_modules_button_i','td_check_modules_button_j' )
-        else:
-            cmds.warning("no Module selected")
+        if cmds.button('td_check_modules_button_i', exists =True):
+            query_select_button_i = cmds.button('td_check_modules_button_i', q=True, label=True)
+            if query_select_button_i =="S":
+                cmds.deleteUI('td_check_modules_text_e','td_check_modules_button_i','td_check_modules_button_j' )
+
+
+        # else:
+        #     pass
+        # else:
+        #     pass
+        # else:
+        #     pass
+        # else:
+        #     pass
+        # else:
+        #     cmds.warning("no Module selected")
 
 
 

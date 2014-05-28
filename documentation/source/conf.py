@@ -94,6 +94,7 @@ mock_modules_list = [
   'pymel.core',
   'maya',
   'maya.cmds',
+  'maya.mel',
   'maya.api',
   'maya.OpenMaya',
   'maya.api.OpenMaya',

@@ -30,22 +30,18 @@ Usage
 import os
 import sys
 import webbrowser
+#helga
+from helga.general.setup.global_variables import global_variables
+reload(global_variables)
 
 
-
-
-#Globals
-#----------------------------------------------------
-
-URL = r'http://www.kiiia.com/helga/documentation/build/html/index.html'
-"""Default URL constant. Points to pipeline documentation"""
 
 
 
 #run
 #----------------------------------------------------
 
-def run(url = URL):
+def run(url = global_variables.PIPELINE_DOCUMENTATION_URL):
 	"""
 	Open web browser with pipeline documentation
 	"""

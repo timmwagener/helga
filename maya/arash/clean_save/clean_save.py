@@ -1,3 +1,29 @@
+
+"""
+clean_save
+==========================================
+
+Tool to support our naming convention by checking and convenience saving
+functionality.
+
+-----------------------
+
+Usage
+-----
+
+::
+    
+    from helga.maya.arash.clean_save import clean_save
+    reload(clean_save)
+
+    #run
+    clean_save.run()
+
+**Author:** `Arash Hosseini <mailto:s.arashhosseini@gmail.com>`_
+
+-----------------------
+"""
+
 #clean_save by arash hosseini
 
 import maya.cmds as cmds
@@ -648,6 +674,9 @@ class cleanSave_UI:
 #----------------------------------------------------------
 #----------------------------------------------------------
 def run():
+    """
+        Default method for script execution.
+    """
     cleanSave_UI()
 
 

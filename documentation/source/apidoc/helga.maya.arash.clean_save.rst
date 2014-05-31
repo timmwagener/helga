@@ -1,17 +1,19 @@
-helga.maya.arash.clean_save package
-===================================
 
-Submodules
-----------
 
-.. toctree::
-
-   helga.maya.arash.clean_save.clean_save
-
-Module contents
----------------
+.. Documentation comes from package __init__
 
 .. automodule:: helga.maya.arash.clean_save
     :members:
     :undoc-members:
     :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+	:maxdepth: 1
+
+	helga.maya.arash.clean_save.clean_save
+
+
+

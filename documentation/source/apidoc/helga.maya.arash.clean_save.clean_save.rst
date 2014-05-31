@@ -1,5 +1,6 @@
-helga.maya.arash.clean_save.clean_save module
-=============================================
+
+
+.. Documentation comes from package __init__
 
 .. automodule:: helga.maya.arash.clean_save.clean_save
     :members:

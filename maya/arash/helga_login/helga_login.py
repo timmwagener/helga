@@ -1,3 +1,29 @@
+
+
+"""
+helga_login
+==========================================
+
+GUI for the auto-rigger for the Helga characters.
+
+-----------------------
+
+Usage
+-----
+
+::
+    
+    from helga.maya.arash.helga_login import helga_login
+    reload(helga_login)
+
+    #run
+    helga_login.run()
+
+**Author:** `Arash Hosseini <mailto:s.arashhosseini@gmail.com>`_
+
+-----------------------
+"""
+
 ###################################################################
 #
 #    "Helga" Character Manangment System

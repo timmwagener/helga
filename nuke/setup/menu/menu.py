@@ -33,6 +33,12 @@ if(doReload): reload(renderReconstructVRay)
 from helga.nuke.reconstruction.sceneReconstructVRay import sceneReconstruct as sceneReconstructVRay
 if(doReload): reload(sceneReconstructVRay)
 
+from helga.general.setup.global_variables import global_variables
+if(doReload): reload(global_variables)
+
+from helga.general.setup.doc_link import doc_link
+if(doReload): reload(doc_link)
+
 
 
 #Globals
@@ -63,6 +69,11 @@ try:
 	#Main Menubar
 	helga_main_menu = nuke.menu('Nodes').addMenu('Helga', icon= ICONS_PATH + r'iconHelgaMenuMain.png' )
 
+
+	
+	#reconstruction_menu
+	#------------------------------------------------------------------
+	#------------------------------------------------------------------
 
 	#reconstruction_menu
 	reconstruction_menu = helga_main_menu.addMenu('Reconstruction')
@@ -108,6 +119,20 @@ try:
 
 	#cmds
 	scene_reconstruct_menu_mantra.addCommand('Dummy')
+
+
+
+
+
+	#doc_link_menu
+	#------------------------------------------------------------------
+	#------------------------------------------------------------------
+
+	#doc_link_menu
+	doc_link_menu = helga_main_menu.addMenu('Documentation')
+
+	#cmds
+	doc_link_menu.addCommand('Open Documentation', lambda: doc_link.run())
 
 	
 

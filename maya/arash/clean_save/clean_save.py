@@ -29,11 +29,13 @@ Usage
 import maya.cmds as cmds
 import os
 import time
+import getpass
 
 Version= '0.6'
 #zu_eigene_pfad_wechseln!!!
 
 projects_scene_dir = "Y:/Production/3d/"
+
 
 
 class cleanSave_UI:
@@ -43,6 +45,7 @@ class cleanSave_UI:
 
         welcome_massage=cmds.warning("Welcome, your Main Path is: "+projects_scene_dir)
 
+        self.query_username = getpass.getuser()
         self.allUIs={}
         self.deletewindow()
         self.windowsWidth=windowsWidth
@@ -59,8 +62,18 @@ class cleanSave_UI:
         # Vars
         self.fileName = ""
 
+
         #call_mainUI//call_listFiles
         self.mainUI()
+        self.login_file()
+
+    def login_file(self, *args):
+        now = time.localtime(time.time())
+        current_time = time.strftime("  %y/%m/%d %H:%M", now)
+        file = open("Y:/Production/rnd/ahosseini/helga_clean_save_login_file/helga_clean_save_login_file.txt", "a")
+        file.write("open: "+current_time+" by "+self.query_username+"\n")
+        file.close()
+
 
 
     def mainUI(self,windowsWidth=355,windowsHeight=400):

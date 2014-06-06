@@ -12,7 +12,7 @@ Usage
 -----
 
 ::
-    
+
     from helga.maya.arash.helga_login import helga_login
     reload(helga_login)
 
@@ -57,7 +57,7 @@ except Exception as e:
     print e
 
 # Global Helpstrings
-HELGA_VERSION = "v 0.1"
+HELGA_VERSION = "0.1"
 helper_td_main_module = "Hallo Welcome to Helga CMS"
 helper_arm_module = "arm________________"
 helper_leg_module = "leg________________"
@@ -92,6 +92,11 @@ class Base(object):
             cmds.deleteUI(name, control=True)
 
 
+    def quit_UI_window(self, name):
+        if cmds.window(name, query = True, exists =True):
+            cmds.deleteUI(name, window = True)
+
+
     #Getter & setter
     #--------------------------------
     def get_color(self):
@@ -121,7 +126,7 @@ class Helga_cms_login_UI(Base):
 
         super(Helga_cms_login_UI, self).__init__()
 
-        query_username = getpass.getuser()
+        self.query_username = getpass.getuser()
         self.loginUIs = {}
 
         self.delete_window('helga_cms_login')
@@ -131,7 +136,7 @@ class Helga_cms_login_UI(Base):
 
         self.windows_height = windows_height
         self.windows_width = windows_width
-        self.loginUIs["helga_login_window"] = cmds.window('helga_cms_login', title = 'Welcome '+str(query_username),
+        self.loginUIs["helga_login_window"] = cmds.window('helga_cms_login', title = 'Welcome '+str(self.query_username),
                                                             widthHeight = (self.windows_width, self.windows_height),
                                                             sizeable = False, menuBar = False, minimizeButton = True,
                                                             maximizeButton = False)
@@ -154,13 +159,24 @@ class Helga_cms_login_UI(Base):
         self.loginUIs["separator_c"] = cmds.separator(h=10, vis=True, st='none')
         cmds.showWindow(self.loginUIs ["helga_login_window"])
 
+    def login_file(self, *args):
+        #query_debug_text = cmds.textField('debugTextField', text=True, query=True)
+        now = time.localtime(time.time())
+        current_time = time.strftime("  %y/%m/%d %H:%M", now)
+        file = open("Y:/Production/rnd/ahosseini/helga_td_login_file/helga_login_file.txt", "a")
+        file.write("open: "+current_time+" by "+self.query_username+"\n")
+        file.close()
+        #warning = cmds.warning("successful sending to Arash")
+
 
     def run_helga_cms_td_UI(self, *args):
         Helga_cms_td_UI()
+        self.login_file()
         self.delete_window('helga_cms_login')
 
     def run_helga_cms_anim_UI(self, *args):
         Helga_cms_anim_UI()
+        self.login_file()
         self.delete_window('helga_cms_login')
 
 
@@ -283,7 +299,7 @@ class Helga_cms_td_UI(Base):
         cmds.setParent('..')
         self.tdUIs["td_modules_frame_f"] = cmds.frameLayout('td_modules_frame_f',cl=True,label='Tools',bgc=Color.gray_a ,  cll = True, borderStyle ='in', w=self.parent_width)
         self.tdUIs["td_modules_layout_g"] = cmds.columnLayout('td_modules_layout_g', columnAttach = ('both', 0), rowSpacing = 1)
-        self.tdUIs["color_a"] = cmds.symbolButton(h=50, vis=True, w=self.child_width )
+        self.tdUIs["color_a"] = cmds.symbolButton(image="icons/icon_helgaCMS_jelly_tool_Module.png", h=50, vis=True, w=self.child_width , command =self.tool_jelly)
         self.tdUIs["color_a"] = cmds.symbolButton(h=50, vis=True, w=self.child_width )
         self.tdUIs["color_a"] = cmds.symbolButton(h=50, vis=True, w=self.child_width )
         self.tdUIs["color_a"] = cmds.symbolButton(h=50, vis=True, w=self.child_width )
@@ -459,46 +475,371 @@ class Helga_cms_td_UI(Base):
                 cmds.deleteUI('td_check_modules_text_e','td_check_modules_button_i','td_check_modules_button_j' )
 
 
-        # else:
-        #     pass
-        # else:
-        #     pass
-        # else:
-        #     pass
-        # else:
-        #     pass
-        # else:
-        #     cmds.warning("no Module selected")
+    def tool_jelly(self, *args):
+        from helga.maya.arash.dynamo import dynamo
+        reload(dynamo)
+        dynamo.UI()
 
-
-
-
-
-
-
-
-            # cmds.button(name, edit=True, bgc=value)
-    # def change_color_arm(self, name):
-    #     self.name = name
-    #     cmds.button(name, edit=True, bgc=self.value)
-
-
-        # print scene_joints
-
-
-        # print query_checkBox_helgaCMS_jnt
-
+#################################################################################
+###################################Animation#####################################
+#################################################################################
+#################################################################################
+#################################################################################
 #################################################################################
 #
 #
-#ANIM_UI
+#ANIM_UI_character_choice
 #
 #
 #################################################################################
-class Helga_cms_anim_UI:
+class Helga_cms_anim_UI(Base):
 
     def __init__(self):
-        print "class helga_cms_anim_UI"
+        # myHelper = Helper()
+        # myHelper.load_helper_UI()
+
+
+        #call superclass constructor for inheritance in Python . This is neccessary
+        super(Helga_cms_anim_UI, self).__init__()
+
+        self.anim_choiceUIs = {}
+        helga_anim_choice_win_width = 300
+        helga_anim_choice_win_height = 200
+        self.delete_window('helga_anim_choice_window')
+        self.anim_choiceUIs["helga_anim_choice_win"] = cmds.window('helga_anim_choice_window', title = 'Helga Character Set',
+                                                widthHeight = (helga_anim_choice_win_width,helga_anim_choice_win_height), menuBar = True, sizeable = True,
+                                                minimizeButton=True, maximizeButton=False)
+        self.character_choice()
+    def character_choice(self, *args):
+        self.anim_choiceUIs['helga_choice_column_a']=cmds.columnLayout('helga_choice_column_a', columnAttach=('both', 20), rowSpacing=3, columnWidth=300)
+        self.anim_choiceUIs['helga_choice_separator_a']=cmds.separator('helga_choice_separator_a', h=20, st='none', vis=True)
+        self.anim_choiceUIs['helga_choice_text_a'] = cmds.text('helga_choice_text_a', label="Choice Character", align='center')
+        self.anim_choiceUIs['helga_choice_separator_b']=cmds.separator('helga_choice_separator_b', h=10, st='none', vis=True)
+        self.anim_choiceUIs['helga_choice_option_a'] =cmds.optionMenu('helga_choice_option_a', w=180, label ="Character Body UI")
+        self.anim_choiceUIs['helga_choice_option_b'] =cmds.optionMenu('helga_choice_option_b', w=180, label ="Character Hand UI")
+        self.anim_choiceUIs['helga_choice_menuItem_a'] =cmds.menuItem('helga_choice_menuItem_a',label="1. Ulfbert",  parent =self.anim_choiceUIs['helga_choice_option_a'])
+        self.anim_choiceUIs['helga_choice_menuItem_b'] =cmds.menuItem('helga_choice_menuItem_b',label="2. Helga",parent =self.anim_choiceUIs['helga_choice_option_a'])
+        self.anim_choiceUIs['helga_choice_menuItem_c'] =cmds.menuItem('helga_choice_menuItem_c',label="3. Ritter", parent =self.anim_choiceUIs['helga_choice_option_a'])
+        self.anim_choiceUIs['helga_choice_menuItem_d'] =cmds.menuItem('helga_choice_menuItem_d',label="1. Ulfbert",parent =self.anim_choiceUIs['helga_choice_option_b'])
+        self.anim_choiceUIs['helga_choice_menuItem_e'] =cmds.menuItem('helga_choice_menuItem_e',label="2. Helga", parent =self.anim_choiceUIs['helga_choice_option_b'])
+        self.anim_choiceUIs['helga_choice_menuItem_f'] =cmds.menuItem('helga_choice_menuItem_f',label="3. Ritter", parent =self.anim_choiceUIs['helga_choice_option_b'])
+        self.anim_choiceUIs['helga_choice_separator_c']=cmds.separator('helga_choice_separator_c', h=5, st='none', vis=True)
+        self.anim_choiceUIs['helga_choice_button_a'] = cmds.button('helga_choice_button_a',command= self.character_body_button, h = 30,  label="Create Character UI")
+        self.anim_choiceUIs['helga_choice_button_b'] = cmds.button('helga_choice_button_b', command= self.character_hand_button,h=30, label="Create Hand UI")
+        #self.anim_choiceUIs['helga_choice_column_b']=cmds.columnLayout('helga_choice_column_b', columnAttach=('both', 0), rowSpacing=3, columnWidth=300, parent = self.anim_choiceUIs["helga_anim_choice_win"])
+        #self.anim_choiceUIs['helga_choice_separator_d']=cmds.separator('helga_choice_separator_d', h=5, st='none', vis=True)
+
+        #self.anim_choiceUIs['helga_choice_text_b'] = cmds.text('helga_choice_text_b', bgc= (0.0,0.0,0.0),h = 20, align = 'left', label= "Hallo", parent = self.anim_choiceUIs['helga_choice_column_b'])
+
+
+        cmds.showWindow(self.anim_choiceUIs ["helga_anim_choice_win"])
+
+##################################################
+#
+#
+#ANIM_UI_character_choice_function
+#
+#
+##################################################
+
+
+    def character_body_button(self, *args):
+        query_character_button = cmds.optionMenu('helga_choice_option_a', query = True, value = True)[0]
+
+        if query_character_button =='1':
+            self.delete_ulfbert_character_UIs()
+            Ulfbert_body_UI()
+        else:
+            pass
+        if query_character_button =='2':
+            self.delete_helja_character_UIs()
+            Helja_body_UI()
+        else:
+            pass
+        if query_character_button =='3':
+            self.delete_ritter_character_UIs()
+            Ritter_body_UI()
+
+
+    def character_hand_button(self, *args):
+        query_character_hand_button = cmds.optionMenu('helga_choice_option_b', query = True, value = True)[0]
+        if query_character_hand_button =='1':
+            print "Ulfbert_hand_UI()"
+        else:
+            pass
+        if query_character_hand_button =='2':
+            print "hand Helga"
+        else:
+            pass
+        if query_character_hand_button =='3':
+            print "hand Ritter"
+
+    def delete_ulfbert_character_UIs(self, *args):
+        if cmds.window('ulfbert_body_window', exists=True):
+            self.delete_window('ulfbert_body_window')
+
+    def delete_helja_character_UIs(self, *args):
+        if cmds.window('helja_body_window', exists=True):
+            self.delete_window('helja_body_window')
+
+    def delete_ritter_character_UIs(self, *args):
+        if cmds.window('ritter_body_window', exists=True):
+            self.delete_window('ritter_body_window')
+
+
+#################################################################################
+#
+#
+#ANIM_UI_character_body_UI
+#
+#
+#################################################################################
+
+class Ulfbert_body_UI(Base):
+    def __init__(self, ulfbert_parent_width = 500, ulfbert_parent_height = 730, ulfbert_child_width = 495, ulfbert_child_height = 495):
+
+        super(Ulfbert_body_UI, self).__init__()
+
+        self.ulfbert_body_UIs = {}
+        #self.delete_window('helga_anim_choice_window')
+        self.ulfbert_parent_width = ulfbert_parent_width
+        self.ulfbert_parent_height = ulfbert_parent_height
+        self.ulfbert_child_width = ulfbert_child_width
+        self.ulfbert_child_height = ulfbert_child_height
+        self.ulfbert_body_UIs["ulfbert_body_win"] = cmds.window('ulfbert_body_window', title = 'Ulfebrt Character UI',
+                                                widthHeight = (self.ulfbert_parent_width,self.ulfbert_parent_height),
+                                                menuBar = True, sizeable = False, topEdge= 0, leftEdge= 0, minimizeButton=True, maximizeButton=False)
+        self.ulfbert_body_main_UI()
+
+    def ulfbert_body_main_UI(self, *args):
+
+        self.ulfbert_body_UIs['ulfbert_column_a'] = cmds.columnLayout('ulfbert_column_a', columnAttach=('both', 0), rowSpacing=3, columnWidth=self.ulfbert_child_width, parent =self.ulfbert_body_UIs["ulfbert_body_win"] )
+        ########to go'''
+        self.ulfbert_body_UIs['ulfbert_rowColumn_a'] = cmds.rowColumnLayout('ulfbert_rowColumn_a', w= self.ulfbert_child_width, h=self.ulfbert_child_height, numberOfColumns=11, columnSpacing=(1,1),
+                                                            columnWidth=[(1,45), (2,45), (3,45),(4,45), (5,45),(6,45), (7,45), (8,45),(9,45), (10,45),(11,45)], parent= self.ulfbert_body_UIs['ulfbert_column_a'] )
+        '''never, have to import as module'''
+        self.ulfbert_body_UIs['ulfbert_icon_1'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_2'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_3'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_4'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_5'] = cmds.symbolButton(bgc=(1.0,1.0,1.0), image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_6'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_7'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_8'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_9'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_10'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_11'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_12'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_13'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_14'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_15'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_16'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_17'] = cmds.symbolButton(bgc=(1.0,1.0,1.0), image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_18'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_20'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_21'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_22'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_23'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_24'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_25'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_27'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_28'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_29'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_30'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_31'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_32'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_33'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_34'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_35'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_36'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_37'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_38'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_39'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_40'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_41'] = cmds.symbolButton(bgc=(1.0,1.0,0.5),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True, command=self.select_ulfbert_chestA)
+        self.ulfbert_body_UIs['ulfbert_icon_42'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_43'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_45'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_46'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_47'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_48'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_49'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_50'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_51'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_52'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_53'] = cmds.symbolButton(bgc = (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_54'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_55'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_56'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_57'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_58'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_59'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_60'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_61'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_62'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_63'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_64'] = cmds.symbolButton(bgc = (1.0,1.0,1.0), image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_65'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_66'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_67'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_68'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_69'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_70'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_71'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_72'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_73'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_74'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_75'] = cmds.symbolButton(bgc= (1.0,1.0,1.0), image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_76'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_77'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_78'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_79'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_80'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_6'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_7'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png",h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_8'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_9'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png",h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_10'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png",h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_11'] = cmds.symbolButton(bgc= (1.0,0.5,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True, command=self.select_ulfbert_hipsA)
+        self.ulfbert_body_UIs['ulfbert_icon_12'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_13'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png",h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_14'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_15'] = cmds.symbolButton(bgc=(1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png",h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_16'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_17'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_18'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_1'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_2'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_3'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_4'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_5'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_6'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_7'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_8'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_9'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_10'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_11'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_12'] = cmds.symbolButton( h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_13'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_14'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_15'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_16'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_17'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_18'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_1'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_2'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_3'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_4'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_5'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_6'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_7'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_8'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_9'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_10'] = cmds.symbolButton(bgc= (1.0,1.0,1.0),image="icons/Helga_character_UI/cms_cog.png", h=45, vis=True)
+        self.ulfbert_body_UIs['ulfbert_icon_11'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_12'] = cmds.symbolButton(h=45, vis=False)
+        self.ulfbert_body_UIs['ulfbert_icon_13'] = cmds.symbolButton(h=45, vis=False)
+        cmds.setParent('..')
+        # self.ulfbert_body_UIs['ulfbert_separator_a'] = cmds.separator(h=20, st='none', vis=True)
+        # self.ulfbert_body_UIs['ulfbert_rowColumn_b'] = cmds.rowColumnLayout('ulfbert_rowColumn_b', w= self.ulfbert_child_width, h=100, numberOfColumns=6, columnSpacing=(1,1),
+        #                                                     columnWidth=[(1,60), (2,100), (3,60),(4,100), (5,60),(6,100)], parent = self.ulfbert_body_UIs['ulfbert_column_a'] )
+        # ##---X----
+        # self.ulfbert_body_UIs['ulfbert_trans_x_text'] = cmds.text('ulfbert_trans_x_text',label="Translate X")
+        # self.ulfbert_body_UIs['ulfbert_trans_x_textField'] = cmds.textField('ulfbert_trans_x_textField', text="0")
+        # self.ulfbert_body_UIs['ulfbert_rotate_x_text'] = cmds.text('ulfbert_rotate_x_text',label="Rotate X")
+        # self.ulfbert_body_UIs['ulfbert_rotate_x_textField'] = cmds.textField('ulfbert_rotate_x_textField', text="0")
+        # self.ulfbert_body_UIs['ulfbert_scale_x_text'] = cmds.text('ulfbert_scale_x_text',label="Scale X")
+        # self.ulfbert_body_UIs['ulfbert_scale_x_textField'] = cmds.textField('ulfbert_scale_x_textField', text="0")
+        # ##---Y----
+        # self.ulfbert_body_UIs['ulfbert_trans_y_text'] = cmds.text('ulfbert_trans_y_text',label="Translate Y")
+        # self.ulfbert_body_UIs['ulfbert_trans_y_textField'] = cmds.textField('ulfbert_trans_y_textField', text="0")
+        # self.ulfbert_body_UIs['ulfbert_rotate_y_text'] = cmds.text('ulfbert_rotate_y_text',label="Rotate Y")
+        # self.ulfbert_body_UIs['ulfbert_rotate_y_textField'] = cmds.textField('ulfbert_rotate_y_textField', text="0")
+        # self.ulfbert_body_UIs['ulfbert_scale_y_text'] = cmds.text('ulfbert_scale_y_text',label="Scale Y")
+        # self.ulfbert_body_UIs['ulfbert_scale_y_textField'] = cmds.textField('ulfbert_scale_y_textField', text="0")
+        # ##---Z----
+        # self.ulfbert_body_UIs['ulfbert_trans_z_text'] = cmds.text('ulfbert_trans_z_text',label="Translate Z")
+        # self.ulfbert_body_UIs['ulfbert_trans_z_textField'] = cmds.textField('ulfbert_trans_z_textField', text="0")
+        # self.ulfbert_body_UIs['ulfbert_rotate_z_text'] = cmds.text('ulfbert_rotate_z_text',label="Rotate Z")
+        # self.ulfbert_body_UIs['ulfbert_rotate_z_textField'] = cmds.textField('ulfbert_rotate_z_textField', text="0")
+        # self.ulfbert_body_UIs['ulfbert_scale_z_text'] = cmds.text('ulfbert_scale_z_text',label="Scale Z")
+        # self.ulfbert_body_UIs['ulfbert_scale_z_textField'] = cmds.textField('ulfbert_scale_z_textField', text="0")
+        # ##---button----
+        # self.ulfbert_body_UIs['ulfbert_text_palceHolder_a'] = cmds.text('ulfbert_text_palceHolder_a',label="")
+        # self.ulfbert_body_UIs['ulfbert_key_trans_button'] = cmds.button('ulfbert_key_trans_button', label="Key Translate")
+        # self.ulfbert_body_UIs['ulfbert_text_palceHolder_b'] = cmds.text('ulfbert_text_palceHolder_b',label="")
+        # self.ulfbert_body_UIs['ulfbert_key_rotate_button'] = cmds.button('ulfbert_key_rotate_button', label="Key Rotate")
+        # self.ulfbert_body_UIs['ulfbert_text_palceHolder_c'] = cmds.text('ulfbert_text_palceHolder_c',label="")
+        #self.ulfbert_body_UIs['ulfbert_key_scale_button'] = cmds.button('ulfbert_key_scale_button', label="Key Scale")
+
+
+        self.ulfbert_body_UIs['ulfbert_column_b'] = cmds.columnLayout('ulfbert_column_b', columnAttach=('both', 20), rowSpacing=3, columnWidth=self.ulfbert_child_width, parent =self.ulfbert_body_UIs['ulfbert_column_a'] )
+        self.ulfbert_body_UIs['ulfbert_key_all_button'] = cmds.button('ulfbert_key_all_button', label="Key all")
+        self.ulfbert_body_UIs['ulfbert_key_save_body_button'] = cmds.button('ulfbert_key_save_body_button', label="Save Body Pose")
+        self.ulfbert_body_UIs['ulfbert_key_open_libary_button'] = cmds.button('ulfbert_key_open_libary_button', label="Open Body Pose Libary")
+
+
+        cmds.showWindow(self.ulfbert_body_UIs["ulfbert_body_win"])
+
+    def select_ulfbert_hipsA(self, *args):
+        ulfbert_hipsA = cmds.select('spine_hipsA_ctrl')
+    #     self.get_trans_data('spine_hipsA_ctrl')
+    #     self.get_rotate_data('spine_hipsA_ctrl')
+    #     self.get_scale_data('spine_hipsA_ctrl')
+    #     # self.connect_attr('spine_hipsA_ctrl.translateX','ulfbert_trans_x_textField.text')
+    #     # self.connect_attr('spine_hipsA_ctrl.translateY','ulfbert_trans_y_textField.text')
+    #     # self.connect_attr('spine_hipsA_ctrl.translateZ','ulfbert_trans_z_textField.text')
+
+    def select_ulfbert_chestA(self, *args):
+        ulfbert_chestA = cmds.select('spine_chestA_ctrl')
+    #     self.get_trans_data('spine_chestA_ctrl')
+    #     self.get_rotate_data('spine_chestA_ctrl')
+    #     self.get_scale_data('spine_chestA_ctrl')
+    #     # self.connect_attr('spine_chestA_ctrl.translateX','ulfbert_trans_x_textField.text')
+    #     # self.connect_attr('spine_chestA_ctrl.translateY','ulfbert_trans_y_textField.text')
+    #     # self.connect_attr('spine_chestA_ctrl.translateZ','ulfbert_trans_z_textField.text')
+
+    # def get_trans_data(self, name):
+    #     val_trans_x = cmds.getAttr(name+'.translateX')
+    #     val_trans_y = cmds.getAttr(name+'.translateY')
+    #     val_trans_z = cmds.getAttr(name+'.translateZ')
+    #     cmds.textField('ulfbert_trans_x_textField', edit=True, text=val_trans_x)
+    #     cmds.textField('ulfbert_trans_y_textField', edit=True, text=val_trans_y)
+    #     cmds.textField('ulfbert_trans_z_textField', edit=True, text=val_trans_z)
+    #     print val_trans_x
+    #     print val_trans_y
+    #     print val_trans_z
+    # def get_rotate_data(self, name):
+    #     val_rotate_x = cmds.getAttr(name+'.rotateX')
+    #     val_rotate_y = cmds.getAttr(name+'.rotateY')
+    #     val_rotate_z = cmds.getAttr(name+'.rotateZ')
+    #     cmds.textField('ulfbert_rotate_x_textField', edit=True, text=val_rotate_x)
+    #     cmds.textField('ulfbert_rotate_y_textField', edit=True, text=val_rotate_y)
+    #     cmds.textField('ulfbert_rotate_z_textField', edit=True, text=val_rotate_z)
+    #     print val_rotate_x
+    #     print val_rotate_y
+    #     print val_rotate_z
+    # def get_scale_data(self, name):
+    #     val_scale_x = cmds.getAttr(name+'.scaleX')
+    #     val_scale_y = cmds.getAttr(name+'.scaleY')
+    #     val_scale_z = cmds.getAttr(name+'.scaleZ')
+    #     cmds.textField('ulfbert_scale_x_textField', edit=True, text=val_scale_x)
+    #     cmds.textField('ulfbert_scale_y_textField', edit=True, text=val_scale_y)
+    #     cmds.textField('ulfbert_scale_z_textField', edit=True, text=val_scale_z)
+    #     print val_scale_x
+    #     print val_scale_y
+    #     print val_scale_z
+
+    # def connect_attr(self, driver, driven):
+    #     cmds.connectAttr(driver, driven)
+
+
+  
+
+
+
+    def delete_ulfbert_character_body_UI(self, *args):
+        self.quit_UI_window('ulfbert_body_window')
 
 
 
@@ -508,6 +849,58 @@ class Helga_cms_anim_UI:
 
 
 
+class Helja_body_UI(Base):
+    def __init__(self, helja_parent_width = 500, helja_parent_height = 500, helja_child_width = 480, helja_child_height = 480):
+
+        super(Helja_body_UI, self).__init__()
+
+        self.helja_body_UIs = {}
+        #self.delete_window('helga_anim_choice_window')
+        self.helja_parent_width = helja_parent_width
+        self.helja_parent_height = helja_parent_height
+        self.helja_child_width = helja_child_width
+        self.helja_child_height = helja_child_height
+        self.helja_body_UIs["helja_body_win"] = cmds.window('helja_body_window', title = 'Helga Character UI',
+                                                widthHeight = (self.helja_parent_width,self.helja_parent_height),
+                                                menuBar = True, sizeable = True, minimizeButton=True, maximizeButton=False)
+        self.helja_body_main_UI()
+
+    def helja_body_main_UI(self, *args):
+        self.helja_body_UIs['helja_column_a'] = cmds.columnLayout('helja_column_a', columnAttach=('both', 20), rowSpacing=3, columnWidth=self.helja_parent_width)
+        cmds.showWindow(self.helja_body_UIs["helja_body_win"])
+    def delete_helja_character_body_UI(self, *args):
+        self.quit_UI_window('helja_body_window')
+
+
+class Ritter_body_UI(Base):
+    def __init__(self, ritter_parent_width = 500, ritter_parent_height = 500, ritter_child_width = 480, ritter_child_height = 480):
+
+        super(Ritter_body_UI, self).__init__()
+
+        self.ritter_body_UIs = {}
+        #self.delete_window('helga_anim_choice_window')
+        self.ritter_parent_width = ritter_parent_width
+        self.ritter_parent_height = ritter_parent_height
+        self.ritter_child_width = ritter_child_width
+        self.ritter_child_height = ritter_child_height
+        self.ritter_body_UIs["ritter_body_win"] = cmds.window('ritter_body_window', title = 'Ritter Character UI',
+                                                widthHeight = (self.ritter_parent_width,self.ritter_parent_height),
+                                                menuBar = True, sizeable = True, minimizeButton=True, maximizeButton=False)
+        self.ritter_body_main_UI()
+
+    def ritter_body_main_UI(self, *args):
+        self.ritter_body_UIs['ritter_column_a'] = cmds.columnLayout('ritter_column_a', columnAttach=('both', 20), rowSpacing=3, columnWidth=self.ritter_parent_width)
+        cmds.showWindow(self.ritter_body_UIs["ritter_body_win"])
+    def delete_ritter_character_body_UI(self, *args):
+        self.quit_UI_window('ritter_body_window')
+
+#################################################################################
+#
+#
+#ANIM_UI_character_body_function
+#
+#
+#################################################################################
 
 #################################################################################
 #

@@ -15,6 +15,8 @@ Here you can find some infographics to explain our pipeline visually.
 
 ---------------
 
+
+
 Assets and shots pipeline
 -------------------------
 
@@ -22,3 +24,13 @@ Assets and shots pipeline
 	:width: 800px
 	:align: center
 	:alt: Assets and shots pipeline chart
+
+-------------
+
+Photoscan pipeline
+------------------
+
+.. figure:: /media/images/infographics/helga_photoscan_pipeline.png
+	:width: 800px
+	:align: center
+	:alt: Photoscan pipeline chart

@@ -97,6 +97,7 @@ mock_modules_list = [
   'maya.mel',
   'maya.api',
   'maya.OpenMaya',
+  'maya.OpenMayaUI',
   'maya.api.OpenMaya',
   'nuke',
   'nukescripts'

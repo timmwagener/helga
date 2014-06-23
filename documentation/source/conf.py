@@ -100,7 +100,10 @@ mock_modules_list = [
   'maya.OpenMayaUI',
   'maya.api.OpenMaya',
   'nuke',
-  'nukescripts'
+  'nukescripts',
+  'PySide',
+  'QtGui',
+  'QtCore'
 ]
 
 #create mock objects

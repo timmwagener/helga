@@ -1,15 +1,17 @@
-#!/usr/bin/env python2
 
 
-#Author
-#------------------------------------------------
 """
-Timm Wagener
-www.timmwagener.com
-wagenertimm@gmail.com
+auto_key
+===============
 
-Usage:
-Copy this script into Nukes script editor and execute it.
+Live key in Nuke for photoscan sessions.
+
+-----------------------
+
+Usage
+-----------
+
+Copy this script in the Nuke script editor and execute it.
 """
 
 
@@ -21,8 +23,8 @@ import time
 import os
 import logging
 #PySyide
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PySide import QtGui
+from PySide import QtCore
 #nuke
 import nuke
 
@@ -34,7 +36,7 @@ import nuke
 #MaskThread
 #------------------------------------------------
 
-class MaskThread(QThread):
+class MaskThread(QtCore.QThread):
 	"""
 		Thread that recognizes files in a source directory (photo_dir) which do not exist in
 		a target dir (masks_dir). If it found such files, it will grab the specified read & 
@@ -54,7 +56,7 @@ class MaskThread(QThread):
 		"""
 
 
-		QThread.__init__(self, parent)
+		QtCore.QThread.__init__(self, parent)
 
 
 		#starter_widget
@@ -224,7 +226,7 @@ class MaskThread(QThread):
 
 		#while file not yet created print a queue dot
 		while not (os.path.isfile(write_node_file_path)):
-			QApplication.processEvents()
+			QtCore.QCoreApplication.processEvents()
 			print('.'),
 			self.msleep(150)
 
@@ -240,7 +242,7 @@ class MaskThread(QThread):
 		#finish
 		print('Hello from run')
 
-		QApplication.processEvents()
+		QtCore.QCoreApplication.processEvents()
 
 		#update_data
 		self.update_data()
@@ -275,14 +277,14 @@ class MaskThread(QThread):
 #ThreadWidget
 #------------------------------------------------
 
-class ThreadWidget(QWidget):
+class ThreadWidget(QtGui.QWidget):
 	"""
 		Main UI to be started in Nuke instance.
 	"""
 
 	def __init__(self, parent = None):
 
-		QWidget.__init__(self, parent)
+		QtGui.QWidget.__init__(self, parent)
 
 
 		#Create GUI
@@ -301,38 +303,38 @@ class ThreadWidget(QWidget):
 		
 
 		#btn_set_read_node_name
-		self.btn_set_read_node_name = QPushButton('Get Read Node',self)
+		self.btn_set_read_node_name = QtGui.QPushButton('Get Read Node',self)
 		#le_read_node_name
-		self.le_read_node_name = QLineEdit(self)
+		self.le_read_node_name = QtGui.QLineEdit(self)
 		self.le_read_node_name.setPlaceholderText('Read node name')
 
 		#btn_set_write_node_name
-		self.btn_set_write_node_name = QPushButton('Get Write Node',self)
+		self.btn_set_write_node_name = QtGui.QPushButton('Get Write Node',self)
 		#le_write_node_name
-		self.le_write_node_name = QLineEdit(self)
+		self.le_write_node_name = QtGui.QLineEdit(self)
 		self.le_write_node_name.setPlaceholderText('Write node name')
 
 		#btn_photo_dir
-		self.btn_photo_dir = QPushButton('Get photo directory', self)
+		self.btn_photo_dir = QtGui.QPushButton('Get photo directory', self)
 		#le_photo_dir
-		self.le_photo_dir = QLineEdit(self)
+		self.le_photo_dir = QtGui.QLineEdit(self)
 		self.le_photo_dir.setPlaceholderText('Photo Directory')
 
 		#btn_masks_dir
-		self.btn_masks_dir = QPushButton('Get masks directory', self)
+		self.btn_masks_dir = QtGui.QPushButton('Get masks directory', self)
 		#le_masks_dir
-		self.le_masks_dir = QLineEdit(self)
+		self.le_masks_dir = QtGui.QLineEdit(self)
 		self.le_masks_dir.setPlaceholderText('Masks Directory')
 
 		#chkbx_suppress_thread
-		self.chkbx_suppress_thread = QCheckBox('Suppress Thread')
+		self.chkbx_suppress_thread = QtGui.QCheckBox('Suppress Thread')
 		self.chkbx_suppress_thread.setCheckable(True)
 		self.chkbx_suppress_thread.setChecked(False)
 
 
 
 		#lyt_widget
-		self.lyt_widget = QVBoxLayout()
+		self.lyt_widget = QtGui.QVBoxLayout()
 		#add widgets
 		self.lyt_widget.addWidget(self.btn_set_read_node_name)
 		self.lyt_widget.addWidget(self.le_read_node_name)
@@ -362,7 +364,7 @@ class ThreadWidget(QWidget):
 		self.thread.finished.connect(self.set_running_false)
 
 		#timer
-		self.timer = QTimer()
+		self.timer = QtCore.QTimer()
 		self.timer.timeout.connect(self.start_thread)
 		self.timer.start(2000)
 
@@ -464,3 +466,4 @@ if (__name__=='__main__'):
 	
 	window = ThreadWidget()
 	window.show()
+

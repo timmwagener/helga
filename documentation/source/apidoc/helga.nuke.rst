@@ -19,5 +19,6 @@ Packages
     helga.nuke.hanna
     helga.nuke.johannes
     helga.nuke.manuel
+    helga.nuke.photoscan
     helga.nuke.reconstruction
     helga.nuke.setup

@@ -39,6 +39,9 @@ import sys
 PIPELINE_BASE_PATH = r'//bigfoot/grimmhelga'
 """Helga pipeline base path"""
 
+PIPELINE_SCRIPTS_BASE_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy'
+"""Pipeline scripts base path. You can import helga from here."""
+
 MAYA_PROJECT_PATH = r'//bigfoot/grimmhelga/Production/3d/maya'
 """Helga pipeline Maya project path"""
 

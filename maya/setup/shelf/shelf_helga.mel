@@ -519,7 +519,7 @@ global proc shelf_helga () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "from helga.maya.arash.helga_login import helga_login\nreload(helga_login)\n\nhelga_login_ui = helga_login.Helga_cms_login_UI()" 
+        -command "from helga.maya.arash.helga_login import helga_login\nreload(helga_login)\n\n\nhelga_login.run()" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1

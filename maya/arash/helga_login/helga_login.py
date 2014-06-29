@@ -1079,12 +1079,13 @@ class Ulfbert_body_UI(Base):
             cmds.warning('No Character in Scene')
         else:
             query_ulfbert_L_mirror_L2R=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-            ulfbert_mirror_L2R_namespace_target=query_ulfbert_L_mirror_L2R.split("_")[1]
+            print query_ulfbert_L_mirror_L2R
+            ulfbert_mirror_L2R_namespace_target=query_ulfbert_L_mirror_L2R
             if len(ulfbert_L2R_list) == 1:
                 self.ulfbert_L2R_object=pm.ls(sl = True, fl = True)[0]
                 ulfbert_L2R_split_object=self.ulfbert_L2R_object.split("_")
-                ulfbert_L2R_target=(str(ulfbert_mirror_L2R_namespace_target)+':R')
-                ulfbert_L2R_split_object[1]=ulfbert_L2R_target
+                ulfbert_L2R_target=str(ulfbert_mirror_L2R_namespace_target)+str(':R')
+                ulfbert_L2R_split_object[0]=ulfbert_L2R_target
                 self.ulfbert_L2R_join_object="_".join(ulfbert_L2R_split_object)
 
 
@@ -1130,12 +1131,12 @@ class Ulfbert_body_UI(Base):
             cmds.warning('No Character in Scene')
         else:
             query_ulfbert_L_mirror_R2L=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-            ulfbert_mirror_R2L_namespace_target=query_ulfbert_L_mirror_R2L.split("_")[1]
+            ulfbert_mirror_R2L_namespace_target=query_ulfbert_L_mirror_R2L
             if len(ulfbert_R2L_list) == 1:
                 self.ulfbert_R2L_object=pm.ls(sl = True, fl = True)[0]
                 ulfbert_R2L_split_object=self.ulfbert_R2L_object.split("_")
-                ulfbert_R2L_target=(str(ulfbert_mirror_R2L_namespace_target)+':L')
-                ulfbert_R2L_split_object[1]=ulfbert_R2L_target
+                ulfbert_R2L_target=str(ulfbert_mirror_R2L_namespace_target)+str(':L')
+                ulfbert_R2L_split_object[0]=ulfbert_R2L_target
                 self.ulfbert_R2L_join_object="_".join(ulfbert_R2L_split_object)
 
                 self.ulfbert_get_trans_data(self.ulfbert_R2L_object)
@@ -1510,7 +1511,7 @@ class Ulfbert_hand_UI(Base):
 
 
 class Save_character_pose_UI(Base):
-    def __init__(self, character_parent_width = 320, character_parent_height = 510, character_child_width = 505, character_child_height = 295):
+    def __init__(self, character_parent_width = 320, character_parent_height = 540, character_child_width = 505, character_child_height = 295):
 
         super(Save_character_pose_UI, self).__init__()
         self.delete_window('character_save_pose_window')
@@ -1533,7 +1534,7 @@ class Save_character_pose_UI(Base):
         self.character_save_pose['character_save_pose_column_c'] = cmds.columnLayout('character_save_pose_column_c', columnAttach=('both', 5), rowSpacing=1, columnWidth=self.character_child_width, parent=self.character_save_pose['character_save_pose_win'] )
         self.character_save_pose['character_save_pose_text_a_x']=cmds.text('character_save_pose_text_a_x', label="Select Body Part:", align="left")
         self.character_save_pose['character_save_pose_separator_a_x']=cmds.separator('character_save_pose_separator_a_x', h=7, st='none')
-        self.character_save_pose['character_save_pose_column_a'] = cmds.rowColumnLayout('character_save_pose_column_a', numberOfColumns=2,rowSpacing=(1, 2), 
+        self.character_save_pose['character_save_pose_column_a'] = cmds.rowColumnLayout('character_save_pose_column_a', numberOfColumns=2,rowSpacing=(1, 2),
                                                              columnWidth=[(1,150), (2,150)], parent=self.character_save_pose['character_save_pose_column_c'])
 
 
@@ -1544,24 +1545,37 @@ class Save_character_pose_UI(Base):
         self.character_save_pose['character_save_pose_button_R_Leg_controller']=cmds.button('character_save_pose_button_R_Leg_controller',h=20, label='R Leg', parent=self.character_save_pose['character_save_pose_column_a'], command=self.select_character_R_leg)
         self.character_save_pose['character_save_pose_button_L_Leg_controller']=cmds.button('character_save_pose_button_L_Leg_controller',h=20, label='L Leg', parent=self.character_save_pose['character_save_pose_column_a'], command=self.select_character_L_leg)
         self.character_save_pose['character_save_pose_button_Body_controller']=cmds.button('character_save_pose_button_body_controller',h=20, label='Body', parent=self.character_save_pose['character_save_pose_column_a'], command=self.select_character_main_body)
-        # self.character_save_pose['character_save_pose_button_spine_controller']=cmds.button('character_save_pose_button_spine_controller',h=20, label='Spine', parent=self.character_save_pose['character_save_pose_column_a'])
         self.character_save_pose['character_save_pose_button_selected_controller']=cmds.button('character_save_pose_button_selected_controller',h=20, label='Selected', parent=self.character_save_pose['character_save_pose_column_a'])
         cmds.setParent('..')
-        self.character_save_pose['character_save_pose_column_b'] = cmds.columnLayout('character_save_pose_column_b', rowSpacing=1, columnWidth=self.character_child_width, parent=self.character_save_pose['character_save_pose_column_c'] )
+        self.character_save_pose['character_save_pose_column_b'] = cmds.columnLayout('character_save_pose_column_b', rowSpacing=1,  columnWidth=self.character_child_width, parent=self.character_save_pose['character_save_pose_column_c'] )
         self.character_save_pose['character_save_pose_selected_controller']=cmds.textScrollList('character_save_pose_selected_controller',w=300, h=100, parent=self.character_save_pose['character_save_pose_column_b'])
+        self.character_save_pose['character_save_pose_checkbox_formlayout']=cmds.formLayout('character_save_pose_checkbox_formlayout', h=30,w=300,parent= self.character_save_pose['character_save_pose_column_b'])
+        self.character_save_pose['character_save_pose_checkbox_panLayout']=cmds.paneLayout('character_save_pose_checkbox_panLayout', configuration='vertical2',w=300,parent= self.character_save_pose['character_save_pose_checkbox_formlayout'])
+        self.character_save_pose['character_save_pose_radioCollection']=cmds.radioCollection('character_save_pose_radioCollection')
+        self.character_save_pose['character_save_pose_checkbox_current_namespace']=cmds.radioButton('character_save_pose_checkbox_current_namespace', sl=True, label="Current Namespace", onc=self.save_pose_radioButton_Current_namespace)
+        self.character_save_pose['character_save_pose_checkbox_custom_name']=cmds.radioButton('character_save_pose_checkbox_custom_name',label="Custom Name", onc=self.save_pose_radioButton_custom_namespace)
         self.character_save_pose['charcater_save_pose_separator_d'] =cmds.separator(h=10,st='none')
         self.character_save_pose['character_save_pose_text_a']=cmds.text('character_save_pose_text_a',label='Save Pose',w=300, align='center', parent=self.character_save_pose['character_save_pose_column_b'])
         self.character_save_pose['character_save_pose_text_b']=cmds.text('character_save_pose_text_b',label='Character Name',w=300, align='left', parent=self.character_save_pose['character_save_pose_column_b'])
-        self.character_save_pose['character_save_pose_scroll_c']=cmds.textField('character_save_pose_scroll_c',w=300, h=30, parent=self.character_save_pose['character_save_pose_column_b'])
+        self.character_save_pose['character_save_pose_scroll_c']=cmds.textField('character_save_pose_scroll_c',w=300, h=30,ed=False,  parent=self.character_save_pose['character_save_pose_column_b'])
         self.character_save_pose['character_save_pose_text_c']=cmds.text('character_save_pose_text_c',label='Describe the Pose',w=300, align='left', parent=self.character_save_pose['character_save_pose_column_b'])
         self.character_save_pose['character_save_pose_scroll_b']=cmds.scrollField('character_save_pose_scroll_b',w=300, wordWrap=True,ed=True,h=100, parent=self.character_save_pose['character_save_pose_column_b'])
         self.character_save_pose['charcater_save_pose_separator_b'] =cmds.separator(h=5,st='none')
-        self.character_save_pose['character_save_pose_button_a']=cmds.button('character_save_pose_button_a',w=300, h=40, label='Save Pose', command=self.check_perspective)
-        self.character_save_pose['charcater_save_pose_separator_x'] =cmds.separator(h=5,st='none')
+        self.character_save_pose['character_save_pose_button_a']=cmds.button('character_save_pose_button_a',w=300, h=50, label='Save Pose', command=self.check_perspective, parent=self.character_save_pose['character_save_pose_column_b'])
+        self.character_save_pose['charcater_save_pose_separator_x'] =cmds.separator(h=100,st='none', parent=self.character_save_pose['character_save_pose_column_b'])
 
         cmds.showWindow(self.character_save_pose['character_save_pose_win'])
         self.refresh_save_pose_namespace()
         self.set_name_save_pose()
+
+
+
+    def save_pose_radioButton_Current_namespace(self, *args):
+        cmds.textField('character_save_pose_scroll_c', e=True, ed=False)
+
+
+    def save_pose_radioButton_custom_namespace(self, *args):
+        cmds.textField('character_save_pose_scroll_c', e=True, ed=True)
 
 
     def refresh_save_pose_namespace(self, *args):
@@ -1715,27 +1729,27 @@ class Save_character_pose_UI(Base):
         if len(select_character_main_body_namespace)==0:
             cmds.warning('No Character in Scene')
         else:
-            query_select_character_main_body_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-            character_main_body_list=[str(query_select_character_main_body_namespace)+str(":")+str('head_head_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('head_jaw_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('head_chin_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('spine_hipsA_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('spine_hipsB_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_leg_hip_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_leg_leg_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_leg_ankle_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_leg_knee_fk_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_leg_hip_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_foot_middle_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_up_leg_off_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_down_leg_off_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_leg_off_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_leg_hip_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_leg_leg_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_leg_ankle_fk_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('R_leg_knee_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_leg_hip_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_foot_middle_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_up_leg_off_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('R_down_leg_off_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_leg_off_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('spine_chestA_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('spine_chestB_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('head_neck_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_arm_clavicle_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_arm_shoulder_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_arm_wrist_fk_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_arm_elbow_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_arm_elbow_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_arm_clavicle_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_index_0_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_index_1_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_index_2_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_index_3_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_middle_0_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_middle_1_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_middle_2_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_middle_3_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_ring_0_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_ring_1_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_ring_2_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_ring_3_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_pink_0_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_pink_1_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_pink_2_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_pink_3_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_thumb_0_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_thumb_1_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_thumb_2_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_up_arm_off_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_down_arm_off_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_arm_off_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_arm_clavicle_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_arm_shoulder_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_arm_wrist_fk_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('R_arm_elbow_fk_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_arm_elbow_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_arm_clavicle_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_index_0_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('R_index_1_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_index_2_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_index_3_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_middle_0_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_middle_1_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('R_middle_2_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_middle_3_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_ring_0_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_ring_1_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_ring_2_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('R_ring_3_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_pink_0_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_pink_1_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_pink_2_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_pink_3_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('R_thumb_0_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_thumb_1_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_thumb_2_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_up_arm_off_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_down_arm_off_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('R_arm_off_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_arm_wrist_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_arm_wrist_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('spine_middle1_ctrl'),
-            str(query_select_character_main_body_namespace)+str(":")+str('L_leg_ankle_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('L_leg_knee_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_leg_ankle_ik_ctrl'), str(query_select_character_main_body_namespace)+str(":")+str('R_leg_knee_ik_ctrl')]
+            self.query_select_character_main_body_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
+            character_main_body_list=[str('head_head_ctrl'), str('head_jaw_ctrl'), str('head_chin_ctrl'), str('spine_hipsA_ctrl'), str('spine_hipsB_ctrl'),
+            str('L_leg_hip_fk_ctrl'), str('L_leg_leg_fk_ctrl'), str('L_leg_ankle_fk_ctrl'), str('L_leg_knee_fk_ctrl'),
+            str('L_leg_hip_ik_ctrl'), str('L_foot_middle_ctrl'), str('L_up_leg_off_ctrl'), str('L_down_leg_off_ctrl'),
+            str('L_leg_off_ctrl'), str('R_leg_hip_fk_ctrl'), str('R_leg_leg_fk_ctrl'), str('R_leg_ankle_fk_ctrl'),
+            str('R_leg_knee_fk_ctrl'), str('R_leg_hip_ik_ctrl'), str('R_foot_middle_ctrl'), str('R_up_leg_off_ctrl'),
+            str('R_down_leg_off_ctrl'), str('R_leg_off_ctrl'), str('spine_chestA_ctrl'), str('spine_chestB_ctrl'),
+            str('head_neck_ctrl'), str('L_arm_clavicle_fk_ctrl'), str('L_arm_shoulder_fk_ctrl'), str('L_arm_wrist_fk_ctrl'),
+            str('L_arm_elbow_fk_ctrl'), str('L_arm_elbow_ik_ctrl'), str('L_arm_clavicle_ik_ctrl'), str('L_index_0_ctrl'),
+            str('L_index_1_ctrl'), str('L_index_2_ctrl'), str('L_index_3_ctrl'), str('L_middle_0_ctrl'), str('L_middle_1_ctrl'),
+            str('L_middle_2_ctrl'), str('L_middle_3_ctrl'), str('L_ring_0_ctrl'), str('L_ring_1_ctrl'), str('L_ring_2_ctrl'),
+            str('L_ring_3_ctrl'), str('L_pink_0_ctrl'), str('L_pink_1_ctrl'), str('L_pink_2_ctrl'), str('L_pink_3_ctrl'),
+            str('L_thumb_0_ctrl'), str('L_thumb_1_ctrl'), str('L_thumb_2_ctrl'), str('L_up_arm_off_ctrl'), str('L_down_arm_off_ctrl'),
+            str('L_arm_off_ctrl'), str('R_arm_clavicle_fk_ctrl'), str('R_arm_shoulder_fk_ctrl'), str('R_arm_wrist_fk_ctrl'),
+            str('R_arm_elbow_fk_ctrl'), str('R_arm_elbow_ik_ctrl'), str('R_arm_clavicle_ik_ctrl'), str('R_index_0_ctrl'),
+            str('R_index_1_ctrl'), str('R_index_2_ctrl'), str('R_index_3_ctrl'), str('R_middle_0_ctrl'), str('R_middle_1_ctrl'),
+            str('R_middle_2_ctrl'), str('R_middle_3_ctrl'), str('R_ring_0_ctrl'), str('R_ring_1_ctrl'), str('R_ring_2_ctrl'),
+            str('R_ring_3_ctrl'), str('R_pink_0_ctrl'), str('R_pink_1_ctrl'), str('R_pink_2_ctrl'), str('R_pink_3_ctrl'),
+            str('R_thumb_0_ctrl'), str('R_thumb_1_ctrl'), str('R_thumb_2_ctrl'), str('R_up_arm_off_ctrl'), str('R_down_arm_off_ctrl'),
+            str('R_arm_off_ctrl'), str('L_arm_wrist_ik_ctrl'), str('R_arm_wrist_ik_ctrl'), str('spine_middle1_ctrl'),
+            str('L_leg_ankle_ik_ctrl'), str('L_leg_knee_ik_ctrl'), str('R_leg_ankle_ik_ctrl'), str('R_leg_knee_ik_ctrl')]
 
             cmds.textScrollList('character_save_pose_selected_controller',e=True,ra=True)
             for a in character_main_body_list:
@@ -1760,9 +1774,9 @@ class Save_character_pose_UI(Base):
         self.query_character_name = cmds.textField('character_save_pose_scroll_c', text=True, query=True)
         self.query_pose_describe = cmds.scrollField('character_save_pose_scroll_b', text=True, query=True)
         self.query_selected_body_part = cmds.textScrollList('character_save_pose_selected_controller', q=True, ai=True)
-        print (self.query_selected_body_part)
-        print (self.query_character_name)
-        print (self.query_pose_describe)
+        # print (self.query_selected_body_part)
+        # print (self.query_character_name)
+        # print (self.query_pose_describe)
         self.save_pose()
         self.save_pose_screen_save()
         self.delete_window('character_save_pose_window')
@@ -1777,8 +1791,13 @@ class Save_character_pose_UI(Base):
 
         # grab all visible objects, which type is transform
         selection = self.query_selected_body_part
+        selection_b=[]
+        for member_b in selection:
+            new_member=str(self.query_select_character_main_body_namespace)+str(":")+str(member_b)
+            selection_b.append(new_member)
+        print selection_b
 
-        for member in selection:
+        for member in selection_b:
             nodeName = member #    Fix Later
 
             # XML create object element
@@ -1813,7 +1832,7 @@ class Save_character_pose_UI(Base):
 
 
 class Load_character_pose_UI(Base):
-    def __init__(self, character_load_parent_width = 320, character_load_parent_height = 580, character_load_child_width = 315, character_load_child_height = 465):
+    def __init__(self, character_load_parent_width = 320, character_load_parent_height =600, character_load_child_width = 315, character_load_child_height = 465):
 
         super(Load_character_pose_UI, self).__init__()
         self.delete_window('character_load_pose_window')
@@ -1843,19 +1862,33 @@ class Load_character_pose_UI(Base):
         load_image_path= cmds.internalVar(upd=False)+ "Y:/Production/rnd/ahosseini/helga_save_pose/helga_save_pose_image/" + "main_image_load.jpg"
         self.character_load_pose['laod_image_area_a'] = cmds.image('laod_image_area_a', w=300, h=180, image=load_image_path, parent=self.character_load_pose['character_load_pose_column_a'] )
         self.character_load_pose['character_save_pose_paneLayout']=cmds.paneLayout( 'character_save_pose_paneLayout', configuration='quad' , h=50)
-        self.character_load_pose['character_load_text_c']=cmds.text('character_load_text_c', h=20, label="Character", align='center')
-        self.character_load_pose['character_load_text_d']=cmds.text('character_load_text_d', h=20, label="Describe", align='left')
+        self.character_load_pose['character_load_text_c']=cmds.text('character_load_text_c', h=20, label="Select Character", align='center')
+        self.character_load_pose['character_select_optionMenu']=cmds.optionMenu('character_select_optionMenu', label="", parent=self.character_load_pose['character_save_pose_paneLayout'])
 
+        #self.character_load_pose['character_load_text_d']=cmds.text('character_load_text_d', h=20, label="Describe", align='left')
         self.character_load_pose['character_load_text_f']=cmds.text('character_load_text_f', h=20, label="Date", align='left')
         self.character_load_pose['character_load_text_g']=cmds.text('character_load_text_g', h=20, label="Artist", align='center')
-
-
         self.character_load_pose['separator_g'] = cmds.separator(h=7, vis=True, st='none')
         self.character_load_pose['character_load_pose_button_a'] = cmds.button('character_load_pose_button_a', label='Load Pose', h=50, command=self.load_pose, parent=self.character_load_pose['character_load_pose_column_a'])
 
         self.load_saved_poses()
         self.refresh_load_pose_namespace()
+        self.character_load_pose_namespace()
         cmds.showWindow(self.character_load_pose['character_load_pose_win'])
+
+
+    def character_load_pose_namespace(self, *args):
+        character_namespace_list = pm.system.listNamespaces()
+        character_namespace_menuItem=cmds.optionMenu('character_select_optionMenu', q=True, itemListLong=True)
+        # if ulfbert_namespace_menuItem:
+        #     cmds.deleteUI(ulfbert_namespace_menuItem)
+        for self.namespace_laod in character_namespace_list:
+            cmds.menuItem(label=self.namespace_laod, parent=self.character_load_pose['character_select_optionMenu'])
+
+
+
+
+
 
     def change_saved_image(self, *args):
         query_selected_pose = cmds.textScrollList('character_load_saved_pose', si=True, q=True)
@@ -1864,21 +1897,23 @@ class Load_character_pose_UI(Base):
         split_first_member = self.set_first_member.split(".")[0]
         # print split_first_member
         cmds.image('laod_image_area_a', e=True, image="Y:/Production/rnd/ahosseini/helga_save_pose/helga_save_pose_image/"+split_first_member+ ".jpg")
-        split_spl_first_member=split_first_member.split("_")[0]
-        split_spl_first_member_b=split_first_member.split("_")[1]
-        split_spl_third_member_f=split_first_member.split("_")[2]
-        split_spl_fourth_member_g=split_first_member.split("_")[3]
+        # split_spl_first_member=split_first_member.split("_")[0]
+        # split_spl_first_member_b=split_first_member.split("_")[1]
+        # split_spl_third_member_f=split_first_member.split("_")[2]
+        # split_spl_fourth_member_g=split_first_member.split("_")[3]
+        # split_spl_fourth_member_h=split_first_member.split("_")[4]
 
 
-        change_saved_pose_label_name=split_spl_first_member
-        change_saved_pose_label_name_b=split_spl_first_member_b
-        change_saved_pose_label_name_f=split_spl_third_member_f
-        change_saved_pose_label_name_g=split_spl_fourth_member_g
+        # self.change_saved_pose_label_name=split_spl_first_member
+        # self.change_saved_pose_label_name_b=split_spl_first_member_b
+        # change_saved_pose_label_name_f=split_spl_third_member_f
+        # change_saved_pose_label_name_g=split_spl_fourth_member_g
 
-        cmds.text('character_load_text_c', e=True, label=change_saved_pose_label_name)
-        cmds.text('character_load_text_d', e=True, label=change_saved_pose_label_name_b)
-        cmds.text('character_load_text_f', e=True, label=change_saved_pose_label_name_f)
-        cmds.text('character_load_text_g', e=True, label=change_saved_pose_label_name_g)
+        # cmds.text('character_load_text_c', e=True, label=self.change_saved_pose_label_name+"_"+self.change_saved_pose_label_name_b)
+        # cmds.text('character_load_text_d', e=True, label=change_saved_pose_label_name_f)
+        # cmds.text('character_load_text_f', e=True, label=split_spl_fourth_member_h)
+        # cmds.text('character_load_text_g', e=True, label=change_saved_pose_label_name_g)
+        # self.load_pose_match()
 
 
     def refresh_load_pose_namespace(self, *args):
@@ -1893,11 +1928,42 @@ class Load_character_pose_UI(Base):
             cmds.warning("No Namespace selected or in Scene!")
 
 
+    def load_pose_match(self, *args):
+        #if namespace exitst
+
+
+        query_laod_pose_namespace=cmds.text('character_save_pose_a_x', q=True, label=True)
+        replace_laod_pose_namespace=query_laod_pose_namespace.replace(":", "")
+        split_laod_pose_namespace=replace_laod_pose_namespace.split("_")
+
+        split_laod_pose_namespace_a=split_laod_pose_namespace[0]
+        print split_laod_pose_namespace_a
+        split_laod_pose_namespace_b=split_laod_pose_namespace[1]
+        print split_laod_pose_namespace_b
+
+        # print
+        # print
+        # print
+        # print self.change_saved_pose_label_name
+        # Color feedback bei main refresh
+        # match or not match per warning or own warning area
+        # laod pose button > color feedback /label feedback
+
+
+        if split_laod_pose_namespace_a==self.change_saved_pose_label_name:
+            if split_laod_pose_namespace_b==self.change_saved_pose_label_name_b:
+                cmds.text('character_load_text_c', e=True, bgc=Color.green_a)
+            else:
+                cmds.text('character_load_text_c', e=True, bgc=Color.red)
+        else:
+            cmds.text('character_load_text_c', e=True, bgc=Color.red)
+
+
 
     def load_saved_poses(self, *args):
         cmds.textScrollList('character_load_saved_pose', e=True, ra=True)
         pose_libary_path = ("Y:/Production/rnd/ahosseini/helga_save_pose/")
-        load_file_path = os.listdir(pose_libary_path)   
+        load_file_path = os.listdir(pose_libary_path)
         # print load_file_path
         for pose in load_file_path:
             if pose.rpartition(".")[2]=="xml":
@@ -1915,8 +1981,6 @@ class Load_character_pose_UI(Base):
             for attrName in cmds.listAttr(nodeName, k=True):
                 self.setValue(nodeName, attrName, node)
                 cmds.warning('selected Pose loaded')
-
-
 
 
 

@@ -38,6 +38,32 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
+        -annotation "Directory Wizard" 
+        -enableBackground 0
+        -align "center" 
+        -label "directory_wizard" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDirectoryWizard.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDirectoryWizard.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "from helga.general.directory_wizard import directory_wizard\nreload(directory_wizard)\n\ndirectory_wizard.run()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
         -annotation "User Script" 
         -enableBackground 0
         -align "center" 

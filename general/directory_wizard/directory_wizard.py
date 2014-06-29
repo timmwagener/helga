@@ -266,6 +266,22 @@ class DirectoryWizard(QtGui.QWidget):
 
         #set header label
         self.lbl_header_text.setText(self.title)
+
+
+
+        #Button tooltips
+        #------------------------------------------------------------------
+        
+        #btn_create_character_directories
+        self.btn_create_character_directories.setToolTip(directory_creator.CharacterDirectoryCreator('character', '').get_directories_string())
+        #btn_create_prop_directories
+        self.btn_create_prop_directories.setToolTip(directory_creator.PropDirectoryCreator('prop', '').get_directories_string())
+        #btn_create_shot_directories
+        self.btn_create_shot_directories.setToolTip(directory_creator.ShotDirectoryCreator('shot', '').get_directories_string())
+        #btn_create_comp_directories
+        self.btn_create_comp_directories.setToolTip(directory_creator.CompDirectoryCreator('comp', '').get_directories_string())
+        #btn_create_photoscan_directories
+        self.btn_create_photoscan_directories.setToolTip(directory_creator.PhotoscanDirectoryCreator('photoscan', '').get_directories_string())
         
 
         

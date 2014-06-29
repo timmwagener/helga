@@ -161,6 +161,56 @@ class DirectoryCreator(object):
         return self.directory_type
 
 
+    #get_directories_string
+    def get_directories_string(self, name_list = None, tabs = ''):
+        """
+            Return string representation of directory_list
+        """
+
+        #name_list None
+        if (name_list is None):
+            name_list = [self.asset_name, self.directory_list]
+
+
+        #directories_string
+        directories_string = ''
+
+        
+        #iterate name_list
+        for index, name_entry in enumerate(name_list):
+
+            #if directory_entry is string
+            if(isinstance(name_entry, str)):
+                
+                #name_entry_string
+                if(tabs):
+                    name_entry_string = '\n' +tabs +'/' + name_entry
+                else:
+                    #first entry
+                    if(name_entry == self.asset_name):
+                        
+                        #name_entry_header
+                        name_entry_header = '-----------------------------------------------'
+                        name_entry_header += '\nDirectories: {0}'.format(self.get_directory_type())
+                        name_entry_header += '\n-----------------------------------------------\n\n'
+                        
+                        #name_entry_string
+                        name_entry_string = name_entry_header +'/' + name_entry
+                    
+                
+                #add
+                directories_string += name_entry_string
+        
+            #if directory_entry is list recurse
+            elif(isinstance(name_entry, list)):
+
+                #get_directories_string
+                directories_string += self.get_directories_string(name_entry, tabs + '    ')
+
+
+        return directories_string
+
+
 
 
 #CharacterDirectoryCreator class
@@ -320,6 +370,7 @@ class PhotoscanDirectoryCreator(DirectoryCreator):
 
 if (__name__ == '__main__'):
 
+    
     #test_root_dir
     test_root_dir = 'c:/symlinks/temp/directory_creator_test'
     #test_prop_asset_name
@@ -327,6 +378,7 @@ if (__name__ == '__main__'):
     #test_photoscan_asset_name
     test_photoscan_asset_name = 'stairs_horizontal'
 
+    '''
     #divider
     global_functions.divider()
 
@@ -334,13 +386,14 @@ if (__name__ == '__main__'):
     prop_directory_creator = PropDirectoryCreator(test_prop_asset_name, test_root_dir)
     prop_directory_creator.create_directories()
     print('Asset directory: {0}'.format(prop_directory_creator.get_asset_directory()))
-        
+    
+    '''
+
     #divider
     global_functions.divider()
 
     #photoscan_directory_creator
-    photoscan_directory_creator = PhotoscanDirectoryCreator(test_photoscan_asset_name, test_root_dir)
-    photoscan_directory_creator.create_directories()
-    print('Asset directory: {0}'.format(photoscan_directory_creator.get_asset_directory()))    
-        
-
+    photoscan_directory_creator = PropDirectoryCreator(test_photoscan_asset_name, test_root_dir)
+    print('Asset directory: {0}'.format(photoscan_directory_creator.get_asset_directory()))
+    #print directories string
+    print(photoscan_directory_creator.get_directories_string())

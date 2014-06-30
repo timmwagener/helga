@@ -1,0 +1,3 @@
+[submodule "nuke/setup/plugins/LumaNukeGizmos"]
+	path = nuke/setup/plugins/LumaNukeGizmos
+	url = https://github.com/LumaPictures/LumaNukeGizmos.git

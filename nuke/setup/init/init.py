@@ -355,6 +355,32 @@ except:
 
 
 
+#Custom gizmo pathes
+#------------------------------------------------------------------
+try:
+
+    #custom_gizmo_pathes_list
+    custom_gizmo_pathes_list = [global_variables.NUKE_PLUGIN_PATH + r'/nuke.env/gizmos']
+
+    #iterate and append
+    for gizmo_path in custom_gizmo_pathes_list:
+        nuke.pluginAppendPath(gizmo_path)
+
+    #SuccessMsg
+    print('Successfully added custom gizmo pathes')
+    
+except:
+    
+    #FailMsg
+    print('Error adding custom gizmo pathes')
+
+
+
+
+
+
+
+
 
 #Check init position
 #------------------------------------------------------------------

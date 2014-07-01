@@ -44,17 +44,7 @@ if(do_reload): reload(directory_wizard)
 
 
 
-#Globals
-#------------------------------------------------------------------
-SCRIPTS_ROOT_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy'
-ICONS_PATH = SCRIPTS_ROOT_PATH + r'/helga/nuke/setup/icons/'
 
-
-
-
-
-#Methods
-#------------------------------------------------------------------
 
 
 
@@ -70,7 +60,7 @@ ICONS_PATH = SCRIPTS_ROOT_PATH + r'/helga/nuke/setup/icons/'
 
 try:
     #Main Menubar
-    helga_main_menu = nuke.menu('Nodes').addMenu('Helga', icon= ICONS_PATH + r'iconHelgaMenuMain.png' )
+    helga_main_menu = nuke.menu('Nodes').addMenu('Helga', icon= global_variables.NUKE_ICONS_PATH + r'iconHelgaMenuMain.png' )
 
 
     
@@ -173,7 +163,7 @@ try:
     display_type = nuke.IMAGE | nuke.SCRIPT | nuke.GEO | nuke.FONT | nuke.PYTHON
 
     #favorite_icon
-    favorite_icon = ICONS_PATH + r'iconHelgaMenuMain.png'
+    favorite_icon = global_variables.NUKE_ICONS_PATH + r'iconHelgaMenuMain.png'
     
     #favorite_dict
     favorite_dict = {'helga_assets':['helga_assets', r'//bigfoot/grimmhelga/Production/3d/maya/scenes/assets/', display_type, favorite_icon],
@@ -210,7 +200,22 @@ except:
     
     
 
+#LumaNukeGizmos startup procedure
+#------------------------------------------------------------------
 
+try:
+    if __name__ == '__main__':
+        gizManager = globals().get('gizManager', None)
+        if gizManager is None:
+            print 'Problem finding GizmoPathManager - check that init.py was setup correctly'
+        else:
+            gizManager.addGizmoMenuItems()
+            del gizManager
 
-
-
+    #SuccessMsg
+    nuke.tprint('Successfully added LumaNukeGizmo menu items')
+    
+except:
+    
+    #FailMsg
+    nuke.tprint('Error adding LumaNukeGizmo menu items')

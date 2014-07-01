@@ -71,10 +71,17 @@ PHOTOSCAN_DIRECTORY_LIST = ['photos', 'masks', 'nuke', 'photoscan', ['out'], 'te
 
 #Nuke
 #----------------------------------------------------
+NUKE_INIT_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/nuke/setup/init/'
+"""Default nuke init path"""
+
+NUKE_MENU_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/nuke/setup/menu/'
+"""Default nuke menu path"""
+
 NUKE_ICONS_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/nuke/setup/icons/'
 """Default nuke icons path"""
 
-
+NUKE_PLUGIN_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/nuke/setup/plugins'
+"""Default nuke plugin path"""
 
 
 

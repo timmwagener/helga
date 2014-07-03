@@ -17,11 +17,12 @@
 #python
 import sys
 import os
+import functools
 
 #nuke
 import nuke
 from nukescripts import panels
-import functools
+
 
 
 #Reload Bool
@@ -36,6 +37,10 @@ if(do_reload): reload(sceneReconstructVRay)
 from helga.general.setup.global_variables import global_variables
 if(do_reload): reload(global_variables)
 
+#global_functions
+from helga.general.setup.global_functions import global_functions
+if(do_reload):reload(global_functions)
+
 from helga.general.setup.doc_link import doc_link
 if(do_reload): reload(doc_link)
 
@@ -49,9 +54,18 @@ if(do_reload): reload(directory_wizard)
 
 
 
+#menu Globals
+#------------------------------------------------------------------
 
+#Assign all global variables to only use local ones later on
+PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH
+NUKE_ICONS_PATH = global_variables.NUKE_ICONS_PATH
+NUKE_PLUGIN_PATH = global_variables.NUKE_PLUGIN_PATH
 
-
+PIPELINE_ASSETS_PATH = global_variables.PIPELINE_ASSETS_PATH
+PIPELINE_SHOTS_PATH = global_variables.PIPELINE_SHOTS_PATH
+PIPELINE_WORK_PROPS_PATH = global_variables.PIPELINE_WORK_PROPS_PATH
+PIPELINE_RND_PATH = global_variables.PIPELINE_RND_PATH
 
 
 
@@ -79,13 +93,13 @@ try:
     display_type = nuke.IMAGE | nuke.SCRIPT | nuke.GEO | nuke.FONT | nuke.PYTHON
 
     #favorite_icon
-    favorite_icon = global_variables.NUKE_ICONS_PATH + r'iconHelgaMenuMain.png'
+    favorite_icon = NUKE_ICONS_PATH + r'iconHelgaMenuMain.png'
     
     #favorite_dict
-    favorite_dict = {'helga_assets':['helga_assets', r'//bigfoot/grimmhelga/Production/3d/maya/scenes/assets/', display_type, favorite_icon],
-    'helga_shots':['helga_shots', r'//bigfoot/grimmhelga/Production/3d/maya/scenes/shots/', display_type, favorite_icon],
-    'helga_props':['helga_props', r'//bigfoot/grimmhelga/Production/3d/maya/scenes/assets/work/props', display_type, favorite_icon],
-    'helga_rnd':['helga_rnd', r'//bigfoot/grimmhelga/Production/rnd/', display_type, favorite_icon]
+    favorite_dict = {'helga_assets':['helga_assets', PIPELINE_ASSETS_PATH, display_type, favorite_icon],
+    'helga_shots':['helga_shots', PIPELINE_SHOTS_PATH, display_type, favorite_icon],
+    'helga_props':['helga_props', PIPELINE_WORK_PROPS_PATH, display_type, favorite_icon],
+    'helga_rnd':['helga_rnd', PIPELINE_RND_PATH, display_type, favorite_icon]
     }
 
     #iterate and set
@@ -117,7 +131,7 @@ except:
 
 try:
     #Main Menubar
-    helga_main_menu = nuke.menu('Nodes').addMenu('Helga', icon= global_variables.NUKE_ICONS_PATH + r'iconHelgaMenuMain.png' )
+    helga_main_menu = nuke.menu('Nodes').addMenu('Helga', icon= NUKE_ICONS_PATH + r'iconHelgaMenuMain.png' )
 
 
 
@@ -205,7 +219,7 @@ try:
     #------------------------------------------------------------------
 
     #LUMA_NUKE_GIZMO_BASE_PATH
-    LUMA_NUKE_GIZMO_BASE_PATH = global_variables.NUKE_PLUGIN_PATH + r'/LumaNukeGizmos/Gizmos'
+    LUMA_NUKE_GIZMO_BASE_PATH = NUKE_PLUGIN_PATH + r'/LumaNukeGizmos/Gizmos'
 
     #luma_nuke_gizmos_menu
     luma_nuke_gizmos_menu = third_party_gizmos_menu.addMenu('LumaNukeGizmos')
@@ -258,7 +272,7 @@ try:
     #------------------------------------------------------------------
 
     #NUKE_ENV_GIZMO_PATH
-    NUKE_ENV_GIZMO_PATH = global_variables.NUKE_PLUGIN_PATH + r'/nuke.env/gizmos'
+    NUKE_ENV_GIZMO_PATH = NUKE_PLUGIN_PATH + r'/nuke.env/gizmos'
 
     #nuke_env_menu
     nuke_env_menu = third_party_gizmos_menu.addMenu('nuke.env')

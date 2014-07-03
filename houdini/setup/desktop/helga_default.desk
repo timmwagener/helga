@@ -1,0 +1,62 @@
+fullscreen   -1
+playbarshown 1
+playbar      -1
+shelf        -1
+menubar      -1
+statusbar    -1
+root {
+    split 0.677215 H {
+        tabs 0 1 {
+            pane panetab1 -a 0 -l 10 -H /obj/ -T OBJ -m sceneview
+            pane panetab2 -a 0 -l 10 -H /obj/ -T OBJ -m chaneditor
+            pane panetab3 -a 0 -l 10 -H /obj/ -T OBJ -m iprviewer
+            pane panetab4 -a 0 -l 10 -H /img/comp1/ -T COP2 -m imageview
+            pane panetab13 -a 0 -l 10 -H /ch/ -T CHOPNET -m channelview
+            pane panetab11 -a 0 -l 10 -H /obj/ -T OBJ -m details
+        }
+        split 0.494624 V {
+            tabs 0 1 {
+                pane panetab5 -a 0 -l 10 -H /obj/ -T OBJ -m parmeditor
+                pane panetab6 -a 0 -l 10 -H /obj/ -T OBJ -m takelist
+                pane panetab12 -a 0 -l 0 -H /obj/ -T OBJ -m perfmon
+            }
+            tabs 0 1 {
+                pane panetab7 -a 0 -l 10 -H /obj/ -T OBJ -m neteditor
+                pane panetab8 -a 0 -l 0 -H /obj/ -T OBJ -m treecontrol
+                pane panetab9 -a 0 -l 10 -H /obj/ -T OBJ -m materialpalette
+                pane panetab10 -a 0 -l 0 -H /obj/ -T OBJ -m assetbrowser
+            }
+        }
+    }
+}
+shelfdock -o 1 -l icon_and_text -G "0.40 0.50 0.50" add shelf_set_1 shelf_set_2 helga_shelf_set0
+viewerstow -x open -b stow -l stow -m hide -c hide -d open helga_default2.panetab1.world
+vieweroption -a 2 helga_default2.panetab1.world
+viewlayout -s 2 helga_default2.panetab1.world
+viewtype -t ortho_right helga_default2.panetab1.world.`vpname("helga_default2.panetab1.world",4)`
+viewtype -t ortho_front helga_default2.panetab1.world.`vpname("helga_default2.panetab1.world",3)`
+viewtype -t ortho_top helga_default2.panetab1.world.`vpname("helga_default2.panetab1.world",1)`
+viewtype -t perspective helga_default2.panetab1.world.`vpname("helga_default2.panetab1.world",2)`
+iprview -t 0.1 -l 0 -e 1  panetab3
+chopview -a 0 -c "" -k 1 -m 1 -b 1 -e 1 -f 0 -g 0 -H 1 -i 0 -j 1 -l 0 -n 1 -V 0 -y 0 -B 0 -s 0 -S 0.034375 -u 0 -v 0 -h -10 310 -r -1.5 1.5 panetab13
+parmeditor -T 0.25 -w 0 panetab5
+takelist -w 1 -G 0.5 panetab6
+performance -c on -d on -f on -g off -k on -m off -n on -o on -t off -v on -y on -u on -e off -r absolute -w tree panetab12
+neteditor -G 0.75 -T 0.375 -K 0.3 -p 0 -c 0 -o 0 -n 1 -s 3 -x 0 -w 0 -k 0 -I 0 -B 1 -D 1 -L 1 -P 1 -S user -t comments subnet none -g 0 -a 0 -y 0.5 -m e -r 2 1 -N 1 -H 0.22 -V 0.22 panetab7
+netviewdep -l 0 -c 0 -C 0 -e 0 -E 0 -b 0 -S 0 -s 3 -t 0 panetab7
+netcolumns -c display,xray,select,origin,capture,bone -n OBJ panetab7
+netcolumns -c display,render,template,selectabletemplate,highlight,unload,bypass,lock -n SOP panetab7
+netcolumns -c delscript,comment -n PART panetab7
+netcolumns -c display,render,template,bypass -n POP panetab7
+netcolumns -c delscript,comment -n CHOPNET panetab7
+netcolumns -c display,export,audio,bypass,lock -n CHOP panetab7
+netcolumns -c startrender,bypass,lock -n ROP panetab7
+netcolumns -c delscript,comment -n SHOP panetab7
+netcolumns -c display,render,template,bypass -n COP2 panetab7
+netcolumns -c delscript,comment -n IMG panetab7
+netcolumns -c delscript,comment,input -n VOP panetab7
+netcolumns -c delscript,comment -n VOPNET panetab7
+netcolumns -c delscript,comment -n DOP panetab7
+netcolumns -c delscript,comment -n MGR panetab7
+netcolumns -c delscript,comment -n DIR panetab7
+treecontrol -a 0 -i 1 -f 0 -O 0 -S 0 -D 0 -P 0 -H 0 -V 0 -C 0 -I 0 -R 0 panetab8

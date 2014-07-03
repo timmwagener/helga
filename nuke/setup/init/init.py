@@ -50,6 +50,9 @@ do_reload = True
 from helga.general.setup.global_variables import global_variables
 if(do_reload):reload(global_variables)
 
+#global_functions
+from helga.general.setup.global_functions import global_functions
+if(do_reload):reload(global_functions)
 
 
 
@@ -60,34 +63,17 @@ if(do_reload):reload(global_variables)
 
 
 
-
-
-#Methods
+#init Globals
 #------------------------------------------------------------------
 
-#get_user
-def get_user():
-    return os.environ.get('USERNAME')
+#Assign all global variables to only use local ones later on
+PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH
+NUKE_INIT_PATH = global_variables.NUKE_INIT_PATH
+NUKE_MENU_PATH = global_variables.NUKE_MENU_PATH
+NUKE_ICONS_PATH = global_variables.NUKE_ICONS_PATH
+NUKE_PLUGIN_PATH = global_variables.NUKE_PLUGIN_PATH
 
 
-#get_user_setup_destination_dir
-def get_user_setup_destination_dir():
-    
-    path_start = 'C:/Users/'
-    username = get_user()
-    path_end = '/.nuke'
-    
-    return path_start + username + path_end
-
-
-#copy_file
-def copy_file(source_file, source_dir, destination_dir):
-    
-    source = source_dir + '/' +source_file
-    
-    shutil.copy(source, destination_dir)
-
-    
 
 
 
@@ -107,12 +93,12 @@ def copy_file(source_file, source_dir, destination_dir):
 #------------------------------------------------------------------
 
 try:
-    source_user_setup_dir = global_variables.NUKE_INIT_PATH
+    source_user_setup_dir = NUKE_INIT_PATH
     source_user_setup_file = 'init.py'
 
-    user_setup_destination_dir = get_user_setup_destination_dir()
+    user_setup_destination_dir = global_functions.get_user_setup_destination_dir('nuke')
 
-    copy_file(source_user_setup_file, source_user_setup_dir, user_setup_destination_dir)
+    global_functions.copy_file(source_user_setup_file, source_user_setup_dir, user_setup_destination_dir)
 
     #SuccessMsg
     print('Successfully copied init.py')
@@ -130,12 +116,12 @@ except:
 #------------------------------------------------------------------
 
 try:
-    source_user_setup_dir = global_variables.NUKE_MENU_PATH
+    source_user_setup_dir = NUKE_MENU_PATH
     source_user_setup_file = 'menu.py'
 
-    user_setup_destination_dir = get_user_setup_destination_dir()
+    user_setup_destination_dir = global_functions.get_user_setup_destination_dir('nuke')
 
-    copy_file(source_user_setup_file, source_user_setup_dir, user_setup_destination_dir)
+    global_functions.copy_file(source_user_setup_file, source_user_setup_dir, user_setup_destination_dir)
 
     #SuccessMsg
     print('Successfully copied menu.py')
@@ -160,7 +146,7 @@ except:
 #Set plugins and scripts path
 #------------------------------------------------------------------
 try:
-    plugin_path_list = [global_variables.PIPELINE_SCRIPTS_BASE_PATH, global_variables.NUKE_PLUGIN_PATH]
+    plugin_path_list = [PIPELINE_SCRIPTS_BASE_PATH, NUKE_PLUGIN_PATH]
     
     for plugin_path in plugin_path_list:
         nuke.pluginAppendPath(plugin_path)
@@ -192,7 +178,7 @@ try:
     # without the need to define any environment variables. Note that if this is
     # defined and points to an existing directory, other possible search locations
     # will be ignored, unless the `__main__` entry point code is modified below.
-    CUSTOM_GIZMO_LOCATION = global_variables.NUKE_PLUGIN_PATH + r'/LumaNukeGizmos/Gizmos'
+    CUSTOM_GIZMO_LOCATION = NUKE_PLUGIN_PATH + r'/LumaNukeGizmos/Gizmos'
 
 
     class GizmoPathManager(object):
@@ -360,7 +346,7 @@ except:
 try:
 
     #custom_gizmo_pathes_list
-    custom_gizmo_pathes_list = [global_variables.NUKE_PLUGIN_PATH + r'/nuke.env/gizmos']
+    custom_gizmo_pathes_list = [NUKE_PLUGIN_PATH + r'/nuke.env/gizmos']
 
     #iterate and append
     for gizmo_path in custom_gizmo_pathes_list:

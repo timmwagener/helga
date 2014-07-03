@@ -1509,7 +1509,7 @@ class Ulfbert_hand_UI(Base):
 
 
 class Save_character_pose_UI(Base):
-    def __init__(self, character_parent_width = 320, character_parent_height = 540, character_child_width = 505, character_child_height = 295):
+    def __init__(self, character_parent_width = 320, character_parent_height = 560, character_child_width = 505, character_child_height = 295):
 
         super(Save_character_pose_UI, self).__init__()
         self.delete_window('character_save_pose_window')
@@ -1560,7 +1560,9 @@ class Save_character_pose_UI(Base):
         self.character_save_pose['character_save_pose_scroll_b']=cmds.scrollField('character_save_pose_scroll_b',w=300, wordWrap=True,ed=True,h=100, parent=self.character_save_pose['character_save_pose_column_b'])
         self.character_save_pose['charcater_save_pose_separator_b'] =cmds.separator(h=5,st='none')
         self.character_save_pose['character_save_pose_button_a']=cmds.button('character_save_pose_button_a',w=300, h=50, label='Save Pose', command=self.check_perspective, parent=self.character_save_pose['character_save_pose_column_b'])
-        self.character_save_pose['charcater_save_pose_separator_x'] =cmds.separator(h=100,st='none', parent=self.character_save_pose['character_save_pose_column_b'])
+        self.character_save_pose['charcater_save_pose_separator_x'] =cmds.separator(h=2,st='none', parent=self.character_save_pose['character_save_pose_column_b'])
+        self.character_save_pose['character_save_pose_progressbar'] = cmds.progressBar('character_save_pose_progressbar', maxValue=100, w=300, parent=self.character_save_pose['character_save_pose_column_b'])
+        self.character_save_pose['charcater_save_pose_separator_x_x'] =cmds.separator(h=10,st='none', parent=self.character_save_pose['character_save_pose_column_b'])
 
         cmds.showWindow(self.character_save_pose['character_save_pose_win'])
         self.refresh_save_pose_namespace()
@@ -1604,6 +1606,7 @@ class Save_character_pose_UI(Base):
             # Info Popup
             if cmds.window("check_perspective", exists=True):
                 cmds.deleteUI("check_perspective")
+            cmds.progressBar('character_save_pose_progressbar', edit=True, step=50)
             cmds.window("check_perspective",title="Check Perspektive",mnb=True, mxb=False,w=300,h=150,sizeable=False)
             cmds.columnLayout(w = 250, h=160, columnAttach=('both', 20), rowSpacing=5, columnWidth=250)
             cmds.separator(h=5,vis=True, st='none')
@@ -1772,11 +1775,9 @@ class Save_character_pose_UI(Base):
         self.query_character_name = cmds.textField('character_save_pose_scroll_c', text=True, query=True)
         self.query_pose_describe = cmds.scrollField('character_save_pose_scroll_b', text=True, query=True)
         self.query_selected_body_part = cmds.textScrollList('character_save_pose_selected_controller', q=True, ai=True)
-        # print (self.query_selected_body_part)
-        # print (self.query_character_name)
-        # print (self.query_pose_describe)
         self.save_pose()
         self.save_pose_screen_save()
+        cmds.progressBar('character_save_pose_progressbar', edit=True, progress=100)
         self.delete_window('character_save_pose_window')
 
 
@@ -1808,7 +1809,7 @@ class Save_character_pose_UI(Base):
             # set attributes
             for attrName in cmds.listAttr(nodeName, k=True):
                 self.saveValue(nodeName, attrName, object_node)
-                cmds.warning('Pose successful saved')
+        cmds.warning('Pose successful saved')
 
         now_character_save_pose = time.localtime(time.time())
         self.current_time_character_save_pose = time.strftime("%a, %d %m %y", now_character_save_pose)
@@ -1816,6 +1817,7 @@ class Save_character_pose_UI(Base):
         xml_file = open("Y:/Production/rnd/ahosseini/helga_save_pose/"+self.query_character_name+"_"+self.query_pose_describe+"_"+self.character_save_pose_get_user+"_"+self.current_time_character_save_pose+".xml" , "w")
         xml_file.write(doc.toprettyxml())
         xml_file.close()
+
 
 
     def save_pose_screen_save(self, *args):
@@ -1830,7 +1832,7 @@ class Save_character_pose_UI(Base):
 
 
 class Load_character_pose_UI(Base):
-    def __init__(self, character_load_parent_width = 320, character_load_parent_height =640, character_load_child_width = 315, character_load_child_height = 465):
+    def __init__(self, character_load_parent_width = 320, character_load_parent_height =660, character_load_child_width = 315, character_load_child_height = 465):
 
         super(Load_character_pose_UI, self).__init__()
         self.delete_window('character_load_pose_window')
@@ -1868,7 +1870,10 @@ class Load_character_pose_UI(Base):
         self.character_load_pose['character_load_text_f']=cmds.text('character_load_text_f', h=20, label="Date", align='left')
         self.character_load_pose['character_load_text_g']=cmds.text('character_load_text_g', h=20, label="Artist", align='center')
         self.character_load_pose['character_load_pose_separator_j'] = cmds.separator(h=7, vis=True, st='in')
+
         self.character_load_pose['character_load_pose_button_a'] = cmds.button('character_load_pose_button_a', label='Load Pose', h=50, command=self.load_pose, parent=self.character_load_pose['character_load_pose_column_a'])
+        self.character_load_pose['character_load_pose_separator_k'] = cmds.separator(h=5, vis=True, st='in')
+        self.character_load_pose['character_load_pose_progressbar'] = cmds.progressBar('character_load_pose_progressbar', maxValue=100, w=300, parent=self.character_load_pose['character_load_pose_column_a'])
 
         self.load_saved_poses()
         self.refresh_load_pose_namespace()
@@ -1886,6 +1891,7 @@ class Load_character_pose_UI(Base):
 
 
     def change_saved_image(self, *args):
+        cmds.progressBar('character_load_pose_progressbar', edit=True, progress=0)
         query_selected_pose = cmds.textScrollList('character_load_saved_pose', si=True, q=True)
         self.set_first_member=query_selected_pose[0]
         split_first_member = self.set_first_member.split(".")[0]
@@ -1938,8 +1944,11 @@ class Load_character_pose_UI(Base):
             nodeName=split_nodeName+":"+split_nodeName_Ctrl
             for attrName in cmds.listAttr(nodeName, k=True):
                 self.setValue(nodeName, attrName, node)
+        cmds.progressBar('character_load_pose_progressbar', edit=True, progress=100)
 
         cmds.warning('Pose load successfuly')
+
+        
 
 
 

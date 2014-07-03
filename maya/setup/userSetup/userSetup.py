@@ -10,16 +10,33 @@
 
 
 
+#Globals
+#------------------------------------------------------------------
+PIPELINE_SCRIPTS_BASE_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy'
+
+
+
+
+#Append custom pathes
+#------------------------------------------------------------------
+import sys
+sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)
+
+
+
+
+
+
+
 
 
 
 #Imports
 #------------------------------------------------------------------
-#------------------------------------------------------------------
 
 #python
-import sys
 import os
+import re
 import shutil
 
 #maya
@@ -28,19 +45,37 @@ import maya.cmds as cmds
 import maya.utils
 
 
+#Import variable
+do_reload = True
+
+#global_variables
+from helga.general.setup.global_variables import global_variables
+if(do_reload):reload(global_variables)
+
+#global_functions
+from helga.general.setup.global_functions import global_functions
+if(do_reload):reload(global_functions)
 
 
 
 
-#Globals
+
+
+
+
+
+
+
+
+#userSetup Globals
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 
 #helga filmaka project globals
-SCRIPTS_ROOT_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy'
-MAYA_PROJECT_DIR = r'//bigfoot/grimmhelga/Production/3d/maya'
-MAYA_VERSION = '2014-x64'
-STARTUP_RENDERER = 'vray' #Possible options: 'mayaSoftware', 'mayaHardware', 'mayaHardware2', 'vray', 'mentalRay'
+PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH #r'//bigfoot/grimmhelga/Production/scripts/deploy'
+MAYA_PROJECT_DIR = global_variables.MAYA_PROJECT_PATH #r'//bigfoot/grimmhelga/Production/3d/maya'
+MAYA_VERSION = global_variables.MAYA_VERSION #'2014-x64'
+
 
 #check for home office
 home_office_timm_scripts_root_path = os.getenv('HELGA_HOME_OFFICE_TIMM_SCRIPTS_ROOT_PATH', False)
@@ -51,14 +86,17 @@ if (home_office_timm_scripts_root_path and
 	home_office_timm_maya_project_dir):
 	
 	#change root variables to home office
-	SCRIPTS_ROOT_PATH = home_office_timm_scripts_root_path
+	PIPELINE_SCRIPTS_BASE_PATH = home_office_timm_scripts_root_path
 	MAYA_PROJECT_DIR = home_office_timm_maya_project_dir
 
 	#log
 	print('Set home office environment for {0}'.format('Timm Wagener'))
-	print('SCRIPTS_ROOT_PATH: {0}'.format(SCRIPTS_ROOT_PATH))
+	print('PIPELINE_SCRIPTS_BASE_PATH: {0}'.format(PIPELINE_SCRIPTS_BASE_PATH))
 	print('MAYA_PROJECT_DIR: {0}'.format(MAYA_PROJECT_DIR))
 	print('------------------------------------------------------------------')
+
+
+
 
 
 
@@ -66,39 +104,14 @@ if (home_office_timm_scripts_root_path and
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 
-#get_user
-def get_user():
-	
-	return os.environ.get('USERNAME')
-
-
-#get_user_setup_destination_dir
-def get_user_setup_destination_dir():
-	
-	path_start = 'C:/Users/'
-	username = get_user()
-	path_end = '/Documents/maya/{0}/scripts'.format(MAYA_VERSION)
-	
-	return path_start + username + path_end
-	
-
 #get_shelf_destination_dir
 def get_shelf_destination_dir():
 	
 	path_start = 'C:/Users/'
-	username = get_user()
+	username = global_functions.get_user()
 	path_end = '/Documents/maya/{0}/prefs/shelves'.format(MAYA_VERSION)
 	
 	return path_start + username + path_end
-	
-	
-
-#copy_file
-def copy_file(source_file, source_dir, destination_dir):
-	
-	source = source_dir + '/' +source_file
-	
-	shutil.copy(source, destination_dir)
 
 	
 	
@@ -120,12 +133,12 @@ def copy_file(source_file, source_dir, destination_dir):
 #------------------------------------------------------------------
 
 try:
-	source_user_setup_dir = SCRIPTS_ROOT_PATH + r'/helga/maya/setup/userSetup'
+	source_user_setup_dir = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/userSetup'
 	source_user_setup_file = 'userSetup.py'
 
-	user_setup_destination_dir = get_user_setup_destination_dir()
+	user_setup_destination_dir = global_functions.get_user_setup_destination_dir('maya')
 
-	copy_file(source_user_setup_file, source_user_setup_dir, user_setup_destination_dir)
+	global_functions.copy_file(source_user_setup_file, source_user_setup_dir, user_setup_destination_dir)
 
 	#SuccessMsg
 	print('Successfully copied userSetup.py')
@@ -146,14 +159,14 @@ except:
 #------------------------------------------------------------------
 
 try:
-	source_shelf_dir = SCRIPTS_ROOT_PATH + r'/helga/maya/setup/shelf'
+	source_shelf_dir = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/shelf'
 	source_shelf_name_list = ['shelf_helga.mel', 'shelf_advancedSkeleton.mel']
 
 	shelf_destination_dir = get_shelf_destination_dir()
 
 	#iterate and copy
 	for source_shelf_name in source_shelf_name_list:
-		copy_file(source_shelf_name, source_shelf_dir, shelf_destination_dir)
+		global_functions.copy_file(source_shelf_name, source_shelf_dir, shelf_destination_dir)
 
 		#SuccessMsg
 		print('Successfully copied shelf: {0}'.format(source_shelf_name))
@@ -175,10 +188,10 @@ except:
 #------------------------------------------------------------------
 
 try:
-	script_path_list = [SCRIPTS_ROOT_PATH, SCRIPTS_ROOT_PATH + r'/helga/maya/setup/scripts']
+	script_path_list = [PIPELINE_SCRIPTS_BASE_PATH, PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts']
 	
 	#Add custom test path if user is twagener
-	if(get_user() == 'twagener'): 
+	if(global_functions.get_user() == 'twagener'): 
 		script_path_list.append('C:/symlinks/maya/maya2014x64_scripts')
 
 	for script_path in script_path_list:
@@ -211,10 +224,10 @@ except:
 #------------------------------------------------------------------
 
 try:
-	icons_path_list = [SCRIPTS_ROOT_PATH + r'/helga/maya/setup/icons']
+	icons_path_list = [PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/icons']
 	
 	#Add custom test path if user is twagener
-	if(get_user() == 'twagener'):
+	if(global_functions.get_user() == 'twagener'):
 		icons_path_list.append('C:/symlinks/maya/maya2014x64_icons')
 
 	for icon_path in icons_path_list:
@@ -243,10 +256,10 @@ except:
 #------------------------------------------------------------------
 
 try:
-	plugin_path_list = [SCRIPTS_ROOT_PATH + r'/helga/maya/setup/plugins']
+	plugin_path_list = [PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/plugins']
 	
 	#Add custom test path if user is twagener
-	if(get_user() == 'twagener'):
+	if(global_functions.get_user() == 'twagener'):
 		plugin_path_list.append('C:/symlinks/maya/maya2014x64_plugins')
 	
 	for plugin_path in plugin_path_list:
@@ -304,7 +317,7 @@ try:
 		plugin_list = ['vrayformaya.mll', 'rrSubmit_Maya_8.5+.py', 'metadata.py']
 		
 		#Add custom test path if user is twagener
-		if(get_user() == 'twagener'):
+		if(global_functions.get_user() == 'twagener'):
 			plugin_list.append('ocio_maya.mll')
 
 		#iterate plugin_list and load
@@ -390,30 +403,3 @@ except:
 
 
 
-
-
-#Set Renderer (VRay)
-#------------------------------------------------------------------
-
-#Turned off for safety reasons
-"""
-try:
-	
-	#set_renderer
-	def set_renderer():
-		
-		#set renderer
-		cmds.setAttr('defaultRenderGlobals.currentRenderer', '{0}'.format(STARTUP_RENDERER), type='string')
-		
-		#Print to console instead of script editor
-		sys.__stdout__.write('Successfully set startup renderer {0} deferred\n'.format(STARTUP_RENDERER))
-	
-	#eval deferred
-	cmds.evalDeferred(set_renderer)
-	
-
-except:
-	
-	#FailMsg
-	print('Failed to set startup renderer {0} grid\n'.format(STARTUP_RENDERER))
-"""

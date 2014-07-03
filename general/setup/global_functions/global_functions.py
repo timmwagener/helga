@@ -30,11 +30,35 @@ Usage
 import os
 import sys
 import logging
+import re
+import shutil
+
+
+
+#Import variable
+do_reload = True
+
+#global_variables
+from helga.general.setup.global_variables import global_variables
+if(do_reload):reload(global_variables)
+
+
+
+
+
+
+
+
+
 
 
 
 
 #Functions
+#----------------------------------------------------
+
+
+#OS
 #----------------------------------------------------
 
 #check_interpreter
@@ -51,6 +75,83 @@ def check_interpreter(keyword):
         return True
 
     return False
+
+
+#get_user
+def get_user():
+    
+    return os.environ.get('USERNAME')
+
+
+#copy_file
+def copy_file(source_file, source_dir, destination_dir):
+    
+    source = source_dir + '/' +source_file
+    
+    shutil.copy(source, destination_dir)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#DCC
+#----------------------------------------------------
+
+#get_user_setup_destination_dir
+def get_user_setup_destination_dir(dcc):
+    
+    if (dcc == 'maya'):
+        return get_user_setup_destination_dir_maya()
+    elif (dcc == 'nuke'):
+        return get_user_setup_destination_dir_nuke()
+    elif (dcc == 'houdini'):
+        return get_user_setup_destination_dir_houdini()
+
+
+#get_user_setup_destination_dir_maya
+def get_user_setup_destination_dir_maya():
+
+    path_start = 'C:/Users/'
+    username = get_user()
+    path_end = '/Documents/maya/{0}/scripts'.format(global_variables.MAYA_VERSION)
+    
+    return path_start + username + path_end
+
+
+#get_user_setup_destination_dir_nuke
+def get_user_setup_destination_dir_nuke():
+
+    path_start = 'C:/Users/'
+    username = get_user()
+    path_end = '/.nuke'
+    
+    return path_start + username + path_end
+
+
+#get_user_setup_destination_dir_houdini
+def get_user_setup_destination_dir_houdini():
+
+    path_start = 'C:/Users/'
+    username = get_user()
+    path_end = '/Documents/houdini{0}'.format(global_variables.HOUDINI_VERSION)
+    
+    return path_start + username + path_end
 
 
 #get_main_window
@@ -142,6 +243,27 @@ def divider():
     """
 
     print('----------------------------------------------------')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

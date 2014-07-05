@@ -93,7 +93,7 @@ try:
     display_type = nuke.IMAGE | nuke.SCRIPT | nuke.GEO | nuke.FONT | nuke.PYTHON
 
     #favorite_icon
-    favorite_icon = NUKE_ICONS_PATH + r'iconHelgaMenuMain.png'
+    favorite_icon = NUKE_ICONS_PATH + r'/iconHelgaMenuMain.png'
     
     #favorite_dict
     favorite_dict = {'helga_assets':['helga_assets', PIPELINE_ASSETS_PATH, display_type, favorite_icon],
@@ -131,7 +131,7 @@ except:
 
 try:
     #Main Menubar
-    helga_main_menu = nuke.menu('Nodes').addMenu('Helga', icon= NUKE_ICONS_PATH + r'iconHelgaMenuMain.png' )
+    helga_main_menu = nuke.menu('Nodes').addMenu('Helga', icon= NUKE_ICONS_PATH + r'/iconHelgaMenuMain.png' )
 
 
 

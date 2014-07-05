@@ -7,16 +7,73 @@
 
 
 
-#Globals
+#Helga pipeline exceptions
 #------------------------------------------------------------------
-PIPELINE_SCRIPTS_BASE_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy'
+
+#MissingEnvironmentVariableException
+class MissingEnvironmentVariableException(Exception):
+    """
+    Exception to be thrown when os.getenv('HELGA_PIPELINE_BASE_PATH', False) return False.
+    This exception means that PIPELINE_BASE_PATH variable has not been set.
+    """
+
+    def __init__(self):
+
+        #log_message
+        self.log_message = 'HELGA_PIPELINE_BASE_PATH environment variable is not set. Helga pipeline not loaded. Please set this environment variable to point to: //bigfoot/grimmhelga/Production/scripts/deploy'
+        #super
+        super(MissingEnvironmentVariableException, self).__init__(self, self.log_message)
+
+
+#PipelineBasePathNonExistentException
+class PipelineBasePathNonExistentException(Exception):
+    """
+    Exception to be thrown when os.isdir(HELGA_PIPELINE_BASE_PATH) is False.
+    """
+
+    def __init__(self):
+
+        #log_message
+        self.log_message = 'HELGA_PIPELINE_BASE_PATH does not exist. Helga pipeline not loaded.'
+        #super
+        super(PipelineBasePathNonExistentException, self).__init__(self, self.log_message)
 
 
 
 
-#Append custom pathes
+
+
+#Pipeline base path
+#------------------------------------------------------------------
+import os
+
+#PIPELINE_BASE_PATH
+PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy'
+
+
+#env. var. doesnt exist
+if not (PIPELINE_BASE_PATH):
+    #raise custom exception and abort execution of module
+    raise MissingEnvironmentVariableException
+
+#pipeline path doesnt exist
+if not (os.path.isdir(PIPELINE_BASE_PATH)):
+    #raise custom exception and abort execution of module
+    raise PipelineBasePathNonExistentException
+
+
+
+
+
+
+#Append pipeline script path
 #------------------------------------------------------------------
 import sys
+
+#PIPELINE_SCRIPTS_BASE_PATH
+PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy'
+
+#append
 sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)
 
 
@@ -32,7 +89,6 @@ sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)
 #------------------------------------------------------------------
 
 #python
-import os
 import re
 import shutil
 #houdini
@@ -64,8 +120,9 @@ if(do_reload):reload(global_functions)
 #Assign all global variables to only use local ones later on
 PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH
 PIPELINE_HDRI_PATH = global_variables.PIPELINE_HDRI_PATH
-
-
+HOUDINI_ENV_FILE = global_variables.HOUDINI_ENV_FILE
+HOUDINI_SETUP_PATH = global_variables.HOUDINI_SETUP_PATH
+HOUDINI_DIGITAL_ASSETS_PATH = global_variables.HOUDINI_DIGITAL_ASSETS_PATH
 
 
 
@@ -82,6 +139,34 @@ PIPELINE_HDRI_PATH = global_variables.PIPELINE_HDRI_PATH
 #Startup Procedures
 #------------------------------------------------------------------
 #------------------------------------------------------------------
+
+
+
+#Write houdini.env
+#------------------------------------------------------------------
+
+try:
+
+    #clear and write file
+    with open(HOUDINI_ENV_FILE, 'w') as houdini_env_file:
+
+        #houdini_env_content
+        houdini_env_content = ''
+
+        #Houdini Path
+        houdini_env_content += 'HOUDINI_PATH = "{0};{1};&"'.format(HOUDINI_SETUP_PATH, HOUDINI_DIGITAL_ASSETS_PATH)
+        
+        #write
+        houdini_env_file.write(houdini_env_content)
+
+    #SuccessMsg
+    print('Successfully written houdini.env')
+
+except:
+    
+    #FailMsg
+    print('Failed to write houdini.env')
+
 
 
 
@@ -146,7 +231,7 @@ except:
 #------------------------------------------------------------------
 
 try:
-
+    
     #default houdini startup when opened without hip file
     hou.hscript("source 456.cmd")
 
@@ -195,7 +280,7 @@ except:
 #Helga set cm
 #------------------------------------------------------------------
 try:
-
+    
     #default houdini startup when opened without hip file
     hou.hscript("unitlength 0.01")
 

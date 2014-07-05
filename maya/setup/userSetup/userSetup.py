@@ -9,17 +9,73 @@
 
 
 
-
-#Globals
+#Helga pipeline exceptions
 #------------------------------------------------------------------
-PIPELINE_SCRIPTS_BASE_PATH = r'//bigfoot/grimmhelga/Production/scripts/deploy'
+
+#MissingEnvironmentVariableException
+class MissingEnvironmentVariableException(Exception):
+	"""
+	Exception to be thrown when os.getenv('HELGA_PIPELINE_BASE_PATH', False) return False.
+	This exception means that PIPELINE_BASE_PATH variable has not been set.
+	"""
+
+	def __init__(self):
+
+		#log_message
+		self.log_message = 'HELGA_PIPELINE_BASE_PATH environment variable is not set. Helga pipeline not loaded. Please set this environment variable to point to: //bigfoot/grimmhelga/Production/scripts/deploy'
+		#super
+		super(MissingEnvironmentVariableException, self).__init__(self, self.log_message)
+
+
+#PipelineBasePathNonExistentException
+class PipelineBasePathNonExistentException(Exception):
+	"""
+	Exception to be thrown when os.isdir(HELGA_PIPELINE_BASE_PATH) is False.
+	"""
+
+	def __init__(self):
+
+		#log_message
+		self.log_message = 'HELGA_PIPELINE_BASE_PATH does not exist. Helga pipeline not loaded.'
+		#super
+		super(PipelineBasePathNonExistentException, self).__init__(self, self.log_message)
 
 
 
 
-#Append custom pathes
+
+
+#Pipeline base path
+#------------------------------------------------------------------
+import os
+
+#PIPELINE_BASE_PATH
+PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy'
+
+
+#env. var. doesnt exist
+if not (PIPELINE_BASE_PATH):
+	#raise custom exception and abort execution of module
+	raise MissingEnvironmentVariableException
+
+#pipeline path doesnt exist
+if not (os.path.isdir(PIPELINE_BASE_PATH)):
+	#raise custom exception and abort execution of module
+	raise PipelineBasePathNonExistentException
+
+
+
+
+
+
+#Append pipeline script path
 #------------------------------------------------------------------
 import sys
+
+#PIPELINE_SCRIPTS_BASE_PATH
+PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy'
+
+#append
 sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)
 
 
@@ -35,7 +91,6 @@ sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)
 #------------------------------------------------------------------
 
 #python
-import os
 import re
 import shutil
 
@@ -77,23 +132,6 @@ MAYA_PROJECT_DIR = global_variables.MAYA_PROJECT_PATH #r'//bigfoot/grimmhelga/Pr
 MAYA_VERSION = global_variables.MAYA_VERSION #'2014-x64'
 
 
-#check for home office
-home_office_timm_scripts_root_path = os.getenv('HELGA_HOME_OFFICE_TIMM_SCRIPTS_ROOT_PATH', False)
-home_office_timm_maya_project_dir = os.getenv('HELGA_HOME_OFFICE_TIMM_MAYA_PROJECT_DIR', False)
-
-#if true, reroot
-if (home_office_timm_scripts_root_path and
-	home_office_timm_maya_project_dir):
-	
-	#change root variables to home office
-	PIPELINE_SCRIPTS_BASE_PATH = home_office_timm_scripts_root_path
-	MAYA_PROJECT_DIR = home_office_timm_maya_project_dir
-
-	#log
-	print('Set home office environment for {0}'.format('Timm Wagener'))
-	print('PIPELINE_SCRIPTS_BASE_PATH: {0}'.format(PIPELINE_SCRIPTS_BASE_PATH))
-	print('MAYA_PROJECT_DIR: {0}'.format(MAYA_PROJECT_DIR))
-	print('------------------------------------------------------------------')
 
 
 

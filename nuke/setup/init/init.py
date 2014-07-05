@@ -53,7 +53,6 @@ import os
 #PIPELINE_BASE_PATH
 PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy'
 
-
 #env. var. doesnt exist
 if not (PIPELINE_BASE_PATH):
     #raise custom exception and abort execution of module
@@ -63,6 +62,9 @@ if not (PIPELINE_BASE_PATH):
 if not (os.path.isdir(PIPELINE_BASE_PATH)):
     #raise custom exception and abort execution of module
     raise PipelineBasePathNonExistentException
+
+#log
+print('Pipeline base path: {0}'.format(PIPELINE_BASE_PATH))
 
 
 

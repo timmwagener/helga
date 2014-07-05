@@ -63,7 +63,8 @@ if not (os.path.isdir(PIPELINE_BASE_PATH)):
 	#raise custom exception and abort execution of module
 	raise PipelineBasePathNonExistentException
 
-
+#log
+print('Pipeline base path: {0}'.format(PIPELINE_BASE_PATH))
 
 
 

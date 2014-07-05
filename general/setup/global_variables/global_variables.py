@@ -12,12 +12,12 @@ Usage
 -----
 
 ::
-	
-	from helga.general.setup.global_variables import global_variables
-	reload(global_variables)
+    
+    from helga.general.setup.global_variables import global_variables
+    reload(global_variables)
 
-	#pipeline_base_path
-	pipeline_base_path = global_variables.PIPELINE_BASE_PATH
+    #pipeline_base_path
+    pipeline_base_path = global_variables.PIPELINE_BASE_PATH
 
 -----------------------
 """
@@ -41,8 +41,15 @@ import sys
 #----------------------------------------------------
 
 #we are past the check if this env. variable exists at this point
-PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/'
+PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga'
+
+#check if pipeline base path False and if so set to FAIL
+#This is done to prevent autodoc from failing.
+#Not optimal, more of a hotfix. Will have to look at this again...
+if not(PIPELINE_BASE_PATH):
+    PIPELINE_BASE_PATH = r'FAIL'
 """Helga pipeline base path"""
+
 
 PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy'
 """Pipeline scripts base path. You can import helga from here."""
@@ -135,3 +142,7 @@ HOUDINI_SETUP_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/houdini/setup'
 
 HOUDINI_DIGITAL_ASSETS_PATH = MAYA_PROJECT_PATH + r'/scenes/assets'
 """Helga pipeline HOUDINI digital assets path"""
+
+
+    
+

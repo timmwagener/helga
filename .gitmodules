@@ -1,3 +1,6 @@
 [submodule "helga/nuke/setup/plugins/LumaNukeGizmos"]
 	path = helga/nuke/setup/plugins/LumaNukeGizmos
 	url = https://github.com/LumaPictures/LumaNukeGizmos.git
+[submodule "helga/nuke/setup/plugins/nuke.env"]
+	path = helga/nuke/setup/plugins/nuke.env
+	url = https://github.com/dekekincaid/nuke.env.git

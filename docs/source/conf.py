@@ -23,8 +23,8 @@ import sys
 
 #custom_path_list
 custom_path_list = [
-  r'Y:/Production/scripts/deploy',
-  r'C:/symlinks/filmaka/helga_scripts_deploy'
+  r'Y:/Production/scripts/deploy/helga',
+  r'C:/symlinks/filmaka/helga_scripts_deploy/helga'
 ]
 
 #append

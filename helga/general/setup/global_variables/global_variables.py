@@ -42,16 +42,17 @@ import sys
 
 #we are past the check if this env. variable exists at this point
 PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga'
+"""Helga pipeline base path"""
 
 #check if pipeline base path False and if so set to FAIL
 #This is done to prevent autodoc from failing.
 #Not optimal, more of a hotfix. Will have to look at this again...
 if not(PIPELINE_BASE_PATH):
     PIPELINE_BASE_PATH = r'FAIL'
-"""Helga pipeline base path"""
 
 
-PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy'
+
+PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy/helga'
 """Pipeline scripts base path. You can import helga from here."""
 
 PIPELINE_ASSETS_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/scenes/assets'

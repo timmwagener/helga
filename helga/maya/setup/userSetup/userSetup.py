@@ -74,7 +74,7 @@ print('Pipeline base path: {0}'.format(PIPELINE_BASE_PATH))
 import sys
 
 #PIPELINE_SCRIPTS_BASE_PATH
-PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy'
+PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy/helga'
 
 #append
 sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)
@@ -128,7 +128,7 @@ if(do_reload):reload(global_functions)
 #------------------------------------------------------------------
 
 #helga filmaka project globals
-PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH #r'//bigfoot/grimmhelga/Production/scripts/deploy'
+PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH #r'//bigfoot/grimmhelga/Production/scripts/deploy/helga'
 MAYA_PROJECT_DIR = global_variables.MAYA_PROJECT_PATH #r'//bigfoot/grimmhelga/Production/3d/maya'
 MAYA_VERSION = global_variables.MAYA_VERSION #'2014-x64'
 

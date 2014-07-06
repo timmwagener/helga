@@ -72,7 +72,7 @@ print('Pipeline base path: {0}'.format(PIPELINE_BASE_PATH))
 import sys
 
 #PIPELINE_SCRIPTS_BASE_PATH
-PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy'
+PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy/helga'
 
 #append
 sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)

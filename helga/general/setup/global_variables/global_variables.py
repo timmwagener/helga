@@ -70,7 +70,7 @@ PIPELINE_RND_PATH = PIPELINE_BASE_PATH + r'/Production/rnd'
 PIPELINE_HDRI_PATH = PIPELINE_BASE_PATH + r'/Production/2d/hdri'
 """Pipeline HDRI path. Below here are all HDRIs for helga."""
 
-PIPELINE_DOCUMENTATION_URL = r'http://www.kiiia.com/helga/documentation/build/html/index.html'
+PIPELINE_DOCUMENTATION_URL = r'http://helga-docs.readthedocs.org/'
 """Default URL constant. Points to pipeline documentation"""
 
 

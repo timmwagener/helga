@@ -50,7 +50,7 @@ class PipelineBasePathNonExistentException(Exception):
 import os
 
 #PIPELINE_BASE_PATH
-PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy'
+PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy/helga'
 
 
 #env. var. doesnt exist

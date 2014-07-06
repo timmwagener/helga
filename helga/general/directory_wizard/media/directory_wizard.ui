@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>802</width>
-    <height>328</height>
+    <width>832</width>
+    <height>347</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,6 +23,12 @@
    <string notr="true"/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="margin">
+    <number>0</number>
+   </property>
+   <property name="spacing">
+    <number>0</number>
+   </property>
    <item row="2" column="0">
     <widget class="Line" name="line">
      <property name="orientation">
@@ -104,7 +110,6 @@
            </spacer>
           </item>
          </layout>
-         <zorder>le_root_directory</zorder>
          <zorder>wdgt_asset_name</zorder>
          <zorder>wdgt_root_directory</zorder>
          <zorder>lbl_asset_name</zorder>

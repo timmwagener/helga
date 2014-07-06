@@ -14,7 +14,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='1.0.0',
+    version='2.0.0',
 
     description="Helga Pipeline Modules and Documentation",
     long_description="Pipeline repo for our diploma movie with the working title Helga. Contains the script environment for our DCCs like Maya, Houdini, Nuke etc.",

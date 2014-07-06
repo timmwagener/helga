@@ -17,4 +17,4 @@ Use it like this
 
 	from helga.houdini.animation import my_tool
 
-You can find the pipeline documentation [here](http://www.kiiia.com/helga/documentation/build/html/index.html).
+You can find the pipeline documentation [here](http://helga-docs.readthedocs.org/).

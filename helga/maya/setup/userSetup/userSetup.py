@@ -12,33 +12,18 @@
 #Helga pipeline exceptions
 #------------------------------------------------------------------
 
-#MissingEnvironmentVariableException
-class MissingEnvironmentVariableException(Exception):
-	"""
-	Exception to be thrown when os.getenv('HELGA_PIPELINE_BASE_PATH', False) return False.
-	This exception means that PIPELINE_BASE_PATH variable has not been set.
-	"""
-
-	def __init__(self):
-
-		#log_message
-		self.log_message = 'HELGA_PIPELINE_BASE_PATH environment variable is not set. Helga pipeline not loaded. Please set this environment variable to point to: //bigfoot/grimmhelga/Production/scripts/deploy'
-		#super
-		super(MissingEnvironmentVariableException, self).__init__(self, self.log_message)
-
-
 #PipelineBasePathNonExistentException
 class PipelineBasePathNonExistentException(Exception):
-	"""
-	Exception to be thrown when os.isdir(HELGA_PIPELINE_BASE_PATH) is False.
-	"""
+    """
+    Exception to be thrown when os.isdir(HELGA_PIPELINE_BASE_PATH) is False.
+    """
 
-	def __init__(self):
+    def __init__(self):
 
-		#log_message
-		self.log_message = 'HELGA_PIPELINE_BASE_PATH does not exist. Helga pipeline not loaded.'
-		#super
-		super(PipelineBasePathNonExistentException, self).__init__(self, self.log_message)
+        #log_message
+        self.log_message = 'HELGA_PIPELINE_BASE_PATH does not exist. Helga pipeline not loaded.'
+        #super
+        super(PipelineBasePathNonExistentException, self).__init__(self, self.log_message)
 
 
 
@@ -50,18 +35,17 @@ class PipelineBasePathNonExistentException(Exception):
 import os
 
 #PIPELINE_BASE_PATH
-PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy/helga'
+PIPELINE_BASE_PATH = r'//bigfoot/grimmhelga'
 
+#if env. var. exists, replace
+if (os.getenv('HELGA_PIPELINE_BASE_PATH', False)):
+    PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy'
 
-#env. var. doesnt exist
-if not (PIPELINE_BASE_PATH):
-	#raise custom exception and abort execution of module
-	raise MissingEnvironmentVariableException
 
 #pipeline path doesnt exist
 if not (os.path.isdir(PIPELINE_BASE_PATH)):
-	#raise custom exception and abort execution of module
-	raise PipelineBasePathNonExistentException
+    #raise custom exception and abort execution of module
+    raise PipelineBasePathNonExistentException
 
 #log
 print('Pipeline base path: {0}'.format(PIPELINE_BASE_PATH))

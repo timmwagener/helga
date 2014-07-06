@@ -13,21 +13,6 @@
 #Helga pipeline exceptions
 #------------------------------------------------------------------
 
-#MissingEnvironmentVariableException
-class MissingEnvironmentVariableException(Exception):
-    """
-    Exception to be thrown when os.getenv('HELGA_PIPELINE_BASE_PATH', False) return False.
-    This exception means that PIPELINE_BASE_PATH variable has not been set.
-    """
-
-    def __init__(self):
-
-        #log_message
-        self.log_message = 'HELGA_PIPELINE_BASE_PATH environment variable is not set. Helga pipeline not loaded. Please set this environment variable to point to: //bigfoot/grimmhelga/Production/scripts/deploy'
-        #super
-        super(MissingEnvironmentVariableException, self).__init__(self, self.log_message)
-
-
 #PipelineBasePathNonExistentException
 class PipelineBasePathNonExistentException(Exception):
     """
@@ -51,12 +36,12 @@ class PipelineBasePathNonExistentException(Exception):
 import os
 
 #PIPELINE_BASE_PATH
-PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy'
+PIPELINE_BASE_PATH = r'//bigfoot/grimmhelga'
 
-#env. var. doesnt exist
-if not (PIPELINE_BASE_PATH):
-    #raise custom exception and abort execution of module
-    raise MissingEnvironmentVariableException
+#if env. var. exists, replace
+if (os.getenv('HELGA_PIPELINE_BASE_PATH', False)):
+    PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy'
+
 
 #pipeline path doesnt exist
 if not (os.path.isdir(PIPELINE_BASE_PATH)):
@@ -69,15 +54,12 @@ print('Pipeline base path: {0}'.format(PIPELINE_BASE_PATH))
 
 
 
-
-
 #Append pipeline script path
 #------------------------------------------------------------------
 import sys
 
 #PIPELINE_SCRIPTS_BASE_PATH
 PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy/helga'
-
 
 #append
 sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)
@@ -94,8 +76,6 @@ sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)
 #------------------------------------------------------------------
 
 #python
-
-import os
 import re
 import shutil
 #nuke

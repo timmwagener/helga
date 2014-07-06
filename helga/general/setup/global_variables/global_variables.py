@@ -40,15 +40,13 @@ import sys
 #General
 #----------------------------------------------------
 
-#we are past the check if this env. variable exists at this point
-PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga'
+#PIPELINE_BASE_PATH
+PIPELINE_BASE_PATH = r'//bigfoot/grimmhelga'
 """Helga pipeline base path"""
 
-#check if pipeline base path False and if so set to FAIL
-#This is done to prevent autodoc from failing.
-#Not optimal, more of a hotfix. Will have to look at this again...
-if not(PIPELINE_BASE_PATH):
-    PIPELINE_BASE_PATH = r'FAIL'
+#if env. var. exists, replace
+if (os.getenv('HELGA_PIPELINE_BASE_PATH', False)):
+    PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False)
 
 
 

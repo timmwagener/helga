@@ -5,8 +5,8 @@ quick_setup_loader
 ==========================================
 
 Helper module to enable import of quick_setup.
-
------------------------
+This module makes sure the __file__ attribute of the quick_setup module delivers
+a path.
 
 -----------------------
 """

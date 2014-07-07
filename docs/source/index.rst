@@ -37,7 +37,7 @@ Manual
 	manual/naming_convention
 	manual/work_and_publish
 	manual/pipeline
-	manual/faq
+	manual/mesh_checklist
 	manual/i_am_a/i_am_a
 
 

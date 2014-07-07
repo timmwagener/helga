@@ -2,13 +2,13 @@
 
 """
 setup
-==========================================
+=====
 
 Helper module for py2exe to build a distribution.
 
 -----------------------
 
------------------------
+**Author:** `Timm Wagener <mailto:wagenertimm@gmail.com>`_
 """
 
 

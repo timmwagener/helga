@@ -11,8 +11,7 @@ Python interpreters.
 
 -----------------------
 
-Usage
------
+.. rubric:: Usage
 
 ::
     

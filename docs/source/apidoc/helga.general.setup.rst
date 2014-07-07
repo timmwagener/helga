@@ -15,4 +15,7 @@ Packages
     :toctree:
 
 	helga.general.setup.doc_link
+	helga.general.setup.global_functions
 	helga.general.setup.global_variables
+	helga.general.setup.quick_setup
+	

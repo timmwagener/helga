@@ -14,4 +14,5 @@ Packages
 .. autosummary::
     :toctree:
 
+    helga.general.directory_wizard
     helga.general.setup

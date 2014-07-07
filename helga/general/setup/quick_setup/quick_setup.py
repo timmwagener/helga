@@ -12,6 +12,8 @@ into deployment or remove them from it.
 The tool is available as precompiled binary under $PIPELINE_SCRIPTS_BASE_PATH/bin
 
 -----------------------
+
+**Author:** `Timm Wagener <mailto:wagenertimm@gmail.com>`_
 """
 
 
@@ -81,7 +83,8 @@ try:
     
     #ui_file_path
     ui_file_path = os.path.join(media_path, 'quick_setup.ui')
-    form_class, base_class = uic.loadUiType(ui_file_path)
+    #form_class, base_class = uic.loadUiType(ui_file_path)
+    classes_list = uic.loadUiType(ui_file_path)
 
 
 #ui_file_path when run from distribution
@@ -89,7 +92,8 @@ except:
     
     #ui_file_path
     ui_file_path = os.path.join(media_path_py2exe, 'quick_setup.ui')
-    form_class, base_class = uic.loadUiType(ui_file_path)
+    #form_class, base_class = uic.loadUiType(ui_file_path)
+    classes_list = uic.loadUiType(ui_file_path)
 
 
 
@@ -101,7 +105,7 @@ except:
 #QuickSetup class
 #------------------------------------------------------------------
 
-class QuickSetup(form_class, base_class):
+class QuickSetup(classes_list[0], classes_list[1]):
     
     #Constructor
     def __init__(self, 

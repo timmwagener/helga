@@ -102,13 +102,17 @@ mock_modules_list = [
   'nuke',
   'nukescripts',
   'PySide',
+  'PyQt4',
   'QtGui',
-  'QtCore'
+  'QtCore',
+  'uic',
+  'qdarkstyle',
+  'py2exe'
 ]
 
 #create mock objects
 for module_name in mock_modules_list:
-  sys.modules[module_name] = mock.Mock()
+  sys.modules[module_name] = mock.MagicMock()
 
 
 

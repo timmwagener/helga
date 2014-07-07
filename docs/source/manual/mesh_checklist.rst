@@ -62,12 +62,11 @@ Mesh checklist
 	so that follicles or other rigging nodes that are placed on the surface based on UVs work correct.
 
 #. UVs have the correct winding order? (Are the UV shells blue instead of red?)
+	This happens through flipping and freezing of geometry for example. Can be fixed with Edit UVs>Flip
 	
 	.. figure:: /media/images/mesh_checklist/uv_winding_order.jpg
 		:width: 100px
 		:alt: UV winding order
-
-	This happens through flipping and freezing of geometry for example. Can be fixed with Edit UVs>Flip
 
 #. Do objects have the right scale?
 	Default units in Maya are cm.

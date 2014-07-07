@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>734</width>
-    <height>493</height>
+    <width>865</width>
+    <height>566</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -95,7 +95,7 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
-          <widget class="QWidget" name="wdgt_lbl_header_text_spacer" native="true">
+          <widget class="QWidget" name="wdgt_lbl_header_text_spacer_left" native="true">
            <property name="styleSheet">
             <string notr="true">background-color: rgba(255, 255, 255, 0);</string>
            </property>
@@ -116,6 +116,31 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;</string>
            </property>
            <property name="text">
             <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="wdgt_lbl_header_text_spacer_right" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>20</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
            </property>
           </widget>
          </item>
@@ -150,64 +175,86 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;</string>
     <widget class="QWidget" name="wdgt_content" native="true">
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="QTabWidget" name="wdgt_tab">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <property name="currentIndex">
-         <number>0</number>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="wdgt_info_labels" native="true">
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="1" column="1">
+          <widget class="QLabel" name="lbl_pipeline_base_path_prefix">
+           <property name="text">
+            <string>Pipeline Base Path:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="lbl_user_prefix">
+           <property name="text">
+            <string>User:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="lbl_user">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="lbl_pipeline_base_path">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QWidget" name="wdgt_info_labels_size" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>10</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>10</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <widget class="QWidget" name="tab_user_and_pipeline_settings">
-         <attribute name="title">
-          <string>User and pipeline settings</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_4">
-          <item row="3" column="1">
-           <widget class="QLabel" name="lbl_user">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="lbl_pipeline_base_path">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="lbl_user_prefix">
-            <property name="text">
-             <string>User:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="lbl_pipeline_base_path_prefix">
-            <property name="text">
-             <string>Pipeline Base Path:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
        </widget>
       </item>
       <item>
@@ -230,6 +277,9 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;</string>
            <property name="horizontalScrollBarPolicy">
             <enum>Qt::ScrollBarAlwaysOff</enum>
            </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
         </layout>
@@ -244,6 +294,28 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;</string>
          </sizepolicy>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QWidget" name="wdgt_spacer_buttons_left" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>10</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>10</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QPushButton" name="btn_quick_setup">
            <property name="text">
@@ -275,10 +347,6 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;</string>
        </widget>
       </item>
      </layout>
-     <zorder>wdgt_header</zorder>
-     <zorder>wdgt_setup_status</zorder>
-     <zorder>wdgt_tab</zorder>
-     <zorder>wdgt_setup_buttons</zorder>
     </widget>
    </item>
   </layout>

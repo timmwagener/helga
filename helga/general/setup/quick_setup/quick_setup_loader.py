@@ -27,6 +27,8 @@ import subprocess
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from PyQt4 import uic
+#qdarkstyle
+import qdarkstyle
 
 
 #Import variable
@@ -57,6 +59,9 @@ def load_quick_setup():
 
     #app_quick_setup
     app_quick_setup = QtGui.QApplication(sys.argv)
+
+    #load darkstyle
+    app_quick_setup.setStyleSheet(qdarkstyle.load_stylesheet(pyside=False))
 
     #quick_setup_instance
     quick_setup_instance = quick_setup.QuickSetup()

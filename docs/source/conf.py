@@ -110,8 +110,7 @@ mock_modules_list = [
   'py2exe',
   'winshell',
   'mf',
-  'modulefinder',
-  'win32com'
+  'modulefinder'
 
 ]
 

@@ -93,6 +93,7 @@ mock_modules_list = [
   'pymel', 
   'pymel.core',
   'maya',
+  'maya.utils',
   'maya.cmds',
   'maya.mel',
   'maya.api',
@@ -111,7 +112,6 @@ mock_modules_list = [
   'winshell',
   'mf',
   'modulefinder'
-
 ]
 
 #create mock objects

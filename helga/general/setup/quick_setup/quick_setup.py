@@ -19,12 +19,60 @@ The tool is available as precompiled binary under $PIPELINE_SCRIPTS_BASE_PATH/bi
 
 
 
+
+#FAVORITES_DICT
+#------------------------------------------------------------------
+
+import os
+
+
+#clean_path_for_favorites (upfront definition)
+def clean_path_for_favorites(path):
+    """
+    Modify path to match favorite neccessities.
+    """
+
+    #remove forward slashes
+    path = path.replace('/', '\\')
+
+    return path
+
+
+
+
+#PIPELINE_BASE_PATH
+PIPELINE_BASE_PATH = r'//bigfoot/grimmhelga'
+
+#if env. var. exists, replace
+if (os.getenv('HELGA_PIPELINE_BASE_PATH', False)):
+    PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False)
+
+
+#clean base path
+PIPELINE_BASE_PATH = clean_path_for_favorites(PIPELINE_BASE_PATH)
+
+
+#FAVORITES_DICT
+FAVORITES_DICT = dict(
+helga_rnd = '{0}\\Production\\rnd'.format(PIPELINE_BASE_PATH),
+helga_scripts = '{0}\\Production\\scripts'.format(PIPELINE_BASE_PATH),
+helga_2d = '{0}\\Production\\2d'.format(PIPELINE_BASE_PATH),
+helga_3d = '{0}\\Production\\3d'.format(PIPELINE_BASE_PATH),
+helga_assets = '{0}\\Production\\3d\\maya\\scenes\\assets'.format(PIPELINE_BASE_PATH),
+helga_assets_work = '{0}\\Production\\3d\\maya\\scenes\\assets\\work'.format(PIPELINE_BASE_PATH),
+helga_shots = '{0}\\Production\\3d\\maya\\scenes\\shots'.format(PIPELINE_BASE_PATH)
+)
+
+
+
+
+
 #Add relative pathes
 #------------------------------------------------------------------
 
 #import
 import sys
-import os
+
 
 #tool_root_path
 tool_root_path = os.path.dirname(__file__)
@@ -54,6 +102,7 @@ sys.path.append(icons_path_py2exe)
 import functools
 import logging
 import subprocess
+import time
 #PyQt4
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -83,7 +132,6 @@ try:
     
     #ui_file_path
     ui_file_path = os.path.join(media_path, 'quick_setup.ui')
-    #form_class, base_class = uic.loadUiType(ui_file_path)
     classes_list = uic.loadUiType(ui_file_path)
 
 
@@ -92,7 +140,6 @@ except:
     
     #ui_file_path
     ui_file_path = os.path.join(media_path_py2exe, 'quick_setup.ui')
-    #form_class, base_class = uic.loadUiType(ui_file_path)
     classes_list = uic.loadUiType(ui_file_path)
 
 
@@ -198,6 +245,11 @@ class QuickSetup(classes_list[0], classes_list[1]):
         #btn_quick_remove
         self.btn_quick_remove.clicked.connect(functools.partial(self.quick_remove_pipeline))
 
+        #btn_create_favorites
+        self.btn_create_favorites.clicked.connect(functools.partial(self.add_favorites))
+        #btn_remove_favorites
+        self.btn_remove_favorites.clicked.connect(functools.partial(self.remove_favorites))
+
 
 
 
@@ -261,6 +313,20 @@ class QuickSetup(classes_list[0], classes_list[1]):
         #append status
         self.append_setup_status('User setup destination dir: {0}.'.format(user_setup_destination_dir))
 
+
+        #userSetup already exists at user destination
+        if('userSetup.py' in os.listdir(user_setup_destination_dir)):
+            
+            #current_file_name
+            current_file_name = os.path.join(user_setup_destination_dir, 'userSetup.py')
+            #target_file_name
+            target_file_name = os.path.join(user_setup_destination_dir, 'backup_helga_{0}_userSetup.py'.format(quick_setup_functionality.get_time_string()))
+
+            #rename
+            os.rename(current_file_name, target_file_name)
+            
+            #append status
+            self.append_setup_status('Backuped existing userSetup: {0}.'.format(target_file_name))
 
 
         #pipeline_user_setup_source_dir
@@ -328,7 +394,37 @@ class QuickSetup(classes_list[0], classes_list[1]):
         self.append_setup_status('User setup destination dir: {0}.'.format(user_setup_destination_dir))
 
 
+        #init already exists at user destination
+        if('init.py' in os.listdir(user_setup_destination_dir)):
+            
+            #current_file_name
+            current_file_name = os.path.join(user_setup_destination_dir, 'init.py')
+            #target_file_name
+            target_file_name = os.path.join(user_setup_destination_dir, 'backup_helga_{0}_init.py'.format(quick_setup_functionality.get_time_string()))
 
+            #rename
+            os.rename(current_file_name, target_file_name)
+            
+            #append status
+            self.append_setup_status('Backuped existing init.py: {0}.'.format(target_file_name))
+
+
+        #menu already exists at user destination
+        if('menu.py' in os.listdir(user_setup_destination_dir)):
+            
+            #current_file_name
+            current_file_name = os.path.join(user_setup_destination_dir, 'menu.py')
+            #target_file_name
+            target_file_name = os.path.join(user_setup_destination_dir, 'backup_helga_{0}_menu.py'.format(quick_setup_functionality.get_time_string()))
+
+            #rename
+            os.rename(current_file_name, target_file_name)
+            
+            #append status
+            self.append_setup_status('Backuped existing menu.py: {0}.'.format(target_file_name))
+
+
+        
         #pipeline_user_setup_source_dir
         pipeline_user_setup_source_dir = quick_setup_functionality.get_user_setup_source_dir('nuke')
 
@@ -434,6 +530,20 @@ class QuickSetup(classes_list[0], classes_list[1]):
         #append status
         self.append_setup_status('User setup destination dir: {0}.'.format(user_setup_destination_dir))
 
+
+        #houdini already exists at user destination
+        if('houdini.env' in os.listdir(user_setup_destination_dir)):
+            
+            #current_file_name
+            current_file_name = os.path.join(user_setup_destination_dir, 'houdini.env')
+            #target_file_name
+            target_file_name = os.path.join(user_setup_destination_dir, 'backup_helga_{0}_houdini.env'.format(quick_setup_functionality.get_time_string()))
+
+            #rename
+            os.rename(current_file_name, target_file_name)
+            
+            #append status
+            self.append_setup_status('Backuped existing houdini.env: {0}.'.format(target_file_name))
 
 
         #pipeline_user_setup_source_dir
@@ -589,6 +699,98 @@ class QuickSetup(classes_list[0], classes_list[1]):
 
         #append status
         self.append_setup_status('Removed local helga hoduini pipeline files')
+
+
+
+
+
+
+
+
+    #Favorites
+    #------------------------------------------------------------------
+
+    #add_favorites
+    def add_favorites(self):
+        """
+        Add favorites.
+        """
+
+        #clear status
+        self.clear_setup_status()
+
+        
+        #iterate and set favorites
+        for shortcut_name in sorted(FAVORITES_DICT.keys()):
+            
+            #target_path
+            target_path = FAVORITES_DICT[shortcut_name]
+
+            try:
+                
+                #add
+                quick_setup_functionality.add_favorite(shortcut_name, target_path)
+
+                #append status
+                self.append_setup_status('Added favorite: {0} --> {1}'.format(shortcut_name, target_path))
+
+            except:
+                
+                #append status
+                self.append_setup_status('Error adding favorite: {0} --> {1}'.format(shortcut_name, target_path))
+
+        
+        
+        #append status
+        self.append_setup_status('---------------------------------')
+        #append status
+        self.append_setup_status('Setting favorites finished')
+        #log
+        self.logger.debug('Setting favorites finished')
+
+    
+    #remove_favorites
+    def remove_favorites(self):
+        """
+        Remove favorites.
+        """
+
+        #clear status
+        self.clear_setup_status()
+
+        
+
+        #iterate and set favorites
+        for shortcut_name, target_path in FAVORITES_DICT.iteritems():
+            
+            try:
+                
+                #shortcut_path
+                shortcut_path = os.path.join(quick_setup_functionality.get_links_directory(), '{0}.lnk'.format(shortcut_name))
+
+                #if isfile delete
+                if(os.path.isfile(shortcut_path)):
+                    
+                    #delete
+                    os.remove(shortcut_path)
+
+                #append status
+                self.append_setup_status('Deleted favorite: {0}'.format(shortcut_name))
+
+            except:
+
+                #append status
+                self.append_setup_status('Error deleting favorite: {0}'.format(shortcut_name))
+
+
+        #append status
+        self.append_setup_status('---------------------------------')
+        #append status
+        self.append_setup_status('Removing favorites finished')
+        #log
+        self.logger.debug('Removing favorites finished')
+
+        
 
 
 

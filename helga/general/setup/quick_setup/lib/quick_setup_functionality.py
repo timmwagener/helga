@@ -10,6 +10,12 @@ Module that holds the functionality for quick_setup.
 
 
 
+
+
+
+
+
+
 #Import
 #------------------------------------------------------------------
 #python
@@ -18,7 +24,8 @@ import os
 import logging
 import re
 import shutil
-
+import winshell
+import time
 
 
 
@@ -78,6 +85,30 @@ def copy_file(source_file, source_dir, destination_dir):
     source = source_dir + '/' +source_file
     
     shutil.copy(source, destination_dir)
+
+
+#get_time_string
+def get_time_string():
+    """
+    Return time string.
+    """
+
+    #time_string
+    time_string = ''
+    
+    try:
+        
+        #localtime
+        localtime   = time.localtime()
+        #assign time_string
+        time_string  = time.strftime("%Y%m%d%H%M%S", localtime)
+    
+    except:
+
+        print('Aquiring time string failed')
+        return ''
+    
+    return time_string
 
 
 
@@ -189,3 +220,55 @@ def get_nuke_menu_source_dir():
     nuke_menu_source_dir = get_pipeline_scripts_base_path() + r'/helga/nuke/setup/menu'
 
     return nuke_menu_source_dir
+
+
+
+
+
+
+
+#Favorites
+#----------------------------------------------------
+
+#get_favorite_directory
+def get_favorite_directory():
+    """
+    Return favorite directory
+    """
+    
+    return winshell.folder("Favorites")
+
+
+#get_links_directory
+def get_links_directory():
+    """
+    Return user Links directory
+    """
+    
+    return os.path.join(winshell.folder("profile"), 'Links')
+
+
+
+#add_favorite
+def add_favorite(shortcut_name, target_path, description = ''):
+    """
+    Add favorite shortcut. If shortcut already exists in Links, the
+    shortcut will be updated with the given path.
+    """
+
+    #shortcut_path
+    shortcut_path = os.path.join(get_links_directory(), '{0}.lnk'.format(shortcut_name))
+    
+    
+    #create shortcut
+    with winshell.shortcut(shortcut_path) as shortcut:
+        shortcut.path = target_path
+        shortcut.description = description
+
+    #log
+    print('Sucessfully created/updated favorite: {0}'.format(shortcut_path))
+
+
+
+
+

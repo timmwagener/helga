@@ -49,6 +49,8 @@ try:
     import time
     import getpass
     #maya
+    import maya.utils
+    import threading
     import maya.OpenMaya as openMaya
     import maya.OpenMayaUI as openMayaUi
     import maya.cmds as cmds
@@ -75,6 +77,9 @@ about="Author: Arash Hosseini"+"\n"+     "Contact: s.arashhosseini@gmail.com    
 #uncomment your original below. / Timm
 relative_image_path = 'media/images'
 image_path = os.path.join(os.path.dirname(__file__), relative_image_path)
+
+relative_image_sequenz_path = 'media/sequenz_images'
+image_sequenz_path = os.path.join(os.path.dirname(__file__), relative_image_sequenz_path)
 #image_path="Y:/Production/scripts/deploy/helga/maya/arash/helga_login/media/images"
 
 
@@ -548,6 +553,9 @@ class Helga_cms_td_UI(Base):
 class Helga_cms_anim_UI(Base):
 
     def __init__(self):
+        self.image = "" # Fuer SubThread
+
+
         # myHelper = Helper()
         # myHelper.load_helper_UI()
 
@@ -556,36 +564,45 @@ class Helga_cms_anim_UI(Base):
         super(Helga_cms_anim_UI, self).__init__()
 
         self.anim_choiceUIs = {}
-        helga_anim_choice_win_width = 300
-        helga_anim_choice_win_height = 250
+        helga_anim_choice_win_width = 302
+        helga_anim_choice_win_height = 220
         self.delete_window('helga_anim_choice_window')
         self.anim_choiceUIs["helga_anim_choice_win"] = cmds.window('helga_anim_choice_window', title = 'Helga Character Set',
                                                 widthHeight = (helga_anim_choice_win_width,helga_anim_choice_win_height), menuBar = True, sizeable = False,
                                                 minimizeButton=True, maximizeButton=False)
         self.character_choice()
+
+
     def character_choice(self, *args):
-        self.anim_choiceUIs['helga_choice_column_a']=cmds.columnLayout('helga_choice_column_a', columnAttach=('both', 0), rowSpacing=0, columnWidth=300)
-        self.anim_choiceUIs['helga_choise_image_a']=cmds.image('helga_choise_image_a', image=image_path+"/cms_create_character_UI.png")
+        self.anim_choiceUIs['helga_choice_column_a']=cmds.columnLayout('helga_choice_column_a',columnAlign = 'center', columnAttach=('both', 0), rowSpacing=0, columnWidth=300)
+        #self.anim_choiceUIs['helga_choice_separator_x']=cmds.separator('helga_choice_separator_x', h=1, st='in', vis=True)
+        self.anim_choiceUIs['helga_choise_image_a']=cmds.image('helga_choise_image_a', image=image_sequenz_path+"/000.jpg")
+        self.anim_choiceUIs['helga_choice_separator_d']=cmds.separator('helga_choice_separator_d', h=5, st='in', vis=True)
         self.anim_choiceUIs['helga_choice_column_a']=cmds.columnLayout('helga_choice_column_b', columnAttach=('both', 20), rowSpacing=3, columnWidth=300)
         self.anim_choiceUIs['helga_choice_separator_b']=cmds.separator('helga_choice_separator_b', h=10, st='none', vis=True)
-        self.anim_choiceUIs['helga_choice_option_a'] =cmds.optionMenu('helga_choice_option_a', w=180, label ="Character Body UI")
-        self.anim_choiceUIs['helga_choice_option_b'] =cmds.optionMenu('helga_choice_option_b', w=180, label ="Character Hand UI")
-        self.anim_choiceUIs['helga_choice_menuItem_a'] =cmds.menuItem('helga_choice_menuItem_a',label="1. Ulfbert",  parent =self.anim_choiceUIs['helga_choice_option_a'])
-        self.anim_choiceUIs['helga_choice_menuItem_b'] =cmds.menuItem('helga_choice_menuItem_b',label="2. Helga",parent =self.anim_choiceUIs['helga_choice_option_a'])
-        self.anim_choiceUIs['helga_choice_menuItem_c'] =cmds.menuItem('helga_choice_menuItem_c',label="3. Ritter", parent =self.anim_choiceUIs['helga_choice_option_a'])
-        self.anim_choiceUIs['helga_choice_menuItem_d'] =cmds.menuItem('helga_choice_menuItem_d',label="1. Ulfbert",parent =self.anim_choiceUIs['helga_choice_option_b'])
-        self.anim_choiceUIs['helga_choice_menuItem_e'] =cmds.menuItem('helga_choice_menuItem_e',label="2. Helga", parent =self.anim_choiceUIs['helga_choice_option_b'])
-        self.anim_choiceUIs['helga_choice_menuItem_f'] =cmds.menuItem('helga_choice_menuItem_f',label="3. Ritter", parent =self.anim_choiceUIs['helga_choice_option_b'])
+        # self.anim_choiceUIs['helga_choice_option_a'] =cmds.optionMenu('helga_choice_option_a', w=180, label ="Character Body UI")
+        # self.anim_choiceUIs['helga_choice_option_b'] =cmds.optionMenu('helga_choice_option_b', w=180, label ="Character Hand UI")
+        # self.anim_choiceUIs['helga_choice_menuItem_a'] =cmds.menuItem('helga_choice_menuItem_a',label="1. Ulfbert",  parent =self.anim_choiceUIs['helga_choice_option_a'])
+        # self.anim_choiceUIs['helga_choice_menuItem_b'] =cmds.menuItem('helga_choice_menuItem_b',label="2. Helga",parent =self.anim_choiceUIs['helga_choice_option_a'])
+        # self.anim_choiceUIs['helga_choice_menuItem_c'] =cmds.menuItem('helga_choice_menuItem_c',label="3. Ritter", parent =self.anim_choiceUIs['helga_choice_option_a'])
+        # self.anim_choiceUIs['helga_choice_menuItem_d'] =cmds.menuItem('helga_choice_menuItem_d',label="1. Ulfbert",parent =self.anim_choiceUIs['helga_choice_option_b'])
+        # self.anim_choiceUIs['helga_choice_menuItem_e'] =cmds.menuItem('helga_choice_menuItem_e',label="2. Helga", parent =self.anim_choiceUIs['helga_choice_option_b'])
+        # self.anim_choiceUIs['helga_choice_menuItem_f'] =cmds.menuItem('helga_choice_menuItem_f',label="3. Ritter", parent =self.anim_choiceUIs['helga_choice_option_b'])
         self.anim_choiceUIs['helga_choice_separator_c']=cmds.separator('helga_choice_separator_c', h=5, st='none', vis=True)
         self.anim_choiceUIs['helga_choice_button_a'] = cmds.button('helga_choice_button_a',command= self.character_body_button, h = 30,  label="Create Character UI")
         self.anim_choiceUIs['helga_choice_button_b'] = cmds.button('helga_choice_button_b', command= self.character_hand_button,h=30, label="Create Hand UI")
         #self.anim_choiceUIs['helga_choice_column_b']=cmds.columnLayout('helga_choice_column_b', columnAttach=('both', 0), rowSpacing=3, columnWidth=300, parent = self.anim_choiceUIs["helga_anim_choice_win"])
-        #self.anim_choiceUIs['helga_choice_separator_d']=cmds.separator('helga_choice_separator_d', h=5, st='none', vis=True)
 
         #self.anim_choiceUIs['helga_choice_text_b'] = cmds.text('helga_choice_text_b', bgc= (0.0,0.0,0.0),h = 20, align = 'left', label= "Hallo", parent = self.anim_choiceUIs['helga_choice_column_b'])
 
 
         cmds.showWindow(self.anim_choiceUIs ["helga_anim_choice_win"])
+
+        sub = threading.Thread(None, self.startSubThread)
+        sub.start()
+
+
+
 
 ##################################################
 #
@@ -597,52 +614,60 @@ class Helga_cms_anim_UI(Base):
 
 
     def character_body_button(self, *args):
-        query_character_button = cmds.optionMenu('helga_choice_option_a', query = True, value = True)[0]
+        #query_character_button = cmds.optionMenu('helga_choice_option_a', query = True, value = True)[0]
 
-        if query_character_button =='1':
-            self.delete_ulfbert_character_UIs()
-            Ulfbert_body_UI()
-        else:
-            pass
-        if query_character_button =='2':
-            self.delete_helja_character_UIs()
-            Helja_body_UI()
-        else:
-            pass
-        if query_character_button =='3':
-            self.delete_ritter_character_UIs()
-            Ritter_body_UI()
+        #if query_character_button =='1':
+        self.delete_ulfbert_character_UIs()
+        Ulfbert_body_UI()
+        # else:
+        #     pass
+        # if query_character_button =='2':
+        #     self.delete_helja_character_UIs()
+        #     Helja_body_UI()
+        # else:
+        #     pass
+        # if query_character_button =='3':
+        #     self.delete_ritter_character_UIs()
+        #     Ritter_body_UI()
 
 
     def character_hand_button(self, *args):
-        query_character_hand_button = cmds.optionMenu('helga_choice_option_b', query = True, value = True)[0]
-        if query_character_hand_button =='1':
-            self.delete_ulfbert_hand_UI()
-            Ulfbert_hand_UI()
-        else:
-            pass
-        if query_character_hand_button =='2':
-            print "hand Helga"
-        else:
-            pass
-        if query_character_hand_button =='3':
-            print "hand Ritter"
+        # query_character_hand_button = cmds.optionMenu('helga_choice_option_b', query = True, value = True)[0]
+        # if query_character_hand_button =='1':
+        self.delete_ulfbert_hand_UI()
+        Ulfbert_hand_UI()
+        # else:
+        #     pass
+        # if query_character_hand_button =='2':
+        #     print "hand Helga"
+        # else:
+        #     pass
+        # if query_character_hand_button =='3':
+        #     print "hand Ritter"
 
     def delete_ulfbert_character_UIs(self, *args):
         if cmds.window('ulfbert_body_window', exists=True):
             self.delete_window('ulfbert_body_window')
 
-    def delete_helja_character_UIs(self, *args):
-        if cmds.window('helja_body_window', exists=True):
-            self.delete_window('helja_body_window')
-
-    def delete_ritter_character_UIs(self, *args):
-        if cmds.window('ritter_body_window', exists=True):
-            self.delete_window('ritter_body_window')
-
     def delete_ulfbert_hand_UI(self, *args):
         if cmds.window('ulfbert_hand_body_window', exists = True):
             self.delete_window('ulfbert_hand_body_window')
+
+
+
+
+    def set_image_sequenz(self, path):
+        cmds.image('helga_choise_image_a', e=True, image=path)
+
+    # SubTread: Loop
+    def startSubThread(self):
+        for i in range(500):
+            #print "Hallo " + str(i)
+            time.sleep(0.04)
+
+            self.image = image_sequenz_path + "/" + ("000" + str(i))[-3:] +".jpg"
+            result = maya.utils.executeInMainThreadWithResult(self.set_image_sequenz, self.image)
+        #self.startSubThread() # Evil Shit!
 
 
 #################################################################################
@@ -664,7 +689,7 @@ class Ulfbert_body_UI(Base):
         self.ulfbert_parent_height = ulfbert_parent_height
         self.ulfbert_child_width = ulfbert_child_width
         self.ulfbert_child_height = ulfbert_child_height
-        self.ulfbert_body_UIs["ulfbert_body_win"] = cmds.window('ulfbert_body_window', title = 'Ulfbert Character UI',
+        self.ulfbert_body_UIs["ulfbert_body_win"] = cmds.window('ulfbert_body_window', title = 'Main Character UI',
                                                 widthHeight = (self.ulfbert_parent_width,self.ulfbert_parent_height),
                                                 menuBar = True, sizeable = False, topEdge= 0, leftEdge= 0, minimizeButton=True, maximizeButton=False)
         cmds.menu('ulfbert_reference_window', label='Reference', tearOff=True)
@@ -1543,7 +1568,7 @@ class Save_character_pose_UI(Base):
         self.character_save_pose['character_save_pose_button_R_Leg_controller']=cmds.button('character_save_pose_button_R_Leg_controller',h=20, label='R Leg', parent=self.character_save_pose['character_save_pose_column_a'], command=self.select_character_R_leg)
         self.character_save_pose['character_save_pose_button_L_Leg_controller']=cmds.button('character_save_pose_button_L_Leg_controller',h=20, label='L Leg', parent=self.character_save_pose['character_save_pose_column_a'], command=self.select_character_L_leg)
         self.character_save_pose['character_save_pose_button_Body_controller']=cmds.button('character_save_pose_button_body_controller',h=20, label='Body', parent=self.character_save_pose['character_save_pose_column_a'], command=self.select_character_main_body)
-        self.character_save_pose['character_save_pose_button_selected_controller']=cmds.button('character_save_pose_button_selected_controller',h=20, label='Selected', parent=self.character_save_pose['character_save_pose_column_a'])
+        self.character_save_pose['character_save_pose_button_selected_controller']=cmds.button('character_save_pose_button_selected_controller',h=20, label='Selected', parent=self.character_save_pose['character_save_pose_column_a'], command=self.select_character_selected_member)
         cmds.setParent('..')
         self.character_save_pose['character_save_pose_column_b'] = cmds.columnLayout('character_save_pose_column_b', rowSpacing=1,  columnWidth=self.character_child_width, parent=self.character_save_pose['character_save_pose_column_c'] )
         self.character_save_pose['character_save_pose_selected_controller']=cmds.textScrollList('character_save_pose_selected_controller',w=300, h=100, parent=self.character_save_pose['character_save_pose_column_b'])
@@ -1559,9 +1584,8 @@ class Save_character_pose_UI(Base):
         self.character_save_pose['character_save_pose_text_c']=cmds.text('character_save_pose_text_c',label='Describe the Pose',w=300, align='left', parent=self.character_save_pose['character_save_pose_column_b'])
         self.character_save_pose['character_save_pose_scroll_b']=cmds.scrollField('character_save_pose_scroll_b',w=300, wordWrap=True,ed=True,h=100, parent=self.character_save_pose['character_save_pose_column_b'])
         self.character_save_pose['charcater_save_pose_separator_b'] =cmds.separator(h=5,st='none')
-        self.character_save_pose['character_save_pose_button_a']=cmds.button('character_save_pose_button_a',w=300, h=50, label='Save Pose', command=self.check_perspective, parent=self.character_save_pose['character_save_pose_column_b'])
         self.character_save_pose['charcater_save_pose_separator_x'] =cmds.separator(h=2,st='none', parent=self.character_save_pose['character_save_pose_column_b'])
-        self.character_save_pose['character_save_pose_progressbar'] = cmds.progressBar('character_save_pose_progressbar', maxValue=100, w=300, parent=self.character_save_pose['character_save_pose_column_b'])
+        self.character_save_pose['character_save_pose_button_a']=cmds.button('character_save_pose_button_a',w=300, h=50, label='Save Pose', command=self.check_perspective, parent=self.character_save_pose['character_save_pose_column_b'])
         self.character_save_pose['charcater_save_pose_separator_x_x'] =cmds.separator(h=10,st='none', parent=self.character_save_pose['character_save_pose_column_b'])
 
         cmds.showWindow(self.character_save_pose['character_save_pose_win'])
@@ -1606,7 +1630,6 @@ class Save_character_pose_UI(Base):
             # Info Popup
             if cmds.window("check_perspective", exists=True):
                 cmds.deleteUI("check_perspective")
-            cmds.progressBar('character_save_pose_progressbar', edit=True, step=50)
             cmds.window("check_perspective",title="Check Perspektive",mnb=True, mxb=False,w=300,h=150,sizeable=False)
             cmds.columnLayout(w = 250, h=160, columnAttach=('both', 20), rowSpacing=5, columnWidth=250)
             cmds.separator(h=5,vis=True, st='none')
@@ -1757,6 +1780,20 @@ class Save_character_pose_UI(Base):
                 cmds.textScrollList('character_save_pose_selected_controller', e=True, append=a)
 
 
+    def select_character_selected_member(self, *args):
+        body_memeber_list = cmds.ls(sl=True)
+        if len(body_memeber_list)==0:
+            cmds.warning("Select a Bodypart!")
+        else:
+            new_body_memeber_list = []
+            for o in body_memeber_list:
+                member_without_namespace = o.split(":")[1]
+                new_body_memeber_list.append(member_without_namespace)
+
+            cmds.textScrollList('character_save_pose_selected_controller',e=True,ra=True)
+            for a in new_body_memeber_list:
+                cmds.textScrollList('character_save_pose_selected_controller', e=True, append=a)
+
 
     def save_pose_action(self, *args):
         if cmds.window("check_perspective", exists=True):
@@ -1777,7 +1814,6 @@ class Save_character_pose_UI(Base):
         self.query_selected_body_part = cmds.textScrollList('character_save_pose_selected_controller', q=True, ai=True)
         self.save_pose()
         self.save_pose_screen_save()
-        cmds.progressBar('character_save_pose_progressbar', edit=True, progress=100)
         self.delete_window('character_save_pose_window')
 
 

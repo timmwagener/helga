@@ -15,6 +15,43 @@ Helper module for py2exe to build a distribution.
 
 
 
+
+#win32com py2exe shell fix
+#------------------------------------------------------------------
+try:
+    
+    #import module finder
+    try:
+        #from py2exe
+        import py2exe.mf as modulefinder
+    except ImportError:
+        #else default
+        import modulefinder
+    
+
+    #default imports
+    import win32com
+    import sys
+    
+    for path in win32com.__path__[1:]:
+        modulefinder.AddPackagePath("win32com", path)
+    
+    for extra in ["win32com.shell"]: #,"win32com.mapi"
+        __import__(extra)
+        m = sys.modules[extra]
+        for path in m.__path__[1:]:
+            modulefinder.AddPackagePath(extra, path)
+
+except ImportError:
+    # no build path setup, no worries.
+    pass
+
+
+
+
+
+
+
 #Import
 #------------------------------------------------------------------
 #python

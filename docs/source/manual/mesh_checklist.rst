@@ -27,14 +27,12 @@ Mesh checklist
 		
 		import pymel.core as pm
 
-		#get selected nodes
 		selected_nodes = pm.ls(sl = True, fl = True)
 
-		#iterate selected nodes
 		for selected_node in selected_nodes:
 		    
 		    #freeze
-		    pm.makeIdentity(selected_node)
+		    pm.makeIdentity(selected_node, a = True)
 		    #reset pivot
 		    pm.xform(selected_node, piv = (0,0,0))
 

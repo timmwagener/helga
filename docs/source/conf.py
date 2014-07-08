@@ -107,7 +107,12 @@ mock_modules_list = [
   'QtCore',
   'uic',
   'qdarkstyle',
-  'py2exe'
+  'py2exe',
+  'winshell',
+  'mf',
+  'modulefinder',
+  'win32com'
+
 ]
 
 #create mock objects

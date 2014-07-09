@@ -47,6 +47,9 @@ if(do_reload): reload(doc_link)
 from helga.general.directory_wizard import directory_wizard
 if(do_reload): reload(directory_wizard)
 
+from helga.nuke.vincent.face_palm import face_palm
+if(do_reload): reload(face_palm)
+
 
 
 
@@ -320,6 +323,18 @@ try:
 
 
 
+
+
+
+    #separator
+    helga_main_menu.addSeparator()
+
+    #face_palm
+    #------------------------------------------------------------------
+    #------------------------------------------------------------------
+
+    #cmds
+    helga_main_menu.addCommand('Face Palm', lambda: face_palm.run())
 
 
 

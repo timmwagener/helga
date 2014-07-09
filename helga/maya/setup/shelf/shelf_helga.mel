@@ -20,8 +20,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDocumentation.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDocumentation.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDocumentation.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDocumentation.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -46,8 +46,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDirectoryWizard.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDirectoryWizard.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDirectoryWizard.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDirectoryWizard.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -72,8 +72,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDummy.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDummy.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDummy.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDummy.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -98,8 +98,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobals.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobals.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfVrayGlobals.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfVrayGlobals.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -124,8 +124,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobalsLinear.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfVrayGlobalsLinear.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfVrayGlobalsLinear.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfVrayGlobalsLinear.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -150,8 +150,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfLightRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfLightRE.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfLightRE.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfLightRE.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -176,8 +176,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfFramebufferRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfFramebufferRE.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfFramebufferRE.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfFramebufferRE.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -202,8 +202,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDataRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDataRE.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfDataRE.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfDataRE.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -228,8 +228,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfMmRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfMmRE.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfMmRE.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfMmRE.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -254,8 +254,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfShadowRE.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfShadowRE.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfShadowRE.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfShadowRE.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -280,8 +280,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathTesting.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathTesting.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfSetRenderpathTesting.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfSetRenderpathTesting.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -306,8 +306,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathLighting.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSetRenderpathLighting.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfSetRenderpathLighting.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfSetRenderpathLighting.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -332,8 +332,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/icons/iconDummy.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/icons/iconDummy.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDummy.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDummy.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -358,8 +358,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfPrSel.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfPrSel.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfPrSel.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfPrSel.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -384,8 +384,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCarlaHSkinweights.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCarlaHSkinweights.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfCarlaHSkinweights.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfCarlaHSkinweights.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -410,8 +410,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDjRivet.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfDjRivet.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfDjRivet.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfDjRivet.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -436,8 +436,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSymMesh.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfSymMesh.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfSymMesh.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfSymMesh.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -462,8 +462,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCvShapeInverter.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconShelfCvShapeInverter.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfCvShapeInverter.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconShelfCvShapeInverter.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -488,8 +488,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDummy.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/iconDummy.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDummy.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDummy.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -514,8 +514,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/icon_ShelfCleanSave.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/icon_ShelfCleanSave.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_ShelfCleanSave.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_ShelfCleanSave.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -540,8 +540,8 @@ global proc shelf_helga () {
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "Y:/Production/scripts/deploy/helga/maya/setup/icons/icon_ShelfHelgaCms.png" 
-        -image1 "Y:/Production/scripts/deploy/helga/maya/setup/icons/icon_ShelfHelgaCms.png" 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_ShelfHelgaCms.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_ShelfHelgaCms.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1

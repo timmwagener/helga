@@ -60,7 +60,8 @@ helga_2d = '{0}\\Production\\2d'.format(PIPELINE_BASE_PATH),
 helga_3d = '{0}\\Production\\3d'.format(PIPELINE_BASE_PATH),
 helga_assets = '{0}\\Production\\3d\\maya\\scenes\\assets'.format(PIPELINE_BASE_PATH),
 helga_assets_work = '{0}\\Production\\3d\\maya\\scenes\\assets\\work'.format(PIPELINE_BASE_PATH),
-helga_shots = '{0}\\Production\\3d\\maya\\scenes\\shots'.format(PIPELINE_BASE_PATH)
+helga_shots = '{0}\\Production\\3d\\maya\\scenes\\shots'.format(PIPELINE_BASE_PATH),
+helga_tools = '{0}\\Production\\scripts\\deploy\\helga\\bin'.format(PIPELINE_BASE_PATH)
 )
 
 
@@ -166,7 +167,7 @@ class QuickSetup(classes_list[0], classes_list[1]):
         #instance variables
         #------------------------------------------------------------------
         self.title_name = self.__class__.__name__
-        self.version = 0.1
+        self.version = 0.2
         self.title = self.title_name +' ' + str(self.version)
 
         #logger

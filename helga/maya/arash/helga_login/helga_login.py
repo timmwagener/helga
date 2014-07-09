@@ -661,7 +661,7 @@ class Helga_cms_anim_UI(Base):
 
     # SubTread: Loop
     def startSubThread(self):
-        for i in range(500):
+        for i in range(100):
             #print "Hallo " + str(i)
             time.sleep(0.04)
 

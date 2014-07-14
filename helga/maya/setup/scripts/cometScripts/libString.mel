@@ -1,0 +1,350 @@
+// --------------------------------------------------------------------------
+// libString.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	This is a nice library of "string" procedures to help those that
+//	do MEL scripting.
+//
+// REQUIRES:
+//	Nothing.
+//
+//
+// USAGE:
+//	source "libString.mel";  
+//
+//	// Replace $search text in $str with $replace text.
+//	string $s = strSearchReplace(string $str, string $search, string $replace);
+//
+//	// Remove last character from $str
+//	string $s = strChop(string $str);
+//
+//	// UPPER or lower case the character at $index in $str
+//	//    $index is one based.
+//	string $s = strUpperIdx(string $str, int $index);
+//	string $s = strLowerIdx(string $str, int $index);
+//
+//	// Convert and int or a float to a string with specified padding
+//	string $s = intToStr(int $i, int $padding);
+//	string $s = floatToStr(float $f, int $prePad, int $decPad);
+//
+//	// Returns the short name of an object, even if it has | pipes in the name.
+//	string $s = objShortName(string $obj);
+//
+//	// Given an object name like foo_bar, returns the "foo" part.  Works
+//	// even if the obj passed in has a long name with | pipes in it.
+//	string $s = objGetPrefix(string $obj);
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Copyright ©2003 Michael B. Comet - All Rights Reserved.
+//
+// VERSIONS:
+//	1.00 - Feb 28, 2003 - Initial Release.
+//
+// --------------------------------------------------------------------------
+
+
+// --------------------------------------------------------------------------
+//	Library Functions
+// --------------------------------------------------------------------------
+
+/*
+ * strSearchReplace() - Given a main string $str, looks for ALL occurances
+ *	of $search, and replaces them with $replace.
+ *
+ *	This properly handles the replace string being similar or a part
+ *	of the search string, and handling multiple matches.
+ */
+global proc string strSearchReplace(string $str, string $search, string $replace)
+{
+    string $retstr = "";
+    
+    	// Sanity check please!
+    if ($search == "")
+        return $str;
+    
+    if ($str == "")
+        return $str;
+	
+    int $len = size($str);
+    int $lenS = size($search);
+    
+    int $i, $j;
+    int $match;
+    
+    for ($i=1; $i <= $len; ++$i)
+        {
+	$match = 0;
+
+	// Now get substring from where we are currently
+	// to the number of letters past of the length
+	// of the search string.  Basically the same
+	// length as the search string.  So if it is identical
+	// we know we have a match.
+	//
+	// If not, we don't.  We also make sure we aren't
+	// trying to look past the end of the string...
+	//
+	$j = $i + ($lenS - 1);
+
+	if ($j <= $len)
+	    {
+	    string $part = `substring $str $i $j`;
+	    if ($part == $search)
+	        $match = 1;
+	    }
+	
+	if ($match == 1)
+	    {
+	    $retstr += $replace; // we did it, so insert replace str
+	    $i = $j;	// skip forward
+	    }
+	else
+	    {
+	    string $char = `substring $str $i $i`;
+	    $retstr += $char;
+	    }
+	}
+
+    return $retstr;
+	
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * strChop() - Removes last char from a string
+ */
+global proc string strChop(string $str)
+{
+    string $ret = "";
+
+    int $cnt = size($str);
+    
+    if ($cnt <= 1)
+        return $ret;
+    
+    $ret = `substring $str 1 ($cnt-1)`;
+
+    return $ret;
+}
+
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * strUpperIdx() - Upper cases only the given $index character of a string
+ *
+ *	ie:	strUpperIdx("michael", 1) ;
+ *		// Result: Michael //
+ *
+ *		strUpperIdx("michael", 3);
+ *		// Result: miChael /
+ */
+global proc string strUpperIdx(string $str, int $index)
+{
+    int $cnt = size($str);
+    if ($index < 1 || $index > $cnt)
+        return $str;
+
+    string $pre = "";
+    string $post = "";
+    string $mid = "";
+    
+    if ($index > 1)
+        $pre = `substring $str 1 ($index-1)`;
+    if ($index < $cnt)
+        $post = `substring $str ($index+1) $cnt`;
+    $mid = `substring $str $index $index`;
+    $mid = `toupper $mid`;
+    
+    string $ret = ($pre + $mid + $post);
+
+    return $ret;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * strLowerIdx() - Upper cases only the given $index character of a string
+ *
+ *	ie:	strUpperIdx("MICHAEL", 1) ;
+ *		// Result: mICHAEL //
+ *
+ *		strUpperIdx("MICHAEL", 3);
+ *		// Result: MIcHAEL /
+ */
+global proc string strLowerIdx(string $str, int $index)
+{
+    int $cnt = size($str);
+    if ($index < 1 || $index > $cnt)
+        return $str;
+
+    string $pre = "";
+    string $post = "";
+    string $mid = "";
+    
+    if ($index > 1)
+        $pre = `substring $str 1 ($index-1)`;
+    if ($index < $cnt)
+        $post = `substring $str ($index+1) $cnt`;
+    $mid = `substring $str $index $index`;
+    $mid = `tolower $mid`;
+    
+    string $ret = ($pre + $mid + $post);
+
+    return $ret;
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * intToStr() - Converts the int $i to a string, with the specified # of
+ *	0 field padding in it.  ie: 2 padding would be 01,02...09,10,11
+ *		3 padding is 001,002...099,100,101 etc...
+ *	padding of 0 and 1 or less is identical.
+ *
+ */
+global proc string intToStr(int $i, int $padding)
+{
+    string $s = (string)$i;
+    
+    while (size($s) < $padding)
+        $s = ("0" + $s);    // add zero in front as needed.
+
+    return $s;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * floatToStr() - Converts the float $f to a string, with the specified # of
+ *	0 field padding in it.  
+ *    $prePad is the # of fields to have before the decimal.
+ *    $decPad is the # to have after.  This value will extend extra 0's
+ *	at the end of the value, or will CROP the #'s after the decimal
+ *	so exactly and only that number of post decimal values are shown.
+ *
+ *
+ *    ie:
+ *		floatToStr(0.2,  2, 3);
+ *		// Result: 00.200 //
+ *
+ *		floatToStr(12.34,  3, 5);
+ *	 	  // Result: 012.34000 //
+ *
+ *		// Not this CROPS the after decimal value as specified //
+ *		floatToStr(12.345,  1, 1);
+ *		// Result: 12.3 //
+ *
+ *		// Not this CROPS the after decimal value as specified //
+ *		floatToStr(12.345,  1, 0);
+ *		// Result: 12 //
+ *
+ */
+global proc string floatToStr(float $f, int $prePad, int $decPad)
+{
+    string $s = (string)$f;
+
+    
+    string $parts[];
+    tokenize($s, ".", $parts);
+    
+    while (size($parts[0]) < $prePad)
+        $parts[0] = ("0" + $parts[0]);    // add zero in front as needed.
+
+    while (size($parts[1]) < $decPad)
+        $parts[1] = ($parts[1] + "0");    // add zero in back as needed.
+    
+    	// Now crop so we ONLY have the part after the decimal we want.
+    	//
+    if ($decPad >= 1)
+    	{
+    	$parts[1] = `substring $parts[1] 1 $decPad`;
+
+    	$s = ($parts[0] + "." + $parts[1]);  // put it back together now.
+	}
+    else
+    	$s = $parts[0];	 // if 0 pad, means only want part before .
+
+    return $s;
+}
+
+
+
+// --------------------------------------------------------------------------
+//	Object string Procedures
+// --------------------------------------------------------------------------
+
+/*
+ * objShortName() - Given a |Obj|Obj|Obj string, get last part after 
+ *	last | pipe.
+ */
+global proc string objShortName(string $obj)
+{
+    string $ret = "";
+    
+    if ($obj == "")
+        return $ret;
+        
+    string $parts[];
+    int $cnt = tokenize($obj, "|", $parts);
+    
+    if ($cnt <= 0)
+        $ret = $obj;
+    else
+        $ret = $parts[($cnt-1)];
+    
+    return $ret;
+}
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * objGetPrefix() - Given an object name like foo_bar_myObj (as if it was
+ *		referenced, parse out and return the prefix up to the last _
+ *		Works even if you pass in a full path object.
+ *
+ *	Returns "" if no prefix is found
+ *	Otherwise returns prefix without trailing _
+ * 
+ *  ie:  foo_bar 	-->  foo
+ * 	 biz     	-->  ""	(empty string)
+ * 	 biz_bang_doo 	-->  biz_bang
+ *	 |a_b_c|d_e_f	-->  d_e
+ *
+ */
+global proc string objGetPrefix(string $obj)
+{
+    string $ret = "";
+    
+    if ($obj == "")
+        return $ret;
+
+    $obj = objShortName($obj);	// First make sure we only have short name part of object
+        
+    string $parts[];
+    int $cnt = tokenize($obj, "_", $parts);
+    
+    if ($cnt <= 1)
+        $ret = "";
+    else
+        {
+		// Add all pre parts together
+	for ($i=0; $i < $cnt-1; ++$i)
+	    {
+	    if ($i > 0)
+	        $ret += "_";
+	    $ret += $parts[$i];
+    	    }
+	}
+    
+    return $ret;
+}
+
+// --------------------------------------------------------------------------
+

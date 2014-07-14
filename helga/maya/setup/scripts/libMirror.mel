@@ -1,0 +1,155 @@
+// --------------------------------------------------------------------------
+// libMirror.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	This is a nice library of procs to mirror objects.
+//	This will mirror for behavior, similar to Maya's mirror skeleton cmd,
+//	but this works on any object.
+//
+// REQUIRES:
+//	Nothing.
+//
+// USAGE:
+//	source "libMirror.mel";  
+//
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Copyright ©2004 Michael B. Comet - All Rights Reserved.
+//
+// VERSIONS:
+//	1.00 - Oct 16, 2004 - Initial Release.
+//
+// --------------------------------------------------------------------------
+
+
+// --------------------------------------------------------------------------
+//	Library Functions
+// --------------------------------------------------------------------------
+
+
+/*
+ * libMirror_mirrorObject() - Takes the current object and mirrors it
+ *		for behavior
+ *
+ *	$nAxis.  0=X 1=Y 2=Z  which axis to mirror across
+ */
+global proc libMirror_mirrorObject(string $obj, int $nAxis)
+{
+    if ($obj == "" || objExists($obj) != true)
+		{
+		warning -sl 0 ("libMirror_mirrorObject: \""+$obj+"\" does not exist. ") ;
+		return ;
+		}
+	
+	// First move to new spot
+	float $pos[3] = `xform -q -ws -t $obj` ;
+	
+	$pos[$nAxis] *= -1.0 ;
+	
+	xform -a -ws -t $pos[0] $pos[1] $pos[2] $obj ;
+	
+	
+	// Now mirror rotation.  We simply do an aim on the object,
+	// but with everything backwards.  We can pick any two axis.
+	// I will just pick Y as aim and X as up, but it doesn't really 
+	// matter at all, so long as the way we move them matches the
+	// aim constraint later.
+	//
+	//
+	string $aimTgt = `group -em -w -n "grpAimTgtMirrorTEMP"` ;
+	string $aimUp = `group -em -w -n "grpAimUpTgtMirrorTEMP"` ;
+	parent $aimTgt $obj ;
+	parent $aimUp $obj ;
+	// Now snap these to the same spot
+	string $pCons[], $oCons[] ;
+	$pCons = `pointConstraint -w 1 $obj $aimTgt` ;
+	$oCons = `orientConstraint -w 1 $obj $aimTgt` ;
+	refresh -f;
+	delete $pCons $oCons ;
+	$pCons = `pointConstraint -w 1 $obj $aimUp` ;
+	$oCons = `orientConstraint -w 1 $obj $aimUp` ;
+	refresh -f;
+	delete $pCons $oCons ;
+
+	// Now we have two groups at same spot...move them down axis, but reverse.
+	xform -r -os -t 0 -1 0 $aimTgt ;
+	xform -r -os -t -1 0 0 $aimUp ;
+	
+	// Now how did aimTgt move, what is world vector
+	float $posTgt[3] = `xform -q -ws -t $aimTgt` ;
+	float $posUp[3] = `xform -q -ws -t $aimUp` ;
+	float $deltaTgt[3] = {($posTgt[0]-$pos[0]), ($posTgt[1]-$pos[1]), ($posTgt[2]-$pos[2]) } ;
+	float $deltaUp[3] = {($posUp[0]-$pos[0]), ($posUp[1]-$pos[1]), ($posUp[2]-$pos[2]) } ;
+	// Now mirror that vector as needed
+	$deltaTgt[$nAxis] *= -1.0 ;
+	$deltaUp[$nAxis] *= -1.0 ;
+	xform -r -os -t 0 1 0 $aimTgt ;		// Then move aim tgt back
+	xform -r -os -t 1 0 0 $aimUp ;		// Then move aim up back
+	xform -r -ws -t $deltaTgt[0] $deltaTgt[1] $deltaTgt[2] $aimTgt ;	// Then move right way...
+	xform -r -ws -t $deltaUp[0] $deltaUp[1] $deltaUp[2] $aimUp ;		// Then move right way...
+	// unparent.
+	parent -w $aimTgt ;
+	parent -w $aimUp ;
+	
+	
+	// Now use these to do the aimConstraint.
+	string $aCons[] = `aimConstraint -aim 0 1 0 -u 1 0 0 -wut "object" -wuo $aimUp -w 1 $aimTgt $obj` ;
+	refresh -f;
+	delete $aCons ;
+	delete $aimTgt $aimUp ;
+	
+	// Also zero out rotation on joint if what we have is a joint, so it does 
+	// something like a joint align
+	//
+	if (nodeType($obj) == "joint")
+		makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 $obj ;
+	
+	select -r $obj ;
+	// Done!
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * libMirror_mirrorSelection() - Mirrors selected objects
+ */
+global proc libMirror_mirrorSelection(int $nAxis)
+{
+	string $objs[] = `ls -sl` ;
+	int $nObj = size($objs) ;
+	if ($nObj <= 0)
+		return ;
+
+	int $i;
+	string $parents[] ;	
+	
+		// Store parents
+	for ($i=0; $i < $nObj; ++$i)
+		{
+		string $pars[] = `listRelatives -parent $objs[$i]`;
+		$parents[$i] = $pars[0] ;	// store
+		if ($parents[$i] != "")		// And un-link for now!
+			parent -w $objs[$i] ;	
+		}
+	
+		// Do mirroring!
+	for ($i=0; $i < $nObj; ++$i)
+		libMirror_mirrorObject($objs[$i], $nAxis) ;
+
+
+		// RE-parent
+	for ($i=0; $i < $nObj; ++$i)
+		{
+		if ($parents[$i] != "")		// redo
+			parent $objs[$i] $parents[$i] ;	
+		}
+	
+	select -r $objs ;
+}
+
+// --------------------------------------------------------------------------
+
+

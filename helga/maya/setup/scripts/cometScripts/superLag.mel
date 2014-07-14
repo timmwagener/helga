@@ -1,0 +1,953 @@
+// --------------------------------------------------------------------------
+// superLag.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	Creates/Rigs an object for secondary action, then allows you to
+//	"Bake that data" and then lag in realtime with it.
+//
+//	You select an object control that you want to add Lag-Attributes
+//	onto.  Then a SuperLAG group is created as a child.  This group will
+//	rotate with secondary action.  All original children of the control
+//	are re-parented under this group.
+//
+//	Controls for Lag can be "Enabled" to an on state, or "Disabled" to 
+//	speed up playback when you don't need to see them.
+//
+//	Basic animation controls are given in overall Percent 0-100% (or more 
+//	or negative).  Frequency in frames of a bounce back-and-forth.  And
+//	a Falloff in frames, for approx time for lag to come to rest.
+//
+//	There is also percentage controls for adjusting how much lag is based
+//	on rotation vs. translation movement of the master object.
+//
+//	A Start Frame can also be set so that Lags can be done without popping
+//	problems for multiple shots in a scene file.  Simply animate the value
+//	with stepped keys to match the frame # of each start frame of your shots.
+//	on those frames.
+//
+// REQUIRES:
+//	Nothing.
+//
+//
+// USAGE:
+//	source "superLag"; superLag();
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Copyright ©2003 Michael B. Comet - All Rights Reserved.
+//
+// VERSIONS:
+//	1.00a1 - Mar 08, 2003 - Initial Release of Alpha.
+//	1.00 - Mar 16, 2003 - Initial Release.
+//
+// --------------------------------------------------------------------------
+
+
+/*
+ * Global Vars
+ */
+global string $superLagVersion = "1.00";
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * superLag_snap() - Properly snaps slave to master node
+ */
+global proc superLag_snap(string $master, string $slave)
+{
+    string $dups[] = `duplicate -rc $slave`;
+    string $dup = $dups[0];
+    
+    pointConstraint -n "superLagSnapPX" $master $dup ;
+    orientConstraint -n "superLagSnapOX" $master $dup ;
+
+    delete "superLagSnapPX";
+    delete "superLagSnapOX";
+    
+    float $tx = `getAttr ($dup+".tx")`;
+    float $ty = `getAttr ($dup+".ty")`;
+    float $tz = `getAttr ($dup+".tz")`;
+    float $rx = `getAttr ($dup+".rx")`;
+    float $ry = `getAttr ($dup+".ry")`;
+    float $rz = `getAttr ($dup+".rz")`;
+    
+    delete $dup;
+    
+    setAttr ($slave+".tx") $tx;
+    setAttr ($slave+".ty") $ty;
+    setAttr ($slave+".tz") $tz;
+    setAttr ($slave+".rx") $rx;
+    setAttr ($slave+".ry") $ry;
+    setAttr ($slave+".rz") $rz;
+
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * superLag_enableAll() - Sets all lag nodes to be enabled or disabled as
+ *	specified.
+ */
+global proc superLag_enableAll(int $onOff)
+{
+    string $lagNodes[] = `ls -type "transform" "*SuperLAG"`;
+    string $lag;
+    
+    for ($lag in $lagNodes)
+        {
+        string $s[] = `listConnections ($lag+".masterLagNode")`;
+        $master = $s[0];
+        if (`getAttr -se ($master+".lagEnabled")` == 1)
+	    setAttr ($master+".lagEnabled") $onOff;
+	}
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * superLag_selectAll() - Sets all lag nodes to be enabled or disabled as
+ *	specified.
+ */
+global proc superLag_selectAll()
+{
+    string $lagNodes[] = `ls -type "transform" "*SuperLAG"`;
+    string $lag;
+    
+    select -cl;
+    
+    for ($lag in $lagNodes)
+        {
+        string $s[] = `listConnections ($lag+".masterLagNode")`;
+        $master = $s[0];
+        select -add $master;
+	}
+    
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * superLag_erase() - Erases lag keys for all time 
+ */
+global proc superLag_erase()
+{
+    string $objs[] = `ls -sl`;	// Get names of selected objects
+    string $obj;
+
+
+    for ($obj in $objs)
+        {
+	string $master = "";
+	string $slave = "";
+	
+	// First make sure we have a Lag node of some sort...if we have the 
+	// master, or slave, figure the other one out so we can work..
+	//
+	if (objExists($obj+".slaveLagNode"))
+	    {
+	    $master = $obj;
+	    string $s[] = `listConnections ($obj+".slaveLagNode")`;
+	    $slave = $s[0];
+	    }
+	else if (objExists($obj+".masterLagNode"))
+	    {
+	    $slave = $obj;
+	    string $s[] = `listConnections ($obj+".masterLagNode")`;
+	    $master = $s[0];
+	    }
+	else
+	    {
+	    warning -sl 0 ("Object \""+$obj+"\" is not setup for Lag.  Skipping it.");
+	    continue;
+    	    }
+
+
+    		// Remove any old keys
+	cutKey -time (":") -at "lagForceT0" -at "lagForceT1" -at "lagForceT2" $slave;
+        cutKey -time (":") -at "lagForceR0" -at "lagForceR1" -at "lagForceR2" $slave;
+
+	setAttr ($slave+".lagForceT0") 0.0;
+	setAttr ($slave+".lagForceT1") 0.0;
+	setAttr ($slave+".lagForceT2") 0.0;
+	setAttr ($slave+".lagForceR0") 0.0;
+	setAttr ($slave+".lagForceR1") 0.0;
+	setAttr ($slave+".lagForceR2") 0.0;
+
+	}
+
+    print ("// superLag: Erased ALL Lag Data on Selected Objects. //\n");
+    
+    select -r $objs;	// End with original objs seleted still	
+	
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * superLag_eraseRange() - Erases lag keys for current time range
+ */
+global proc superLag_eraseRange()
+{
+    string $objs[] = `ls -sl`;	// Get names of selected objects
+    string $obj;
+
+
+	// Get start/end times
+    int $sf = `playbackOptions -q -ast`;
+    int $ef = `playbackOptions -q -aet`;
+
+
+    for ($obj in $objs)
+        {
+	string $master = "";
+	string $slave = "";
+	
+	// First make sure we have a Lag node of some sort...if we have the 
+	// master, or slave, figure the other one out so we can work..
+	//
+	if (objExists($obj+".slaveLagNode"))
+	    {
+	    $master = $obj;
+	    string $s[] = `listConnections ($obj+".slaveLagNode")`;
+	    $slave = $s[0];
+	    }
+	else if (objExists($obj+".masterLagNode"))
+	    {
+	    $slave = $obj;
+	    string $s[] = `listConnections ($obj+".masterLagNode")`;
+	    $master = $s[0];
+	    }
+	else
+	    {
+	    warning -sl 0 ("Object \""+$obj+"\" is not setup for Lag.  Skipping it.");
+	    continue;
+    	    }
+
+
+    		// Remove any old keys
+	cutKey -time ($sf+":"+$ef) -at "lagForceT0" -at "lagForceT1" -at "lagForceT2" $slave;
+        cutKey -time ($sf+":"+$ef) -at "lagForceR0" -at "lagForceR1" -at "lagForceR2" $slave;
+    
+	setKeyframe -t $sf -t $ef -v 0.0 -at ("lagForceR0") -at ("lagForceR1") -at ("lagForceR2") $slave;
+	setKeyframe -t $sf -t $ef -v 0.0 -at ("lagForceT0") -at ("lagForceT1") -at ("lagForceT2") $slave;
+
+	}
+
+    print ("// superLag: Erased Lag Data for Current Range on Selected Objects. //\n");
+    
+    select -r $objs;	// End with original objs seleted still	
+	
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * superLag_bake() -
+ */
+global proc superLag_bake()
+{
+    string $objs[] = `ls -sl`;	// Get names of selected objects
+    string $obj;
+
+    for ($obj in $objs)
+        {
+	string $master = "";
+	string $slave = "";
+	
+	// First make sure we have a Lag node of some sort...if we have the 
+	// master, or slave, figure the other one out so we can work..
+	//
+	if (objExists($obj+".slaveLagNode"))
+	    {
+	    $master = $obj;
+	    string $s[] = `listConnections ($obj+".slaveLagNode")`;
+	    $slave = $s[0];
+	    }
+	else if (objExists($obj+".masterLagNode"))
+	    {
+	    $slave = $obj;
+	    string $s[] = `listConnections ($obj+".masterLagNode")`;
+	    $master = $s[0];
+	    }
+	else
+	    {
+	    warning -sl 0 ("Object \""+$obj+"\" is not setup for Lag.  Skipping it.");
+	    continue;
+    	    }
+
+
+	// Init forces to nothing
+	float $forceT[3] = {0,0,0};
+	float $forceR[3] = {0,0,0};
+	float $prevForceT[3] = {0,0,0};
+	float $prevForceR[3] = {0,0,0};
+	
+	// Get start/end times
+	int $sf = `playbackOptions -q -ast`;
+	int $ef = `playbackOptions -q -aet`;
+	
+	int $cf = `currentTime -q`;
+	
+	// Remove any old keys
+	cutKey -time ($sf+":"+$ef) -at "lagForceT0" -at "lagForceT1" -at "lagForceT2" $slave;
+	cutKey -time ($sf+":"+$ef) -at "lagForceR0" -at "lagForceR1" -at "lagForceR2" $slave;
+	
+	// Go to start time	
+	currentTime -e $sf;
+	
+	// Get user pref
+	int $Zup = `getAttr ($slave+".lagZup")`;
+	
+
+	// Start to get storage data ready.
+	float $T1[], $T2[];
+	float $R1[], $R2[];
+	$T1 = `xform -q -ws -rp $master`;
+	$R1 = `xform -q -ws -ro $master`;
+
+	// Make our reader helper objects and put them at right spot
+	string $locs[] = `spaceLocator`;
+	string $locX = $locs[0];
+	string $locs[] = `spaceLocator`;
+	string $locY = $locs[0];
+	string $locs[] = `spaceLocator`;
+	string $locZ = $locs[0];
+	$locX = `rename $locX ("superLagReaderX")`;
+	$locY = `rename $locY ("superLagReaderY")`;
+	$locZ = `rename $locZ ("superLagReaderZ")`;
+	// Parent them too
+	parent $locX $master;
+	parent $locY $master;
+	parent $locZ $master;
+	superLag_snap($master, $locX);
+	superLag_snap($master, $locY);
+	superLag_snap($master, $locZ);
+	// Now they are snapped...move em to a spot out on each "local" axis for reading
+	xform -r -os -t 1 0 0 $locX;
+	xform -r -os -t 0 1 0 $locY;
+	xform -r -os -t 0 0 1 $locZ;
+
+
+	// Turn off all lags...but store original state so we can set back.
+	//
+	string $lagNodes[] = `ls -type "transform" "*SuperLAG"`;
+	int $lagStates[] ;
+	string $lag;
+	int $lc = 0;
+	for ($lag in $lagNodes)
+	    {
+		    // Now really store master node...not lag node.
+	    string $s[] = `listConnections ($lag+".masterLagNode")`;
+	    $lagNodes[$lc] = $s[0];
+
+	    $lagStates[$lc] = `getAttr ($lagNodes[$lc] + ".lagEnabled")`;
+	    if (`getAttr -se ($lagNodes[$lc]+".lagEnabled")` == 1)
+	        setAttr ($lagNodes[$lc] +".lagEnabled") 0;	// turn it off for faster update on bake
+	    ++$lc;
+	    }
+
+	string $panels[] = `getPanel -vis`;
+	string $panel;
+	select -r $locX $locY $locZ;
+	
+	for ($panel in $panels)
+	    {
+	    string $type = `getPanel -typeOf $panel`;
+		// Result: modelPanel //
+	    if ($type == "modelPanel")
+	        {
+		isolateSelect -state 1 $panel;
+		isolateSelect -ls $panel;
+		}
+	    }
+
+	waitCursor -state on;
+
+	int $t;
+	
+	    // Now calc and store forces for each frame
+	    //
+	for ($t= $sf; $t <= $ef; ++$t)
+	    {
+	    currentTime -e $t;	// go to new time
+	    
+		/*
+		 * Deal with rotation first....
+		 */
+	    $T2 = `xform -q -ws -rp $master`;
+	    $R2 = `xform -q -ws -ro $master`;
+	    
+	    
+	    	// now we get mover readers pos in world space and subtract
+	    	// from center point to get true dir vectors at origin.  We store
+	    	// these as vectors for the nice math procs.
+	    float $TX[] = `xform -q -ws -rp $locX`;
+	    float $TY[] = `xform -q -ws -rp $locY`;
+	    float $TZ[] = `xform -q -ws -rp $locZ`;
+	    vector $vX = <<$TX[0] - $T2[0], $TX[1] - $T2[1], $TX[2] - $T2[2] >>;
+	    vector $vY = <<$TY[0] - $T2[0], $TY[1] - $T2[1], $TY[2] - $T2[2] >>;
+	    vector $vZ = <<$TZ[0] - $T2[0], $TZ[1] - $T2[1], $TZ[2] - $T2[2] >>;
+	    	// These are already unit vectors since that's how we made them.
+	    
+	    // Get stuff ready to unrotate back to world type orientation
+	    // We rotate back by PREVIOUS rotation in world space, so that
+	    // we are always looking at the difference.  In other words since
+	    // the locators and obj are always aligned, normally we will always
+	    // have returns to world unit axis.  But since we are unrotating by
+	    // prev frame, our locators will be offset a bit.  That's the amount
+	    // we rotated by.  And since we have done this back via the master
+	    // orienation, even if it moved/rotated in world space, what we will
+	    // have is answer relative to the parent space of the master which is
+	    // what we need.
+	    float $rz = -1 * deg_to_rad($R1[2]);
+	    float $ry = -1 * deg_to_rad($R1[1]);
+	    float $rx = -1 * deg_to_rad($R1[0]);
+
+
+		// Do the reverse transforms
+		//
+		// Order here MUST be opposite of the master node order
+		// or else xform returns values that won't work right with 
+		// the order we are reversing!
+		//
+	    vector $vX = `rot $vX <<0, 1, 0>>  $ry`;
+	    vector $vX = `rot $vX <<1, 0, 0>>  $rx`;
+	    vector $vX = `rot $vX <<0, 0, 1>>  $rz`;
+
+	    vector $vY = `rot $vY <<0, 1, 0>>  $ry`;
+	    vector $vY = `rot $vY <<1, 0, 0>>  $rx`;
+	    vector $vY = `rot $vY <<0, 0, 1>>  $rz`;
+
+	    vector $vZ = `rot $vZ <<0, 1, 0>>  $ry`;
+	    vector $vZ = `rot $vZ <<1, 0, 0>>  $rx`;
+	    vector $vZ = `rot $vZ <<0, 0, 1>>  $rz`;
+	    
+	    // Now we have rotations but in true parent space. 
+	    // So figure it out using basic trig SOH CAH TOA.... :)
+	    //
+	    //
+	    if ($vY.y != 0)
+            	$forceR[0] = atand( $vY.z / $vY.y );
+	    else if ($vZ.z != 0)
+            	$forceR[0] = atand( $vZ.y / $vZ.z );
+            else
+                $forceR[0] = 0;
+	    
+	    if ($vX.x != 0)
+            	$forceR[1] = atand( $vX.z / $vX.x );
+	    else if ($vZ.z != 0)
+            	$forceR[1] = atand( $vZ.x / $vZ.z );
+            else
+                $forceR[1] = 0;
+
+	    if ($vX.x != 0)
+            	$forceR[2] = atand( $vX.y / $vX.x );
+	    else if ($vY.y != 0)
+            	$forceR[2] = atand( $vY.x / $vY.y );
+            else
+                $forceR[2] = 0;
+
+
+		/*
+		 * Now for Translation...we deal with a similar issue.
+		 *   We can easily see if the object is moving thru world space...
+		 *   But we'll want to know that motion relative to the objects
+		 *   coordinate system.  ie: if the object is rotated down 90's
+		 *  then even tho we move forward on an axis, we're really moving
+		 *  across a different axis on the master obj.  Which means we'll
+		 *  need to rotate that way, not the worldspace way.
+		 *
+		 * So we just get the world change in pos, put it through the 
+		 *   same reverse rotation matrix stuff so we can read it relative 
+		 *   to the original object.
+		 */
+		
+		// Get our movement vector.
+	    vector $vM = << $T2[0]-$T1[0], $T2[1]-$T1[1], $T2[2]-$T1[2] >>;
+	    	
+	    	// Now we already figured our radian stuff earlier, so just use that
+	    	// again...and put out motion thru the un-rotations.
+	    vector $vM = `rot $vM <<0, 1, 0>>  $ry`;
+	    vector $vM = `rot $vM <<1, 0, 0>>  $rx`;
+	    vector $vM = `rot $vM <<0, 0, 1>>  $rz`;
+
+		// At this point we know which way we have moved for real relative to
+		// the master.  The only last tricky bit is deciding what to do with this
+		// data.  ie: we want to get rotation force not trans.  
+		//
+		// So for example it is pre-determined that Y-axis point down the 
+		// chain, and we won't have "roll" on translation lag.  So if we move
+		// on the Z axis, then we rotate on X and vice versa.  THe only last
+		// question is do we rotate on X or Z if we move fwd/back on Y.  That's
+		// user determined by getting the Zup attribute.  If Z is "up" then we'll
+		// assume rotate on X to yield an up/down look.  If Zup if off we use Z.
+		//
+		// So we're really storing a rotation amount on the forceT attributes.
+		//
+	    $forceT[0] = $vM.z;
+	    $forceT[1] = 0;
+	    $forceT[2] = $vM.x;
+	    
+	    if ($Zup)
+	        $forceT[0] += $vM.y;
+	    else
+	        $forceT[2] += $vM.y;
+			
+
+		// Now we're all done.  The only other thing we do is try 
+		// to make force "absoulute".  So that even if we go back 
+		// and forth...we still keep adding force....
+		//
+		// So once a force is starting we let it go positive or 
+		// negative as needed...but then we keep it that way until
+		// it drops to zero again.
+		//
+	    for ($i=0; $i < 3; ++$i)
+	        {
+		if ($prevForceR[$i] > 0.0 && $forceR[$i] < 0.0)
+		    $forceR[$i] *= -1;
+		else if ($prevForceR[$i] < 0.0 && $forceR[$i] > 0.0)
+		    $forceR[$i] *= -1;
+
+		if ($prevForceT[$i] > 0.0 && $forceT[$i] < 0.0)
+		    $forceT[$i] *= -1;
+		else if ($prevForceT[$i] < 0.0 && $forceT[$i] > 0.0)
+		    $forceT[$i] *= -1;
+		
+		}
+	    
+	    // Now store this data in keyframes on the Lag Object
+	    // And prep for next loop
+	    //
+	    for ($i=0; $i < 3; ++$i)
+	        {
+	        setKeyframe -v $forceR[$i] -at ("lagForceR"+$i) $slave;
+	        setKeyframe -v $forceT[$i] -at ("lagForceT"+$i) $slave;
+		
+		$prevForceR[$i] = $forceR[$i];
+		$prevForceT[$i] = $forceT[$i];
+
+		}
+	     
+	    $T1 = `xform -q -ws -rp $master`;
+	    $R1 = `xform -q -ws -ro $master`;
+	    
+	    }
+
+
+	delete $locX;
+	delete $locY;
+	delete $locZ;
+
+
+	currentTime -e $cf;
+
+	int $lc = 0;
+	for ($lag in $lagNodes)
+	    {
+	    if (`getAttr -se ($lag+".lagEnabled")` == 1)
+	        setAttr ($lag+".lagEnabled") $lagStates[$lc];   // set it back to how it was.
+	    ++$lc;
+	    }
+	    // Except force this on on, since we just baked.
+        if (`getAttr -se ($master+".lagEnabled")` == 1)
+            setAttr ($master+".lagEnabled") 1;
+
+	for ($panel in $panels)
+	    {
+	    string $type = `getPanel -typeOf $panel`;
+		// Result: modelPanel //
+	    if ($type == "modelPanel")
+	        {
+		isolateSelect -state 0 $panel;
+		}
+	    }
+
+	waitCursor -state off;
+	
+	}
+
+    print ("// superLag: Baked selected objects. //\n");
+    
+    select -r $objs;	// End with original objs seleted still	
+}
+
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * superLag_rig() - Rigs objects for lag.
+ *
+ *	The way this works...is for each selected object...
+ *
+ *		A group is created with the same name and "SuperLAG"
+ *		appended to the name.  This is created to be a child of
+ *		the selected object. 
+ *		All original children are then grouped	under this node.  
+ *		So that they inherit the lag as well as the usual values.
+ *
+ *		The original object is then the master object.  And this newly 
+ *		create group becomes the slave with lag.  Data is stored on this
+ *		node, while user defined prefernces for key data like Lag strength
+ *		etc is stored on the original object.  A message attr is added to
+ *		both to allow the scripts to find the related object, even if the
+ *		user changes names later on.  Other attrs while normally keyed
+ *		on the master object, are connected the slave, so the slave script can
+ *		run properly even if names change later.
+ *
+ *		Y axis is assumed to point "down" the length of the node.  
+ *		In addition axis-order for both are set to ZXY, which MUST occur 
+ *		for this script to work right.
+ */
+global proc superLag_rig()
+{
+    string $objs[] = `ls -sl`;	// Get names of selected objects
+    string $obj;
+
+    print ("// Rigging superLag... //\n");
+
+    for ($obj in $objs)
+        {
+	string $parents[] = `listRelatives -ni -fullPath -parent $obj`;
+	string $children[] = `listRelatives -ni -fullPath -children -type "transform" $obj`;
+	
+	string $grp = `group -em -world -name ($obj+"SuperLAG")`;
+
+
+	// Make axis rotate order same
+	int $order = 2;	// ZXY
+	setAttr ($grp+".rotateOrder") $order;
+	setAttr ($obj+".rotateOrder") $order;
+
+	// Snap grp to master
+	float $T[] = `xform -q -ws -rp $obj`;
+	float $R[] = `xform -q -ws -ro $obj`;
+
+        parent $grp $obj;	// Parent the superLag grp
+	
+	xform -a -ws -t $T[0] $T[1] $T[2] $grp;
+	xform -a -ws -ro $R[0] $R[1] $R[2] $grp;
+	
+	// Now link original children to this node.
+	string $child;
+	for ($child in $children)
+	    {
+	    parent $child $grp;
+    	    }
+
+
+
+
+	// Finally we just do attribute stuff.
+	//
+	addAttr -ln "slaveLagNode" -at "message" $obj;
+	connectAttr -f ($grp+".message") ($obj+".slaveLagNode");
+
+	addAttr -ln "masterLagNode" -at "message" $grp;
+	connectAttr -f ($obj+".message") ($grp+".masterLagNode");
+
+	addAttr -ln "lagEnabled" -at "bool" -keyable true $obj;
+	addAttr -ln "lagEnabled" -at "bool" -keyable true $grp;
+	addAttr -ln "lagPercent" -at "float" -dv 100.0 -keyable true $obj;
+	addAttr -ln "lagPercent" -at "float" -dv 100.0  -keyable true $grp;
+	addAttr -ln "lagFreq" -at "float" -keyable true -dv 24 -min 1 -hnv true $obj;
+	addAttr -ln "lagFreq" -at "float" -keyable true -dv 24 -min 1 -hnv true $grp;
+	addAttr -ln "lagFalloff" -at "float" -keyable true -dv 48 -min 1 -hnv true $obj;
+	addAttr -ln "lagFalloff" -at "float" -keyable true -dv 48 -min 1 -hnv true $grp;
+	addAttr -ln "lagTraPct" -at "float" -keyable true -dv 100.0 $obj;
+	addAttr -ln "lagTraPct" -at "float" -keyable true -dv 100.0 $grp;
+	addAttr -ln "lagRotPct" -at "float" -keyable true -dv 100.0 $obj;
+	addAttr -ln "lagRotPct" -at "float" -keyable true -dv 100.0 $grp;
+	addAttr -ln "lagStartFrame" -at "short" -keyable true -dv 0.0 $obj;
+	addAttr -ln "lagStartFrame" -at "short" -keyable true -dv 0.0 $grp;
+
+		// Make this hidden
+	addAttr -ln "lagPrefixIdx" -at "short" -dv 0 -min 0 -hnv true -keyable false $grp;
+
+	addAttr -ln "lagForceT0" -at "float" -dv 0.0 -keyable true $grp;
+	addAttr -ln "lagForceT1" -at "float" -dv 0.0 -keyable true $grp;
+	addAttr -ln "lagForceT2" -at "float" -dv 0.0 -keyable true $grp;
+	addAttr -ln "lagForceR0" -at "float" -dv 0.0 -keyable true $grp;
+	addAttr -ln "lagForceR1" -at "float" -dv 0.0 -keyable true $grp;
+	addAttr -ln "lagForceR2" -at "float" -dv 0.0 -keyable true $grp;
+	addAttr -ln "lagZup" -at "bool" -keyable true $grp;
+
+	setAttr ($obj+".lagEnabled") false;	// default to off
+	connectAttr -f ($obj+".lagEnabled") ($grp+".lagEnabled");
+	connectAttr -f ($obj+".lagPercent") ($grp+".lagPercent");
+	connectAttr -f ($obj+".lagFreq") ($grp+".lagFreq");
+	connectAttr -f ($obj+".lagFalloff") ($grp+".lagFalloff");
+	connectAttr -f ($obj+".lagTraPct") ($grp+".lagTraPct");
+	connectAttr -f ($obj+".lagRotPct") ($grp+".lagRotPct");
+	connectAttr -f ($obj+".lagStartFrame") ($grp+".lagStartFrame");
+
+
+	/*
+	 * **** CREATE REAL LAG WORKER SCRIPT HERE on $grp ****
+	 */
+
+	string $script = "";
+	
+	$script += ("// Automated LAG Script for "+$grp+" // \n");
+	$script += ("// --------------------------------------- // \n");
+	$script += ("// \n");
+	$script += ("// Read current data values... //\n");
+	$script += ("// \n");
+	$script += ("int $enabled = "+$grp+".lagEnabled; \n");
+	$script += ("if ($enabled != 1) \n");
+	$script += ("    { \n");
+	$script += ("    "+$grp+".rotateX = 0; \n");
+	$script += ("    "+$grp+".rotateY = 0; \n");
+	$script += ("    "+$grp+".rotateZ = 0; \n");
+	$script += ("    } \n");
+	$script += ("else \n");
+	$script += ("    { \n");
+	$script += ("    // \n");
+	$script += ("    int $pIdx = "+$grp+".lagPrefixIdx; \n");
+	$script += ("    global string $lagPrefixArray[]; \n");
+	$script += ("    string $prefix = $lagPrefixArray[$pIdx]; \n");
+	$script += ("    // \n");
+	$script += ("    float $pct = "+$grp+".lagPercent / 100.0; \n");
+	$script += ("    float $freq = "+$grp+".lagFreq; \n");
+	$script += ("    float $falloff = "+$grp+".lagFalloff; \n");
+	$script += ("    float $pctT = "+$grp+".lagTraPct / 100.0; \n");
+	$script += ("    float $pctR = "+$grp+".lagRotPct / 100.0; \n");
+	$script += ("    int $startFrame = "+$grp+".lagStartFrame; \n");
+	$script += ("    float $tFactor = 10; // This value makes rotations and trans's more similar in range \n");
+	$script += ("    // Initialize force for this frame // \n");
+	$script += ("    // \n");
+	$script += ("    float $forceT[3] = {0,0,0}; \n");
+	$script += ("    float $forceR[3] = {0,0,0}; \n");
+	$script += ("    // Figure out how much force drops for each prev frame // \n");
+	$script += ("    // \n");
+	$script += ("    float $fPct = 1.0; \n");
+	$script += ("    float $pctFall = (1.0 / $falloff); \n");
+	$script += ("    float $ff[]; \n");
+	$script += ("    // Now go thru and calc force at this frame from // \n");
+	$script += ("    // previously baked data.  Force is 100% at current time // \n");
+	$script += ("    // and then falls off from forces from earlier frames based // \n");
+	$script += ("    // on the falloff the user set. // \n");
+	$script += ("    // \n");
+	$script += ("    for ($t=frame; $t >= $startFrame && $t >= frame - $falloff; --$t) \n");
+	$script += ("        { \n");
+	$script += ("        for ($i=0; $i < 3; ++$i) \n");
+	$script += ("            { \n");
+	$script += ("            $ff = `keyframe -at (\"lagForceR\"+$i) -t $t -q -eval ($prefix+\""+$grp+"\")`; \n");
+	$script += ("            $forceR[$i] += $fPct * $ff[0]; \n");
+	$script += ("            $ff = `keyframe -at (\"lagForceT\"+$i) -t $t -q -eval ($prefix+\""+$grp+"\")`; \n");
+	$script += ("            $forceT[$i] += $fPct * $ff[0]; \n");
+	$script += ("            } \n");
+	$script += ("        \n");
+	$script += ("        $fPct -= $pctFall; // fade out for next iteration \n");
+	$script += ("        } \n");
+	$script += ("    // Now do real true rotation data based on cos function on the forces. // \n");
+	$script += ("    for ($i=0; $i < 3; ++$i) \n");
+	$script += ("        { \n");
+	$script += ("        $forceT[$i] *= $tFactor; \n");
+	$script += ("        $forceR[$i] = -1 * $pctR * ($forceR[$i] * $pct * (cosd( frame * 360.0 / $freq )) ); \n");
+	$script += ("        $forceT[$i] = -1 * $pctT * ($forceT[$i] * $pct * (cosd( frame * 360.0 / $freq )) ); \n");
+	$script += ("        } \n");
+	$script += ("    // Finally set our rotations! \n");
+	$script += ("    "+$grp+".rotateX = $forceR[0] + $forceT[0]; \n");
+	$script += ("    "+$grp+".rotateY = $forceR[1] + $forceT[1]; \n");
+	$script += ("    "+$grp+".rotateZ = $forceR[2] + $forceT[2]; \n");
+	$script += ("    } \n");
+	$script += ("// \n");
+	$script += ("// End of Automated LAG Script \n");
+	
+	// Now set the expression into play!
+	expression -object $grp -name ("expr"+$grp) -string $script;
+	
+	}
+
+	/*
+	 * Now create our silly LagPrefix Script node if it doesn't exist
+	 * yet.... this will allow our script to have the proper ref prefix_
+	 * in it even tho we use back ticks....
+	 */
+
+    if (objExists("scriptNodeSuperLagFixPrefix") != true)
+        {
+	string $script = "";
+	
+	$script += ("// Automated SuperLAG FIX PREFIX scriptNode // \n");
+	$script += ("// ---------------------------------------- // \n");
+	$script += ("// \n");
+	$script += ("// First defined some nice procedures for us to \n");
+	$script += ("// use for object parsing of names... \n");
+	$script += ("// \n");
+	$script += ("/* \n");
+	$script += (" * objShortName() - Given a |Obj|Obj|Obj string, get last part after \n");
+	$script += (" *	last | pipe. \n");
+	$script += (" */ \n");
+	$script += ("global proc string objShortName(string $obj) \n");
+	$script += ("{ \n");
+	$script += ("    string $ret = \"\"; \n");
+	$script += ("    if ($obj == \"\") \n");
+	$script += ("        return $ret; \n");
+	$script += ("    string $parts[]; \n");
+	$script += ("	 int $cnt = tokenize($obj, \"|\", $parts); \n");
+	$script += ("    \n");
+	$script += ("    if ($cnt <= 0) \n");
+	$script += ("        $ret = $obj; \n");
+	$script += ("    else \n");
+	$script += ("        $ret = $parts[($cnt-1)]; \n");
+	$script += ("    return $ret; \n");
+	$script += ("} \n");
+	$script += ("// \n");
+	$script += ("/* \n");
+	$script += (" * objGetPrefix() - Given an object name like foo_bar_myObj (as if it was \n");
+	$script += (" *		referenced, parse out and return the prefix up to the last _ \n");
+	$script += (" *		Works even if you pass in a full path object. \n");
+	$script += (" * \n");
+	$script += (" *	Returns \"\" if no prefix is found \n");
+	$script += (" *	Otherwise returns prefix with trailing _ \n");
+	$script += (" * \n");
+	$script += (" *  ie:  foo_bar 	-->  foo_ \n");
+	$script += (" *  biz     	-->  \"\"	(empty string) \n");
+	$script += (" *  biz_bang_doo 	-->  biz_bang_ \n");
+	$script += (" *	 |a_b_c|d_e_f	-->  d_e_ \n");
+	$script += (" * \n");
+	$script += (" */ \n");
+	$script += ("global proc string objGetPrefix(string $obj) \n");
+	$script += ("{ \n");
+	$script += ("    string $ret = \"\"; \n");
+	$script += ("    if ($obj == \"\") \n");
+	$script += ("        return $ret; \n");
+	$script += ("    $obj = objShortName($obj);	// First make sure we only have short name part of object \n");
+	$script += ("    string $parts[]; \n");
+	$script += ("    int $cnt = tokenize($obj, \"_\", $parts); \n");
+	$script += ("    if ($cnt <= 1) \n");
+	$script += ("        $ret = \"\"; \n");
+	$script += ("    else \n");
+	$script += ("       { \n");
+	$script += ("		// Add all pre parts together \n");
+	$script += ("	    for ($i=0; $i < $cnt-1; ++$i) \n");
+	$script += ("           { \n");
+	$script += ("           $ret += $parts[$i]; \n");
+	$script += ("           $ret += \"_\"; \n");
+	$script += ("           } \n");
+	$script += ("       } \n");
+	$script += ("    return $ret; \n");
+	$script += ("} \n");
+	$script += ("// \n");
+	$script += ("// Now we do the real work of setting up our global array \n");
+	$script += ("// and storing prefix's in it, as well as setting the prefix \n");
+	$script += ("// index attr on each LagNode so we can use it. \n");
+	$script += ("// \n");
+	$script += ("print(\"// Fixing SuperLAG Prefix's. //\\n\"); \n");
+	$script += ("global string $lagPrefixArray[]; \n");
+	$script += ("clear $lagPrefixArray; // Start anew! \n");
+	$script += ("int $preCnt = 0; \n");
+	$script += ("// \n");
+	$script += ("string $lagNodes[] = `ls -type \"transform\" \"*SuperLAG\"`; \n");
+	$script += ("int $lagCnt = size($lagNodes); \n");
+	$script += ("int $i; \n");
+	$script += ("for ($i=0; $i < $lagCnt; ++$i) \n");
+	$script += ("    { \n");
+	$script += ("    string $prefix = objGetPrefix($lagNodes[$i]); \n");
+	$script += ("    int $preIdx = -1;    // Now we try to find it in our list. \n");
+	$script += ("    for ($j=0; $j < $preCnt; ++$j) \n");
+	$script += ("        { \n");
+	$script += ("        if ($lagPrefixArray[$j] == $prefix) \n");
+	$script += ("            { \n");
+	$script += ("            $preIdx = $j; \n");
+	$script += ("            break; \n");
+	$script += ("            } \n");
+	$script += ("        } \n");
+	$script += ("    // Now if we found a match the idx is set, otherwise this \n");
+	$script += ("    // is a new prefix, so we need to add it to our list. \n");
+	$script += ("    if ($preIdx == -1) \n");
+	$script += ("        { \n");
+	$script += ("        $preIdx = $preCnt;	    // add to the end \n");
+	$script += ("        $lagPrefixArray[$preIdx] = $prefix; \n");
+	$script += ("        ++$preCnt; \n"); 
+	$script += ("        } \n");
+	$script += ("    // Finally we have added if needed to the global array and we \n");
+	$script += ("    // know what our index should be...so set it. \n");
+	$script += ("    setAttr ($lagNodes[$i]+\".lagPrefixIdx\") $preIdx; \n");
+	$script += ("    print (\"// Setting \"+$lagNodes[$i]+\" --> \\\"\"+$prefix+\"\\\" (\"+$preIdx+\") //\\n\"); \n");
+	$script += ("    } \n");		
+	$script += ("print (\"// SuperLAG Prefix's Set. //\\n\"); \n");	
+	$script += ("// \n");
+	$script += ("// End of Automated SuperLAG scriptNode \n");
+	
+    	scriptNode -st 1 -bs $script -n "scriptNodeSuperLagFixPrefix";
+        
+        }
+
+	// eval it now to ensure proper prefix stuff
+	// 
+    scriptNode -executeBefore "scriptNodeSuperLagFixPrefix";
+
+
+
+    print ("// superLag: Done Rigging selected objects. //\n");
+    
+    select -r $obj;	// end with same objs still selected
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * superLag() - Main entry and ui.
+ */
+global proc superLag()
+{
+    global string $superLagVersion;
+
+    if (!`window -ex superLagWin`)
+        {
+	
+	window -w 210 -h 270 -t ("Super Lag - "+$superLagVersion) -in "superLag" superLagWin;
+
+	columnLayout sLag_mainCol;
+	
+	separator -style "in" -w 195 -h 3;
+	
+	button -l "Bake Anim Data for Sel. Lag" -w 195 -al "center" -c ("superLag_bake();") butLagBake;
+
+	separator -style "in" -w 195 -h 8;
+
+	button -l "Select All Lag Controls" -w 195 -al "center" -c ("superLag_selectAll();") butLagSelect;
+	separator -style "in" -w 195 -h 3;
+	button -l "Enable All Lag Objects" -w 195 -al "center" -c ("superLag_enableAll(1);") butLagEnable;
+	button -l "Disable All Lag Objects" -w 195 -al "center" -c ("superLag_enableAll(0);") butLagDisable;
+
+	separator -style "in" -w 195 -h 8;
+	
+	button -l "Erase Lag on Current Time Range" -w 195 -al "center" -c ("superLag_eraseRange();") butLagEraseRange;
+	button -l "Erase All Lag for Sel. Objects" -w 195 -al "center" -c ("superLag_erase();") butLagErase;
+
+	separator -style "in" -w 195 -h 8;
+
+	text -l "  Rigging:" -fn "smallPlainLabelFont";
+	button -l "Rig Objects for Lag" -w 195 -al "center" -c ("superLag_rig();") butLagRig;
+
+	separator -style "in" -w 195 -h 8;
+
+	text -l "  Copyright ©2003 Michael B. Comet" -fn "smallPlainLabelFont";
+	text -l "  All Rights Reserved" -fn "smallPlainLabelFont";
+
+	separator -style "in" -w 195 -h 3;
+
+	showWindow superLagWin;
+	}
+    else 
+        {
+	showWindow superLagWin;
+	}
+
+}
+
+
+// --------------------------------------------------------------------------
+
+
+
+

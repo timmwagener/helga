@@ -1,0 +1,1142 @@
+// --------------------------------------------------------------------------
+// cometSaveWeights.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	A tool to easily save and load skin weights.  Handles search and replace,
+//	mirroring and normalization/pruning.
+//
+//	NOTE: To do mirroring, you MUST:
+//			- Load by Point Position
+//			- Select BOTH a Search/Replace AND a Mirror Axis.
+//
+//
+// REQUIRES:
+//	libSkin.mel	- For skin procs
+//	libString.mel 	- For string procs
+//
+// USAGE:
+//	source "cometSaveWeights.mel";  cometSaveWeights() ;
+//
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Copyright ?2004 Michael B. Comet - All Rights Reserved.
+//
+// VERSIONS:
+//	1.00 - Sep 18, 2004 - Initial Release.
+//	1.01 - 11/02/04 - mcomet - Fixing.
+//	1.02 - 11/02/04 - mcomet - Now does pruning on save and works better.
+//	1.03 - 11/03/04 - mcomet - Fixed big bug in pruning I added yesterday and
+//		also better printing now for matches.
+//
+// --------------------------------------------------------------------------
+
+
+/*
+ * Includes
+ */
+eval("source \"libSkin.mel\"; ") ;
+eval("source \"libString.mel\"; ") ;
+
+/*
+ * globals
+ */
+global string $cSaveW_version = "1.03" ;
+global string $cSaveW_date = "Nov 3, 2004" ;
+
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+//	UI Procs
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+
+/*
+ * cometSaveWeights() - Main Entry
+ */
+global proc cometSaveWeights()
+{
+    global string $cSaveW_version ;
+    global string $cSaveW_date ;
+
+    if (`window -q -ex cometSaveWeightsWin`)
+    	{
+    	showWindow cometSaveWeightsWin ;
+    	return ;
+    	}
+
+
+    window -w 350 -h 280 -t ("Comet Save Weights - v"+$cSaveW_version) cometSaveWeightsWin ;
+    formLayout mainSaveForm ;
+    
+    text -l "skinCluster:" txSkinCl ;
+    textField -tx "" tfSkinCl ;
+    button -l "<<<" -w 30 -c ("cSaveW_loadSkin();") -ann ("Load skinCluster from selected geometry.") btnSkinCl ;
+
+    popupMenu -p tfSkinCl -pmc ("cSaveW_buildSkinMenu();") pmSkinCl ;
+    
+
+    text -l "Filename:" txFile ;
+    textField -tx "" tfFileWts ;
+    button -l "..." -w 30 -c ("cSaveW_chooseFile();") -ann ("Choose file for load/save.") btnFile ;
+    
+    separator -style "in" -h 3 sepMain ;
+    
+    button -l "Save Weights" -c ("cSaveW_saveUI();") -ann ("Save weights for chosen skinCluster") btnSave ;
+    
+    separator -style "in" -h 3 sepSave ;
+    
+    radioButtonGrp -l "Load By:" -cc ("cSaveW_updateUI();")  -nrb 3 -la3 "Pt. Order" "World Pos." "Local pos." -sl 1 -cw4 52 70 80 80  -ann ("Load by either Point Order, where point count cannot have changed, or by Closest Point Position matching.") rbgLoadBy ;
+
+    text -l "Point Position Match Tolerance:" txTol ;
+    floatField -w 150 -v -1.0 -min -1.0 -pre 6 -en false tfTol ;
+    popupMenu -p tfTol ;
+    	menuItem -l "0.0001" -c ("floatField -e -v 0.0001 tfTol ;") ;
+    	menuItem -l "0.001" -c ("floatField -e -v 0.001 tfTol ;") ;
+    	menuItem -l "0.01" -c ("floatField -e -v 0.01 tfTol ;") ;
+    	menuItem -l "0.1" -c ("floatField -e -v 0.1 tfTol ;") ;
+    	menuItem -divider true ;
+    	menuItem -l "Disabled (-1)" -c ("floatField -e -v -1.0 tfTol ;") ;
+
+
+    checkBox -l "Prune weights to" -v 1 -cc ("cSaveW_updateUI();") cbPrune ;
+    intField -v 3 -min 1 -max 12 -w 40 ifPrune ;
+    text -l "decimal places." txPrune ;
+    popupMenu -p ifPrune ;
+    	menuItem -l "1" -c ("intField -e -v 1 ifPrune ;") ;
+    	menuItem -l "2" -c ("intField -e -v 2 ifPrune ;") ;
+    	menuItem -l "3" -c ("intField -e -v 3 ifPrune ;") ;
+    	menuItem -l "4" -c ("intField -e -v 4 ifPrune ;") ;
+    	menuItem -l "5" -c ("intField -e -v 5 ifPrune ;") ;
+
+
+    radioButtonGrp -l "Mirror Pos.:" -nrb 4 -la4 "None" "X" "Y" "Z" -sl 1 -en false -cw5 63 50 40 40 40  rbgMirror ;
+
+
+    text -l "Search:" txSearch ;
+    textField -tx "" tfSearch ;
+    text -l "Replace:" txReplace ;
+    textField -tx "" tfReplace ;
+   
+    popupMenu -p tfSearch ;
+        menuItem -l "*NONE*" -c ("textField -e -tx \"\" tfSearch; textField -e -tx \"\" tfReplace; radioButtonGrp -e -sl 1 rbgMirror ; ") ;
+        menuItem -l "Lf" -c ("textField -e -tx \"Lf\" tfSearch; textField -e -tx \"Rt\" tfReplace; radioButtonGrp -e -sl 2 rbgMirror ; ") ;
+        menuItem -l "Rt" -c ("textField -e -tx \"Rt\" tfSearch; textField -e -tx \"Lf\" tfReplace; radioButtonGrp -e -sl 2 rbgMirror ; ") ;
+
+    popupMenu -p tfReplace ;
+        menuItem -l "*NONE*" -c ("textField -e -tx \"\" tfSearch; textField -e -tx \"\" tfReplace; radioButtonGrp -e -sl 1 rbgMirror ; ") ;
+        menuItem -l "Rt" -c ("textField -e -tx \"Lf\" tfSearch; textField -e -tx \"Rt\" tfReplace; radioButtonGrp -e -sl 2 rbgMirror ; ") ;
+        menuItem -l "Lf" -c ("textField -e -tx \"Rt\" tfSearch; textField -e -tx \"Lf\" tfReplace; radioButtonGrp -e -sl 2 rbgMirror ; ") ;
+   
+    button -l "Select Joints from File" -c ("cSaveW_selJntsUI();") -ann ("Attempts to re-select original skin joints based on what was stored in the save weights file.") btnSelJnts ;
+   
+    button -l "Load Weights" -c ("cSaveW_loadUI();") -ann ("Loads weights for chosen skinCluster.") btnLoad ;
+   
+    separator -style "in" -h 3 sepEmail ;
+    iconTextButton -style "textOnly" -l ("comet@comet-cartoons.com") -ann ("cometSaveWeights - "+$cSaveW_version+" - "+$cSaveW_date+"  Copyright ?2004 Michael B. Comet All Rights Reserved") -c ("showHelp -a \"http://www.comet-cartoons.com/toons/\"") -h 24 email ;
+   
+
+    
+    formLayout -e
+    
+    	-af txSkinCl "top" 8 
+    	-an txSkinCl "bottom" 
+    	-af txSkinCl "left" 5 
+    	-an txSkinCl "right" 
+
+    	-af tfSkinCl "top" 5 
+    	-an tfSkinCl "bottom" 
+    	-ac tfSkinCl "left" 5 txSkinCl 
+    	-ac tfSkinCl "right" 5 btnSkinCl
+    	
+    	-af btnSkinCl "top" 5 
+    	-an btnSkinCl "bottom" 
+    	-an btnSkinCl "left"  
+    	-af btnSkinCl "right" 5
+
+
+    	-ac txFile "top" 8 tfSkinCl
+    	-an txFile "bottom" 
+    	-af txFile "left" 5 
+    	-an txFile "right" 
+
+    	-ac tfFileWts "top" 5 tfSkinCl
+    	-an tfFileWts "bottom" 
+    	-ac tfFileWts "left" 5 txFile 
+    	-ac tfFileWts "right" 5 btnFile
+    	
+    	-ac btnFile "top" 5 tfSkinCl
+    	-an btnFile "bottom" 
+    	-an btnFile "left"  
+    	-af btnFile "right" 5
+    	
+    	-ac sepMain "top" 5 tfFileWts
+    	-an sepMain "bottom" 
+    	-af sepMain "left" 0
+    	-af sepMain "right" 0
+    
+    	-ac btnSave "top" 5 sepMain
+    	-an btnSave "bottom" 
+    	-af btnSave "left" 5
+    	-af btnSave "right" 5
+
+    	-ac sepSave "top" 5 btnSave
+    	-an sepSave "bottom" 
+    	-af sepSave "left" 0
+    	-af sepSave "right" 0
+
+    	-ac rbgLoadBy "top" 5 sepSave
+    	-an rbgLoadBy "bottom" 
+    	-af rbgLoadBy "left" 5
+    	-an rbgLoadBy "right" 
+
+    	-ac txTol "top" 8 rbgLoadBy
+    	-an txTol "bottom" 
+    	-af txTol "left" 5
+    	-an txTol "right" 
+
+    	-ac tfTol "top" 5 rbgLoadBy
+    	-an tfTol "bottom" 
+    	-ac tfTol "left" 5 txTol
+    	-af tfTol "right" 5
+    
+
+    	-ac cbPrune "top" 8 tfTol
+    	-an cbPrune "bottom" 
+    	-af cbPrune "left" 5 
+    	-an cbPrune "right" 
+
+    	-ac ifPrune "top" 5 tfTol
+    	-an ifPrune "bottom" 
+    	-ac ifPrune "left" 0 cbPrune
+    	-an ifPrune "right" 
+
+    	-ac txPrune "top" 8 tfTol
+    	-an txPrune "bottom" 
+    	-ac txPrune "left" 5 ifPrune
+    	-an txPrune "right" 
+
+
+    	-ac rbgMirror "top" 5 ifPrune
+    	-an rbgMirror "bottom" 
+    	-af rbgMirror "left" 5 
+    	-af rbgMirror "right" 5
+
+
+    	    	
+    	-ac txSearch "top" 8 rbgMirror
+    	-an txSearch "bottom" 
+    	-af txSearch "left" 5 
+    	-an txSearch "right" 
+
+    	-ac tfSearch "top" 5 rbgMirror
+    	-an tfSearch "bottom" 
+    	-ac tfSearch "left" 5 txSearch
+    	-ap tfSearch "right" 0 49
+
+    	-ac txReplace "top" 8 rbgMirror
+    	-an txReplace "bottom" 
+    	-ap txReplace "left" 0 51
+    	-an txReplace "right" 
+
+    	-ac tfReplace "top" 5 rbgMirror
+    	-an tfReplace "bottom" 
+    	-ac tfReplace "left" 5 txReplace 
+    	-af tfReplace "right" 5
+    
+    	-ac btnSelJnts "top" 5 tfSearch
+    	-an btnSelJnts "bottom" 
+    	-af btnSelJnts "left" 5 
+    	-ap btnSelJnts "right" 0 50
+
+    	-ac btnLoad "top" 5 tfSearch
+    	-an btnLoad "bottom" 
+    	-ap btnLoad "left" 0 50
+    	-af btnLoad "right" 5
+
+    	-ac sepEmail "top" 5 btnLoad
+    	-an sepEmail "bottom" 
+    	-af sepEmail "left" 0 
+    	-af sepEmail "right" 0
+
+    	-ac email "top" 0 sepEmail
+    	-an email "bottom" 
+    	-af email "left" 5
+    	-af email "right" 5
+    	
+    	mainSaveForm ;
+
+	
+
+    showWindow cometSaveWeightsWin ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_loadSkin() - Loads the skinCluster up into field
+ */
+global proc cSaveW_loadSkin()
+{
+    string $objs[] = `ls -sl` ;
+
+    string $skins[] = libSkin_getSkinFromGeo($objs[0]) ;
+    textField -e -tx $skins[0] tfSkinCl ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_buildSkinMenu() - Makes popup menu for the geo list
+ */
+global proc cSaveW_buildSkinMenu()
+{
+    menu -e -dai pmSkinCl ;
+    setParent -menu pmSkinCl ;
+    
+    string $geos[] = libSkin_getSkinGeosInScene() ;
+    string $g;
+    
+    $geos = `sort $geos` ;
+    
+    for ($g in $geos)
+        {
+        menuItem -l $g -c ("select -r \""+$g+"\"; cSaveW_loadSkin(); ") ;        
+        }
+    
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_chooseFile() - Use the nicer Maya file browser....
+ */
+global proc cSaveW_chooseFile()
+{
+	// See the top of fileBrowser.mel in Maya for info.
+	// Basically you call :
+	//		fileBrowser( string $procCB, string $action, string $type, int $mode) ;
+	//
+	//  $procCB = callback proc to be invoked when the action button is pressed
+	//  $action = label of the button in the browser that will do something, like "Load" or "Save"
+	//  $type   = File type to be used... like *.mel
+	//  $mode   = 0=read 1=write 2=write (no paths)  4=Read dir's only
+    	//
+	//
+	//  The Callback proc must take two strings, and return an int
+	// ie:
+	//	global proc int fileProcCB(string $file, string $type) 
+	//
+	//   $file  = file or dir that was chosen
+	//   $type  = type of file
+	//     Returns 1 if dialog should close and success, 0 if keep open and fail.
+	//
+	//  Finally another useful items is: 
+	//		global string $gDefaultFileBrowserDir;
+	//
+	//	This will put the filebrowser to point to the path.  Useful to make
+	//	it go somewhere right before the initial fileBrowser call.
+	//
+    global string $gDefaultFileBrowserDir;
+
+    string $curFile = `textField -q -tx tfFileWts` ;
+	string $dir = dirname($curFile) ;
+
+	if ($dir != "")
+		pv_goDirectory($dir) ;			// And start in that place...
+    
+    fileBrowser( "cSaveW_chooseFileCB", "Choose", "*.*", 1) ;
+
+
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_chooseFileCB() - Callback proc for fileBrowser call.
+ */
+global proc int cSaveW_chooseFileCB(string $file, string $type)
+{
+    textField -e -tx $file tfFileWts ;
+    return 1 ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_saveUI() - Wrapper for save from ui call
+ */
+global proc cSaveW_saveUI()
+{
+    string $skinCl = `textField -q -tx tfSkinCl`; 
+    string $file = `textField -q -tx tfFileWts` ;
+    int $bDoPrune = `checkBox -q -v cbPrune` ;
+    int $prunePlaces = `intField -q -v ifPrune` ;
+	
+    string $comps[] = libSkin_getSelComps($skinCl) ;
+    
+    cSaveW_save($skinCl, $file, $comps, $bDoPrune, $prunePlaces ) ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_save() - Real Save proc
+ */
+global proc cSaveW_save(string $skinCl, string $file, string $comps[],
+	int $bDoPrune, int $prunePlaces)
+{
+    if (size($comps) <= 0)
+    	{
+    	error -sl 0 ("cometSaveWeights: You must select one or more points/vertices to save.") ;
+    	}
+
+    if ($file == "")
+    	{
+    	error -sl 0 ("cometSaveWeights: You must choose a file to save to.");
+    	}
+
+    if (`filetest -r $file`)	// Does file already exist? 
+    	{
+    	if (`filetest -w $file` != true)	// If so is it not writable?
+    	    {
+    	    error -sl 0 ("cometSaveWeights: The file you have chosen is NOT writeable.");	
+    	    }
+	string $ret = `confirmDialog
+			-title "Overwrite File?"
+			-message ("The file: "+$file+" \n\n    Already exists.  Do you wish to overwrite it?\n")
+			-button "Save"
+			-button "Cancel"
+			-defaultButton "Cancel"
+			-cancelButton "Cancel"
+			-dismissString "Cancel"
+			`;
+			
+	if ($ret != "Save")
+	    {
+	    print ("// cometSaveWeights aborted at user request. //\n") ;
+	    return ;
+	    }
+    	
+    	}
+
+
+	// At this point we are ready to save weights.
+	//
+
+	// Open file
+    int $fileId = `fopen $file "w"`;
+    if ($fileId == 0) {
+	error -sl 1 ("cometSaveWeights: Error Opening File: "+$file);
+	return;
+	}    
+
+    fprint $fileId ("// "+$file+" - cometSaveWeights.mel OUTPUT.\n");
+    fprint $fileId ("// \n\n");
+    fprint $fileId ("[WEIGHTS]\n");
+
+    waitCursor -state on; 
+
+    string $comp="" ;
+    
+    string $usedJnts[] ;
+    clear $usedJnts ;
+    string $cmd="" ;
+    
+        
+    setAttr ($skinCl+".envelope") 0.0 ;	// Disable so we get a valid point pos read...
+        	
+    for ($comp in $comps) 
+        {
+		float $wts[] ;
+		string $jnts[] ;
+		clear $jnts;		// erase array
+		clear $wts ;
+	
+			// What joints are being used?
+		$cmd = ("skinPercent -q -t "+$skinCl+" "+$comp); 
+		$jnts = eval($cmd);
+			// And what are their skinPercent weights?
+		$cmd = ("skinPercent -q -v "+$skinCl+" "+$comp); 
+		$wts = eval($cmd);
+		
+		if ($bDoPrune)
+			cSaveW_pruneAndNormalize($wts, $prunePlaces) ;
+		
+		float $posW[3] = `pointPosition -w $comp`;
+		float $posL[3] = `pointPosition -l $comp`;
+	
+		fprint $fileId "[COMPONENT]\n";
+		fprint $fileId ($comp+"\n");			// print sel name
+		fprint $fileId ($posW[0]+" "+$posW[1]+" "+$posW[2]+"\n");   // print pos World
+		fprint $fileId ($posL[0]+" "+$posL[1]+" "+$posL[2]+"\n");   // print pos Local
+	
+		string $output = "" ;
+		float $total = 0.0 ;	
+		for ($n=0; $n < size($jnts); ++$n) 
+			{
+			if ($wts[$n] != 0.0)
+				{
+				$total += $wts[$n] ;
+				$output += ($jnts[$n]+" "+$wts[$n]+" ");
+	
+				// Now keep list of joints we've seen...
+				cSaveW_addToArray($jnts[$n], $usedJnts ) ;
+				}
+			}
+		if ($total <= 0.0 || $output == "")
+			$output = "// No weights" ;
+	
+		fprint $fileId ($output+"\n");		// write to file
+		} // end of each comp
+
+    fprint $fileId ("[END-WEIGHTS]\n");
+
+    fprint $fileId ("\n");
+
+    fprint $fileId ("[JOINTS]\n");
+    for ($n=0; $n < size($usedJnts); ++$n) 
+    	{
+    	fprint $fileId ($usedJnts[$n]+"\n");
+    	}
+    fprint $fileId ("[END-JOINTS]\n");
+    
+    fprint $fileId ("\n\n");
+    fprint $fileId ("// end of output.\n");
+
+    fclose $fileId;
+
+    setAttr ($skinCl+".envelope") 1.0 ;		// RE-Enable
+
+
+    waitCursor -state off; 
+
+    print ("// cometSaveWeights ended successfully. //\n");    
+
+}
+
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * cSaveW_addToArray() - Helper function that checks to see if the passed in
+ *     string/bonename is in our list, and if not, adds it to the end.
+ */
+global proc cSaveW_addToArray(string $b, string $array[])
+{
+    int $n;
+    int $found=0;
+    int $total = size($array);
+    
+    for ($n=0; $n < $total; ++$n) {
+    	if ($array[$n] == $b) {
+	    $found = 1;
+	    break;
+	    }
+    	}
+
+    if ($found == 0)		// haven't seen it yet, add to end of list.
+        $array[$total] = $b;   // add it
+
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_updateUI
+ */
+global proc cSaveW_updateUI()
+{
+    int $mode = `radioButtonGrp -q -sl rbgLoadBy` ;
+    if ($mode == 1)	// Order
+    	{
+    	textField -e -en false tfTol ;
+    	radioButtonGrp -e -en false rbgMirror ;
+    	}
+    else
+    	{
+    	textField -e -en true tfTol ;
+    	radioButtonGrp -e -en true rbgMirror ;
+    	}
+
+
+    int $prune = `checkBox  -q -v cbPrune` ;
+    intField -e -en $prune ifPrune ;
+
+}
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * cSaveW_loadUI() - Wrapper for load from ui call
+ */
+global proc cSaveW_loadUI()
+{
+    string $skinCl = `textField -q -tx tfSkinCl`; 
+    string $file = `textField -q -tx tfFileWts` ;
+    int $mode = `radioButtonGrp -q -sl rbgLoadBy` ;
+    float $tol = `floatField -q -v tfTol` ;
+    int $mirrorMode = `radioButtonGrp -q -sl rbgMirror` ;
+    string $search = `textField -q -tx tfSearch` ;
+    string $replace = `textField -q -tx tfReplace` ;
+    int $bDoPrune = `checkBox -q -v cbPrune` ;
+    int $prunePlaces = `intField -q -v ifPrune` ;
+
+    string $comps[] = libSkin_getSelComps($skinCl) ;
+    
+    cSaveW_load($skinCl, $file, $comps, $mode, $tol, $mirrorMode, $search, $replace, $bDoPrune, $prunePlaces) ;
+
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_load() - Real load proc
+ */
+global proc cSaveW_load(string $skinCl, string $file, string $comps[], 
+	int $mode, float $tol, int $mirrorMode, string $search, string $replace,
+	int $bDoPrune, int $prunePlaces)
+{
+	// Store some vars for pointPosition loads...
+    int $ppCnt = 0 ;	// How many read in?
+	string $ppComps[] ;	// Original component name for the saved pp comp
+    string $ppJnts[] ;	// string of joints for each point
+    string $ppWts[] ;	// Weight string of float weights for each point
+    float $ppXPos[] ;	// X Pos for each loaded pt
+    float $ppYPos[] ;	// X Pos for each loaded pt
+    float $ppZPos[] ;	// X Pos for each loaded pt
+
+
+    if (size($comps) <= 0)
+    	{
+    	error -sl 0 ("cometSaveWeights: You must select one or more points/vertices to load points for.") ;
+    	}
+
+    if ($file == "")
+    	{
+    	error -sl 0 ("cometSaveWeights: You must choose a file to load from.");
+    	}
+
+    if (`filetest -r $file` != true)	// Does file already exist? 
+	error -sl 0 ("cometSaveWeights: The file \""+$file+"\" does not exist.") ;
+
+
+    $fileId = `fopen $file "r"`;
+    if ($fileId == 0) {
+	error -sl 1 ("saveWeights.mel: Error Opening File or File does not exist: "+$file);
+	return;
+	}        
+
+    waitCursor -state on; 
+
+    setAttr ($skinCl+".envelope") 0.0 ;	// Disable so we get a valid point pos read...
+
+	// Start the reading...
+    $line = `fgetline $fileId`;		// get the first comment line/header
+    $line = cSaveW_stripCR($line);
+
+    string $parts[] ;
+
+    string $curObj = "" ;
+    tokenize($comps[0], ".", $parts) ;	// Break on obj.attr to get at least what current obj is.
+    $curObj = $parts[0] ;
+
+    do
+        {
+        
+        
+	if ($line == "" || substring($line,1,1) == " " || substring($line,1,2) == "//")
+	    $line = "[COMMENT]" ;
+	
+	switch ($line)
+	    {
+	    case "[WEIGHTS]":
+	    	print ("// cometSaveWeights: Reading weights... //\n") ;
+	    	break ;
+	    
+	    case "[COMPONENT]":
+	    	// Now read next items...
+	    	string $comp = `fgetline $fileId` ;	// obj.vtx[]
+	    	$comp = cSaveW_stripCR($comp) ;
+	    	
+	    	string $posWStr = `fgetline $fileId` ;	// posW
+	    	$posWStr = cSaveW_stripCR($posWStr) ;
+	    	tokenize($posWStr, $parts) ;
+	    	float $posW[3]; 
+	    	$posW[0] = (float)$parts[0] ;
+	    	$posW[1] = (float)$parts[1] ;
+	    	$posW[2] = (float)$parts[2] ;
+	    	if ($mirrorMode == 2)
+	    	    $posW[0] *= -1.0 ;
+	    	else if ($mirrorMode == 3)
+	    	    $posW[1] *= -1.0 ;
+	    	else if ($mirrorMode == 4)
+	    	    $posW[2] *= -1.0 ;
+	    	
+	    	string $posLStr = `fgetline $fileId` ;	// posL
+	    	$posLStr = cSaveW_stripCR($posLStr) ;
+	    	tokenize($posLStr, $parts) ;
+	    	float $posL[3]; 
+	    	$posL[0] = (float)$parts[0] ;
+	    	$posL[1] = (float)$parts[1] ;
+	    	$posL[2] = (float)$parts[2] ;
+	    	if ($mirrorMode == 2)
+	    	    $posL[0] *= -1.0 ;
+	    	else if ($mirrorMode == 3)
+	    	    $posL[1] *= -1.0 ;
+	    	else if ($mirrorMode == 4)
+	    	    $posL[2] *= -1.0 ;
+	    		    	
+	    	string $tvStr = `fgetline $fileId` ;	// jnt wt jnt wt jnt wt ...
+	    	$tvStr = cSaveW_stripCR($tvStr) ;
+	    	tokenize($tvStr, $parts) ;
+	    	string $jnts[] ;
+	    	float $wts[] ;
+	    	clear $jnts ;
+	    	clear $wts ;
+	    	int $j;
+	    	for ($j=0; $j < size($parts); $j += 2)
+	    	    {
+	    	    if ($search != "")
+			$parts[$j] = strSearchReplace($parts[$j], $search, $replace) ;
+
+	    	    $jnts[size($jnts)] = $parts[$j] ;
+	    	    $wts[size($wts)] = $parts[$j+1] ;
+	    	    }
+
+		// Now actually do something with all the data we read.
+		// We know the points World and Local space with mirroring done, 
+		// as well as the joints, weights and comp with search/replace done.
+		//
+		if ($mode == 1)		// Order
+		    {
+		    tokenize($comp, ".", $parts) ;	// Break into obj.attr
+		    string $c;
+		    
+			
+		    // Now to allow for loading of one obj to another, we only really keep
+		    // the .vtx part, and retack that onto the real object the skinCluster is for.
+		    //
+		    $comp = ($curObj+"."+$parts[1]) ;
+		    
+		    int $isSel = false ;
+		    for ($c in $comps)
+		        {
+		        if ($c == $comp)
+		            {
+		            $isSel = true ;
+		            break ;
+		            }
+		        }
+		    
+		    // Now only actually do the load if the comp we just read was in the selected comp list...
+		    if ($isSel)
+		        {
+				print ("// "+$comp+" Loading... //\n");
+	
+				string $cmd = "" ;
+			
+				if ($bDoPrune)
+					{
+					// Prune and normalize
+					int $floodIdx = cSaveW_pruneAndNormalize($wts, $prunePlaces) ;
+	
+					// Flood to largest value first, to ensure proper set.
+					$cmd += "skinPercent " ;
+					$cmd += ("-tv "+$jnts[$floodIdx]+" 1.0 ");
+					$cmd += ($skinCl+" "+$comp+" ;  ") ;
+					eval($cmd) ;
+					}
+			
+			
+				$cmd = "skinPercent " ;
+	
+				for ($j=0; $j < size($jnts); ++$j)
+					$cmd += ("-tv "+$jnts[$j]+" "+$wts[$j]+" ");
+	
+				$cmd += ($skinCl+" "+$comp+" ;") ;
+	
+				eval($cmd) ;		// Load the weight!
+				}
+		    }
+		else 	// Point position, just store data
+		    {
+			$ppComps[$ppCnt] = $comp ;
+		    $ppJnts[$ppCnt] = "" ;
+		    $ppWts[$ppCnt] = "" ;
+		    for ($j=0; $j < size($jnts); ++$j)	// Re-assemble as strings for now...
+		    	{
+		    	$ppJnts[$ppCnt] = $ppJnts[$ppCnt] + ($jnts[$j] + " ");	
+		    	$ppWts[$ppCnt]  = $ppWts[$ppCnt]  + ($wts[$j] + " ") ;	
+		    	}
+		    
+		    if ($mode == 2)		// World
+		        {
+		        $ppXPos[$ppCnt] = $posW[0] ;
+		        $ppYPos[$ppCnt] = $posW[1] ;
+		        $ppZPos[$ppCnt] = $posW[2] ;
+		        }
+		    else if ($mode == 3)	// Local
+		        {
+		        $ppXPos[$ppCnt] = $posL[0] ;
+		        $ppYPos[$ppCnt] = $posL[1] ;
+		        $ppZPos[$ppCnt] = $posL[2] ;
+		        }
+		    
+		    ++$ppCnt ;	// Keep track of how many pts read.
+		    }
+
+
+	    	break ;
+
+	    case "[END-WEIGHTS]":
+	        print ("// cometSaveWeights: Finished reading weight data. //\n") ;
+	        break ;
+
+
+	    case "[JOINTS]":    
+	    	// Orig jnt list, read until we hit the END marker for it...
+	    	string $temp ;
+	    	do 
+	    	    {
+	    	    $temp = `fgetline $fileId` ;	// orig jnt 
+		    $temp = cSaveW_stripCR($temp) ;
+	    	    
+	    	    } while ($temp != "[END-JOINTS]" && !feof($fileId)) ;
+		break ;
+
+
+	    case "[COMMENT]":    
+	    default:
+	    	; // Ignore it!
+	    	break ;
+	    	}
+
+
+		// Attempt to read next line        
+		$line = `fgetline $fileId`;		// get the first comment line/header
+		$line = cSaveW_stripCR($line);
+			
+        } while ( !feof($fileId) ) ;
+
+
+
+    if ($mode == 2 || $mode == 3)		// Point position load...must finish...
+    	{
+    	print ("// cometSaveWeights: Loading by point position... //\n") ;
+    	
+    	// At this stage we have stored jnt, wts, pos for each original comp pt.
+    	// Now for each real selected vert, we can loop thru and load.
+    	//
+    	
+    	// Go thru each selected comp...and find best match for it..
+    	int $i;
+    	for ($i=0; $i < size($comps); ++$i)
+    	    {
+				// Get position of the component
+			float $posC[3] ;
+			if ($mode == 2)
+				$posC = `pointPosition -w $comps[$i]`;
+			else if ($mode == 3) 
+				$posC = `pointPosition -l $comps[$i]`;
+				
+			
+				int $idxClosest = -1 ;
+				float $closestDist = -1 ;
+				
+				int $j ;
+				for ($j=0; $j < $ppCnt; ++$j)
+					{
+					
+					vector $vDist = << ($posC[0] - $ppXPos[$j]), ($posC[1] - $ppYPos[$j]), ($posC[2] - $ppZPos[$j]) >> ;
+					float $dist = mag($vDist) ;
+	
+					
+					// Now if we are closer, or if first round, store...
+					if ($dist < $closestDist || $idxClosest == -1)
+						{
+						$idxClosest = $j ;
+						$closestDist = $dist ;
+						}
+					
+					}
+			  
+				// Now we have a closest point..but make sure it is within threshold
+			if ($closestDist > $tol && $tol >= 0.0)	// The closest match was not close enough....neg tol means ignore tolerance
+					{
+					print ("// "+$comps[$i]+" distance "+$closestDist+" is out of tolerance "+$tol+" for closest point INDEX "+$idxClosest+". //\n") ;
+					continue ;
+					}
+			  
+			print ("// "+$comps[$i]+" matches "+$ppComps[$idxClosest]+" (Internal Index "+$idxClosest+") //\n") ;
+			  
+			// At this point we can weight..we just have to munge the strings we stored
+			// back into something usable
+			//
+			string $jnts[] ;
+			float $wts[] ;
+			clear $jnts ;
+			clear $wts ;
+			
+			tokenize($ppJnts[$idxClosest], $parts) ;
+			for ($j=0; $j < size($parts); ++$j)
+			$jnts[size($jnts)] = $parts[$j] ;
+	
+			tokenize($ppWts[$idxClosest], $parts) ;
+			for ($j=0; $j < size($parts); ++$j)
+			$wts[size($wts)] = (float)$parts[$j] ;
+					
+					
+			// Now we can actually load it.
+			//
+			string $cmd = "" ;
+	
+			if ($bDoPrune)
+				{
+				// Prune and normalize
+				int $floodIdx = cSaveW_pruneAndNormalize($wts, $prunePlaces) ;
+		
+				// Flood to largest value first, to ensure proper set.
+				$cmd += "skinPercent " ;
+				$cmd += ("-tv "+$jnts[$floodIdx]+" 1.0 ");
+				$cmd += ($skinCl+" "+$comps[$i]+" ;  ") ;
+				eval($cmd) ;
+				}
+	
+	
+			$cmd = "skinPercent " ;
+	
+			for ($j=0; $j < size($jnts); ++$j)
+			$cmd += ("-tv "+$jnts[$j]+" "+$wts[$j]+" ");
+	
+			$cmd += ($skinCl+" "+$comps[$i]+" ;") ;
+	
+			eval($cmd) ;		// Load the weight!
+				
+			
+			}
+			
+    	print ("// cometSaveWeights: Point position load done. //\n") ;
+    	}
+    	
+
+    setAttr ($skinCl+".envelope") 1.0 ;	// RE-Enable
+    	
+ 
+    waitCursor -state off; 
+
+
+    fclose $fileId;
+
+}
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * cSaveW_stripCR - removes leading AND trailing \r\n stuff.
+ */
+global proc string cSaveW_stripCR(string $s)
+{
+    return ( match( "^[^(\r\n)]*", $s ) );
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_selJntsUI() - Wrapper for sel jnts proc
+ */
+global proc cSaveW_selJntsUI()
+{
+    string $file = `textField -q -tx tfFileWts` ;
+    string $search = `textField -q -tx tfSearch` ;
+    string $replace = `textField -q -tx tfReplace` ;
+
+    cSaveW_selJntsFromFile($file, $search, $replace) ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_selJntsFromFile() - Selects skin joints from a while.
+ */
+global proc cSaveW_selJntsFromFile(string $file, string $search, string $replace)
+{
+    string $jntsMissed[] ;
+    clear $jntsMissed ;
+    
+    
+    if ($file == "")
+    	{
+    	error -sl 0 ("cometSaveWeights: You must choose a file to load from.");
+    	}
+
+    if (`filetest -r $file` != true)	// Does file already exist? 
+	error -sl 0 ("cometSaveWeights: The file \""+$file+"\" does not exist.") ;
+
+
+    $fileId = `fopen $file "r"`;
+    if ($fileId == 0) {
+	error -sl 1 ("saveWeights.mel: Error Opening File or File does not exist: "+$file);
+	return;
+	}        
+
+    waitCursor -state on; 
+
+	// Start the reading...
+    $line = `fgetline $fileId`;		// get the first comment line/header
+    $line = cSaveW_stripCR($line);
+
+    string $parts[] ;
+
+    select -cl ;		// Start with nada
+
+    do
+        {
+        
+        
+	if ($line == "" || substring($line,1,1) == " " || substring($line,1,2) == "//")
+	    $line = "[COMMENT]" ;
+	
+	switch ($line)
+	    {
+	    case "[JOINTS]":    
+	    	// Orig jnt list, read until we hit the END marker for it...
+	    	string $jntStr ;
+	    	do 
+	    	    {
+	    	    $jntStr = `fgetline $fileId` ;	// orig jnt 
+		    $jntStr = cSaveW_stripCR($jntStr) ;
+		    
+		    if ($jntStr != "" && $jntStr != "[END-JOINTS]")
+		    	{
+		    	$jntStr = strSearchReplace($jntStr, $search, $replace) ;
+		    	if (objExists($jntStr))
+		    	    select -add $jntStr ;
+		    	else
+		    	    $jntsMissed[size($jntsMissed)] = $jntStr ;
+		    	}
+	    	    
+	    	    } while ($jntStr != "[END-JOINTS]" && !feof($fileId)) ;
+		break ;
+
+
+	    case "[WEIGHTS]":
+	    case "[COMPONENT]":
+	    case "[END-WEIGHTS]":
+	    case "[COMMENT]":    
+	    default:
+	    	; // Ignore it!
+	    	break ;
+	    }
+
+
+	// Attempt to read next line        
+	$line = `fgetline $fileId`;		// get the first comment line/header
+	$line = cSaveW_stripCR($line);
+        
+        } while ( !feof($fileId) ) ;
+
+    	
+    waitCursor -state off; 
+
+
+    fclose $fileId;
+
+    if (size($jntsMissed) > 0)
+    	{
+    	string $missedStr = "" ;
+    	string $j ;
+    	for ($j in $jntsMissed)
+    	    $missedStr += ($j + " ");
+    	    
+    	warning -sl 0 ("cometSaveWeights: Could not re-select all joints, the following were missing: "+$missedStr) ;
+    	
+    	confirmDialog
+    		-title ("cometSaveWeights - WARNING")
+    		-message ("Could not re-select all joints, the following were missing: \n    "+$missedStr) 
+    		-ma "left"
+    		-button "OK" 
+    		;
+    	
+    	}
+
+    
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSaveW_roundTo() - Rounds a float value to so many decimal places...
+ *
+ *   ie: cSaveW_roundTo(1.23456789,  1)  ---> 1.2
+ *   ie: cSaveW_roundTo(1.23456789,  2)  ---> 1.23
+ *   ie: cSaveW_roundTo(1.23456789,  3)  ---> 1.234
+ *	etc...
+ */
+global proc float cSaveW_roundTo(float $val, int $places)
+{
+    float $mult = pow(10.0, $places) ;
+    $val = 1.0 * $val * $mult ;	// Shift it all over to the left
+    int $nVal = (int)$val ;	// Remove anything left in the decimal
+    $val = 1.0 * $nVal / $mult ;	// Now shift back.
+    return $val ;
+}
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * cSaveW_pruneAndNormalize() - Given a weight float array this will go thru,
+ *		prune all weights to a certain # of decimal places, and normalize
+ *		so that any leftover goes back to the largest wt.
+ *		Returns which index had the largest value (for flooding).
+ *  $prunePlaces  = Only keep up to N decimal places...anything smaller becomes 0.
+ */
+global proc int cSaveW_pruneAndNormalize(float $wts[], int $prunePlaces)
+{
+
+    if (size($wts) <= 0)
+    	return -1;
+    	
+    int $i ;
+    int $nWts = size($wts) ;
+
+	
+    int $largestIdx = 0 ;
+    float $largestVal = $wts[0] ;
+    
+    float $fTotal  = 0.0 ;
+    
+    // Find largest index...and also round off weights
+    for ($i=0; $i < $nWts; ++$i)
+    	{
+    	// If bigger, then store that...
+    	if ($wts[$i] > $largestVal)
+    	    {
+    	    $largestVal = $wts[$i] ;
+    	    $largestIdx = $i ;
+    	    }
+    	
+		$wts[$i] = cSaveW_roundTo($wts[$i], $prunePlaces) ;
+    	$fTotal += $wts[$i] ;	// Now keep track of total amount for current new values
+    	}
+
+	// If there is any leftover due to pruning removing causing normalization to be off,
+	// then we'll just add that small amt back to the largest weight....
+    float $fLeftover = 1.0 - $fTotal ;    
+    $wts[$largestIdx] += $fLeftover ;
+	if ($wts[$largestIdx] > 1.0)
+		$wts[$largestIdx] = 1.0 ;
+
+	
+    return $largestIdx ;
+}
+
+// --------------------------------------------------------------------------
+
+

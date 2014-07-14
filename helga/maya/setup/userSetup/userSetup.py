@@ -83,6 +83,7 @@ import shutil
 import maya.mel as mel
 import maya.cmds as cmds
 import maya.utils
+import pymel.core as pm
 
 
 #Import variable
@@ -211,7 +212,9 @@ except:
 #------------------------------------------------------------------
 
 try:
-	script_path_list = [PIPELINE_SCRIPTS_BASE_PATH, PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts']
+	script_path_list = [PIPELINE_SCRIPTS_BASE_PATH,
+	PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts',
+	PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts/cometScripts']
 	
 	#Add custom test path if user is twagener
 	if(global_functions.get_user() == 'twagener'): 
@@ -314,7 +317,14 @@ try:
 	#------------------------------------------------------------------
 	
 	#PlugIn List
-	plugin_list = ['objExport.mll', 'AbcExport.mll', 'AbcImport.mll', 'OpenEXRLoader.mll', 'cvShapeInverter.py']
+	plugin_list = ['objExport.mll', 
+	'AbcExport.mll', 
+	'AbcImport.mll', 
+	'OpenEXRLoader.mll', 
+	'cvShapeInverter.py', 
+	'poseDeformer.mll',
+	'poseReader.mll',
+	'resetSkinJoint.mll']
 		
 	#iterate plugin_list and load plugin shouldnt it be already loaded
 	for plugin in plugin_list:
@@ -426,3 +436,27 @@ except:
 
 
 
+
+
+#Source cometMenu deferred
+#------------------------------------------------------------------
+
+try:
+	
+	#source_comet_menu
+	def source_comet_menu():
+		
+		#source menu
+		pm.mel.eval('source "cometMenu.mel";')
+		
+		#Print to console instead of script editor
+		sys.__stdout__.write('Successfully sourced comet menu\n')
+	
+	#eval deferred
+	cmds.evalDeferred(source_comet_menu)
+	
+
+except:
+	
+	#FailMsg
+	print('Failed to source comet menu\n')

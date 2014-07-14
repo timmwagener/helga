@@ -1,0 +1,765 @@
+// --------------------------------------------------------------------------
+// cometMirrorMesh.mel - MEL Script
+// --------------------------------------------------------------------------
+//	Copyright ©2005 Michael B. Comet - All Rights Reserved.
+//
+// DESCRIPTION:
+//	Lets you do polygon mesh mirroring operations, such as selecting mirrored
+//		points, reverting points, mirroring/flipping a mesh etc...
+//		Good use when building blendshapes.
+//
+// REQUIRES:
+//	poseDeformer.mll - My free Pose Deformer plugin is required as this
+//			use the mirrorData node that comes with it.
+//
+// USAGE:
+//	source "cometMirrorMesh.mel";  cometMirrorMesh() ;
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//
+// VERSIONS:
+//	1.00 - June 25, 2005 - mcomet - Initial Rev.
+//
+// --------------------------------------------------------------------------
+
+/*
+ * Includes
+ */
+
+/*
+ * globals
+ */
+global int $cMM_storedIndexes[] ;
+	
+ 
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+//	UI Procs
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+
+/* 
+ * cometMirrorMesh() - 
+ */
+global proc cometMirrorMesh()
+{
+    if (!`pluginInfo -q -loaded "poseDeformer"`)
+		{
+		if (catch(`loadPlugin "poseDeformer"`))
+			error -sl 0 ("This tool requires my free poseDeformer plugin since it uses the mirrorData node in it.") ;
+		}
+	
+	if (`window -ex cometMirrorMeshWin`)
+		{
+		showWindow cometMirrorMeshWin ;
+		return ;
+		}
+
+	window -w 275 -h 340 -t "Comet Mirror Mesh - 1.00" cometMirrorMeshWin ;
+	formLayout mainForm ;
+	
+	text -l "Base Mesh:" txBase ;
+	textField -tx "" -ed 0 tfBase ;
+	button -l "<<<" -w 30 -c ("cMM_loadBase();") -ann ("Choose symmetrical base mesh object") btnBase ;
+	
+	radioButtonGrp -l "Mirror Axis:" -nrb 3 -la3 "X-Axis" "Y-Axis" "Z-Axis" -sl 1 -cw4 70 60 60 60 -cc ("cMM_updateBaseSettings();") rbgAxis ;
+	
+	radioButtonGrp -l "Mirror Mode:" -nrb 2 -la2 "Object" "World" -sl 1 -cw3 70 60 60 -cc ("cMM_updateBaseSettings();") rbgMode ;
+
+	text -l "Threshold:" txThreshold ;
+	floatField -v 0.01 -pre 12 -min 0.0 -cc ("cMM_updateBaseSettings();") ffThreshold ;
+	
+	separator -style "in" -h 3 sepBase ;
+	
+	
+	button -l "Store Sel." -ann ("Store selection to reapply later or on a different object") -c ("cMM_storeSel();") btnStoreSel ;
+	button -l "Retrieve Sel." -ann ("Re-apply selection onto currently selected objects") -c ("cMM_retrieveSel();") btnRetrieveSel ;
+	button -l "Select Opposite Side Points" -ann ("Selects points on the opposite side of the current selection") -c ("cMM_selectOppSide();") btnSelOppSide ;
+	button -l "Select Modified Points" -ann ("Selects points on the current objects that have moved relative to the base.") -c ("cMM_selAlteredPoints();") btnSelAltered ;
+	
+	separator -style "in" -h 3 sepSel ;
+	
+	button -l "Revert Selected Points" -ann ("Reverts selected points back to their original positions.") -c ("cMM_revertSel();") btnRevertSel ;
+	button -l "Mirror Selected Points" -ann ("Mirrors the points on the opposite side of the selected ones.") -c ("cMM_mirrorSel();") btnMirrorSel ;
+	button -l "Flip Selected Points" -ann ("Flips the points on both sides of the selected ones.") -c ("cMM_flipSel();") btnFlipSel ;
+	button -l "Build Flipped Copy" -ann ("Builds a copy of the selected objects that is a flipped version.") -c ("cMM_buildFlipped();") btnBuildFlipped ;
+	
+    iconTextButton -style "textOnly" -l ("www.comet-cartoons.com") -ann ("Copyright ©2005 Michael B. Comet All Rights Reserved") -c ("showHelp -a \"http://www.comet-cartoons.com/\"") -h 24 email ;
+
+	
+	
+	formLayout -e
+		-af txBase "top" 8
+		-an txBase "bottom"
+		-af txBase "left" 5
+		-an txBase "right"
+
+		-af tfBase "top" 5
+		-an tfBase "bottom"
+		-ac tfBase "left" 5 txBase
+		-ac tfBase "right" 5 btnBase
+
+		-af btnBase "top" 5
+		-an btnBase "bottom"
+		-an btnBase "left" 
+		-af btnBase "right" 5
+		
+		-ac rbgAxis "top" 5 tfBase
+		-an rbgAxis "bottom"
+		-af rbgAxis "left" 5 
+		-af rbgAxis "right" 5
+		
+		-ac rbgMode "top" 5 rbgAxis
+		-an rbgMode "bottom"
+		-af rbgMode "left" 5 
+		-af rbgMode "right" 5
+
+		-ac txThreshold "top" 8 rbgMode
+		-an txThreshold "bottom"
+		-af txThreshold "left" 5 
+		-an txThreshold "right"
+
+		-ac ffThreshold "top" 5 rbgMode
+		-an ffThreshold "bottom"
+		-ac ffThreshold "left" 5  txThreshold
+		-af ffThreshold "right" 5
+		
+		-ac sepBase "top" 3 ffThreshold
+		-an sepBase "bottom"
+		-af sepBase "left" 0 
+		-af sepBase "right" 0		
+		
+		-ac btnStoreSel "top" 3 sepBase
+		-an btnStoreSel "bottom"
+		-af btnStoreSel "left" 5 
+		-ap btnStoreSel "right" 0 50		
+
+		-ac btnRetrieveSel "top" 3 sepBase
+		-an btnRetrieveSel "bottom"
+		-ap btnRetrieveSel "left" 0 50
+		-af btnRetrieveSel "right" 5		
+
+		
+		-ac btnSelOppSide "top" 3 btnStoreSel
+		-an btnSelOppSide "bottom"
+		-af btnSelOppSide "left" 5 
+		-af btnSelOppSide "right" 5		
+		
+		-ac btnSelAltered "top" 3 btnSelOppSide
+		-an btnSelAltered "bottom"
+		-af btnSelAltered "left" 5 
+		-af btnSelAltered "right" 5		
+		
+		-ac sepSel "top" 3 btnSelAltered
+		-an sepSel "bottom"
+		-af sepSel "left" 0
+		-af sepSel "right" 0		
+		
+		-ac btnRevertSel "top" 3 sepSel
+		-an btnRevertSel "bottom"
+		-af btnRevertSel "left" 5
+		-af btnRevertSel "right" 5		
+		
+		-ac btnMirrorSel "top" 3 btnRevertSel
+		-an btnMirrorSel "bottom"
+		-af btnMirrorSel "left" 5
+		-af btnMirrorSel "right" 5		
+		
+		-ac btnFlipSel "top" 3 btnMirrorSel
+		-an btnFlipSel "bottom"
+		-af btnFlipSel "left" 5
+		-af btnFlipSel "right" 5		
+		
+		-ac btnBuildFlipped "top" 3 btnFlipSel
+		-an btnBuildFlipped "bottom"
+		-af btnBuildFlipped "left" 5
+		-af btnBuildFlipped "right" 5		
+		
+		-ac email "top" 3 btnBuildFlipped
+		-an email "bottom"
+		-af email "left" 5
+		-af email "right" 5		
+		
+		mainForm ;
+	
+	showWindow cometMirrorMeshWin ;
+		
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_loadBase() - Loads the base mesh in, applies a mirrorData node and 
+ *		sets up UI.
+ */
+global proc cMM_loadBase()
+{
+	string $objs[] = `ls -sl -fl` ;
+	string $base = $objs[0] ;
+	
+	textField -e -tx $base tfBase ;
+	
+	if ($base == "" || objExists($base) != true)
+		return ;
+	
+	// Apply mirrorData node if needed
+	string $mirrorData = cMM_findMirrorData($base) ;
+	if ($mirrorData == "")
+		{
+		string $mirrorDatas[] = `deformer -frontOfChain -type "mirrorData" $base` ;
+		$mirrorData = $mirrorDatas[0] ;
+		setAttr ($mirrorData+".envelope") 0 ;	// Disable for speed now that applied
+		print ("// Applied mirrorData node "+$mirrorData+" to "+$base+" //\n") ;
+		}
+	
+	cMM_updateBaseSettings() ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_findMirrorData() - Finds a mirror data object on a node if any
+ */
+global proc string cMM_findMirrorData(string $obj)
+{
+    if ($obj == "" || objExists($obj) != true)
+    	return "" ;
+
+    string $hist[] = `listHistory -pdo 1 -il 2 $obj` ;
+    string $h ;
+    
+    for ($h in $hist)
+    	{
+    	if (nodeType($h) == "mirrorData")
+    	    {
+    	    return $h ;
+    	    }
+    	}
+    	
+    return "" ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_updateBaseSettings() - Called when user changes a setting to update the base object
+ */
+global proc cMM_updateBaseSettings()
+{
+	string $base = `textField -q -tx tfBase` ;
+
+	if ($base == "" || objExists($base) != true)
+		return ;	
+
+	// Find the mirrorData node...
+	string $mirrorData = cMM_findMirrorData($base) ;
+	
+	if ($mirrorData == "" || objExists($mirrorData) != true)
+		return ;	
+
+
+	int $nAxis = `radioButtonGrp -q -sl rbgAxis` - 1 ;  
+	int $nMode = `radioButtonGrp -q -sl rbgMode` - 1 ;  
+	float $fThreshold = `floatField -q -v ffThreshold` ;
+
+	if ($nAxis < 0 || $nMode < 0)	// Dunno why maya calls twice with an invalid call first...
+		return ;
+//	print ("// $nAxis="+$nAxis+" $nMode="+$nMode+" $fThreshold="+$fThreshold+" //\n") ;
+	
+	setAttr ($mirrorData+".mirrorAxis") $nAxis ;    	// axis
+	setAttr ($mirrorData+".mirrorSpace") $nMode ;  		// object-world
+	setAttr ($mirrorData+".threshold") $fThreshold ;    // large enough threshold please.
+	
+	waitCursor -state on ;
+	setAttr ($mirrorData+".envelope") 1 ;	// Turn on for refresh update
+	refresh ;
+	setAttr ($mirrorData+".envelope") 0 ;	// Disable for speed now that applied
+	waitCursor -state off ;
+	
+	print ("// Set mirrorData settings for "+$mirrorData+" - "+$base+" //\n") ;
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_getSelObjsOnly() - Returns sel objects only even if verts are chosen
+ */
+global proc string[] cMM_getSelObjsOnly()
+{
+	string $sel[] = `ls -sl -fl` ;
+	string $s ;
+	string $objs[] ;
+	clear $objs ;
+	
+	for ($s in $sel)
+		{
+		string $parts[] ;
+		tokenize($s, ".", $parts) ;		// obj.attr
+		$objs[size($objs)] = $parts[0] ;
+		}
+	
+	$objs = stringArrayRemoveDuplicates($objs) ;
+		
+	return $objs ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_storeSel() - Stores selected point indices
+ */
+global proc cMM_storeSel()
+{
+	global int $cMM_storedIndexes[] ;
+	clear $cMM_storedIndexes ;
+
+	
+	string $pts[] = `ls -sl -fl` ;
+	string $pt ;
+	
+	waitCursor -state on ;
+	
+	for ($pt in $pts)
+		{
+		if (!gmatch($pt, "*.vtx*"))
+			continue ;
+		
+		string $parts[] ;
+		tokenize($pt, ".", $parts) ;
+		string $obj = $parts[0] ;		// myObj
+		string $attr = $parts[1] ;		// vtx[12]
+		
+		clear $parts ;
+		tokenize($attr, "[]", $parts) ;
+		int $idx = $parts[1] ;				// 12
+		
+		$cMM_storedIndexes[size($cMM_storedIndexes)] = $idx ;		// Store it!
+		}
+	
+	waitCursor -state off ;
+		
+	print ("// Stored selection. //\n") ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_retrieveSel() - Re-selects same indexed points on any similar object
+ */
+global proc cMM_retrieveSel()
+{
+	global int $cMM_storedIndexes[] ;
+
+	string $objs[] = cMM_getSelObjsOnly() ; 
+	string $obj ;
+	select -cl ;
+
+	changeSelectMode -component ;
+
+	waitCursor -state on ;
+
+	for ($obj in $objs)
+		{
+		hilite $obj ;
+		
+		for ($i=0; $i < size($cMM_storedIndexes); ++$i)
+			select -add ($obj+".vtx["+$cMM_storedIndexes[$i]+"]") ;
+		}
+
+	waitCursor -state off ;
+
+	print ("// Retrieved selection. //\n") ;
+}
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * cMM_selectOppSide() - Select the same points on the opposite side
+ */
+global proc cMM_selectOppSide()
+{
+	string $base = `textField -q -tx tfBase` ;
+	if ($base == "" || objExists($base) != true)
+		return ;	
+
+	// Find the mirrorData node...
+	string $mirrorData = cMM_findMirrorData($base) ;
+	if ($mirrorData == "" || objExists($mirrorData) != true)
+		return ;		
+
+	string $pts[] = `ls -sl -fl` ;
+	string $pt ;
+	select -cl ;
+	
+	waitCursor -state on ;
+
+	
+	for ($pt in $pts)
+		{
+		if (!gmatch($pt, "*.vtx*"))
+			continue ;
+		
+		string $parts[] ;
+		tokenize($pt, ".", $parts) ;
+		string $obj = $parts[0] ;		// myObj
+		string $attr = $parts[1] ;		// vtx[12]
+		
+		clear $parts ;
+		tokenize($attr, "[]", $parts) ;
+		int $idx = $parts[1] ;				// 12
+		
+		// Now we now base shape object, and the index of the point...
+		// Use the mirror data node to get the opposite pt index, and then select
+		// that on this shaape.
+		
+		int $mirrorIdx = `getAttr ($mirrorData+".mirrorIndex["+$idx+"]")` ;
+		
+		select -add ($obj+".vtx["+$mirrorIdx+"]"); 
+		}
+		
+	waitCursor -state off ;
+
+		
+	print ("// Selected opposite side points. //\n") ;
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_selAlteredPoints() - Selects points that have moved
+ */
+global proc cMM_selAlteredPoints()
+{
+	string $base = `textField -q -tx tfBase` ;
+	if ($base == "" || objExists($base) != true)
+		return ;	
+
+	// Find the mirrorData node...
+	string $mirrorData = cMM_findMirrorData($base) ;
+	if ($mirrorData == "" || objExists($mirrorData) != true)
+		return ;		
+
+	int $data[] = `polyEvaluate -vertex $base` ;	// How many verts?
+	int $nVerts = $data[0] ;
+	string $objs[] = cMM_getSelObjsOnly() ; 
+	string $obj ;
+	
+	select -cl ;
+
+	changeSelectMode -component ;
+	
+	waitCursor -state on ;
+	
+	for ($obj in $objs)
+		{
+		int $i ;
+		for ($i=0; $i < $nVerts; ++$i)	// Compare each pt of this object
+			{
+			float $posOrig[3] = `xform -q -os -t ($base+".vtx["+$i+"]")` ;	
+			float $posCur[3] = `xform -q -os -t ($obj+".vtx["+$i+"]")` ;
+			
+			if ($posOrig[0] != $posCur[0] || $posOrig[1] != $posCur[1] || $posOrig[2] != $posCur[2])
+				{
+				hilite $obj ;
+				select -add ($obj+".vtx["+$i+"]") ;
+				}
+			}
+		}
+
+	waitCursor -state off ;
+		
+	print ("// Selected modified points. //\n") ;
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_revertSel() - Reverts sel points to match the base again.
+ */
+global proc cMM_revertSel()
+{
+	string $base = `textField -q -tx tfBase` ;
+	if ($base == "" || objExists($base) != true)
+		return ;	
+
+	// Find the mirrorData node...
+	string $mirrorData = cMM_findMirrorData($base) ;
+	if ($mirrorData == "" || objExists($mirrorData) != true)
+		return ;		
+
+	int $data[] = `polyEvaluate -vertex $base` ;	// How many verts?
+	int $nVerts = $data[0] ;
+	
+	string $pts[] = `ls -sl -fl`; 
+	string $pt ;
+	
+	waitCursor -state on ;
+	
+	for ($pt in $pts)
+		{
+		if (!gmatch($pt, "*.vtx*"))
+			continue ;
+		
+		string $parts[] ;
+		tokenize($pt, ".", $parts) ;
+		string $obj = $parts[0] ;		// myObj
+		string $attr = $parts[1] ;		// vtx[12]
+		
+		clear $parts ;
+		tokenize($attr, "[]", $parts) ;
+		int $idx = $parts[1] ;				// 12
+			
+		float $posOrig[3] = `xform -q -os -t ($base+".vtx["+$idx+"]")` ;	
+		
+		xform -os -a -t $posOrig[0] $posOrig[1] $posOrig[2] ($obj+".vtx["+$idx+"]") ;
+		}
+		
+	waitCursor -state off ;
+
+		
+	print ("// Reverted selection. //\n") ;
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_mirrorSel() - Mirrors the topology
+ */
+global proc cMM_mirrorSel()
+{
+	string $base = `textField -q -tx tfBase` ;
+	if ($base == "" || objExists($base) != true)
+		return ;	
+
+	// Find the mirrorData node...
+	string $mirrorData = cMM_findMirrorData($base) ;
+	if ($mirrorData == "" || objExists($mirrorData) != true)
+		return ;		
+
+	int $data[] = `polyEvaluate -vertex $base` ;	// How many verts?
+	int $nVerts = $data[0] ;
+	
+	string $new[] ;
+	clear $new ;
+	
+	string $pts[] = `ls -sl -fl`; 
+	string $pt ;
+	
+	int $nAxis = `radioButtonGrp -q -sl rbgAxis` - 1;
+	
+	float $mult[3] = {1.0, 1.0, 1.0} ;
+	$mult[$nAxis] = -1.0 ;		// Adjust needed axis for mirroring
+	
+	waitCursor -state on ;
+	
+	for ($pt in $pts)
+		{
+		if (!gmatch($pt, "*.vtx*"))
+			{
+			continue ;
+			}
+		
+		string $parts[] ;
+		tokenize($pt, ".", $parts) ;
+		string $obj = $parts[0] ;		// myObj
+		string $attr = $parts[1] ;		// vtx[12]
+		
+		clear $parts ;
+		tokenize($attr, "[]", $parts) ;
+		int $idx = $parts[1] ;				// 12
+			
+		float $posCur[3] = `xform -q -os -t ($obj+".vtx["+$idx+"]")` ;
+
+		int $mirrorIdx = `getAttr ($mirrorData+".mirrorIndex["+$idx+"]")` ;
+				
+		// Figure adjustment location
+		float $delta[3] ;
+		$posCur[0] = $mult[0] * ($posCur[0]) ;		
+		$posCur[1] = $mult[1] * ($posCur[1]) ;		
+		$posCur[2] = $mult[2] * ($posCur[2]) ;		
+		
+		xform -os -a -t $posCur[0] $posCur[1] $posCur[2] ($obj+".vtx["+$mirrorIdx+"]") ;
+		$new[size($new)] = ($obj+".vtx["+$mirrorIdx+"]") ;
+		}
+		
+	if (size($new) > 0)
+		select -r $new ;
+	
+	waitCursor -state off ;
+	
+	print ("// Mirrored Selected Points. //\n") ;
+	
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cMM_flipSel() - Flips the topology
+ */
+global proc cMM_flipSel()
+{
+	string $base = `textField -q -tx tfBase` ;
+	if ($base == "" || objExists($base) != true)
+		return ;	
+
+	// Find the mirrorData node...
+	string $mirrorData = cMM_findMirrorData($base) ;
+	if ($mirrorData == "" || objExists($mirrorData) != true)
+		return ;		
+
+	int $data[] = `polyEvaluate -vertex $base` ;	// How many verts?
+	int $nVerts = $data[0] ;
+	
+	string $new[] ;
+	clear $new ;
+	
+	string $pts[] = `ls -sl -fl`; 
+	string $pt ;
+	
+	int $nAxis = `radioButtonGrp -q -sl rbgAxis` - 1;
+	
+	float $mult[3] = {1.0, 1.0, 1.0} ;
+	$mult[$nAxis] = -1.0 ;		// Adjust needed axis for mirroring
+	
+	waitCursor -state on ;
+	
+	for ($pt in $pts)
+		{
+		if (!gmatch($pt, "*.vtx*"))
+			{
+			continue ;
+			}
+		
+		string $parts[] ;
+		tokenize($pt, ".", $parts) ;
+		string $obj = $parts[0] ;		// myObj
+		string $attr = $parts[1] ;		// vtx[12]
+		
+		clear $parts ;
+		tokenize($attr, "[]", $parts) ;
+		int $idx = $parts[1] ;				// 12
+			
+		float $posCur[3] = `xform -q -os -t ($obj+".vtx["+$idx+"]")` ;
+
+		int $mirrorIdx = `getAttr ($mirrorData+".mirrorIndex["+$idx+"]")` ;
+
+		float $posOpp[3] = `xform -q -os -t ($obj+".vtx["+$mirrorIdx+"]")` ;
+				
+		// Figure adjustment locations
+		float $delta[3] ;
+		$posCur[0] = $mult[0] * ($posCur[0]) ;		
+		$posCur[1] = $mult[1] * ($posCur[1]) ;		
+		$posCur[2] = $mult[2] * ($posCur[2]) ;		
+		$posOpp[0] = $mult[0] * ($posOpp[0]) ;		
+		$posOpp[1] = $mult[1] * ($posOpp[1]) ;		
+		$posOpp[2] = $mult[2] * ($posOpp[2]) ;		
+		
+		xform -os -a -t $posCur[0] $posCur[1] $posCur[2] ($obj+".vtx["+$mirrorIdx+"]") ;
+		xform -os -a -t $posOpp[0] $posOpp[1] $posOpp[2] ($obj+".vtx["+$idx+"]") ;
+		$new[size($new)] = ($obj+".vtx["+$idx+"]") ;
+		}
+		
+	if (size($new) > 0)
+		select -r $new ;
+
+	waitCursor -state off ;
+	
+	print ("// Flipped Selected Points. //\n") ;
+}
+
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * cMM_buildFlipped() - Builds a new object that is an entire flip of the original
+ */
+global proc cMM_buildFlipped()
+{
+	string $base = `textField -q -tx tfBase` ;
+	if ($base == "" || objExists($base) != true)
+		return ;	
+
+	// Find the mirrorData node...
+	string $mirrorData = cMM_findMirrorData($base) ;
+	if ($mirrorData == "" || objExists($mirrorData) != true)
+		return ;		
+
+	int $data[] = `polyEvaluate -vertex $base` ;	// How many verts?
+	int $nVerts = $data[0] ;
+	
+	string $objs[] = cMM_getSelObjsOnly() ;
+	string $obj ;
+	string $new[] ;
+	clear $new ;
+	
+	int $nAxis = `radioButtonGrp -q -sl rbgAxis` - 1;
+	
+	float $mult[3] = {1.0, 1.0, 1.0} ;
+	$mult[$nAxis] = -1.0 ;		// Adjust needed axis for mirroring
+	
+	waitCursor -state on ;
+	
+	for ($obj in $objs)
+		{
+		string $dups[] = `duplicate -rr -rc $obj` ;
+		string $dup = $dups[0] ;
+		$new[size($new)] = $dup ;
+		
+		// Move entire node to other side to be nice in case it was pulled over.
+		if ($nAxis == 0)
+			{
+			float $tx = `getAttr ($dup+".translateX")` ;
+			setAttr -lock 0 ($dup+".translateX") ;
+			setAttr ($dup+".translateX") (-1.0 * $tx) ;
+			}
+		else if ($nAxis == 1)
+			{
+			float $ty = `getAttr ($dup+".translateY")` ;
+			setAttr -lock 0 ($dup+".translateY") ;
+			setAttr ($dup+".translateY") (-1.0 * $ty) ;
+			}
+		else if ($nAxis == 2)
+			{
+			float $tz = `getAttr ($dup+".translateZ")` ;
+			setAttr -lock 0 ($dup+".translateZ") ;
+			setAttr ($dup+".translateZ") (-1.0 * $tz) ;
+			}
+		
+		int $idx ;
+		for ($idx=0; $idx < $nVerts; ++$idx)
+			{
+			float $posCur[3] = `xform -q -os -t ($obj+".vtx["+$idx+"]")` ;
+	
+			int $mirrorIdx = `getAttr ($mirrorData+".mirrorIndex["+$idx+"]")` ;
+					
+			// Figure adjustment location
+			float $delta[3] ;
+			$posCur[0] = $mult[0] * ($posCur[0]) ;		
+			$posCur[1] = $mult[1] * ($posCur[1]) ;		
+			$posCur[2] = $mult[2] * ($posCur[2]) ;		
+			
+			xform -os -a -t $posCur[0] $posCur[1] $posCur[2] ($dup+".vtx["+$mirrorIdx+"]") ;
+				
+			}
+		}
+	
+	if (size($new) > 0)
+		select -r $new ;
+	
+	waitCursor -state off ;
+	
+	print ("// Built Flipped Copies. //\n") ;
+}
+
+// --------------------------------------------------------------------------
+
+

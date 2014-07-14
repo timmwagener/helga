@@ -1,0 +1,329 @@
+// --------------------------------------------------------------------------
+// cometRename.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	A nice renaming utility that allows basic Prefix, Suffix, Search &
+//	Replace, and Rename+Number methods.  Works properly on any hierarchy,
+//	even if renaming nodes in the hierarchy out of order.
+//
+// REQUIRES:
+//	Nothing.
+//
+//
+// USAGE:
+//	source "cometRename.mel"; cometRename();
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Copyright ©2003 Michael B. Comet - All Rights Reserved.
+//
+// VERSIONS:
+//	1.00 - Feb 20, 2003 - Initial Release.
+//	1.10 - Feb 20, 2003 - Fixed so also handles non-unique node names.
+//	1.20 - Feb 28, 2003 - Fixed up code so string Replace won't die 
+//		if you search for nothing...And also sanity check for other 
+//		fields not to be blank
+//		Also made UI nicer so won't hit wrong buttons.
+//
+// --------------------------------------------------------------------------
+
+
+/*
+ * stringReplace() - Given a main string str, looks for ALL occurances
+ *	of $search, and replaces them with $replace.
+ *
+ *	This properly handles the replace string being similar or a part
+ *	of the search string, and handling multiple matches.
+ */
+proc string stringReplace(string $str, string $search, string $replace)
+{
+    string $retstr = "";
+
+    	// Sanity check please!
+    if ($search == "")
+        return $str;
+    
+    if ($str == "")
+        return $str;
+        
+        
+    int $len = size($str);
+    int $lenS = size($search);
+    
+    int $i, $j;
+    int $match;
+    
+    for ($i=1; $i <= $len; ++$i)
+        {
+	$match = 0;
+
+	// Now get substring from where we are currently
+	// to the number of letters past of the length
+	// of the search string.  Basically the same
+	// length as the search string.  So if it is identical
+	// we know we have a match.
+	//
+	// If not, we don't.  We also make sure we aren't
+	// trying to look past the end of the string...
+	//
+	$j = $i + ($lenS - 1);
+
+	if ($j <= $len)
+	    {
+	    string $part = `substring $str $i $j`;
+	    if ($part == $search)
+	        $match = 1;
+	    }
+	
+	if ($match == 1)
+	    {
+	    $retstr += $replace; // we did it, so insert replace str
+	    $i = $j;	// skip forward
+	    }
+	else
+	    {
+	    string $char = `substring $str $i $i`;
+	    $retstr += $char;
+	    }
+	}
+
+    return $retstr;
+	
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * getShortName() - Given a string, get last part after last | pipe.
+ */
+proc string getShortName(string $obj)
+{
+    string $ret = "";
+    
+    if ($obj == "")
+        return $ret;
+        
+    string $parts[];
+    int $cnt = tokenize($obj, "|", $parts);
+    
+    if ($cnt <= 0)
+        $ret = $obj;
+    else
+        $ret = $parts[($cnt-1)];
+    
+    return $ret;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * chop() - Removes last char
+ */
+proc string chop(string $str)
+{
+    string $ret = "";
+
+    int $cnt = size($str);
+    
+    if ($cnt <= 1)
+        return $ret;
+    
+    $ret = `substring $str 1 ($cnt-1)`;
+
+    return $ret;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cR_doRename() - Does real work of renaming selected objects
+ *
+ *    $mode:  0=S&R 1=Pre 2=Suf 3=R&N
+ */
+global proc cR_doRename(int $mode)
+{
+    string $objs[] = `ls -sl -long`;
+    int $objCnt = size($objs);
+    int $i;
+
+	// Get all UI data...
+	//
+    string $search = `textField -q -tx tfSearch`;
+    string $replace = `textField -q -tx tfReplace`;
+    string $prefix = `textField -q -tx tfPrefix`;
+    string $suffix = `textField -q -tx tfSuffix`;
+    string $rename = `textField -q -tx tfRename`;
+    int $start = `intField -q -v ifNumber`;
+    int $padding = `intField -q -v ifPadding`;
+    
+    string $shortName;
+    string $newShortName;
+    string $newName;
+
+	// Now do it
+	//
+    for ($i=0; $i < $objCnt; ++$i)
+        {
+	$obj = $objs[$i];
+	
+	$shortName = getShortName($obj);
+		
+	switch ($mode)
+	    {
+	    case 0:
+	        if ($search == "")
+	            {
+	            warning -sl 0 ("Can't search and replace, search entry field is blank!");
+	            return;
+	            }
+	        $newShortName = stringReplace($shortName, $search, $replace);
+	        break;
+
+	    case 1:
+	        if ($prefix == "")
+	            {
+	            warning -sl 0 ("Can't add prefix, prefix entry field is blank!");
+	            return;
+	    	    }
+	        $newShortName = ($prefix + $shortName);
+	        break;
+
+	    case 2:
+	        if ($suffix == "")
+	            {
+	            warning -sl 0 ("Can't add suffix, suffix entry field is blank!");
+	            return;
+	    	    }
+	        $newShortName = ($shortName + $suffix);
+	        break;
+
+	    case 3:
+	        if ($rename == "")
+	            {
+	            warning -sl 0 ("Can't rename and number, rename entry field is blank!");
+	            return;
+	            }
+	    		// get index of string as user wants
+	    	int $n = $i + $start;
+	    		// pad of 0's
+	    	string $padStr = "";
+	    	
+	    		// Add padding as needed
+	    	for ($p=1; $p < $padding; ++$p)
+	    	    {
+		    if ($n < pow(10, $p) )
+		        $padStr += "0";
+		    }
+	    	
+	    	$newShortName = ($rename+$padStr+$n);
+	        break;
+
+	    } // end of switch
+		
+	
+	$newName = `rename $obj $newShortName`;
+	select -r $newName;
+	string $newLongNames[] = `ls -sl -long`;
+	string $newLongName = $newLongNames[0];
+	
+	    // Now update rest of stuff in list in case |long|names
+	    // required it
+	for ($j=0; $j < $objCnt; ++$j)
+	    {
+	    string $tmp = $objs[$j];
+
+	    $tmp += "|";	// add to end for easy replacing
+	    $tmp = `substitute ($obj+"|") $tmp ("|"+$newLongName+"|")`;
+	    $tmp = chop($tmp);
+	    
+	    $objs[$j] = $tmp;
+	    }
+	
+
+	}  // end of for all objs
+
+    select $objs;
+    
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cometRename() - Main UI entry.
+ */
+global proc cometRename()
+{
+    if (`window -ex cometRenameWin` != true)
+        {
+	window -w 310 -h 360 -t ("cometRename - 1.20") -in "cometRename" -s true -tb true cometRenameWin;
+
+	columnLayout cr_mainCol;
+
+	separator -style "in" -w 300 -h 8;
+
+	rowColumnLayout -nc 2 -cw 1 50 -cw 2 250;
+	    text -l "Search: " -al "right";
+	    textField -tx "" tfSearch;
+	    setParent "..";
+	rowColumnLayout -nc 2 -cw 1 50 -cw 2 250;
+	    text -l "Replace: " -al "right";
+	    textField -tx "" tfReplace;
+	    setParent "..";
+	separator -style "none" -w 300 -h 4;
+	button -l "Search And Replace" -al "center" -w 300 -c ("cR_doRename(0);") -ann "Searches for Search text and replaecs with Replace text.  Replace CAN be blank to remove text, or CAN be a part of or contain search string in it." butSearchReplace;
+
+	separator -style "none" -w 300 -h 10;
+	separator -style "in" -w 300 -h 8;
+
+	rowColumnLayout -nc 2 -cw 1 50 -cw 2 250;
+	    text -l "Prefix: " -al "right";
+	    textField -tx "" tfPrefix;
+	    setParent "..";
+	separator -style "none" -w 300 -h 4;
+	button -l "Add Prefix" -al "center" -w 300 -c ("cR_doRename(1);") -ann "Adds prefix text in before current name of each object" butPrefix;
+
+
+	separator -style "none" -w 300 -h 10;
+	separator -style "in" -w 300 -h 8;
+
+	rowColumnLayout -nc 2 -cw 1 50 -cw 2 250;
+	    text -l "Suffix: " -al "right";
+	    textField -tx "" tfSuffix;
+	    setParent "..";
+	separator -style "none" -w 300 -h 4;
+	button -l "Add Suffix" -al "center" -w 300 -c ("cR_doRename(2);") -ann "Adds suffix text in after current name of each object" butSuffix;
+
+	separator -style "none" -w 300 -h 10;
+	separator -style "in" -w 300 -h 8;
+
+	rowColumnLayout -nc 2 -cw 1 50 -cw 2 250;
+	    text -l "Rename: " -al "right";
+	    textField -tx "" tfRename;
+	    setParent "..";
+	rowColumnLayout -nc 2 -cw 1 50 -cw 2 60;
+	    text -l "Start #: " -al "right";
+	    intField -v 1 -w 60 -min 0 ifNumber;
+	    setParent "..";
+	rowColumnLayout -nc 2 -cw 1 50 -cw 2 60;
+	    text -l "Padding: " -al "right";
+	    intField -v 0 -w 60 -min 0 ifPadding;
+	    setParent "..";
+	separator -style "none" -w 300 -h 4;
+	button -l "Rename And Number" -al "center" -w 300 -c ("cR_doRename(3);") -ann "Renames each object with the base rename text, then adds a number after each, with the specfied number of zero padding in front of the number" butRenameNumber;
+
+	separator -style "in" -w 300 -h 8;
+
+
+	showWindow cometRenameWin;
+	}
+    else	// else just pop it up from being minimized again
+    	{
+	showWindow cometRenameWin;
+	}
+
+}
+
+
+// --------------------------------------------------------------------------

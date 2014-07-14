@@ -1,0 +1,171 @@
+//
+//----BEGINDOC-----------------------------------------------------------
+// Copyright (C) 2001, Big Idea Productions
+//
+//-----------------------------------------------------------------------
+// Name: libBubbleSort.mel - MEL Script
+//-----------------------------------------------------------------------
+//
+// Synopsis:    bubbleSortString(string $array[], string $compareProc);
+//		bubbleSortInt(int $array[], string $compareProc);
+//		bubbleSortFloat(float $array[], string $compareProc);
+//
+// Description: This is generic bubble sort routine.  It takes an array
+//		to work on, and then a name of a compare proc.  The 
+//		
+//
+// Arguments:   $array[]	- Array of items to sort
+//		$compareProc	- Name only (no parens) of global proc to 
+//				do comparison. Must take 2 items of the 
+//				same data type as  is being sorted.
+//				The compare proc should return -1, 0 or 1.
+//
+// Returns:     Sorted arrays of String, Int or Float based on what is 
+//		called.  
+//		***Note that the ORIGINAL array is ALSO modified! This is 
+//		because of how Maya passes arrays as references and not
+//		as copies.
+//
+// Examples:    // This example uses Maya's built in strcmp() proc as the
+//		// comparison proc.
+//		string $array[] = {"foo", "biz", "baz"};
+//		bubbleSortString($array, "strcmp");
+//		// Result: baz biz foo //
+//
+// Requires:    Patience.
+//
+// Authors:     Michael B. Comet - michael.comet@bigidea.com
+//
+// Versions:    Version 1.00 - Michael B. Comet
+//
+// Known Bugs:	None.
+//
+//----ENDDOC-------------------------------------------------------------
+//
+//
+
+
+
+//----------------------------------------------------------------------------
+
+/*
+ * bubbleSortString() - Does a bubble sort on a STRING array
+ */
+global proc string[] bubbleSortString(string $array[], string $compareProc)
+{
+    if (size($array) <= 0)	// nothing to sort
+	return $array;
+	
+    if ($compareProc == "")	// no compare proc given
+	{
+	warning -sl 1 ("No compareProc given");
+        return $array;
+	}
+
+    int $cnt = size($array);
+    int $i, $j, $r;
+    string $temp;
+    
+    for ($i=0; $i < $cnt; ++$i)
+    	{
+	for ($j=$i+1; $j < $cnt; ++$j)
+    	    {
+	    $r = eval($compareProc+"(\""+$array[$i]+"\", \""+$array[$j]+"\");");
+	    if ($r > 0)
+	       {
+	       $temp = $array[$j];
+	       $array[$j] = $array[$i];
+	       $array[$i] = $temp;
+	       }
+	    
+	    } // end of j loop
+
+	}  // end of i loop
+
+    return $array;
+}
+
+
+//----------------------------------------------------------------------------
+
+
+/*
+ * bubbleSortInt() - Does a bubble sort on an INT array
+ */
+global proc int[] bubbleSortInt(int $array[], string $compareProc)
+{
+    if (size($array) <= 0)	// nothing to sort
+	return $array;
+	
+    if ($compareProc == "")	// no compare proc given
+	{
+	warning -sl 1 ("No compareProc given");
+        return $array;
+	}
+
+    int $cnt = size($array);
+    int $i, $j, $r;
+    int $temp;
+    
+    for ($i=0; $i < $cnt; ++$i)
+    	{
+	for ($j=$i+1; $j < $cnt; ++$j)
+    	    {
+	    $r = eval($compareProc+"("+$array[$i]+", "+$array[$j]+");");
+	    if ($r > 0)
+	       {
+	       $temp = $array[$j];
+	       $array[$j] = $array[$i];
+	       $array[$i] = $temp;
+	       }
+	    
+	    } // end of j loop
+
+	}  // end of i loop
+
+    return $array;
+}
+
+
+//----------------------------------------------------------------------------
+
+
+/*
+ * bubbleSortFloat() - Does a bubble sort on a FLOAT array
+ */
+global proc float[] bubbleSortFloat(float $array[], string $compareProc)
+{
+    if (size($array) <= 0)	// nothing to sort
+	return $array;
+	
+    if ($compareProc == "")	// no compare proc given
+	{
+	warning -sl 1 ("No compareProc given");
+        return $array;
+	}
+
+    int $cnt = size($array);
+    int $i, $j, $r;
+    float $temp;
+    
+    for ($i=0; $i < $cnt; ++$i)
+    	{
+	for ($j=$i+1; $j < $cnt; ++$j)
+    	    {
+	    $r = eval($compareProc+"("+$array[$i]+", "+$array[$j]+");");
+	    if ($r > 0)
+	       {
+	       $temp = $array[$j];
+	       $array[$j] = $array[$i];
+	       $array[$i] = $temp;
+	       }
+	    
+	    } // end of j loop
+
+	}  // end of i loop
+
+    return $array;
+}
+
+
+//----------------------------------------------------------------------------

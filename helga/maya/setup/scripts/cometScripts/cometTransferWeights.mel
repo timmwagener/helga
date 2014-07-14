@@ -1,0 +1,197 @@
+// --------------------------------------------------------------------------
+// cometTransferWeights.mel - MEL Script
+// --------------------------------------------------------------------------
+//	Copyright ©2005 Michael B. Comet - All Rights Reserved.
+//
+// DESCRIPTION:
+//	Lets you transfer weights from one or more joints onto another joint
+//		for selected points of a skinCluster.
+//
+// REQUIRES:
+//	libSkin.mel	- For skin procs
+//
+// USAGE:
+//	source "cometTransferWeights.mel";  cometTransferWeights() ;
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//
+// VERSIONS:
+//	1.00 - June 25, 2005 - mcomet - Initial Rev.
+//
+// --------------------------------------------------------------------------
+
+/*
+ * Includes
+ */
+eval("source \"libSkin.mel\"; ") ;
+
+/*
+ * globals
+ */
+
+ 
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+//	UI Procs
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+
+/* 
+ * cometTransferWeights() - 
+ */
+global proc cometTransferWeights()
+{
+	if (`window -ex cometTransferWeightsWin`)
+		{
+		showWindow cometTransferWeightsWin ;
+		return ;
+		}
+
+	window -w 330 -h 140 -t "Comet Transfer Weights - 1.00" cometTransferWeightsWin ;
+	formLayout mainForm ;
+	
+	text -l "Transfer From:" txFrom ;
+	textField -tx "" tfFrom ;
+	button -l "<<<" -w 30 -c ("cTW_loadObjs(\"tfFrom\");") btnFrom ;
+	
+	text -l "Transfer To:" txTo ;
+	textField -tx "" tfTo ;
+	button -l "<<<" -w 30 -c ("cTW_loadObj(\"tfTo\");") btnTo ;
+
+	text -l "skinCluster:" txSkinClXfer ;
+	textField -tx "" tfSkinClXfer ;
+	button -l "<<<" -w 30 -c ("cTW_loadSkinCl(\"tfSkinClXfer\");") btnSkinClXfer ;
+	
+	button -l "Transfer Weights" -c ("cTW_transferWeights();") -ann "Transfer Skin Weights for Selected Points" btnXfer ;
+	
+	formLayout -e
+		-af txFrom "top" 5
+		-an txFrom "bottom"
+		-af txFrom "left" 5
+		-an txFrom "right"
+
+		-af tfFrom "top" 5
+		-an tfFrom "bottom"
+		-ac tfFrom "left" 5 txFrom
+		-ac tfFrom "right" 5 btnFrom
+
+		-af btnFrom "top" 5
+		-an btnFrom "bottom"
+		-an btnFrom "left" 
+		-af btnFrom "right" 5
+
+		
+		-ac txTo "top" 5 tfFrom
+		-an txTo "bottom"
+		-af txTo "left" 5
+		-an txTo "right"
+
+		-ac tfTo "top" 5 tfFrom
+		-an tfTo "bottom"
+		-ac tfTo "left" 5 txTo
+		-ac tfTo "right" 5 btnTo
+
+		-ac btnTo "top" 5 tfFrom
+		-an btnTo "bottom"
+		-an btnTo "left" 
+		-af btnTo "right" 5
+		
+		
+		-ac txSkinClXfer "top" 5 tfTo
+		-an txSkinClXfer "bottom"
+		-af txSkinClXfer "left" 5
+		-an txSkinClXfer "right"
+
+		-ac tfSkinClXfer "top" 5 tfTo
+		-an tfSkinClXfer "bottom"
+		-ac tfSkinClXfer "left" 5 txSkinClXfer
+		-ac tfSkinClXfer "right" 5 btnSkinClXfer
+
+		-ac btnSkinClXfer "top" 5 tfTo
+		-an btnSkinClXfer "bottom"
+		-an btnSkinClXfer "left" 
+		-af btnSkinClXfer "right" 5
+		
+
+		-ac btnXfer "top" 5 tfSkinClXfer
+		-an btnXfer "bottom"
+		-af btnXfer "left" 5 
+		-af btnXfer "right" 5
+		
+
+		mainForm ;
+	
+	showWindow cometTransferWeightsWin ;
+		
+}
+
+// --------------------------------------------------------------------------
+
+global proc cTW_loadObjs(string $tf)
+{
+	string $objs[] = `ls -sl` ;
+	string $obj ;
+	string $text = "" ;
+	
+	for ($obj in $objs)
+		$text += ($obj+" ") ;
+	
+	textField -e -tx $text $tf ;
+}
+
+
+// --------------------------------------------------------------------------
+
+global proc cTW_loadObj(string $tf)
+{
+	string $objs[] = `ls -sl` ;
+	
+	textField -e -tx $objs[0] $tf ;
+}
+
+
+// --------------------------------------------------------------------------
+
+global proc cTW_loadSkinCl(string $tf)
+{
+	string $objs[] = `ls -sl -fl` ;
+	string $skins[] = libSkin_getSkinFromGeo($objs[0]) ;
+	
+	textField -e -tx $skins[0] $tf ;
+	
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cTW_transferWeights() - Main wrapper
+ */
+global proc cTW_transferWeights()
+{
+	string $fromStr = `textField -q -tx tfFrom` ;
+	string $jntsFrom[] ;
+	tokenize($fromStr, " \t\r\n", $jntsFrom) ;		// Convert from string to array
+	string $jntTo = `textField -q -tx tfTo` ;	
+	string $skinCl = `textField -q -tx tfSkinClXfer` ;
+	
+	string $comps[] = `ls -sl -fl` ; // flatten list of selected points!
+	
+	if ($fromStr == "" || size($jntsFrom) <= 0)
+		error -sl 0 ("No From Joints chosen.") ;
+	if ($jntTo == "")
+		error -sl 0 ("No To Joint chosen.") ;
+	if ($skinCl == "")
+		error -sl 0 ("No Skin Cluster chosen.") ;
+	if (size($comps) <= 0)
+		error -sl 0 ("No points selected to transfer weights for.") ;
+	
+	libSkin_transferWeight($skinCl, $jntsFrom, $jntTo, $comps) ;
+	print ("// Transferred weights. //\n") ;
+}
+
+// --------------------------------------------------------------------------
+
+

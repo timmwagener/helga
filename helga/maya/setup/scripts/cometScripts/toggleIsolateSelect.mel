@@ -1,0 +1,42 @@
+// --------------------------------------------------------------------------
+// toggleIsolateSelect.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	Toggles selected objects on/off for isolate select.
+//	I usually bind CTRL+i to this.
+//
+// USAGE:
+//	source "toggleIsolateSelect.mel"; toggleIsolateSelect();
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com - http://www.comet-cartoons.com/
+//	
+// COPYRIGHT:
+//	Copyright ©2004 Michael B. Comet - All Rights Reserved
+//
+// VERSIONS:
+//	1.00 - 07/05/2004 - Michael B. Comet - Initial Release
+//
+// --------------------------------------------------------------------------
+
+/*
+ * toggleIsolateSelect() - Toggle isolate
+ */
+global proc toggleIsolateSelect()
+{  
+    string $currentPanel = `getPanel -withFocus`;   
+    string $panelType = `getPanel -to $currentPanel`; 
+
+    if ($panelType ==  "modelPanel") 
+        {
+        int $state = `isolateSelect -q -state $currentPanel`;
+        if ($state)
+            enableIsolateSelect $currentPanel false; 
+        else
+            enableIsolateSelect $currentPanel true; 
+        }
+}
+
+
+// --------------------------------------------------------------------------

@@ -1,0 +1,878 @@
+// --------------------------------------------------------------------------
+// cometSkinWeight.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	A tool to more easily do basic skin weighting, without the hassle
+//	of using the component editor.
+//
+// REQUIRES:
+//	libSkin.mel	- For skin procs
+//
+// USAGE:
+//	source "cometSkinWeight.mel";  cometSkinWeight() ;
+//
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Copyright ?2004 Michael B. Comet - All Rights Reserved.
+//
+// VERSIONS:
+//	1.00 - Sep 8, 2004 - Initial Release.
+//	1.01 - Dec 1, 2004 - Now can add joints in or remove from cluster.
+//	1.02 - Dec 9, 2004 - Now does hilite.
+//	1.03 - Mar 15, 2006 - Now has Right click for easier weight setting
+// --------------------------------------------------------------------------
+
+
+
+/*
+ * Includes
+ */
+eval("source \"libSkin.mel\"; ") ;
+eval("source \"libString.mel\"; ") ;
+
+/*
+ * globals
+ */
+global string $cSW_version = "1.03" ;
+global string $cSW_date = "Mar 15, 2006" ;
+
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+//	UI Procs
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+
+/*
+ * cometSkinWeight() - Main Entry
+ */
+global proc cometSkinWeight()
+{
+    global string $cSW_version ;
+    global string $cSW_date ;
+
+    if (`window -q -ex cometSkinWeightWin`)
+    	{
+    	showWindow cometSkinWeightWin ;
+    	return ;
+    	}
+
+
+    window -w 300 -h 500 -t ("Comet Skin Weight - v"+$cSW_version) cometSkinWeightWin ;
+    formLayout mainSkinForm ;
+
+    text -l "GEO:" txGeo ;
+    textField -tx "" -cc ("cSW_refreshList();") tfGeo ;
+    button -l "<<<" -c ("cSW_loadGeo; ") -ann ("Load selected geometry") btnGeo ;
+
+    popupMenu -p tfGeo -pmc ("cSW_buildGeoMenu") pmGeo ;
+
+
+    text -l "Skin:" txSkin ;
+    textField -tx ""  -cc ("cSW_refreshList();")  tfSkin ;
+    button -l "<<<" -c ("cSW_loadGeo; ") -ann ("Load skinCluster for chosen geometry") btnSkin ;
+
+    popupMenu -p tfSkin -pmc ("cSW_buildSkinMenu") pmSkin ;
+
+    separator -style "in" -h 3 sepLoad ;
+
+
+    floatSliderGrp -label "Weight:"
+    		-field true
+     		-minValue 0.0 -maxValue 1.0
+       		-fieldMinValue 0.0 -fieldMaxValue 1.0
+       		-value 0
+       		-sliderStep 0.1
+       		-pre 3
+       		-adj 3
+       		-cw3 50 60 100
+       		fsgWeight ;
+
+    checkBox -l "Live" -v 1 -cc ("cSW_adjustLive(); ") cbLive ;
+    button -l "Set Weight" -c ("cSW_setWeight();") -ann ("Manually Set Weight for selected components") btnWt ;
+	
+	popupMenu -p fsgWeight popWt ;
+	float $f ;
+	for ($f=0.0; $f <= 1.001; $f += 0.05)
+		{
+		menuItem -l (floatToStr($f, 1, 2)) -c ("floatSliderGrp -e -v "+$f+" fsgWeight; if (`checkBox -q -v cbLive`) cSW_setWeight(); ") ;
+		}
+		
+		
+
+    textScrollList
+    	-ams true
+    	-selectCommand ("cSW_selChangedCB();")
+    	tslJoints ;
+
+    popupMenu -p tslJoints ;
+
+        menuItem -l ("Highlight All") -c ("cSW_highlightAll(); ") ;
+        menuItem -divider true ;
+        menuItem -l ("UN-Lock Weights") -c ("cSW_setLocks(0); ") ;
+        menuItem -l ("LOCK Weights") -c ("cSW_setLocks(1); ") ;
+        menuItem -l ("TOGGLE Lock Weights") -c ("cSW_setLocks(2); ") ;
+        menuItem -divider true ;
+        menuItem -l ("Select Highlighted Joints") -c ("cSW_selectFromList(0); ") ;
+        menuItem -l ("Select All Joints in List") -c ("cSW_selectFromList(1); ") ;
+        menuItem -l ("Select All Joints in skinCluster") -c ("cSW_selectFromList(2); ") ;
+        menuItem -divider true ;
+        menuItem -l ("Select Points from Highlighted Joints") -c ("cSW_selectCVsFromJoints(); ") ;
+        menuItem -l ("Highlight Joints from Selected Points") -c ("cSW_selectJointsFromCVs(); ") ;
+        menuItem -divider true ;
+        menuItem -l ("Add selected joints to skinCluster") -c ("cSW_addInfs(); ") ;
+        menuItem -l ("Remove selected joints from skinCluster") -c ("cSW_removeInfs(); ") ;
+
+
+    text -l "Filter:" txFilter ;
+    textField -tx "*" -cc ("cSW_adjustFilter(0);") -ec ("cSW_adjustFilter(0);") tfFilter ;
+
+    popupMenu -p tfFilter ;
+        menuItem -l "ALL (*)" -c ("cSW_adjustFilter(1); ") ;
+        menuItem -l "Filter Highlighted Joints" -c ("cSW_adjustFilter(2); ") ;
+
+    checkBox -l "Sort" -v 1 -cc ("cSW_refreshList") cbSort ;
+
+
+
+    formLayout -e
+
+    	-af txGeo "top" 5
+    	-an txGeo "bottom"
+    	-af txGeo "left" 5
+    	-an txGeo "right"
+
+    	-af tfGeo "top" 5
+    	-an tfGeo "bottom"
+    	-ac tfGeo "left" 5 txGeo
+    	-ac tfGeo "right" 5 btnGeo
+
+    	-af btnGeo "top" 5
+    	-an btnGeo "bottom"
+    	-an btnGeo "left"
+    	-af btnGeo "right" 5
+
+
+    	-ac txSkin "top" 5 tfGeo
+    	-an txSkin "bottom"
+    	-af txSkin "left" 5
+    	-an txSkin "right"
+
+    	-ac tfSkin "top" 5 tfGeo
+    	-an tfSkin "bottom"
+    	-ac tfSkin "left" 5 txSkin
+    	-ac tfSkin "right" 5 btnSkin
+
+    	-ac btnSkin "top" 5 tfGeo
+    	-an btnSkin "bottom"
+    	-an btnSkin "left"
+    	-af btnSkin "right" 5
+
+      	-ac sepLoad "top" 5 tfSkin
+      	-an sepLoad "bottom"
+      	-af sepLoad "left" 0
+    	-af sepLoad "right" 0
+
+      	-ac fsgWeight "top" 5 sepLoad
+      	-an fsgWeight "bottom"
+      	-af fsgWeight "left" 5
+    	-af fsgWeight "right" 5
+
+      	-ac cbLive "top" 8 fsgWeight
+      	-an cbLive "bottom"
+      	-af cbLive "left" 8
+    	-an cbLive "right"
+
+      	-ac btnWt "top" 5 fsgWeight
+      	-an btnWt "bottom"
+      	-ac btnWt "left" 5 cbLive
+    	-af btnWt "right" 8
+
+      	-ac tslJoints "top" 5 btnWt
+      	-ac tslJoints "bottom" 5 tfFilter
+      	-af tslJoints "left" 5
+    	-af tslJoints "right" 5
+
+    	-an txFilter "top"
+    	-af txFilter "bottom" 5
+    	-af txFilter "left" 5
+    	-an txFilter "right"
+
+    	-an tfFilter "top"
+    	-af tfFilter "bottom" 5
+    	-ac tfFilter "left" 5 txFilter
+    	-ac tfFilter "right" 5 cbSort
+
+    	-an cbSort "top"
+    	-af cbSort "bottom" 8
+    	-an cbSort "left"
+    	-af cbSort "right" 5
+
+
+    	mainSkinForm ;
+
+
+	// Get a script job going...
+    scriptJob -event "SelectionChanged" "cSW_selChangedCB" -p cometSkinWeightWin ;
+
+
+    cSW_loadGeo() ; // Try to do an initial load.
+    cSW_adjustLive() ; 	// Setup initial slider callbacks
+
+    showWindow cometSkinWeightWin ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_loadObjTF() - Loads the 1st sel object into the text field
+ */
+global proc cSW_loadObjTF(string $tf)
+{
+    string $objs[] = `ls -sl` ;
+
+    string $parts[] ;
+    if (gmatch($objs[0], "*.*") == 1)	// have a component?
+    	{
+    	tokenize($objs[0], ".", $parts) ;
+    	$objs[0] = $parts[0] ;	// Just get object name part.
+    	}
+
+    textField -e -tx $objs[0] $tf ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_loadGeo() - Wrapper to load geo and skin
+ */
+global proc cSW_loadGeo()
+{
+    cSW_loadObjTF("tfGeo") ;
+    cSW_autoFillSkin();
+    cSW_refreshList() ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_autoFillSkin() - Tries to auto fill skinCluster data from
+ *		geometry loaded in
+ */
+global proc cSW_autoFillSkin()
+{
+    string $geo = cSW_getGeo() ;
+
+    string $skins[] = libSkin_getSkinFromGeo($geo) ;
+
+    textField -e -tx $skins[0] tfSkin ;
+
+
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_getGeo() - Wrapper to get the geo loaded in from text field
+ */
+global proc string cSW_getGeo()
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    return $geo ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_getSkin() - Wrapper to get the geo loaded in from text field
+ */
+global proc string cSW_getSkin()
+{
+    string $skinCl = `textField -q -tx tfSkin` ;
+    return $skinCl ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_buildGeoMenu() - Makes popup menu for the geo list
+ */
+global proc cSW_buildGeoMenu()
+{
+    menu -e -dai pmGeo ;
+    setParent -menu pmGeo ;
+
+    string $geos[] = libSkin_getSkinGeosInScene() ;
+    string $g;
+
+    $geos = `sort $geos` ;
+
+    for ($g in $geos)
+        {
+        menuItem -l $g -c ("select -r \""+$g+"\"; cSW_loadGeo(); ") ;
+        }
+
+}
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * cSW_buildSkinMenu() - Makes popup menu for the skin list
+ */
+global proc cSW_buildSkinMenu()
+{
+    menu -e -dai pmSkin ;
+    setParent -menu pmSkin ;
+
+    // First get the geo in the TF
+    string $geo = cSW_getGeo() ;
+
+    string $skins[] = libSkin_getSkinFromGeo($geo) ;
+
+    for ($s in $skins)
+        {
+        menuItem -l $s -c ("textField -e -tx \""+$s+"\" tfSkin ; cSW_refreshList(); ") ;
+        }
+
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_refreshList() - Refresh's list and such
+ */
+global proc cSW_refreshList()
+{
+    string $origSel[] = cSW_getJoints() ;	// Store Original Selections, so we can try to reselect at end....
+
+    textScrollList -e -removeAll tslJoints ;
+
+    string $geo = cSW_getGeo() ;
+    string $skin = cSW_getSkin() ;
+
+
+	// What should we be adding?
+    string $jnts[] = libSkin_getJointsFromSkin($skin);
+
+    if (`checkBox -q -v cbSort`)
+    	$jnts = `sort $jnts` ;
+
+    	// Add it to list assuming it passes
+    string $j ;
+    for ($j in $jnts)
+        {
+        // Make sure we properly filter.
+        if (cSW_passesFilter($j) != true)
+            continue ;
+
+        string $label = $j ;
+
+        int $lock = libSkin_isLocked($skin, $j) ;
+        if ($lock)
+            $label += ("    (HOLD)") ;
+
+        textScrollList -e -append $label tslJoints ;
+        }
+
+
+	// Now try to restore selection
+    int $i ;
+    string $o ;
+    string $newItems[] = `textScrollList -q -allItems tslJoints` ; // Get entire list
+    int $nNew = size($newItems) ;
+    for ($i=0; $i < $nNew; ++$i)	// Convert new items to short name list only...
+    	{
+    	string $parts[];
+    	tokenize($newItems[$i], $parts) ;
+    	$newItems[$i] = $parts[0] ;
+    	}
+    int $idxToSel[] ;			// What index's should we resel?
+    clear $idxToSel ;
+    for ($o in $origSel)
+        {
+        int $idx = -1;
+        for ($i=0; $i < $nNew; ++$i)
+            {
+            if ($newItems[$i] == $o)	// did we find a match?
+                {
+                $idx = $i ;
+                break ;
+                }
+            }
+
+	// Did we find a match?
+	if ($idx != -1)
+	    $idxToSel[size($idxToSel)] = $idx + 1;	// Store for later, +1 since TSL uses 1 based indexing.
+        }
+
+    $idxToSel = `sort $idxToSel` ;	// Sort it in order.
+
+    // At this point $idxToSel has a nice ordered list of index's of the  TSL we want to
+    // reselect....or it might be empty.
+    for ($i=0; $i < size($idxToSel); ++$i)
+         textScrollList -e -sii $idxToSel[$i] tslJoints ;	// Reselect each one
+    if (size($idxToSel) > 0)
+        {
+        // Now if we did sel something, scroll to the first one if needed.
+
+        int $numVis = `textScrollList -q -numberOfRows tslJoints` ;	// How many can we see?
+	if ($idxToSel[0] > $numVis)
+	    textScrollList -e -showIndexedItem $idxToSel[0] tslJoints ;
+	}
+    else     // End with first item selected if nothing was before.
+        {
+        if (`textScrollList -q -numberOfItems tslJoints` >= 1)
+    	    textScrollList -e -sii 1 tslJoints ;
+    	}
+
+
+    cSW_selChangedCB() ; 	// Call this too to update weight etc..
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_getJoints() - Returns what jnts are highlighted from tsl
+ */
+global proc string[] cSW_getJoints()
+{
+    string $jnts[] ;
+    clear $jnts ;
+
+    string $names[] = `textScrollList -q -selectItem tslJoints` ;
+    string $n ;
+
+    // For each one, just get 1st part before any whitespace
+    for ($n in $names)
+        {
+        string $parts[] ;
+        tokenize($n, $parts) ;
+        $jnts[size($jnts)] = $parts[0] ;
+        }
+
+    return $jnts ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_selChangedCB() - Called when selection changed
+ */
+global proc cSW_selChangedCB()
+{
+    string $geo = cSW_getGeo() ;
+    string $skin = cSW_getSkin() ;
+    string $jnts[] = cSW_getJoints() ;
+
+
+    string $comps[] = cSW_getSelComps() ;	// What pts chosen?
+    int $nComp = size($comps) ;
+
+    int $bLive = `checkBox -q -v cbLive` ;
+
+
+    if ($bLive && $nComp > 0 && $jnts[0] != "")
+        {
+        float $avgWt = libSkin_getAvgWeights($skin, $jnts[0], $comps) ;
+
+        floatSliderGrp -e -v $avgWt fsgWeight ;	// Update slider
+		
+		hilite -r $geo $jnts ;
+        }
+	else if ($nComp > 0 && $jnts[0] != "")		// Even if not live...still highlight.
+		{
+		hilite -r $jnts ;
+        }
+
+//    print ("// "+$nComp+" components chosen. //\n") ;
+
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_getSelComps() - Returns a list of obj.comp[] for any selected components
+ *		that match the current skin cluster...
+ */
+global proc string[] cSW_getSelComps()
+{
+    string $geo = cSW_getGeo() ;
+    string $skin = cSW_getSkin() ;
+
+    string $comps[] = libSkin_getSelComps($skin) ; 	// Use version in library.
+
+    return $comps ;
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_setWeight() - Sets weight for sel comps
+ */
+global proc cSW_setWeight()
+{
+    string $geo = cSW_getGeo() ;
+    string $skin = cSW_getSkin() ;
+    string $jnts[] = cSW_getJoints() ;
+    int $nJnts = size($jnts) ;
+
+    string $comps[] = cSW_getSelComps() ;	// What pts chosen?
+    int $nComp = size($comps) ;
+
+    if ($nJnts <= 0 || $nComp <= 0)
+    	return ;
+
+    float $wt = `floatSliderGrp -q -v fsgWeight` ;	// What wt to set?
+
+    // If just one joint selected, directly set, if possible
+    if ($nJnts == 1)
+    	{
+    	int $lock = libSkin_isLocked($skin, $jnts[0]) ;
+    	if (!$lock)
+    	    {
+    	    string $c ;
+    	    for ($c in $comps)
+    	        {
+    	    	libSkin_setWeight( $skin, $jnts[0], $c, $wt) ;
+    	    	}
+    	    }
+    	}
+    else
+    	{
+    	int $lock0 = libSkin_isLocked($skin, $jnts[0]) ;
+    	int $lock1 = libSkin_isLocked($skin, $jnts[1]) ;
+
+    	// First flood 0 jnt fully
+    	if (!$lock0)
+    	    {
+    	    string $c ;
+    	    for ($c in $comps)
+    	        {
+    	    	libSkin_setWeight( $skin, $jnts[0], $c, 1.0) ;
+    	    	}
+    	    }
+    	// Then put real remainder onto second
+    	if (!$lock1)
+    	    {
+    	    string $c ;
+    	    for ($c in $comps)
+    	        {
+    	    	libSkin_setWeight( $skin, $jnts[1], $c, (1.0-$wt) ) ;
+    	    	}
+    	    }
+    	} // multi jnt
+
+    print ("// cometSkinWeight: Set weight of "+$jnts[0]+" to "+$wt+" for "+$nComp+" components. //\n") ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_setLocks() - Sets locks for highlighted joints
+ *
+ *	$lock 0=off 1=on 2=toggle
+ */
+global proc cSW_setLocks(int $lock)
+{
+    string $geo = cSW_getGeo() ;
+    string $skin = cSW_getSkin() ;
+    string $jnts[] = cSW_getJoints() ;
+    int $nJnts = size($jnts) ;
+
+    if ($nJnts <= 0)
+    	return ;
+
+    string $j ;
+    for ($j in $jnts)
+        {
+        if ($lock == 2)
+            libSkin_toggleLock($skin, $j) ;
+        else
+            libSkin_setLock($skin, $j, $lock) ;
+        } // end of each jnt
+
+
+    cSW_refreshList() ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_adjustLive() - Called when live mode changed to adjust stuff
+ */
+global proc cSW_adjustLive()
+{
+    int $bLive = `checkBox -q -v cbLive` ;
+
+    if ($bLive)
+    	floatSliderGrp -e -cc ("cSW_setWeight();") fsgWeight ;
+    else
+    	floatSliderGrp -e -cc ("") -dc ("") fsgWeight ;
+
+    cSW_selChangedCB() ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_adjustFilter() - Adjust the text filter somehow
+ */
+global proc cSW_adjustFilter(int $mode)
+{
+    switch ($mode)
+    	{
+    	case 0:
+    	    // User change
+    	    break ;
+
+    	case 1:			// ALL
+    	    textField -e -tx "*" tfFilter ;
+    	    break ;
+
+    	case 2:			// Filter Highlighted
+    	    string $filterStr = "" ;
+	    string $jnts[] = cSW_getJoints() ;
+	    int $nJnts = size($jnts) ;
+	    int $i ;
+	    for ($i=0; $i < $nJnts; ++$i)
+		$filterStr += ($jnts[$i] + " " ) ;
+
+	    textField -e -tx $filterStr tfFilter ;
+    	    break ;
+
+    	}
+
+    cSW_refreshList() ; 	// Now refresh list
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_passesFilter() - Returns true if the str passes the filters, false otherwise.
+ */
+global proc int cSW_passesFilter(string $str)
+{
+    string $filterStr = `textField -q -tx tfFilter` ;
+
+    // Easy case, empty or plain * means all, so all are passed.
+    if ($filterStr == "" || $filterStr == "*")
+    	return 1 ;
+
+    string $filters[] ;
+    int $nFilters = tokenize($filterStr, $filters);
+
+    // Do a basic OR type match, if we pass any of them we succeed.
+    string $f ;
+    for ($f in $filters)
+    	{
+    	if (gmatch($str, $f) == 1)
+    	    return 1 ;
+    	}
+
+    return 0 ;
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_highlightAll() - Highlight all items in the tsl
+ */
+global proc cSW_highlightAll()
+{
+    int $total = `textScrollList -q -numberOfItems tslJoints` ;
+    int $i ;
+    for ($i=1; $i <= $total; ++$i)
+        textScrollList -e -selectIndexedItem $i tslJoints ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_selectFromList()  - Selects jnts from list
+ */
+global proc cSW_selectFromList(int $mode)
+{
+    switch ($mode)
+    	{
+    	case 0:			// Sel Highlighted
+    	    string $jnts[] = cSW_getJoints() ;
+    	    select -r $jnts ;
+    	    break ;
+
+
+	case 1:			// Sel those shown in list
+	    string $jnts[] = `textScrollList -q -allItems tslJoints` ;
+	    int $nJnts = size($jnts) ;
+	    for ($i=0; $i < $nJnts; ++$i)	// Convert items to short name list only...
+		{
+		string $parts[];
+		tokenize($jnts[$i], $parts) ;
+		$jnts[$i] = $parts[0] ;
+		}
+	    select -r $jnts ;
+	    break ;
+
+	case 2:			// ALL joints in cluster
+	    string $skin = cSW_getSkin() ;
+		// What should we be adding?
+	    string $jnts[] = libSkin_getJointsFromSkin($skin);
+	    select -r $jnts ;
+    	    break ;
+    	}
+
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_selectCVsFromJoints() - Selects cvs from highlighted jnts
+ */
+global proc cSW_selectCVsFromJoints()
+{
+    string $geo = cSW_getGeo() ;
+    string $skin = cSW_getSkin() ;
+    string $jnts[] = cSW_getJoints() ;
+    int $nJnts = size($jnts) ;
+
+    select -cl ;
+    if ($nJnts <= 0)
+        return ;
+
+	// So try to get cv's...
+    string $comps[] = libSkin_getCompsFromJoints($skin, $jnts)  ;
+
+    	// And select if we did.
+    if (size($comps) > 0)
+        select -r $comps ;
+
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_selectJointsFromCVs() - Selects jnts from selected cvs
+ */
+global proc cSW_selectJointsFromCVs()
+{
+    string $geo = cSW_getGeo() ;
+    string $skin = cSW_getSkin() ;
+
+	// Start by getting any selected points related to this skinCluster
+    string $comps[] = cSW_getSelComps() ;	// What pts chosen?
+    int $nComp = size($comps) ;
+
+	// Unhighlight to start
+    textScrollList -e -deselectAll tslJoints ;
+
+    if ($nComp <= 0)
+        return ;
+
+	// Get all jnts related to the cvs...
+    string $jnts[] = libSkin_getJointsFromComps($skin, $comps) ;
+
+    // Now highlight those...if they are in the list we are looking at...
+
+
+    // Get all items in the list
+    string $j ;
+    string $allItems[] = `textScrollList -q -allItems tslJoints` ; // Get entire list
+    int $nItems = size($allItems) ;
+    for ($i=0; $i < $nItems; ++$i)	// Convert items to short name list only...
+    	{
+    	string $parts[];
+    	tokenize($allItems[$i], $parts) ;
+    	$allItems[$i] = $parts[0] ;
+    	}
+    int $idxToSel[] ;			// What index's should we sel?
+    clear $idxToSel ;
+    for ($j in $jnts)
+        {
+        int $idx = -1;
+        for ($i=0; $i < $nItems; ++$i)
+            {
+            if ($allItems[$i] == $j)	// did we find a match?
+                {
+                $idx = $i ;
+                break ;
+                }
+            }
+
+	// Did we find a match?
+	if ($idx != -1)
+	    $idxToSel[size($idxToSel)] = $idx + 1;	// Store for later, +1 since TSL uses 1 based indexing.
+        }
+
+    $idxToSel = `sort $idxToSel` ;	// Sort it in order.
+
+	// Unhighlight to start
+    textScrollList -e -deselectAll tslJoints ;
+
+    for ($i=0; $i < size($idxToSel); ++$i)
+         textScrollList -e -sii $idxToSel[$i] tslJoints ;	// Reselect each one
+
+
+    cSW_selChangedCB() ;  // And update slider too if needed...
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_addInfs() - Adds selected nodes as influences to the skin cluster.
+ */
+global proc cSW_addInfs()
+{
+    string $geo = cSW_getGeo() ;
+    string $skin = cSW_getSkin() ;
+
+	string $objs[] = `ls -sl` ;
+	if (size($objs) <= 0)
+		return ;
+	
+	if ($skin == "")
+		return ;
+	
+	libSkin_addInfluences($skin, $objs) ;
+
+	cSW_refreshList() ;
+
+	print ("// Added objects to skinCluster. // \n") ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * cSW_removeInfs() - Removes selected nodes as influences to the skin cluster.
+ */
+global proc cSW_removeInfs()
+{
+    string $geo = cSW_getGeo() ;
+    string $skin = cSW_getSkin() ;
+
+	string $objs[] = `ls -sl` ;
+	if (size($objs) <= 0)
+		return ;
+	
+	if ($skin == "")
+		return ;
+	
+	libSkin_removeInfluences($skin, $objs) ;
+
+	cSW_refreshList() ;
+
+	print ("// Removed objects from skinCluster. // \n") ;
+}
+
+
+// --------------------------------------------------------------------------
+
+

@@ -1,0 +1,207 @@
+// --------------------------------------------------------------------------
+// poseReaderUI.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	Lets you easily setup poseReader nodes based on my poseReader plugin.
+//
+// REQUIRES:
+//	poseReader.mll - Plugin
+//
+// USAGE:
+//	source "poseReaderUI.mel";  poseReaderUI() ;
+//
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Copyright ©2004 Michael B. Comet - All Rights Reserved.
+//
+// VERSIONS:
+//	1.00 - Sep 11, 2004 - mcomet - Initial Release.
+//	1.01 - Sep 12, 2004 - mcomet - Added reverse draw option.
+//	1.06 - Oct 17, 2004 - mcomet - Now has animCurve stuff.
+//	1.09 - Nov 17, 2004 - mcomet - Now has multiTrigger support.
+//	1.10 - Jan 21, 2005 - mcomet - Now has HasNoEffect Support.
+//
+// --------------------------------------------------------------------------
+//
+//  poseReader - Pose Space Angle Reader Maya Plugin by Michael B. Comet
+//  Copyright ©2004,2005 Michael B. Comet
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//    For information on poseDeformer contact:
+//    	Michael B. Comet - comet@comet-cartoons.com
+//	or visit http://www.comet-cartooons.com/toons/
+//
+// --------------------------------------------------------------------------
+
+
+
+
+/*
+ * poseReaderUI() - Main Entry
+ */
+global proc poseReaderUI()
+{
+
+    if (`window -q -ex poseReaderUIWin`)
+    	{
+    	showWindow poseReaderUIWin ;
+    	return ;
+    	}
+
+    if (!`pluginInfo -q -loaded "poseReader"`)
+		loadPlugin "poseReader" ;
+
+    window -w 265 -h 110 -t ("poseReaderUI - 1.10") poseReaderUIWin ;
+    formLayout mainForm ;
+    
+    radioButtonGrp -nrb 2 -l "Calculation Space:" -sl 1 -la2 "world" "local" -cw3 100 60 60 rbgSpace ;
+    button -l "Rig Selected Objects" -c ("poseReader_rigUI();") -ann ("Creates a poseReader for each selected object.") btnRig ;
+
+    iconTextButton -style "textOnly" -l ("comet@comet-cartoons.com") -ann ("poseReader Copyright ©2004 Michael B. Comet All Rights Reserved") -c ("showHelp -a \"http://www.comet-cartoons.com/toons/\"") -h 24 email ;
+
+    
+    formLayout -e 
+    	-af rbgSpace "top" 5 
+    	-an rbgSpace "bottom" 
+    	-af rbgSpace "left" 5 
+    	-af rbgSpace "right" 5 
+
+    	-ac btnRig "top" 5 rbgSpace
+    	-an btnRig "bottom" 
+    	-af btnRig "left" 5 
+    	-af btnRig "right" 5 
+
+    	-ac email "top" 5 btnRig
+    	-an email "bottom" 
+    	-af email "left" 5 
+    	-af email "right" 5 
+   	
+   	mainForm ;
+   	
+    
+    showWindow poseReaderUIWin ;
+   
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseReader_rigUI() - Wrapper for call from UI
+ */
+global proc poseReader_rigUI()
+{
+    string $objs[] = `ls -sl` ;
+    int $space = `radioButtonGrp -q -sl rbgSpace` ;
+    
+    poseReader_rig($objs, $space) ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseReader_rig() - Real rig proc
+ */
+global proc poseReader_rig(string $objs[], int $space) 
+{
+    if (size($objs) <= 0)
+    	error -sl 0 ("poseReaderUI: You must select one or more objects to create a poseReader node for!") ;
+
+    string $poses[] ;	// Store created nodes for sel at end
+    clear $poses;
+
+    string $obj;
+    for ($obj in $objs)
+    	{
+    	string $Obj = capitalizeString($obj) ;	// new to maya 6, tho it is a script....
+    	
+		string $pose = `createNode "poseReader" -n ("poseReader"+$Obj+"Shape#")`;
+		
+		$attr = "worldMatrix" ;
+		if ($space == 2)
+		   $attr = "matrix" ;
+		   
+		connectAttr -f ($obj+"."+$attr) ($pose+".worldMatrixLiveIn") ;
+	
+		string $parents[] = `listRelatives -p $pose`;
+		string $xform = $parents[0] ;
+		
+		connectAttr -f ($xform+"."+$attr) ($pose+".worldMatrixPoseIn") ;
+		
+		$poses[size($poses)] = $xform ;		// Actually store xform for sel.
+		
+		// Make a keyable attr people can actually see and use.
+		addAttr -ln "weight" -k 1 $pose ;
+		connectAttr -f ($pose+".outWeight") ($pose+".weight") ;
+	
+		// Parent to same parent that object has.
+		//	Very important if using local space.
+		//
+		string $parentsOrig[] = `listRelatives -p $obj`;
+		string $parent = $parentsOrig[0] ;
+		if ($parent != "")
+			parent $xform $parent ;
+			
+		// Snap xform to same as obj
+		//
+		string $pCons[] = `pointConstraint -w 1 $obj $xform` ;
+		string $oCons[] = `orientConstraint -w 1 $obj $xform` ;
+		delete $pCons $oCons ;
+			
+			
+		// Also make up animCurve for animCurve mode
+		string $animCurve = `createNode animCurveUU` ;
+		setKeyframe -f 0.0 -v 1.0 -itt "flat" -ott "flat" $animCurve;
+		setKeyframe -f 0.25 -v 0.85 -itt "spline" -ott "spline" $animCurve;
+		setKeyframe -f 0.75 -v 0.15 -itt "spline" -ott "spline" $animCurve;
+		setKeyframe -f 1.0 -v 0.0 -itt "flat" -ott "flat" $animCurve;
+		connectAttr -f ($animCurve+".message") ($pose+".msgAnimCurve") ;
+		connectAttr -f ($animCurve+".output") ($pose+".animCurveOutput") ;
+		}
+
+		
+    select -r $poses ;
+
+
+	// Now if we have more than one pose...connect them up to a multiTrigger node
+	//
+	int $nPoses = size($poses) ;
+	if ($nPoses > 1)
+		{
+		string $trig = `createNode "multiTrigger"` ;
+
+		// Make a keyable attr people can actually see and use.
+		addAttr -ln "weight" -k 1 $trig ;
+		connectAttr -f ($trig+".outWeight") ($trig+".weight") ;
+			
+		int $i ;
+		for ($i=0; $i < $nPoses; ++$i)
+			{
+			connectAttr -f ($poses[$i]+".weight") ($trig+".inputValues["+$i+"]") ; 
+			}
+			
+		select -r $poses $trig ;
+		}
+
+}
+
+
+// --------------------------------------------------------------------------
+
+
+

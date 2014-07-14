@@ -1,0 +1,38 @@
+// --------------------------------------------------------------------------
+// mirrorSelZ.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	Mirrors selected nodes for behavior.  Similar to Maya's mirror Skeleton 
+//	except this works on any object, and does not create a duplicate.
+//
+// REQUIRES:
+//	libMirror - For real proc
+//
+// USAGE:
+//	source "mirrorSelZ.mel";  mirrorSelZ ;  
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Copyright ©2004 Michael B. Comet - All Rights Reserved.
+//
+// VERSIONS:
+//	1.00 - Oct 16, 2004 - Initial Release.
+//
+// --------------------------------------------------------------------------
+
+
+source "libMirror.mel" ;
+
+
+/*
+ * mirrorSelZ() - 
+ */
+global proc mirrorSelZ()
+{
+libMirror_mirrorSelection(2) ;
+}
+
+// --------------------------------------------------------------------------
+
+

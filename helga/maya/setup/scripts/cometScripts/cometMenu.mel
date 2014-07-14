@@ -1,0 +1,118 @@
+//----------------------------------------------------------------------------
+// cometMenu.mel - MEL Script
+//----------------------------------------------------------------------------
+// Copyright ©2004 Michael B. Comet All Rights Reserved
+//
+// DESCRIPTION:	
+//
+// REQUIRES:
+//
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//
+//----------------------------------------------------------------------------
+
+
+/*
+ * Globals 
+ */
+global string $gMainWindow;     // defined elsewhere by Maya
+
+// --------------------------------------------------------------------------
+    
+    // Get rid of existing menu in case it exists already...
+    //
+if (`menu -q -exists ccCometMenu`)
+    {
+    menu -e -dai ccCometMenu;
+    }
+else
+    {
+	setParent $gMainWindow ;
+    menu -l "Comet" -p MayaWindow -to true ccCometMenu ;
+    }
+
+setParent -menu ccCometMenu ;
+
+
+menuItem -l "Tools" -sm true -to true ;
+    menuItem -l ("cometRename...") -c ("source \"cometRename.mel\"; cometRename(); ") -ann ("Rename selected nodes.") -image "cometRename.bmp" ;
+    setParent -menu ".." ;
+
+menuItem -l "Modeling" -sm true -to true ;
+    menuItem -l ("cometMirrorMesh...") -c ("source \"cometMirrorMesh.mel\"; cometMirrorMesh(); ") -ann ("Performs useful poly utilities, such as mirroring selection, mirroring geometry, reverting and storing points.") -image "cometMirrorMesh.bmp" ;
+    setParent -menu ".." ;
+
+menuItem -l "Shapes" -sm true -to true ;
+    menuItem -l ("null") -c ("source \"wireShape.mel\"; wireShape(\"null\"); ") -ann ("Makes a group.") ;
+    menuItem -l ("locator") -c ("source \"wireShape.mel\"; wireShape(\"locator\"); ") -ann ("Makes a locator.") ;
+    menuItem -l ("plus") -c ("source \"wireShape.mel\"; wireShape(\"plus\"); ") -ann ("Makes a plus.") ;
+    menuItem -divider true ;
+    menuItem -l ("circleX") -c ("source \"wireShape.mel\"; wireShape(\"circleX\"); ") -ann ("Makes a circleX.") ;
+    menuItem -l ("circleY") -c ("source \"wireShape.mel\"; wireShape(\"circleY\"); ") -ann ("Makes a circleY.") ;
+    menuItem -l ("circleZ") -c ("source \"wireShape.mel\"; wireShape(\"circleZ\"); ") -ann ("Makes a circleZ.") ;
+    menuItem -l ("square") -c ("source \"wireShape.mel\"; wireShape(\"square\"); ") -ann ("Makes a square.") ;
+    menuItem -l ("cube") -c ("source \"wireShape.mel\"; wireShape(\"cube\"); ") -ann ("Makes a cube.") ;
+    menuItem -l ("sphere") -c ("source \"wireShape.mel\"; wireShape(\"sphere\"); ") -ann ("Makes a sphere.") ;
+    menuItem -l ("arrow") -c ("source \"wireShape.mel\"; wireShape(\"arrow\"); ") -ann ("Makes an arrow.") ;
+    menuItem -l ("cross") -c ("source \"wireShape.mel\"; wireShape(\"cross\"); ") -ann ("Makes a cross.") ;
+    menuItem -l ("orient") -c ("source \"wireShape.mel\"; wireShape(\"orient\"); ") -ann ("Makes an orient.") ;
+    menuItem -l ("bulb") -c ("source \"wireShape.mel\"; wireShape(\"bulb\"); ") -ann ("Makes a bulb.") ;
+    menuItem -divider true ;
+    menuItem -l ("joint") -c ("source \"wireShape.mel\"; wireShape(\"joint\"); ") -ann ("Makes a joint.") ;
+    setParent -menu ".." ;
+
+
+menuItem -l "Display" -sm true -to true ;
+    menuItem -l ("Show Selection Handle") -c ("toggle -state on -selectHandle ; ") -ann ("Shows the selection handle for all selected objects") ;
+    menuItem -l ("Hide Selection Handle") -c ("toggle -state off -selectHandle ; ") -ann ("Hides the selection handle for all selected objects") ;
+    menuItem -divider true ;
+    menuItem -l ("Show Local Axis") -c ("toggle -state on -localAxis ; ") -ann ("Shows localAxis for all selected objects") ;
+    menuItem -l ("Hide Local Axis") -c ("toggle -state off -localAxis ; ") -ann ("Hides localAxis for all selected objects") ;
+    menuItem -divider true ;
+    menuItem -l ("Toggle Affected") -c ("source \"toggleAffected.mel\" ; toggleAffected ;") -ann ("Toggles pink affect highlighting for current viewport.") -image "toggleAffected.bmp" ;
+    menuItem -l ("Toggle Isolate Select") -c ("source \"toggleIsolateSelect.mel\" ; toggleIsolateSelect ;") -ann ("Isolates or un-isolates whatever is selected for current viewport.") -image "toggleIsolateSelect.bmp" ;
+    menuItem -l ("Toggle Wireframe On Shaded") -c ("source \"toggleWireframeOnShaded.mel\" ; toggleWireframeOnShaded ;") -ann ("Toggles display of wireframe on shaded mode for current viewport.") -image "toggleWireframeOnShaded.bmp" ;
+    menuItem -l ("Toggle X-Ray") -c ("source \"toggleXRay.mel\" ; toggleXRay ;") -ann ("Toggles display of X-Ray mode for current viewport.") -image "toggleXRay.bmp" ;
+    setParent -menu ".." ;
+
+
+menuItem -l "Constraints" -sm true -to true ;
+    menuItem -l ("Offset Point and Orient") -c ("source \"offsetConstraint.mel\"; offsetConstraintPO(); ") -ann ("Point & Orient Constrains slave to master(s).") -image "offsetConstraintPO.bmp" ;
+    menuItem -l ("Offset Point") -c ("source \"offsetConstraint.mel\"; offsetConstraintP(); ") -ann ("Point Constrains slave to master(s).") -image "offsetConstraintP.bmp" ;
+    menuItem -l ("Offset Orient") -c ("source \"offsetConstraint.mel\"; offsetConstraintO(); ") -ann ("Orient Constrains slave to master(s).") -image "offsetConstraintO.bmp" ;
+    menuItem -divider true ;
+    menuItem -l ("Snap") -c ("source \"snaps.mel\"; snap(\"\",\"\"); ") -ann ("Snaps slave object to master.") -image "snap.bmp" ;
+    menuItem -l ("Anim Snap") -c ("source \"snaps.mel\"; animSnap(\"\",\"\"); ") -ann ("Snaps slave object to master even if it has keys.") -image "animSnap.bmp" ;
+    setParent -menu ".." ;
+
+menuItem -l "Joints/Hierarchy" -sm true -to true ;
+    menuItem -l ("cometJointOrient...") -c ("source \"cometJointOrient.mel\"; cometJointOrient(); ") -ann ("Set joints rotation axis easily.") -image "cometJointOrient.bmp" ;   
+    menuItem -l ("Select All Joints") -c ("select -r `ls -type \"joint\" \"*\"`; ") -ann ("Selects all joints in the scene.") ;   
+    menuItem -divider true ;
+    menuItem -l ("zeroOut") -c ("source \"zeroOut.mel\"; zeroOut(\"\"); ") -ann ("Zero's out selected nodes by grouping.") -image "zeroOut.bmp" ;   
+    menuItem -divider true ;
+    menuItem -l ("cometSkinWeight...") -c ("source \"cometSkinWeight.mel\"; cometSkinWeight(); ") -ann ("Easily set/edit skin weights on components, without having to use the component editor.  Allows multiple wildcard filters for joints list, etc...") -image "cometSkinWeight.bmp" ;   
+    menuItem -l ("cometTransferWeights...") -c ("source \"cometTransferWeights.mel\"; cometTransferWeights(); ") -ann ("Quickly transfer weights from one or more joints to another joint for selected points of a skinCluster deformed object.") -image "cometTransferWeights.bmp" ;   
+    menuItem -l ("cometSaveWeights...") -c ("source \"cometSaveWeights.mel\"; cometSaveWeights(); ") -ann ("Save and Reload skinCluster weights.") -image "cometSaveWeights.bmp" ;
+	
+    setParent -menu ".." ;
+
+menuItem -l "Attributes" -sm true -to true ;
+    menuItem -l ("cometAttrEditor...") -c ("source \"cometAttrEditor.mel\"; cometAttrEditor(); ") -ann ("Adjust attributes up/down.") -image "cometAttrEditor.bmp" ;   
+    setParent -menu ".." ;
+
+menuItem -l "Animation" -sm true -to true ;
+    menuItem -l ("autoTangent...") -c ("source \"autoTangent.mel\"; autoTangent(); ") -ann ("Auto set tangents so they are smooth, but with no overshoot.") -image "autoTangent.bmp" ;
+    setParent -menu ".." ;
+
+
+menuItem -divider true ;
+menuItem -l "Visit Website..." -c ("showHelp -a \"http://www.comet-cartoons.com/\"; ") -ann ("Visit website.") ;
+menuItem -l "Re-Build Menu" -c ("rehash; source \"cometMenu.mel\" ;") -ann ("Re-Creates this menu, and does a rehash to pick up any new scripts.") ;
+
+
+// --------------------------------------------------------------------------
+
+

@@ -1,0 +1,104 @@
+//---------------------------------------------------------------------------
+// snaps.mel - MEL Script
+//---------------------------------------------------------------------------
+// Copyright ©2004 Michael B. Comet All Rights Reserved
+//
+// DESCRIPTION:	
+//
+// REQUIRES:
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Based on code by Mark Behm
+//
+//----------------------------------------------------------------------------
+
+
+/*
+ * animSnap() - Does a "safe" snap for stuff that is animated...
+ */
+global proc animSnap (string $master, string $slave)
+{
+    // get selection
+    string $s[]=`ls -sl`;
+    if ($master == "" || $slave == "")
+        {
+        $master = $s[0] ;
+        $slave = $s[1] ;
+        }
+    
+        // dupe slave
+    string $d[] = `duplicate -rc -rr $slave`;
+    $dupeSlave=$d[0];
+        // snap dupeSlave to master
+    snap($master, $dupeSlave) ;
+	// ndsSnap slave to dupeSlave
+    ndsSnap($dupeSlave, $slave) ;
+	// delete dupeSlave
+    delete $dupeSlave;
+
+    select -r $master $slave ;
+}
+
+//----------------------------------------------------------------------------
+
+/*
+ * snap() - Main snap that uses constraints
+ */
+global proc snap(string $master, string $slave)
+{
+	//get selection		
+    string $s[]=`ls -sl`;
+	// check inputs
+    if ($master=="" || $slave=="")
+	{
+	$master = $s[0];
+	$slave = $s[1];
+	}
+	
+	// constrain
+    string $oCons[] = `orientConstraint -w 1 $master $slave` ;
+    string $pCons[] = `pointConstraint -w 1 $master $slave` ;
+    refresh;
+
+    // delete constraints
+    delete $oCons ;
+    delete $pCons ;
+    
+    select -r $master $slave ;
+}
+
+//----------------------------------------------------------------------------
+
+/* 
+ * ndsSnap() - Snaps but via set attrs.
+ */
+global proc ndsSnap(string $master, string $slave)
+{
+	// get selection
+    string $s[] = `ls -sl`;
+
+	// check inputs
+    if ($master=="" || $slave=="")
+	{
+	$master = $s[0];
+	$slave = $s[1];
+	}
+	
+    if ($master == "" || $slave == "")
+        return ;
+	
+	// snap attributes
+    float $xt[] = `getAttr ($master+".translate")`;
+    float $xr[] = `getAttr ($master+".rotate")`;
+    setAttr ($slave+".translateX") $xt[0];
+    setAttr ($slave+".translateY") $xt[1];
+    setAttr ($slave+".translateZ") $xt[2];
+    setAttr ($slave+".rotateX") $xr[0];
+    setAttr ($slave+".rotateY") $xr[1];
+    setAttr ($slave+".rotateZ") $xr[2];	
+
+}
+	
+
+//----------------------------------------------------------------------------

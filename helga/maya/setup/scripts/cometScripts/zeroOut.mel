@@ -1,0 +1,90 @@
+//---------------------------------------------------------------------------
+// zeroOut.mel - MEL Script
+//---------------------------------------------------------------------------
+// Copyright ©2004 Michael B. Comet All Rights Reserved
+//
+// DESCRIPTION:	
+//
+// REQUIRES:
+//	snaps.mel
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Based on code by Mark Behm
+//
+//----------------------------------------------------------------------------
+
+source "snaps.mel" ;
+
+//----------------------------------------------------------------------------
+
+/*
+ * zeroOut() - 
+ */
+global proc string[] zeroOut(string $n)
+{
+    string $s[];
+    string $zeros[] ;
+
+    if ($n=="")
+	$s =`ls -sl`;
+    else
+	$s[0] = $n;
+
+
+    string $node ;
+    for ($node in $s)
+    	{
+	    // Make an uppercased version of the node name
+	int $len = size($node) ;
+	string $Node = $node ;
+	string $cap = toupper( substring($node, 1, 1) ) ;
+	if ($len > 1)
+	    {
+	    string $end = substring($node, 2, $len) ;
+	    $Node = $cap + $end ;
+	    }
+	else
+	    $Node = $cap ;
+
+	    // Make zero grp
+	string $name = ("grp"+$Node+"ZERO") ;
+	int $num=1;
+	while (objExists($name))  // find unique name
+	    {
+	    ++$num;
+	    $name = ("grp"+$num+$Node+"ZERO") ;
+	    }
+	string $grp = `group -em -w -n $name` ;
+
+	string $parents[] = `listRelatives -parent $node` ;
+	if (size($parents) > 0)
+	    parent $grp $parents[0] ;
+
+	    // Now, duplicate node ( inserting it into the heirarchy)
+	string $dupe[] = `duplicate -rr -rc $node `;
+	$dupe[0]=`rename $dupe[0] ("grp"+$node+"ZERO")`;
+
+	    // And do a NDSsnap..
+	ndsSnap($dupe[0], $grp) ;
+
+	    // delete dupe...
+	delete $dupe ;
+
+	    // parent our node to the grp
+	string $parentedNode[0] = `parent $node $grp`;
+
+	$zeros[size($zeros)] = $grp ;
+	}
+	
+
+    // re select nodes
+    select -r $s ;
+	
+
+    	// return the ZERO grp
+    return $zeros ;
+}
+
+//----------------------------------------------------------------------------
+

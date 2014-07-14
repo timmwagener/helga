@@ -1,0 +1,3168 @@
+// --------------------------------------------------------------------------
+// poseDeformerUI.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	Lets you easily setup poseReader nodes based on my poseReader plugin.
+//
+// REQUIRES:
+//	poseReader.mll - Plugin
+//	poseDeformer.mll - Plugin
+//	libSkin.mel 	- For some nice skin procs
+//	libStirng.mel 	- For string stuff
+//	libMirror.mel	- For mirroring.
+//
+// USAGE:
+//	source "poseDeformerUI.mel";  poseDeformerUI() ;
+//
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//	Copyright ?2004 Michael B. Comet - All Rights Reserved.
+//
+// VERSIONS:
+//	1.02 - Oct 3, 2004 - mcomet - Initial Release of final testing.
+//	1.03 - Oct 5, 2004 - mcomet - Made it so button resize is better for Linux.
+//						 Make attr weights paintable.
+//						 Fixed up plugin so now handles edit membership.
+//	1.05 - Oct 15, 2004 - mcomet - Now has new active attribute for delete
+//						and also totally new RBF-LUFactorization interp.
+//	1.06 - Oct 17, 2004 - mcomet - Now has mirror functionality.
+//	1.07 - 11/03/04 - mcomet - Now only uses membership points when creating
+//				targets, also put in missing scripts to ZIP file.
+//	1.09 - 11/17/04 - mcomet - Now has multiTrigger support.
+//	1.09b - 11/18/04 - mcomet - fixed/added some stuff i forgot such as
+//				Mirroring for new poseReader options, and also new envelope option.
+//	1.09c - 12/01/04 - mcomet - Now has an edit membership buutton, more tooltip help,
+//				and a new filter feature for the joint list.
+//	1.10 - 12/06/04 - mcomet - Now has import/export by order or position feature.
+//	1.11 - 12/06/04 - mcomet - Now when joint is chosen in list, it selects it and
+//				also shows the axis for it for easy finding.
+//				Also now has color swatch to set color of target object.
+//				Now when choosing existing pose, auto-selects readers.
+//				At end of pose creation, now selects xforms of readers, as well as 
+//					resets UI for a new create.
+//				Now has a parentTo option to override parenting of immediate object
+//					for poseReaders, to an explicitly defined node instead.
+//	1.12	12/07/04 - mcomet - Now has more UI options for poseDeformer attrs.
+//	1.13    12/09/04 - mcomet - Now has auto-set membership...which is useful
+//				for setting the membership exactly to what is needed for faster
+//				speed, as well as after an import.
+//	1.14    01/12/05 - mcomet - Fixed bug in import where poseReaders were not properly
+//				reconnected to the joints and stuff...oops.  Also now remakes animCurve
+//				even tho animCurve tweaks are not yet imported/exported.
+//	1.15 - 01/21/05 - mcomet - Deformer now has HasNoEffect feature and fix for mesh implode.
+//	1.16 - 03/09/05 - mcomet - Now mirrorData threshold defaults to 1.
+//	1.17 - 03/24/05 - mcomet - Fixed bug in import where if pt count changed or got later,
+//				incorrect # of points were looked at during comparison and setting.
+//
+// --------------------------------------------------------------------------
+//
+//  poseDeformer - Pose Space Deformer Maya Plugin by Michael B. Comet
+//  Copyright ?2004,?2005, Michael B. Comet
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//    For information on poseDeformer contact:
+//    	Michael B. Comet - comet@comet-cartoons.com
+//	  or visit http://www.comet-cartooons.com/toons/
+//
+// --------------------------------------------------------------------------
+
+
+/* 
+ * Includes
+ */
+source "libSkin.mel" ;
+source "libString.mel" ;
+source "libMirror.mel" ;
+
+
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+//	Main UI Procs
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * poseDeformerUI() - Main Entry
+ */
+global proc poseDeformerUI()
+{
+
+    if (`window -q -ex poseDeformerUIWin`)
+    	{
+    	showWindow poseDeformerUIWin ;
+    	return ;
+    	}
+
+    if (!`pluginInfo -q -loaded "poseReader"`)
+	loadPlugin "poseReader" ;
+
+    if (!`pluginInfo -q -loaded "poseDeformer"`)
+	loadPlugin "poseDeformer" ;
+
+	// Make so the Modify | Paint Attributes tool will paint on ANY deforming geo that
+	// has a weights attr, so pretty much any deformer...including this one.  This provides
+	// another way to do something akin to edit membership.  Regular Edit Membership also works.
+	//
+	makePaintable -attrType "multiFloat" -sm "deformer" "weightGeometryFilter" "weights" ; ;
+	
+
+    window -w 380 -h 480 -t ("poseDeformerUI - 1.17") poseDeformerUIWin ;
+    formLayout mainForm ;
+    
+
+    text -l "1.  Choose Skin Geo:" txGeo ;
+    textField -tx "" -ann ("Enter skin geo name, load with button on right, or Right-Click to choose existing geo with poseDeformaton in the scene.") tfGeo ;
+    button -l "<<<" -w 30 -c ("poseDeformer_loadGeo();") -ann ("Load selected geometry into text field.") btnGeo ;
+    
+	popupMenu -p tfGeo -pmc ("poseDeformer_makeGeoMenu();") pmGeo ;
+
+	
+    text -l "    poseDeformer:" txDef ;
+    textField -tx "" -ann ("Choose which pose deformer to edit, Right-Click to create a new one, or to choose one of the existing ones.") tfDef ;
+	button -l "Edit-Mem" -w 70 -c ("poseDeformer_editMem();") -ann ("Edit membership for current deformer.") btnEditMem ;
+	
+	popupMenu -p tfDef -pmc ("poseDeformer_makeDefMenu();") pmDef ;
+
+    
+    text -l "2.  Pose geo into problem pose using only controls/influences required." txPose ;
+    
+    button -l "3.  Prep for sculpting." -c ("poseDeformer_prepForSculpt();") -ann ("Creates a temporary geo copy that you can edit to sculpt the correct shape.") btnPrep ;
+    colorSliderGrp -l "Color:" -rgb 0.5 0.18 0.0 -h 18 -cw3 40 24 60 
+			-cc ("if (objExists(\"matPoseDeformerCorrected\")) { float $rgb[3] = `colorSliderGrp -q -rgb csgTgt`; setAttr -type double3 \"matPoseDeformerCorrected.color\" $rgb[0] $rgb[1] $rgb[2] ; } ") 
+			-dc ("if (objExists(\"matPoseDeformerCorrected\")) { float $rgb[3] = `colorSliderGrp -q -rgb csgTgt`; setAttr -type double3 \"matPoseDeformerCorrected.color\" $rgb[0] $rgb[1] $rgb[2] ; } ") 
+			csgTgt ;
+	
+	
+    text -l "4.  Sculpt your corrected shape." txSculpt ;
+
+    text -l "5.  Choose ONLY influences that have been moved to create this pose." txInf ;
+
+    textScrollList -ams true -sc ("poseDeformer_tslSelectCB();") tslInf ;
+
+	text -l "    Filter:" txFilter ;
+    textField -tx "*" -cc ("poseDeformer_fillTSL();") -ec ("poseDeformer_fillTSL();") -ann ("Use a wildcard or multiple wildcards separated by spaced to filter the joint list.") tfFilter ;
+	popupMenu -p tfFilter pmFilter ;
+		menuItem -l ("All (*)") -c ("textField -e -tx \"*\" tfFilter; poseDeformer_fillTSL(); ") ;
+
+    text -l "6.  Set creation options:" txOpt ;
+    
+	text -l "Parent poseReaders to:" txParentTo ;
+	textField -tx "" -ann ("poseReaders for a pose will be parented to this object.  By default if blank, it will use the parent of the skin joint.") tfParentTo ;
+	button -l "<<<" -w 30 -c ("poseReader_loadParentTo();") -ann ("Load selected object as parentTo object.") btnParentTo ;
+	
+    text -l "Pose Name:" txName ;
+	button -l "0. CREATE NEW" -w 120 -ann ("Left click to bring up menu for edit options.") btnName ;
+    textField -tx "" -ann ("Enter name here.") tfName	;
+	text -l "(Left click above button to choose a pose to edit, instead of create.)" txNameEdit ;
+    
+	popupMenu -p btnName -button 1 -pmc ("poseDeformer_makeNameMenu();") pmName ;
+
+	
+    button -l "7.  Create/Edit Pose and Readers" -c ("poseDeformer_createPose();") -ann ("Creates a new pose, or if an existing name/index was chosen, edits the existing pose.") btnCreate ;
+
+	checkBox -l "Based on Orig Shape" -v 1 -ann ("Before creating a pose, this will disable the envelope, so poses will be based off of original geo shape.  If off, it will be based on the current shape.  Recommended: On for RBF mode, off if using Additive mode.") cbDisableEnv ;
+	
+	separator -style "in" -h 3 sepAdvanced ;
+	
+	button -l "Rename" -c ("poseDeformer_renamePose();") -ann ("Renames the pose currently entered above.") btnRename ;
+	button -l "Delete" -c ("poseDeformer_deletePoseUI();") -ann ("Deletes the pose current entered above.") btnDelete ;
+	button -l "Mirror" -c ("poseDeformer_mirrorPose();") -ann ("Mirrors the current pose") btnMirror ;
+	button -l "Export" -c ("poseDeformer_exportUI();") -ann ("Exports the current pose, or if none is chosen, exports all poses.") btnExport ;
+	button -l "Import" -c ("poseDeformer_importUI();") -ann ("Imports poses onto the current deformer.") btnImport ;
+	button -l "Auto-Mem" -c ("poseDeformer_autoSetMembership();") -ann ("Automatically sets membership to only points used in deformation.") btnAutoMem ;
+
+
+	separator -style "in" -h 3 sepOptions ;
+	
+	optionMenu -l "blendMode:" -cc ("poseDeformer_updateOpts();") omBlendMode ;
+		menuItem -l "Additive" ;
+		menuItem -l "Normalize" ;
+		menuItem -l "RBF-LUFactorize" ;
+		optionMenu -e -sl 3 omBlendMode ;
+		
+	optionMenu -l "deformSpace:" -cc ("poseDeformer_updateOpts();") omDeformSpace ;
+		menuItem -l "joint-space" ;
+		menuItem -l "pose-space" ;
+		optionMenu -e -sl 2 omBlendMode ;
+	
+	floatSliderGrp -l "avgPoseSepRBF:" -pre 3 -min 0.001 -max 180.0 -v 30 -field true -cw3 100 50 30 -ss 1.0 -adj 3 -cc ("poseDeformer_updateOpts();") -dc ("poseDeformer_updateOpts();") fsgAvgPoseSepRBF ;
+		
+	separator -style "in" -h 3 sepEmail ;
+
+    iconTextButton -style "textOnly" -l ("Copyright ?2004 Michael B. Comet  All Rights Reserved") -ann ("poseDeformer Copyright ?2004 Michael B. Comet All Rights Reserved") -c ("showHelp -a \"http://www.comet-cartoons.com/toons/\"") -h 24 email ;
+
+    
+    formLayout -e 
+		-af txGeo "top" 8
+		-an txGeo "bottom"
+		-af txGeo "left" 5 
+		-an txGeo "right" 
+	
+		-af tfGeo "top" 5 
+		-an tfGeo "bottom" 
+		-ac tfGeo "left" 5 txGeo
+		-ac tfGeo "right" 5 btnGeo
+		
+		-af btnGeo "top" 5 
+		-an btnGeo "bottom" 
+		-an btnGeo "left" 
+		-af btnGeo "right" 5
+
+		-ac txDef "top" 8 tfGeo 
+		-an txDef "bottom"
+		-an txDef "left"  
+		-ac txDef "right" 5 tfGeo 
+	
+		-ac tfDef "top" 5 tfGeo 
+		-an tfDef "bottom" 
+		-ac tfDef "left" 5 txDef
+		-ac tfDef "right" 5 btnEditMem
+		
+		-ac btnEditMem "top" 5 tfGeo 
+		-an btnEditMem "bottom" 
+		-an btnEditMem "left"  
+		-af btnEditMem "right" 5
+	
+		
+    	-ac txPose "top" 5 tfDef
+    	-an txPose "bottom" 
+    	-af txPose "left" 5 
+    	-af txPose "right" 5 
+
+    	-ac btnPrep "top" 5 txPose
+    	-an btnPrep "bottom" 
+    	-af btnPrep "left" 5 
+    	-an btnPrep "right" 
+
+		-ac csgTgt "top" 6 txPose
+    	-an csgTgt "bottom" 
+    	-ac csgTgt "left" 5 btnPrep
+    	-an csgTgt "right" 
+		
+		
+    	-ac txSculpt "top" 5 btnPrep
+    	-an txSculpt "bottom" 
+    	-af txSculpt "left" 5 
+    	-an txSculpt "right" 
+
+    	-ac txInf "top" 5 txSculpt
+    	-an txInf "bottom" 
+    	-af txInf "left" 5 
+    	-an txInf "right" 
+
+    	-ac tslInf "top" 5 txInf
+    	-ac tslInf "bottom" 5 tfFilter
+    	-af tslInf "left" 5 
+    	-af tslInf "right" 5
+
+    	-an txFilter "top" 
+    	-ac txFilter "bottom" 5 txOpt
+    	-af txFilter "left" 5 
+    	-an txFilter "right" 
+
+    	-an tfFilter "top" 
+    	-ac tfFilter "bottom" 5 txOpt
+    	-ac tfFilter "left" 5 txFilter 
+    	-af tfFilter "right" 5 
+
+    	-an txOpt "top" 
+    	-ac txOpt "bottom" 5 tfParentTo
+    	-af txOpt "left" 5 
+    	-an txOpt "right" 
+		
+		
+	
+    	-an txParentTo "top" 
+    	-ac txParentTo "bottom" 8 tfName
+    	-af txParentTo "left" 25 
+    	-an txParentTo "right" 
+		
+    	-an tfParentTo "top" 
+    	-ac tfParentTo "bottom" 5 tfName
+    	-ac tfParentTo "left" 5 txParentTo 
+    	-ac tfParentTo "right" 5 btnParentTo 
+
+    	-an btnParentTo "top" 
+    	-ac btnParentTo "bottom" 5 tfName
+    	-an btnParentTo "left" 
+    	-af btnParentTo "right" 5 
+		
+		
+
+    	-an txName "top" 
+    	-ac txName "bottom" 8 txNameEdit
+    	-af txName "left" 25 
+    	-an txName "right" 
+		
+    	-an btnName "top" 
+    	-ac btnName "bottom" 5 txNameEdit
+    	-ac btnName "left" 5 txName
+    	-ap btnName "right" 0 55  
+
+    	-an tfName "top" 
+    	-ac tfName "bottom" 5 txNameEdit
+    	-ac tfName "left" 5 btnName
+    	-af tfName "right" 5 
+
+    	
+    	-an txNameEdit "top" 
+    	-ac txNameEdit "bottom" 5 btnCreate
+    	-af txNameEdit "left" 25 
+    	-an txNameEdit "right" 
+		
+    	
+    	-an btnCreate "top" 
+    	-ac btnCreate "bottom" 5 sepAdvanced
+    	-af btnCreate "left" 5 
+    	-an btnCreate "right" 
+
+    	-an cbDisableEnv "top" 
+    	-ac cbDisableEnv "bottom" 8 sepAdvanced
+    	-ac cbDisableEnv "left" 8 btnCreate 
+    	-an cbDisableEnv "right" 
+ 		
+		-an sepAdvanced "top" 
+    	-ac sepAdvanced "bottom" 5 btnRename
+    	-af sepAdvanced "left" 0
+    	-af sepAdvanced "right" 0 
+
+
+		-an btnRename "top" 
+    	-ac btnRename "bottom" 5 sepOptions
+    	-af btnRename "left" 5
+    	-an btnRename "right"   
+
+		-an btnDelete "top" 
+    	-ac btnDelete "bottom" 5 sepOptions
+    	-ac btnDelete "left" 5 btnRename
+    	-an btnDelete "right"
+		
+		-an btnMirror "top" 
+    	-ac btnMirror "bottom" 5 sepOptions
+    	-ac btnMirror "left" 5 btnDelete
+    	-an btnMirror "right"
+		
+		-an btnExport "top" 
+    	-ac btnExport "bottom" 5 sepOptions
+    	-ac btnExport "left" 5 btnMirror
+    	-an btnExport "right"
+
+		-an btnImport "top" 
+    	-ac btnImport "bottom" 5 sepOptions
+    	-ac btnImport "left" 5 btnExport
+    	-an btnImport "right"
+		
+		-an btnAutoMem "top" 
+    	-ac btnAutoMem "bottom" 5 sepOptions
+    	-ac btnAutoMem "left" 5 btnImport
+    	-an btnAutoMem "right"
+		
+
+
+		-an sepOptions "top" 
+    	-ac sepOptions "bottom" 5 omBlendMode
+    	-af sepOptions "left" 0
+    	-af sepOptions "right" 0 
+
+		-an omBlendMode "top" 
+    	-ac omBlendMode "bottom" 5 fsgAvgPoseSepRBF
+    	-af omBlendMode "left" 0
+    	-an omBlendMode "right" 
+
+		-an omDeformSpace "top" 
+    	-ac omDeformSpace "bottom" 5 fsgAvgPoseSepRBF
+    	-ac omDeformSpace "left" 5 omBlendMode
+    	-an omDeformSpace "right" 
+		
+		
+		-an fsgAvgPoseSepRBF "top" 
+    	-ac fsgAvgPoseSepRBF "bottom" 5 sepEmail
+    	-af fsgAvgPoseSepRBF "left" 0
+    	-ap fsgAvgPoseSepRBF "right" 0 66 
+		
+		
+		-an sepEmail "top" 
+    	-ac sepEmail "bottom" 5 email
+    	-af sepEmail "left" 0
+    	-af sepEmail "right" 0 
+		
+
+    	-an email "top" 
+    	-af email "bottom" 5
+    	-af email "left" 5 
+    	-af email "right" 5 
+   	
+   	mainForm ;
+   	
+    
+    showWindow poseDeformerUIWin ;
+   
+}
+
+// --------------------------------------------------------------------------
+
+/* 
+ * poseDeformer_fillTSL() - Given the GEO object, fill the TSL
+ */
+global proc poseDeformer_fillTSL()
+{
+	textScrollList -e -removeAll tslInf ;
+	
+	string $geo = `textField -q -tx tfGeo` ;
+	if ($geo == "" || objExists($geo) != true)
+		return ;
+
+	string $filter = `textField -q -tx tfFilter` ;
+	if ($filter == "")
+		$filter = "*" ;
+	
+	// Now break into multiple filters since we could have multiples separated by whitespace.
+	//	ie:  "*foo* *baz* bang*" is a valid string with 3 filters specified.
+	//
+	string $filters[] ;
+	tokenize($filter, $filters) ;
+	
+
+	// Determine skinCl from geo.
+    string $skinCls[] = libSkin_getSkinFromGeo($geo) ;
+    
+    if (size($skinCls) <= 0)
+    	{
+    	return ;
+    	}	
+	
+	// Fill up TSL....
+    string $infs[] = libSkin_getJointsFromSkin($skinCls[0]) ;
+    string $inf ;
+    
+    for ($inf in $infs)
+    	{
+			// Now check against each filter and if it matches only, allow it to be shown.
+			//
+		string $f;
+		int $allow = 0 ;
+		for ($f in $filters)
+			{
+			if (gmatch($inf, $f) == 1)
+				{
+				$allow = 1 ;
+				break ;
+				}
+			}
+		
+		if ($allow)
+			textScrollList -e -append $inf tslInf ;
+    	}
+		
+}		
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_tslSelectCB() - Callback for when item is chosen in TSL
+ */
+global proc poseDeformer_tslSelectCB()
+{
+	string $infs[] ;
+	
+	// First get ALL items
+	$infs = `textScrollList -q -allItems tslInf` ;
+	if (size($infs) > 0)
+		toggle -localAxis -state off $infs ;		// Turn off first...
+    
+	select -cl ;
+	
+	// Now get all SEL items
+	$infs = `textScrollList -q -selectItem tslInf` ;
+    if (size($infs) > 0)
+		{
+		toggle -localAxis -state on $infs ;	// Turn on...
+		select -r $infs ;					// and select
+		}
+
+	
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_loadGeo() -
+ */
+global proc poseDeformer_loadGeo()
+{
+    string $objs[] = `ls -sl -type "transform"` ;
+	
+	button -e -l ("0. CREATE NEW") btnName ;
+	textField -e -tx "" tfName ;
+
+	
+    if (size($objs) <= 0)
+    	{
+    	warning -sl 0 ("poseDeformerUI: You must select geometry that has a skinCluster on it.") ;
+    	return ;
+    	}
+
+    string $skinCls[] = libSkin_getSkinFromGeo($objs[0]) ;
+    
+    if (size($skinCls) <= 0)
+    	{
+    	warning -sl 0 ("poseDeformerUI: You must select geometry that has a skinCluster on it.") ;
+    	return ;
+    	}
+
+    textField -e -tx $objs[0] tfGeo ;
+
+	
+	// Fill up TSL....
+	poseDeformer_fillTSL() ;
+
+		
+
+		// Also load up deformer field too...generating deformer if needed...
+		// If more than one exists, we pick the first. 
+	string $defs[] = poseDeformer_getPoseDeformerFromGeo($objs[0]) ;
+    string $def ;
+    // Do we need to generate a new one?
+    if (size($defs) <= 0)
+    	{
+		$def = poseDeformer_createDef() ;
+    	}
+	else 
+		$def = $defs[0] ;
+	
+	textField -e -tx $def tfDef ;
+	
+	
+	poseDeformer_refreshOpts() ;	
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_refreshOpts() - 
+ */
+global proc poseDeformer_refreshOpts()
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "")
+    	return ;
+
+	string $def = `textField -q -tx tfDef` ;
+    if ($def == "" || objExists($def) != true)
+    	return ;
+
+	
+	// Try to make a nice guess setting for the user.
+	int $mode = `getAttr ($def+".blendMode")` ;
+	if ($mode == 0)	// Additive
+		checkBox -e -v 0 cbDisableEnv  ;
+	else
+		checkBox -e -v 1 cbDisableEnv  ;
+	
+		// Update opts
+	optionMenu -e -sl ($mode+1) omBlendMode ;		
+	
+	int $space = `getAttr ($def+".deformSpace")` ;
+	optionMenu -e -sl ($space+1) omDeformSpace ;
+	
+	float $avgPoseSepRBF = `getAttr ($def+".avgPoseSepRBF")`;
+	floatSliderGrp -e -v $avgPoseSepRBF fsgAvgPoseSepRBF ; 
+
+	if ($mode != 2)
+		floatSliderGrp -e -en false fsgAvgPoseSepRBF ;
+	else
+		floatSliderGrp -e -en true fsgAvgPoseSepRBF ;
+	
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_updateOpts() - 
+ */
+global proc poseDeformer_updateOpts()
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "")
+    	return ;
+
+	string $def = `textField -q -tx tfDef` ;
+    if ($def == "" || objExists($def) != true)
+    	return ;
+
+	int $mode = `optionMenu -q -sl omBlendMode` - 1 ;
+	setAttr ($def+".blendMode") $mode ;
+	
+	int $space = `optionMenu -q -sl omDeformSpace` - 1 ;
+	setAttr ($def+".deformSpace") $space ;
+	
+	float $avgPoseSepRBF = `floatSliderGrp -q -v fsgAvgPoseSepRBF` ;
+	setAttr ($def+".avgPoseSepRBF") $avgPoseSepRBF ;
+	
+	if ($mode != 2)
+		floatSliderGrp -e -en false fsgAvgPoseSepRBF ;
+	else
+		floatSliderGrp -e -en true fsgAvgPoseSepRBF ;
+}
+
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_makeGeoMenu() - Nice right click menu for geo field.
+ */
+global proc poseDeformer_makeGeoMenu()
+{
+    menu -e  -dai pmGeo ;
+    setParent -menu pmGeo ;
+    
+    string $skinGeos[] = libSkin_getSkinGeosInScene() ;
+    string $geo ;
+    for ($geo in $skinGeos)
+    	{
+    	menuItem -l $geo -c ("select -r \""+$geo+"\"; poseDeformer_loadGeo(); ") ;
+    	}
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_makeDefMenu() - Nice right click menu for deformer field.
+ */
+global proc poseDeformer_makeDefMenu()
+{
+    menu -e -dai pmDef ;
+    setParent -menu pmDef ;
+    
+	string $geo = `textField -q -tx tfGeo` ;
+	if ($geo == "" || objExists($geo) != true)
+		return ;
+
+   	menuItem -l "Create new poseDeformer" -c ("string $def = poseDeformer_createDef(); textField -e -tx $def tfDef ;  button -e -l (\"0. CREATE NEW\") btnName ; textField -e -tx \"\" tfName ;") -ann ("Use to create another deformer on the geometry, even if one exists already.") ;
+   	menuItem -divider true ;
+
+	
+    string $defs[] = poseDeformer_getPoseDeformerFromGeo($geo) ;
+    string $def ;
+    for ($def in $defs)
+    	{
+    	menuItem -l $def -c ("textField -e -tx \""+$def+"\" tfDef; button -e -l (\"0. CREATE NEW\") btnName ; textField -e -tx \"\" tfName ; poseDeformer_refreshOpts(); ") ;
+    	}
+
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseReader_loadParentTo() - 
+ */
+global proc poseReader_loadParentTo()
+{
+	string $objs[] = `ls -sl -type "transform"` ;
+	textField -e -tx $objs[0] tfParentTo ;	
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_editMem() - Bring up edit membership. 
+ */
+global proc poseDeformer_editMem()
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "")
+    	{
+    	warning -sl 0 ("You must first choose geometry to adjust.") ;
+    	return ;
+    	}
+
+	string $def = `textField -q -tx tfDef` ;
+    if ($def == "" || objExists($def) != true)
+    	{
+    	warning -sl 0 ("You must first choose a poseDeformer on the geometry.") ;
+    	return ;
+    	}
+		
+	select -r $def ;
+	EditMembershipTool ;		// Regular maya command.
+}
+
+// --------------------------------------------------------------------------
+
+
+
+/*
+ * poseDeformer_prepForSculpt() - Dup skin geo and make nice mtl etc so can sculpt
+ */
+global proc poseDeformer_prepForSculpt()
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "")
+    	{
+    	warning -sl 0 ("You must first choose geometry to adjust.") ;
+    	return ;
+    	}
+
+	string $def = `textField -q -tx tfDef` ;
+    if ($def == "" || objExists($def) != true)
+    	{
+    	warning -sl 0 ("You must first choose a poseDeformer on the geometry.") ;
+    	return ;
+    	}
+		
+    if (objExists("poseDeformerCorrectedTgt"))
+    	{
+    	warning -sl 0 ("A work-in-progress \"poseDeformerCorrectedTgt\" already exists.  Please finish that process, or delete that tempoary target geometry first.") ;
+    	return ;
+    	}
+
+    string $dups[] = `duplicate -rr -rc $geo` ;
+    string $childs[] = `listRelatives -ni -children -type "transform" -type "joint" $dups`;
+    if (size($childs) > 0)
+        delete $childs ;
+    	
+    string $tgt = `rename $dups[0] ("poseDeformerCorrectedTgt")`;
+    poseDeformer_assignShader($tgt) ;
+
+	// Unlock the target.    
+    setAttr -lock false ($tgt+".tx") ; setAttr -lock false ($tgt+".ty") ; setAttr -lock false ($tgt+".tz") ;
+    setAttr -lock false ($tgt+".rx") ; setAttr -lock false ($tgt+".ry") ; setAttr -lock false ($tgt+".rz") ;
+    setAttr -lock false ($tgt+".sx") ; setAttr -lock false ($tgt+".sy") ; setAttr -lock false ($tgt+".sz") ;
+
+	// Show only target
+    setAttr ($tgt+".v") 1 ;
+    setAttr ($geo+".v") 0 ;
+
+    select -r $tgt ;
+	changeSelectMode -component;
+	hilite -r $tgt ;
+	print ("// Ready for sculpting. //\n") ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_assignShader()
+ */
+global proc poseDeformer_assignShader(string $geo)
+{
+	// Get shape node
+    string $shapes[] = `listRelatives -shapes $geo` ;
+    
+    string $mat = "matPoseDeformerCorrected" ;
+
+	// check if blendShapeShader exists
+    if (objExists($mat) != true)
+		{
+        $mat = `shadingNode -asShader blinn`;
+		$mat = `rename $mat ("matPoseDeformerCorrected")` ;
+
+		sets -renderable true -noSurfaceShader true -empty -name ($mat+"SG") ;
+		connectAttr -f ($mat+".outColor") ($mat+"SG.surfaceShader") ;
+		
+		float $rgb[3] = `colorSliderGrp -q -rgb csgTgt` ;
+		setAttr ($mat+".color") -type double3 $rgb[0] $rgb[1] $rgb[2] ;
+		setAttr ($mat+".specularColor") -type double3 0.2 0.2 0.2 ;
+		setAttr ($mat+".reflectivity") 0.0 ;
+		setAttr ($mat+".specularRollOff") 0.25 ;
+		setAttr ($mat+".eccentricity") 0.60 ;
+	
+        }
+
+	float $rgb[3] = `colorSliderGrp -q -rgb csgTgt` ;
+	setAttr ($mat+".color") -type double3 $rgb[0] $rgb[1] $rgb[2] ;
+		
+		
+	// Apply material        
+    select -r $geo ;
+    sets -e -forceElement ($mat+"SG");    
+
+	
+	// This doesn't work...sigh...
+	// connectControl csgTgt ($mat+".color") ;		// Make sure control is connected to material also.
+	
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_createDef() - Create a new deformer on the node
+ */
+global proc string poseDeformer_createDef()
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "")
+    	{
+    	warning -sl 0 ("You must first choose geometry to adjust.") ;
+    	return "" ;
+    	}	
+
+	string $defs[] = `deformer -type "poseDeformer" $geo` ;	// Make new one
+
+	// Connect in all the related infs to the deformer
+	string $skinCls[] = libSkin_getSkinFromGeo($geo) ;
+	string $infs[] = libSkin_getJointsFromSkin($skinCls[0]) ;
+	
+	int $i;
+	for ($i=0; $i < size($infs); ++$i)
+		{
+		connectAttr -f ($infs[$i]+".worldMatrix") ($defs[0]+".worldMatrix["+$i+"]") ;
+		}
+
+	setAttr ($defs[0]+".avgPoseSepRBF") 30.0 ;		// a better default value.
+		
+	return $defs[0] ;
+	print ("// Created new poseDeformer. //\n") ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_createPose() - Actually generate pose
+ */
+global proc poseDeformer_createPose()
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "" || objExists($geo) != true)
+    	{
+    	warning -sl 0 ("You must first choose geometry to adjust.") ;
+    	return ;
+    	}
+
+	string $def = `textField -q -tx tfDef` ;
+    if ($def == "" || objExists($def) != true)
+    	{
+    	warning -sl 0 ("You must first choose a poseDeformer on the geometry.") ;
+    	return ;
+    	}
+    
+    string $tgt = "poseDeformerCorrectedTgt" ;
+    if (objExists($tgt) != true)
+    	{
+    	warning -sl 0 ("You must sculpt a corrected target shape first.") ;
+    	return ;
+    	}
+
+    string $infs[] = `textScrollList -q -selectItem tslInf` ;
+    if (size($infs) <= 0)
+    	{
+    	warning -sl 0 ("You must choose the influences that were used to generate the pose.") ;
+    	return ;
+    	}
+
+    string $name = `textField -q -tx tfName` ;
+    if ($name == "")
+    	{
+    	warning -sl 0 ("You must choose a name for the pose.") ;
+    	return ;
+    	}
+
+	changeSelectMode -object;
+	
+	waitCursor -state on ;
+	
+	
+	// At this point we know the target geo, we know the xforms involved, 
+	// and we know the deformer.  All we want now is to figure out what pose
+	// index we are gonna create.  This should just be the next available empty pose slot.
+	//
+	int $pIdx = -1 ;
+    
+		// Does user want to modify an existing pose?
+	int $bModify = false ;
+	int $desiredIdx = -1 ;
+
+	string $btnIdx = `button -q -l btnName` ;
+	string $parts[] ;
+	tokenize($btnIdx, ". ", $parts) ;
+	$desiredIdx = (int)($parts[0]) - 1 ;	// -1 since doing 1 as ui first entry. But we want 0 based not 1 based.
+
+
+	if ($desiredIdx >= 0)
+		{
+		$pIdx = $desiredIdx ;
+		$bModify = 1 ;
+		}
+	else
+		{
+		$pIdx = poseDeformer_nextAvailablePoseIdx($def) ;
+		}
+
+
+	if (`checkBox -q -v cbDisableEnv`)
+		setAttr ($def+".envelope") 0.0 ;		// For making shapes 100% with changes from the original shape.
+		
+
+	// Now create the pose.  Easily done by calling the poseDeformerEdit command
+	// 	which is a part of the poseDeformer plugin.
+	// Since we can have multiple -xform flags, we need to build a cmd string and then
+	//	eval that....
+	//
+	// ie:  poseDeformerEdit -geo targetGeo -xform joint1 -xform joint3 -pi 0 poseDeformer1 ;
+	
+	print ("// Generating pose... //\n") ;
+	
+    string $cmd = ("poseDeformerEdit -geo "+$tgt+" -pi "+$pIdx+" ") ;
+    int $x ;
+    for ($x=0; $x < size($infs); ++$x)
+        $cmd += ("-xform "+$infs[$x]+" ") ;
+    $cmd += ($def+";") ;
+    
+    eval($cmd) ;	// And call it!
+    
+	print ("// Pose created. //\n") ;
+        
+    
+    // Now blow away target shape.
+    delete $tgt ;
+    
+    setAttr ($geo+".v") 1 ;	// show main geo
+
+
+    string $readers[] ;
+    clear $readers ;
+ 
+    int $space = 1;	// world
+
+	
+	// Now create the poseReader nodes to simply drive the pose values.
+	//
+	for ($x=0; $x < size($infs) && !$bModify; ++$x)
+		{
+    	string $Obj = capitalizeString($infs[$x]) ;	// new to maya 6, tho it is a script....
+    	
+		string $pose = `createNode "poseReader" -n ("poseReader_"+$name+$Obj+"Shape#")`;
+		
+		$attr = "worldMatrix" ;
+		if ($space == 2)
+		   $attr = "matrix" ;
+		   
+		connectAttr -f ($infs[$x]+"."+$attr) ($pose+".worldMatrixLiveIn") ;
+	
+		string $parents[] = `listRelatives -p $pose`;
+		string $xform = $parents[0] ;
+		
+		connectAttr -f ($xform+"."+$attr) ($pose+".worldMatrixPoseIn") ;
+		
+		$readers[size($readers)] = $pose ;	// Store for later
+	
+		// Make a keyable attr people can actually see and use.
+		addAttr -ln "weight" -k 1 $pose ;
+		connectAttr -f ($pose+".outWeight") ($pose+".weight") ;
+	
+		// Parent to same parent that object has.
+		//	Very important if using local space.
+		//
+		string $userParent = `textField -q -tx tfParentTo` ;
+		string $parentsOrig[] = `listRelatives -p $infs[$x]`;
+		string $parent = $parentsOrig[0] ;
+		if ($userParent != "" && objExists($userParent))
+			parent $xform $userParent ;
+		else if ($parent != "")
+			parent $xform $parent ;
+			
+		// Snap xform to same as obj
+		//
+		string $pCons[] = `pointConstraint -w 1 $infs[$x] $xform` ;
+		string $oCons[] = `orientConstraint -w 1 $infs[$x] $xform` ;
+		delete $pCons $oCons ;
+		
+		// Also make up animCurve for animCurve mode
+		string $animCurve = `createNode animCurveUU` ;
+		setKeyframe -f 0.0 -v 1.0 -itt "flat" -ott "flat" $animCurve;
+		setKeyframe -f 0.25 -v 0.85 -itt "spline" -ott "spline" $animCurve;
+		setKeyframe -f 0.75 -v 0.15 -itt "spline" -ott "spline" $animCurve;
+		setKeyframe -f 1.0 -v 0.0 -itt "flat" -ott "flat" $animCurve;
+		connectAttr -f ($animCurve+".message") ($pose+".msgAnimCurve") ;
+		connectAttr -f ($animCurve+".output") ($pose+".animCurveOutput") ;
+		
+		
+		// Set options
+		setAttr ($pose+".maxAngle") 45.0 ;
+
+		// NEW for RBF_LUFactorization stuff...the deformer now needs to know
+		// about the poses itself so it can do interpolation...
+		//
+		// So now connect worldMat of reader into deformer sub xform world mat. 		
+		connectAttr -f ($xform+".worldMatrix") ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormWorldMatrix") ;
+		connectAttr -f ($pose+".readAxis") ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormReadAxis") ;
+		}
+		
+    // Now connect these xforms to the pose weight...if 1 direct connect.
+    // If two or more make multiTrigger...
+    if (size($infs) == 1 && !$bModify)
+    	{
+    	connectAttr -f ($readers[0]+".weight") ($def+".pose["+$pIdx+"].poseWeight") ;
+    	}
+    else if (!$bModify)
+        {
+		// Now if we have more than one pose...connect them up to a multiTrigger node
+		//
+		int $nReaders = size($readers) ;
+		string $trig = `createNode "multiTrigger"` ;
+	
+		// Make a keyable attr people can actually see and use.
+		addAttr -ln "weight" -k 1 $trig ;
+		connectAttr -f ($trig+".outWeight") ($trig+".weight") ;
+				
+		int $r ;
+		for ($r=0; $r < $nReaders; ++$r)
+			{
+			connectAttr -f ($readers[$r]+".weight") ($trig+".inputValues["+$r+"]") ; 
+			}
+				
+		// Finally connect last mult in chain to actual pose weight.
+		connectAttr -f ($trig+".weight") ($def+".pose["+$pIdx+"].poseWeight") ;             
+		}
+	
+		
+    
+    // Set name of pose
+    setAttr -type "string" ($def+".pose["+$pIdx+"].poseName") $name ;
+	setAttr ($def+".pose["+$pIdx+"].poseActive") 1 ;
+
+	setAttr ($def+".envelope") 1.0 ;		// RE-enable
+	
+
+		
+	// button -e -l (($pIdx+1)+". "+$name) btnName ;
+	// Instead now erase button and textfield so ready for next create.
+	button -e -l ("0. CREATE NEW") btnName ;
+	textField -e -tx "" tfName ;
+	
+	waitCursor -state off ;
+	
+    
+	// Select reader xforms.
+    select -r $readers ;
+	pickWalk -d up ;
+
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_makeNameMenu() - Nice right click menu for name field.
+ */
+global proc poseDeformer_makeNameMenu()
+{
+    menu -e  -dai pmName ;
+    setParent -menu pmName ;
+    
+    menuItem -l ("0. CREATE NEW") -c ("poseDeformer_choosePoseEdit(-1); ") ;
+
+	string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "" || objExists($geo) != true)
+		{
+		menuItem -l "No selected geo." ;
+		return ;
+		}
+	
+    $def = `textField -q -tx tfDef` ;
+	if ($def == "" || objExists($def) != true )
+		{
+		menuItem -l "No poseDeformer applied to geo." ;
+		return ;
+		}
+	
+    string $names[] = poseDeformer_getPoseNames($def) ;
+
+	if (size($names) <= 0)
+		{
+		menuItem -l "No poses created yet." ;
+		return ;
+		}
+
+	
+    for ($i=0; $i < size($names); ++$i)
+    	{
+		if ($names[$i] == "")
+			;	// menuItem -l (($i+1)+". (Available)") -c ("textField -e -tx \"\" tfName; ") ;
+		else
+				menuItem -l (($i+1)+". "+$names[$i]) -c ("poseDeformer_choosePoseEdit("+$i+"); ") ;
+		
+    	}
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_choosePoseEdit() - Called when user chooses a pose to edit.
+ */
+global proc poseDeformer_choosePoseEdit(int $idx)
+{
+	string $geo = `textField -q -tx tfGeo` ;
+	string $def = `textField -q -tx tfDef` ;
+	
+	string $names[] = poseDeformer_getPoseNames($def) ;
+	string $name = "" ;
+	string $label = "CREATE NEW" ;
+	if ($idx >= 0)
+		$label = $name = $names[$idx] ;
+	
+	textField -e -tx $name tfName;
+	button -e -l (($idx+1)+". "+$label) btnName ;
+	
+	if ($idx >= 0)	// Now if user is editing a pose, auto choose proper items in joint list...
+		{
+			// Erase and re-Fill up TSL....since we could have had a filter.
+		textField -e -tx "*" tfFilter ;	// Reset filter to ALL!
+		poseDeformer_fillTSL() ;			
+			
+		textScrollList -e -deselectAll tslInf ;
+		string $xforms[] = poseDeformer_getPoseTransformNames($def, $idx);
+		string $xfrom ;
+		for ($xform in $xforms)
+			catch(`textScrollList -e -selectItem $xform tslInf`) ;
+		
+		// highlight proper joints.
+		poseDeformer_tslSelectCB() ;
+		
+		
+		// What readers are tied to this?
+		string $readers[] = poseDeformer_getReadersFromPose($def, $idx) ;
+		if (size($readers) > 0 )		// should be true...
+			select -r $readers ;
+		}
+	else
+		{
+		// Leave as is for now			//		textScrollList -e -deselectAll tslInf ;
+		poseDeformer_tslSelectCB() ;	
+		}
+	
+	setFocus tfName; 
+	
+
+
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_renamePose() - Renames pose from drop down list to pose
+ *		name typed into field.
+ */
+global proc poseDeformer_renamePose()
+{
+	string $def = `textField -q -tx tfDef` ;
+	if ($def == "" || objExists($def) != true)
+		{
+    	warning -sl 0 ("You must first choose a poseDeformer on the geometry.") ;
+		return ;
+		}
+
+		
+	string $btnIdx = `button -q -l btnName` ;
+	string $parts[] ;
+	tokenize($btnIdx, ". ", $parts) ;
+	int $poseIdx = ((int)$parts[0]) - 1 ;
+		
+	if ($poseIdx < 0)
+		{
+		warning -sl 0 ("You must choose a pose to edit from the button menu.") ;
+		return ;
+		}
+
+
+	string $newName = `textField -q -tx tfName` ;
+		
+	if ($newName == "")
+		{
+		warning -sl 0 ("You must choose a new pose name in the name text field.") ;
+		return ;
+		}
+	
+	string $origName = `getAttr ($def+".pose["+$poseIdx+"].poseName")` ;
+	
+	if ($newName == $origName)
+		{
+		warning -sl 0 ("The name of the pose is already set to: \""+$newName+"\".  Edit the name text field to something different first.") ; 
+		return ;
+		}
+
+
+		// Set name of pose
+    setAttr -type "string" ($def+".pose["+$poseIdx+"].poseName") $newName ;
+
+	button -e -l (($poseIdx+1)+". "+$newName) btnName ;
+	poseDeformer_tslSelectCB();	
+	
+
+	print ("// Renamed pose. //\n") ;
+}
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * poseDeformer_deletePoseUI() - Deletes pose from drop down list .
+ */
+global proc poseDeformer_deletePoseUI()
+{
+	string $def = `textField -q -tx tfDef` ;
+	if ($def == "" || objExists($def) != true)
+		{
+    	warning -sl 0 ("You must first choose a poseDeformer on the geometry.") ;
+		return ;
+		}
+
+		
+	string $btnIdx = `button -q -l btnName` ;
+	string $parts[] ;
+	tokenize($btnIdx, ". ", $parts) ;
+	int $poseIdx = ((int)$parts[0]) - 1 ;
+		
+	if ($poseIdx < 0)
+		{
+		warning -sl 0 ("You must choose a pose to delete from the button menu.") ;
+		return ;
+		}
+
+		// Make sure user really wants to.
+	string $ret = `confirmDialog
+					-t "Delete Pose?"
+					-m ("Are you sure you really wish to delete the pose:\n    "+$btnIdx+"\n")
+					-ma "left"
+					-button "Delete"
+					-button "Cancel"
+					-defaultButton "Cancel"
+					-cancelButton "Cancel"
+					-dismissString "Cancel" 
+					`;
+	if ($ret != "Delete")
+		return ;
+	
+
+	poseDeformer_deletePose($def, $poseIdx) ;	// Do real work of deleting!
+		
+	
+	// Fix up button too
+	button -e -l ("0. CREATE NEW") btnName ;
+	textField -e -tx "" tfName ;
+
+}
+
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * poseDeformer_deletePose() - Deletes pose.
+ */
+global proc poseDeformer_deletePose(string $def, int $poseIdx)
+{
+		
+		// OK Now go thru connections into the weight, blow away any readers and mult nodes
+		//	that we might have made...
+		// Then we'll set the weight of the pose back to 0....
+		//
+    string $toDel[] ;	// Keep track of what we want to blow away.
+	clear $toDel ;
+	string $objAttr[] = { ($def+".pose["+$poseIdx+"].poseWeight") } ;
+		
+	while (size($objAttr) > 0)
+		{
+		string $cons[] = `listConnections -s 1 -d 0 -p 1 $objAttr ` ;
+		
+		clear $objAttr ;		// reset
+		string $con;
+		for ($con in $cons)
+			{
+			string $obj ;
+			string $attr ;
+			string $parts[] ;
+			tokenize($con, ".", $parts) ;
+			$obj = $parts[0] ;
+			$attr = $parts[1] ;
+
+			if (nodeType($obj) == "multiplyDivide")
+				{
+					// Next time around look at these connections backwards too
+				$objAttr[size($objAttr)] = ($obj+".input1X") ;
+				$objAttr[size($objAttr)] = ($obj+".input2X") ;
+				
+				$toDel[size($toDel)] = $obj ;	// store for deletion also.
+				}
+			else if (nodeType($obj) == "multiTrigger")
+				{
+				$objAttr[size($objAttr)] = ($obj+".inputValues") ;	// We'll look to see what's connected here...
+				
+				$toDel[size($toDel)] = $obj ;	// store trigger for deletion
+				}
+			else if (nodeType($obj) == "poseReader")
+				{
+					// We'll stop here, just deletet the reader.
+				string $xforms[] = `listRelatives -parent $obj`;	// get parent xform of shape
+				$toDel[size($toDel)] = $xforms[0] ;
+				}
+			}
+		} // end of each objAttr delete loop.
+
+    string $del ;
+	print ("// Deleting nodes: ") ;
+	for ($del in $toDel)
+		print ($del+" ");
+	print ("// \n") ;
+		
+		// Remove items
+	if (size($toDel) > 0)
+		delete $toDel ;
+
+		// Set pose weight to zero.
+    setAttr ($def+".pose["+$poseIdx+"].poseWeight") 0.0 ;
+	setAttr ($def+".pose["+$poseIdx+"].poseActive") 0 ;
+
+	print ("// Deleted pose. //\n") ;
+}
+
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_mirrorPose() - Mirrors a pose
+ */
+global proc poseDeformer_mirrorPose()
+{
+	string $def = `textField -q -tx tfDef` ;
+	if ($def == "" || objExists($def) != true)
+		{
+    	warning -sl 0 ("You must first choose a poseDeformer on the geometry.") ;
+		return ;
+		}
+		
+		
+    string $names[] = poseDeformer_getPoseNames($def) ;
+
+	if (size($names) <= 0)
+		{
+		warning -sl 0 ("There are no poses created yet.") ;
+		return ;
+		}
+		
+
+	if (`window -q -ex poseDeformerMirrorWin`)
+		deleteUI -wnd poseDeformerMirrorWin ;
+	
+	window -w 360 -h 280 -t ("poseDeformer Mirror") poseDeformerMirrorWin ;
+	formLayout formMirror ;
+	
+	text -l "Deformer From:" txMDef ;
+	textField -tx $def -ed 0 tfMDef ;
+
+	text -l "Deformer To:" txMDefTo ;
+	textField -tx "" tfMDefTo ;
+	popupMenu -p tfMDefTo -pmc ("poseDeformer_makeMirrorDefToMenu") pmMDefTo ;
+
+	radioButtonGrp -nrb 3 -l "Mirror Axis:" -la3 "X" "Y" "Z" -sl 1 -cw4 60 40 40 40 rbgAxis ;
+	
+	text -l "Search:" txSearch ;
+	textField -tx "" tfSearch ;
+	text -l "Replace:" txReplace ;
+	textField -tx "" tfReplace ;
+	
+	popupMenu -p tfSearch ;
+		menuItem -l "None" -c ("textField -e -tx \"\" tfSearch ; textField -e -tx \"\" tfReplace ; ") ;
+		menuItem -l "Lf" -c ("textField -e -tx \"Lf\" tfSearch ; textField -e -tx \"Rt\" tfReplace ; ") ;
+		menuItem -l "Rt" -c ("textField -e -tx \"Rt\" tfSearch ; textField -e -tx \"Lf\" tfReplace ; ") ;
+	popupMenu -p tfReplace ;
+		menuItem -l "None" -c ("textField -e -tx \"\" tfSearch ; textField -e -tx \"\" tfReplace ; ") ;
+		menuItem -l "Lf" -c ("textField -e -tx \"Rt\" tfSearch ; textField -e -tx \"Lf\" tfReplace ; ") ;
+		menuItem -l "Rt" -c ("textField -e -tx \"Lf\" tfSearch ; textField -e -tx \"Rt\" tfReplace ; ") ;
+	
+	
+	text -l "Mirror Pose:" txMPose ;
+	optionMenu -w 300 omMPose ;
+		menuItem -l "All Poses" ;
+    for ($i=0; $i < size($names); ++$i)
+    	{
+		if ($names[$i] == "")
+			;	// deleted
+		else
+			menuItem -l (($i+1)+". "+$names[$i])  ;
+    	}	
+		
+	
+	button -l "Mirror" -c ("poseDeformer_mirrorPoseExecute();") -ann ("Mirror pose(s) based on options.") btnMirror ;
+	button -l "Close" -c ("deleteUI -wnd poseDeformerMirrorWin; ") -ann ("Close mirror window.") btnClose ;
+		
+	
+	text -l "NOTE: Mirroring assumes that joints have been mirrored for behavior." txMWarn1 ;
+	text -l "      It also requires the mesh to be symmetric if it is seamless, or" txMWarn2 ;
+	text -l "      if mirroring to a different mesh, it assumes the point count and" txMWarn3 ;
+	text -l "      order is the same, but that the geometry is mirrored." txMWarn4 ;
+			
+		
+	formLayout -e
+	
+		-af txMDef "top" 8
+		-an txMDef "bottom"
+		-af txMDef "left" 5
+		-an txMDef "right"
+		
+		-af tfMDef "top" 5
+		-an tfMDef "bottom"
+		-ac tfMDef "left" 5 txMDef
+		-af tfMDef "right" 5
+		
+		-ac txMDefTo "top" 8 tfMDef
+		-an txMDefTo "bottom"
+		-af txMDefTo "left" 5
+		-an txMDefTo "right"
+		
+		-ac tfMDefTo "top" 5 tfMDef
+		-an tfMDefTo "bottom"
+		-ac tfMDefTo "left" 5 txMDefTo
+		-af tfMDefTo "right" 5
+
+		-ac rbgAxis "top" 5 tfMDefTo
+		-an rbgAxis "bottom"
+		-af rbgAxis "left" 5
+		-an rbgAxis "right"
+
+		-ac txSearch "top" 8 rbgAxis
+		-an txSearch "bottom"
+		-af txSearch "left" 5
+		-an txSearch "right"
+
+		-ac tfSearch "top" 5 rbgAxis
+		-an tfSearch "bottom"
+		-ac tfSearch "left" 5 txSearch
+		-ap tfSearch "right" 0 49
+		
+		-ac txReplace "top" 8 rbgAxis
+		-an txReplace "bottom"
+		-ap txReplace "left" 0 51
+		-an txReplace "right"
+
+		-ac tfReplace "top" 5 rbgAxis
+		-an tfReplace "bottom"
+		-ac tfReplace "left" 5 txReplace
+		-af tfReplace "right" 5
+		
+		-ac txMPose "top" 8 tfSearch
+		-an txMPose "bottom"
+		-af txMPose "left" 5
+		-an txMPose "right" 
+
+		-ac omMPose "top" 5 tfSearch
+		-an omMPose "bottom"
+		-ac omMPose "left" 5 txMPose
+		-af omMPose "right" 5
+
+		-ac txMWarn1 "top" 5 omMPose
+		-an txMWarn1 "bottom"
+		-af txMWarn1 "left" 5
+		-an txMWarn1 "right" 
+
+		-ac txMWarn2 "top" 0 txMWarn1
+		-an txMWarn2 "bottom"
+		-af txMWarn2 "left" 5
+		-an txMWarn2 "right" 
+
+		-ac txMWarn3 "top" 0 txMWarn2
+		-an txMWarn3 "bottom"
+		-af txMWarn3 "left" 5
+		-an txMWarn3 "right" 
+
+		-ac txMWarn4 "top" 0 txMWarn3
+		-an txMWarn4 "bottom"
+		-af txMWarn4 "left" 5
+		-an txMWarn4 "right" 
+		
+		-ac btnMirror "top" 5 txMWarn4
+		-an btnMirror "bottom"
+		-ap btnMirror "left" 0 34
+		-ap btnMirror "right" 0 65
+
+		-ac btnClose "top" 5 txMWarn4
+		-an btnClose "bottom"
+		-ap btnClose "left" 0 67
+		-af btnClose "right" 5 
+
+		formMirror ;
+	
+	showWindow poseDeformerMirrorWin ;
+		
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_makeMirrorDefToMenu() - Nice right click menu for mirror defTo field.
+ */
+global proc poseDeformer_makeMirrorDefToMenu()
+{
+    menu -e  -dai pmMDefTo ;
+    setParent -menu pmMDefTo ;
+    
+    string $defs[] = poseDeformer_getAllPoseDeformersInScene() ;
+    string $def ;
+    for ($def in $defs)
+    	{
+    	menuItem -l $def -c ("textField -e -tx \""+$def+"\" tfMDefTo ") ;
+    	}
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_mirrorPoseExecute() - Does real work of mirroring pose.
+ */
+global proc poseDeformer_mirrorPoseExecute()
+{
+	// First read what we need
+	string $defFrom = `textField -q -tx tfMDef`;
+	string $defTo = `textField -q -tx tfMDefTo`;
+	int $nAxis = `radioButtonGrp -q -sl rbgAxis` - 1 ;
+	string $search = `textField -q -tx tfSearch` ;
+	string $replace = `textField -q -tx tfReplace` ;
+	int $poseIdx = `optionMenu -q -sl omMPose` - 2 ;
+		
+	if ($defTo == "" || objExists($defTo) != true)
+		{
+		warning -sl 0 ("You must specify a poseDeformer to put the mirror data onto") ;
+		return ;
+		}
+
+		
+    int $poseStart = 0;
+	int $poseEnd = `getAttr -size ($defFrom+".pose")` ;
+
+		// If just doing one, adjust loop bounds to just loop over that particular pose 
+	if ($poseIdx >= 0)
+		{
+		$poseStart = $poseIdx ;
+		$poseEnd = $poseIdx+1 ;
+		}
+		
+		
+		// Add a mirrorData node to the geo if needed, so we can easily
+		// figure out point index mirroring.  Effectively, if it is a seamless
+		// mesh, ie: if the poseDef we are mirroing too is on the same mesh,
+		// we'll make a mirror node if one doesn't exist.  If it's a different
+		// mesh, then we don't bother, since we assume the geo was a copy in
+		// the same order.
+		//
+	string $geos[] = `deformer -q -geometry $defTo` ;
+	string $geoTo = $geos[0] ;
+	$geos = `deformer -q -geometry $defFrom` ;
+	string $geoFrom = $geos[0] ;
+	
+	string $mirrorData = "";
+	
+	if ($geoTo == $geoFrom)
+		{
+		string $mirrorDatas[] = poseDeformer_getMirrorDataFromGeo($geoTo) ;
+		$mirrorData = $mirrorDatas[0] ;
+		if ($mirrorData == "")
+			{
+			$mirrorDatas = `deformer -frontOfChain -type "mirrorData" $geoTo` ;
+			$mirrorData = $mirrorDatas[0] ;
+			setAttr ($mirrorData+".threshold") 1.0 ;    	// large enough threshold please.
+			}
+		setAttr ($mirrorData+".mirrorAxis") $nAxis ;    // set mirror data up
+		setAttr ($mirrorData+".mirrorSpace") 1 ;    	// world
+		}
+		
+	
+		// Here we just do this since we are COPYING offset values anyhow, the 
+		// state of the deformers really don't matter.
+	setAttr ($defFrom+".envelope") 0.0 ;	// Disable for speed.
+	setAttr ($defTo+".envelope") 0.0 ;	// Disable for speed.
+
+	
+	int $pIdxFrom ;
+	for ($pIdxFrom = $poseStart; $pIdxFrom < $poseEnd; ++$pIdxFrom)
+		{
+				// See if pose is active and not deleted...
+		int $bActive = getAttr ($defFrom+".pose["+$pIdxFrom+"].poseActive")  ;
+		if (!$bActive)		// Skip if appears to be deleted
+			continue ;
+		
+		$poseName = `getAttr ($defFrom+".pose["+$pIdxFrom+"].poseName")` ;
+		print ("// Mirroring pose "+$poseName+" // \n");
+		
+		// Get slot index for to location we can use 
+		int $pIdxTo = poseDeformer_nextAvailablePoseIdx($defTo) ;
+		
+		// Now set up poseReader as needed
+		
+		
+		// First see what transforms are driving the pose
+		// We want to store $xformIdxs with the index's we should use
+		// 		for the new pose and the $xforms with the names of those joints.
+		//
+		string $xforms[] = poseDeformer_getPoseTransformNames($defFrom, $pIdxFrom) ;
+		int $xformIdxs[] ;
+		int $nXForms  = size($xforms) ;
+		int $x ;
+		for ($x=0; $x < $nXForms; ++$x)
+			{
+			string $newXForm = strSearchReplace($xforms[$x], $search, $replace) ;
+
+			// Now see if a joint with this name, exists in the to deformer
+			// If so, that's the matching transform index we want to use..
+			// Otherwise, we'll just assume the joints on this other mesh
+			// are similar and in the same order and use same index.
+			//
+			int $idxs[] = poseDeformer_getTransformIdxs($defTo, {$newXForm}) ;
+			if ($idxs[0] > -1)
+				{
+				$xformIdxs[$x] = $idxs[0] ;
+				$xforms[$x] = $newXForm ;
+				}
+			else
+				{
+				$xformsIdx[$x] = `getAttr ($defFrom+".pose["+$pIdxFrom+"].poseXForm["+$x+"].poseXFormIdx")` ;
+				$xforms[$x] = poseDeformer_getTransformName($defTo, $xformsIdx[$x]) ;
+				}
+				
+			}
+	
+			
+		string $readers[] ;
+		clear $readers ;
+	 
+		int $space = 1;	// world
+
+		$attr = "worldMatrix" ;
+		if ($space == 2)
+		   $attr = "matrix" ;
+		
+		for ($x=0; $x < $nXForms; ++$x)
+			{
+			// Now we'll go thru each xform entry, and make a duplicate new reader.
+			// We'll also copy over the relative poseStr and reconnect matrices
+			//
+			
+			float $poseStr = `getAttr ($defFrom+".pose["+$pIdxFrom+"].poseXForm["+$x+"].poseXFormStr")` ;
+			setAttr ($defTo+".pose["+$pIdxTo+"].poseXForm["+$x+"].poseXFormStr") $poseStr ;
+			setAttr ($defTo+".pose["+$pIdxTo+"].poseXForm["+$x+"].poseXFormIdx") $xformIdxs[$x] ;
+				// Get the actual reader tied into this thing...
+			string $cons[] = `listConnections -s 1 -d 0 -p 0 ($defFrom+".pose["+$pIdxFrom+"].poseXForm["+$x+"].poseXFormWorldMatrix")` ;
+			string $origReadXForm = $cons[0] ;
+			string $shapes[] = `listRelatives -ni -shapes $origReadXForm` ;
+			string $origRead = $shapes[0] ;
+			string $parents[] = `listRelatives -p $origReadXForm` ;
+			string $origReadParent = $parents[0] ;			
+			
+			// Generate a new reader.
+			//
+			string $Obj = capitalizeString($xforms[$x]) ;	// new to maya 6, tho it is a script....
+			
+			string $read = `createNode "poseReader" -n ("poseReader_"+$poseName+$Obj+"Shape#")`;
+			$parents = `listRelatives -p $read`;
+			string $readXForm = $parents[0] ;
+			
+			$readers[$x] = $read ;	// Store for later
+			
+			// Make a keyable attr people can actually see and use.
+			addAttr -ln "weight" -k 1 $read ;
+			connectAttr -f ($read+".outWeight") ($read+".weight") ;
+
+			// put in actual joint to reader
+			connectAttr -f ($xforms[$x]+"."+$attr) ($read+".worldMatrixLiveIn") ;
+			// and also reader itself into subnode shape so it works... 
+			connectAttr -f ($readXForm+"."+$attr) ($read+".worldMatrixPoseIn") ;
+			
+			
+			// Parent to same parent that object has.
+			//	Very important if using local space.
+			//
+			string $userParent = `textField -q -tx tfParentTo` ;
+			string $parentsOrig[] = `listRelatives -p $xforms[$x]`;
+			string $parent = $parentsOrig[0] ;				// cur jnt parent
+			if ($userParent != "" && objExists($userParent))		// did user override?
+				{
+				$parent = $userParent ;
+
+					// See if a mirror version exists of what is in field
+				string $useParentMirror = strSearchReplace($userParent, $search, $replace) ;
+				if (objExists($useParentMirror))
+					$parent = $useParentMirror ;		
+				}
+			// However, if original node on original from side had something different, see if
+			// we can use that.
+			string $parentMirror = strSearchReplace($origReadParent, $search, $replace) ;
+			if (objExists($parentMirror))
+				$parent = $parentMirror ;		// If it looks like that node exists, use that and not just parent of joint, since user may have manually adjusted...
+			
+			if ($parent != "")
+				parent $readXForm $parent ;
+
+			
+			// Snap this new reader to same spot as original reader, then we'll use libMirror.mel
+			//	to mirror it over...
+			//
+			string $pCons[] = `pointConstraint -w 1 $origReadXForm $readXForm` ;
+			string $oCons[] = `orientConstraint -w 1 $origReadXForm $readXForm` ;
+			refresh -f ;
+			delete $pCons $oCons ;
+			libMirror_mirrorObject($readXForm, $nAxis) ;		// Now mirror the reader over to right place.
+			// Do scale copy also
+			setAttr ($readXForm+".scaleX") (`getAttr ($origReadXForm+".scaleX")`);
+			setAttr ($readXForm+".scaleY") (`getAttr ($origReadXForm+".scaleY")`);
+			setAttr ($readXForm+".scaleZ") (`getAttr ($origReadXForm+".scaleZ")`);
+			
+			
+			// Also make up animCurve for animCurve mode
+			string $animCurve = `createNode animCurveUU` ;
+			setKeyframe -f 0.0 -v 1.0 -itt "flat" -ott "flat" $animCurve;
+			setKeyframe -f 0.25 -v 0.85 -itt "spline" -ott "spline" $animCurve;
+			setKeyframe -f 0.75 -v 0.15 -itt "spline" -ott "spline" $animCurve;
+			setKeyframe -f 1.0 -v 0.0 -itt "flat" -ott "flat" $animCurve;
+			connectAttr -f ($animCurve+".message") ($read+".msgAnimCurve") ;
+			connectAttr -f ($animCurve+".output") ($read+".animCurveOutput") ;
+			
+			
+			// Now connect in the reader stuff into the actual deformer so RBF stuff works.
+			connectAttr -f ($readXForm+".worldMatrix") ($defTo+".pose["+$pIdxTo+"].poseXForm["+$x+"].poseXFormWorldMatrix") ;
+			connectAttr -f ($read+".readAxis") ($defTo+".pose["+$pIdxTo+"].poseXForm["+$x+"].poseXFormReadAxis") ;
+			
+			// Now copy settings over too
+			setAttr ($read+".readAxis") (`getAttr ($origRead+".readAxis")`) ;
+			setAttr ($read+".allowRotate") (`getAttr ($origRead+".allowRotate")`) ;
+			setAttr ($read+".minAngle") (`getAttr ($origRead+".minAngle")`) ;
+			setAttr ($read+".maxAngle") (`getAttr ($origRead+".maxAngle")`) ;
+			setAttr ($read+".allowTwist") (`getAttr ($origRead+".allowTwist")`) ;
+			setAttr ($read+".minTwist") (`getAttr ($origRead+".minTwist")`) ;
+			setAttr ($read+".maxTwist") (`getAttr ($origRead+".maxTwist")`) ;
+			setAttr ($read+".allowTranslate") (`getAttr ($origRead+".allowTranslate")`) ;
+			setAttr ($read+".minTranslate") (`getAttr ($origRead+".minTranslate")`) ;
+			setAttr ($read+".maxTranslate") (`getAttr ($origRead+".maxTranslate")`) ;
+			setAttr ($read+".drawDetail") (`getAttr ($origRead+".drawDetail")`) ;
+			setAttr ($read+".drawCone") (`getAttr ($origRead+".drawCone")`) ;
+			setAttr ($read+".drawText") (`getAttr ($origRead+".drawText")`) ;
+			setAttr ($read+".drawReverse") (1-`getAttr ($origRead+".drawReverse")`) ;
+			setAttr ($read+".drawHighlight") (`getAttr ($origRead+".drawHighlight")`) ;
+			
+			
+			// Now we have to go and copy each point data over one by one...
+			int $nPts = `getAttr ($defFrom+".pose["+$pIdxFrom+"].poseXForm["+$x+"].poseXFormNumPts")`;
+			setAttr ($defTo+".pose["+$pIdxTo+"].poseXForm["+$x+"].poseXFormNumPts") $nPts ;
+			int $p;
+			for ($p=0; $p < $nPts; ++$p)
+				{
+				// Get values but mult by -1 since we assume joints are mirrored for behavior
+				float $dx = -1.0 * `getAttr ($defFrom+".pose["+$pIdxFrom+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaX")` ; 
+				float $dy = -1.0 * `getAttr ($defFrom+".pose["+$pIdxFrom+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaY")` ; 
+				float $dz = -1.0 * `getAttr ($defFrom+".pose["+$pIdxFrom+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaZ")` ; 
+				
+					// What is matching mirrored pt index?
+				int $pMirrorIdx = $p ;
+				if ($mirrorData != "")
+					$pMirrorIdx = `getAttr ($mirrorData+".mirrorIndex["+$p+"]")`;
+				
+
+				// And set it!
+				setAttr ($defTo+".pose["+$pIdxTo+"].poseXForm["+$x+"].poseDelta["+$pMirrorIdx+"].poseDeltaX") $dx ;
+				setAttr ($defTo+".pose["+$pIdxTo+"].poseXForm["+$x+"].poseDelta["+$pMirrorIdx+"].poseDeltaY") $dy ;
+				setAttr ($defTo+".pose["+$pIdxTo+"].poseXForm["+$x+"].poseDelta["+$pMirrorIdx+"].poseDeltaZ") $dz ;
+				
+				if ($p % 25 == 0)
+					{
+					print ("// "+(int)(($p+1.0)/$nPts*100.0)+"% - Mirroring XForm "+($xforms[$x])+" ("+($x+1)+"/"+$nXForms+") Point ("+($p+1)+"/"+$nPts+") setting mirror point "+$p+"--->"+$pMirrorIdx+" //\n") ;
+					}
+				}
+			
+			} // end of each xform copy inside of pose
+ 			
+			
+			
+		// Now connect these readers to the pose weight...if 1 direct connect.
+		// If two or more make a series of mult nodes
+		if (size($readers) == 1)
+			{
+			connectAttr -f ($readers[0]+".weight") ($defTo+".pose["+$pIdxTo+"].poseWeight") ;
+			}
+		else 
+			{
+			// Now if we have more than one pose...connect them up to a multiTrigger node
+			//
+			int $nReaders = size($readers) ;
+			string $trig = `createNode "multiTrigger"` ;
+		
+			// Make a keyable attr people can actually see and use.
+			addAttr -ln "weight" -k 1 $trig ;
+			connectAttr -f ($trig+".outWeight") ($trig+".weight") ;
+					
+			int $r ;
+			for ($r=0; $r < $nReaders; ++$r)
+				{
+				connectAttr -f ($readers[$r]+".weight") ($trig+".inputValues["+$r+"]") ; 
+				}
+					
+			// Finally connect last mult in chain to actual pose weight.
+			connectAttr -f ($trig+".weight") ($defTo+".pose["+$pIdxTo+"].poseWeight") ;             
+			}
+		
+			
+		
+		// Set name of pose
+		setAttr -type "string" ($defTo+".pose["+$pIdxTo+"].poseName") $poseName ;
+		setAttr ($defTo+".pose["+$pIdxTo+"].poseActive") 1 ;
+
+		print ("// Mirror pose "+$poseName+" done. //\n") ;		
+		}	// end of copy from pose loop
+
+
+	setAttr ($defFrom+".envelope") 1.0 ;	// Re-enable
+	setAttr ($defTo+".envelope") 1.0 ;		// Re-enable
+	
+}
+
+
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+//	Helper Procs
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_getPoseDeformerFromGeo() - Returns a list of any poseDeformer nodes
+ *	on the given geometry.
+ */
+global proc string[] poseDeformer_getPoseDeformerFromGeo(string $geo)
+{
+    string $defs[] ;
+    clear $defs ;
+
+    if ($geo == "" || objExists($geo) != true)
+    	return $defs ;
+
+    string $hist[] = `listHistory -pdo 1 -il 2 $geo` ;
+    string $h ;
+    
+    for ($h in $hist)
+    	{
+    	if (nodeType($h) == "poseDeformer")
+    	    {
+    	    $defs[size($defs)] = $h ;	// Store it
+    	    }
+    	}
+    	
+    return $defs ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_getTransformIdxs() - Given a poseDeformer and a bunch of 
+ *		xforms, return what transform index they are into the deformer array.
+ */
+global proc int[] poseDeformer_getTransformIdxs(string $def, string $xforms[])
+{
+    int $idxs[] ;
+    clear $idxs ;
+    
+    if ($def == "" || objExists($def) != true || nodeType($def) != "poseDeformer")
+    	return $idxs ;
+
+    int $nInf = `getAttr -size ($def+".worldMatrix")`;
+
+    int $x ;
+    for ($x=0; $x < size($xforms); ++$x)
+    	{
+    	$idxs[$x] = -1 ;	// default no match
+    	
+    	int $i;
+    	for ($i=0; $i < $nInf; ++$i)
+    	    {
+    	    string $cons[] = `listConnections -s 1 -d 0 -p 0 ($def+".worldMatrix["+$i+"]")` ;
+    	    string $inf = $cons[0] ;
+    	    if ($xforms[$x] == $inf)
+    	    	{
+    	    	$idxs[$x] = $i ;
+    	    	break ;
+    	    	}
+    	    
+    	    } // end of each inf check
+    	
+    	} // end of each xform
+
+    return $idxs ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_getTransformName() - Given a poseDef and an index, return which
+ *		inf joint is tied to that index.
+ */
+global proc string poseDeformer_getTransformName(string $def, int $idx) 
+{
+	string $name = "" ;
+
+    if ($def == "" || objExists($def) != true || nodeType($def) != "poseDeformer")
+    	return $name ;
+	
+    string $cons[] = `listConnections -s 1 -d 0 -p 0 ($def+".worldMatrix["+$idx+"]")` ;
+    string $name = $cons[0] ;
+
+	return $name ;
+}
+
+// --------------------------------------------------------------------------
+
+ 
+/*
+ * poseDeformer_getPoseTransformNames() - For a given pose return the names
+ *		of the xforms used in the pose
+ */
+global proc string[] poseDeformer_getPoseTransformNames(string $def, int $poseIdx)
+{
+    string $names[] ;
+    clear $names ;
+    
+    if ($def == "" || objExists($def) != true || nodeType($def) != "poseDeformer")
+    	return $names ;
+	if ($poseIdx < 0)
+		return $names ;
+	
+	// How many influences/xforms in the deformer?
+	int $nInf = `getAttr -size ($def+".worldMatrix")` ;
+
+	// How many xforms in the pose itself?
+	int $nXForms = `getAttr -size ($def+".pose["+$poseIdx+"].poseXForm")` ;
+	
+	int $x ;
+	for ($x=0; $x < $nXForms; ++$x)
+		{
+		int $idx = `getAttr ($def+".pose["+$poseIdx+"].poseXForm["+$x+"].poseXFormIdx")` ;
+		$names[$x] = poseDeformer_getTransformName($def, $idx) ;
+		}
+
+	return $names ;	
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_getPoseNames() - Returns an array of pose names for poses
+ *		on a deformer
+ */
+global proc string[] poseDeformer_getPoseNames(string $def)
+{
+	string $names[] ;
+	clear $names ;
+	
+    if ($def == "" || objExists($def) != true || nodeType($def) != "poseDeformer")
+    	return $names ;
+
+    int $nPoses = `getAttr -size ($def+".pose")`;
+
+	int $i;
+	for ($i=0; $i < $nPoses; ++$i)
+		{
+			// See if pose is active and not deleted...
+		int $bActive = getAttr ($def+".pose["+$i+"].poseActive")  ;
+			
+		if (!$bActive)
+			{
+			$names[$i] = "" ;	// Assume it is deleted...even tho name may exist
+			}
+		else
+			{
+			$names[$i] = `getAttr ($def+".pose["+$i+"].poseName")` ;
+			// If it is empty but connected...user never named it.
+			if ($names[$i] == "")
+				$names[$i] = ("(No name)") ;
+			}
+		}
+
+	
+	return $names ;	
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_nextAvailablePoseIdx() - Returns the next avail pose index for
+ *			a pose deformer.
+ */
+global proc int poseDeformer_nextAvailablePoseIdx(string $def)
+{
+	int $pIdx = -1 ;
+	
+	int $testIdx = 0;
+	while ($pIdx < 0)
+		{
+		// See if the pose weight is driven...
+		string $cons[] = `listConnections -s 1 -d 0 -p 0 ($def+".pose["+$testIdx+"].poseWeight")` ;
+	
+		if (size($cons) > 0)
+			++$testIdx ;	// prep to try next one.
+		else
+			$pIdx = $testIdx ;	// Found an available pose slot!
+		}
+
+			
+	return $pIdx ;
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_getMirrorDataFromGeo() - Returns a list of any mirrorData nodes
+ *	on the given geometry.
+ */
+global proc string[] poseDeformer_getMirrorDataFromGeo(string $geo)
+{
+    string $defs[] ;
+    clear $defs ;
+
+    if ($geo == "" || objExists($geo) != true)
+    	return $defs ;
+
+    string $hist[] = `listHistory -pdo 1 -il 2 $geo` ;
+    string $h ;
+    
+    for ($h in $hist)
+    	{
+    	if (nodeType($h) == "mirrorData")
+    	    {
+    	    $defs[size($defs)] = $h ;	// Store it
+    	    }
+    	}
+    	
+    return $defs ;
+}
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_getAllPoseDeformersInScene() - Returns a list of all
+ *		pose deformers in the scene.
+ */
+global proc string[] poseDeformer_getAllPoseDeformersInScene()
+{
+    string $defs[] = `ls -type "poseDeformer" "*"` ;
+	return $defs;	
+}
+
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * poseDeformer_getReadersFromPose() - Returns any poseReaders tied to a specific pose.
+ */
+global proc string[] poseDeformer_getReadersFromPose(string $def, int $poseIdx)
+{
+	string $readers[] ;
+	clear $readers ;
+	
+	string $objAttr[] = { ($def+".pose["+$poseIdx+"].poseWeight") } ;
+		
+	while (size($objAttr) > 0)
+		{
+		string $cons[] = `listConnections -s 1 -d 0 -p 1 $objAttr ` ;
+		
+		clear $objAttr ;		// reset
+		string $con;
+		for ($con in $cons)
+			{
+			string $obj ;
+			string $attr ;
+			string $parts[] ;
+			tokenize($con, ".", $parts) ;
+			$obj = $parts[0] ;
+			$attr = $parts[1] ;
+
+			if (nodeType($obj) == "multiplyDivide")
+				{
+					// Next time around look at these connections backwards too
+				$objAttr[size($objAttr)] = ($obj+".input1X") ;
+				$objAttr[size($objAttr)] = ($obj+".input2X") ;
+				}
+			else if (nodeType($obj) == "multiTrigger")
+				{
+				$objAttr[size($objAttr)] = ($obj+".inputValues") ;	// We'll look to see what's connected here...
+				}
+			else if (nodeType($obj) == "poseReader")
+				{
+					// We'll stop here, just store the reader.
+				string $xforms[] = `listRelatives -parent $obj`;	// get parent xform of shape
+				$readers[size($readers)] = $xforms[0] ;
+				}
+			}
+		} // end of each objAttr find loop.
+
+	return $readers ;
+}
+
+
+// --------------------------------------------------------------------------
+
+
+// --------------------------------------------------------------------------
+//	Import / Export Procs
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_exportUI() - Wrapper for Export.
+ */
+global proc poseDeformer_exportUI()
+{
+	// See the top of fileBrowser.mel in Maya for info.
+	// Basically you call :
+	//		fileBrowser( string $procCB, string $action, string $type, int $mode) ;
+	//
+	//  $procCB = callback proc to be invoked when the action button is pressed
+	//  $action = label of the button in the browser that will do something, like "Load" or "Save"
+	//  $type   = File type to be used... like *.mel
+	//  $mode   = 0=read 1=write 2=write (no paths)  4=Read dir's only
+   	//
+	//
+	//  The Callback proc must take two strings, and return an int
+	// ie:
+	//	global proc int fileProcCB(string $file, string $type) 
+	//
+	//   $file  = file or dir that was chosen
+	//   $type  = type of file
+	//     Returns 1 if dialog should close and success, 0 if keep open and fail.
+	//
+	//  Finally another useful items is: 
+	//		global string $gDefaultFileBrowserDir;
+	//
+	//	This will put the filebrowser to point to the path.  Useful to make
+	//	it go somewhere right before the initial fileBrowser call.
+	//
+	string $dir = "" ;
+	if ($dir != "")
+		pv_goDirectory($dir) ;			// And start in that place...
+    
+    fileBrowser( "poseDeformer_exportCB", "Export", "*.*", 1) ;
+
+}
+
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * poseDeformer_exportCB() - CB from file proc for exporting
+ */
+global proc int poseDeformer_exportCB(string $file, string $type) 
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "" || objExists($geo) != true)
+    	{
+    	warning -sl 0 ("You must first choose geometry to adjust.") ;
+    	return 0 ;
+    	}
+
+	string $def = `textField -q -tx tfDef` ;
+    if ($def == "" || objExists($def) != true)
+    	{
+    	warning -sl 0 ("You must first choose a poseDeformer on the geometry.") ;
+    	return 0 ;
+    	}
+    
+	
+		// Does user want to modify an existing pose?
+	int $pIdx = -1 ;
+
+	string $btnIdx = `button -q -l btnName` ;
+	string $parts[] ;
+	tokenize($btnIdx, ". ", $parts) ;
+	$pIdx = (int)($parts[0]) - 1 ;	// -1 since doing 1 as ui first entry. But we want 0 based not 1 based.
+
+	if ($pIdx < 0)
+		{
+		print ("// No pose chosen...will export ALL poses... // \n") ;
+		}
+	else
+		print ("// Going to export pose "+$btnIdx+". // \n") ;
+	
+
+
+	poseDeformer_export($def, $file, $pIdx) ;
+	return 1 ;	
+}
+
+// --------------------------------------------------------------------------
+
+/* 
+ * poseDeformer_export() - Exports one or more poses to the given file.
+ */
+global proc poseDeformer_export(string $def, string $file, int $poseIdx)
+{
+	string $poseNames[] = poseDeformer_getPoseNames($def) ;
+	
+	if (size($poseNames) <= 0)
+		{
+		warning -sl 0 ("No poses to export.") ;
+		return ;
+		}
+
+	int $start = 0 ;
+	int $end = size($poseNames) - 1 ;
+	
+	if ($poseIdx >= 0)		// just a specific one?
+		{
+		$start = $end = $poseIdx ;	
+		}
+
+	// Now for this xform...write out all the point delta data...
+	//
+	string $geos[] = `deformer -q -geometry $def` ;  // what geo being deformed?
+	string $geo = $geos[0] ;
+	string $compStr="" ;
+	if (nodeType($geo) == "nurbsSurface" || nodeType($geo) == "nurbsCurve")
+		$compStr = "cv" ;
+	else if (nodeType($geo) == "mesh")
+		$compStr = "vtx" ;
+	else if (nodeType($geo) == "subdiv")
+		$compStr = "smp" ;
+		
+	// Determine skinCl from geo.
+    string $skinCls[] = libSkin_getSkinFromGeo($geo) ;
+    
+	setAttr ($skinCls[0]+".envelope") 0.0 ;		// Disable skin for accurate point position storage. 		
+		
+
+	// Open file
+    int $fileId = `fopen $file "w"`;
+    if ($fileId == 0) 
+		{
+		error -sl 1 ("poseDeformer_export: Error Opening File: "+$file);
+		return;
+		}
+
+    waitCursor -state on; 
+
+    fprint $fileId ("// "+$file+" - poseDeformerUI.mel OUTPUT.\n");
+    fprint $fileId ("// \n\n");
+
+	int $avgPoseSepRBF = `getAttr ($def+".avgPoseSepRBF")`;
+	int $blendMode = `getAttr ($def+".blendMode")`;
+	int $deformSpace = `getAttr ($def+".deformSpace")`;
+	
+	fprint $fileId ("[AVGPOSESEPRBF] \n");		// poseDef Attr
+	fprint $fileId ($avgPoseSepRBF+" \n");		
+	fprint $fileId ("[BLENDMODE] \n");			// poseDef Attr
+	fprint $fileId ($blendMode+" \n");		
+	fprint $fileId ("[DEFORMSPACE] \n");		// poseDef Attr
+	fprint $fileId ($deformSpace+" \n");		
+	fprint $fileId ("\n") ;
+
+		
+	
+		// Write out each pose.
+		//
+	int $pIdx ;
+	for ($pIdx=$start; $pIdx <= $end; ++$pIdx)
+		{
+				// See if pose is active and not deleted...
+		int $bActive = getAttr ($def+".pose["+$pIdx+"].poseActive")  ;
+		if (!$bActive)		// Skip if appears to be deleted
+			continue ;
+
+		
+			// What xforms are used in this pose?
+		string $xforms[] = poseDeformer_getPoseTransformNames($def, $pIdx) ;
+		int $nXForms = size($xforms) ;
+
+		
+		print ("// Exporting "+$poseNames[$pIdx]+" ... //\n") ;
+		
+		fprint $fileId ("// ------------------------------------------------------------ \n") ;
+		fprint $fileId ("[POSE] \n") ;					// tag
+		fprint $fileId ($poseNames[$pIdx]+"\n");		// pose name
+		fprint $fileId ($nXForms+"\n");					// num xforms
+		fprint $fileId ("\n") ;
+		
+		
+			// Write out data for each xform in the pose... 
+		int $x ;
+		for ($x=0; $x < $nXForms; ++$x)
+			{
+			float $str = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormStr")`;
+			float $xidx = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormIdx")`;
+			float $nPts = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormNumPts")`;
+			
+			
+			fprint $fileId ("[POSE-XFORM] \n") ;			// tag
+			fprint $fileId ($xforms[$x]+"\n");				// xform name
+			fprint $fileId ($xidx+"\n");					// pose xform index
+			fprint $fileId ($str+"\n");						// pose xform str
+			fprint $fileId ($nPts+"\n");					// num pts
+			fprint $fileId ("\n") ;
+
+			// Also output poseReader info.
+			//
+
+				// Get the actual reader tied into this thing...
+			string $cons[] = `listConnections -s 1 -d 0 -p 0 ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormWorldMatrix")` ;
+			string $readXForm = $cons[0] ;
+			string $shapes[] = `listRelatives -ni -shapes $readXForm` ;
+			string $readShape = $shapes[0] ;
+			string $parents[] = `listRelatives -p $readXForm` ;
+			string $readParent = $parents[0] ;			
+			
+			
+			fprint $fileId ("[POSE-READER] \n") ;			// tag
+			fprint $fileId ($readXForm+"\n");				// reader name
+			fprint $fileId ($readParent+"\n");				// parent xform
+			fprint $fileId (`getAttr ($readXForm+".tx")`+"\n");		// tx
+			fprint $fileId (`getAttr ($readXForm+".ty")`+"\n");		// ty
+			fprint $fileId (`getAttr ($readXForm+".tz")`+"\n");		// tz
+			fprint $fileId (`getAttr ($readXForm+".rx")`+"\n");		// rx
+			fprint $fileId (`getAttr ($readXForm+".ry")`+"\n");		// ry
+			fprint $fileId (`getAttr ($readXForm+".rz")`+"\n");		// rz
+			fprint $fileId (`getAttr ($readXForm+".sx")`+"\n");		// sx
+			fprint $fileId (`getAttr ($readXForm+".sy")`+"\n");		// sy
+			fprint $fileId (`getAttr ($readXForm+".sz")`+"\n");		// sz
+			
+			// Should export anim curve data here...but i'm a lazy shucker....
+			
+			fprint $fileId (`getAttr ($readXForm+".readAxis")`+"\n");		// readAxis
+			fprint $fileId (`getAttr ($readXForm+".allowRotate")`+"\n");	// allowRotate
+			fprint $fileId (`getAttr ($readXForm+".minAngle")`+"\n");		// minAngle
+			fprint $fileId (`getAttr ($readXForm+".maxAngle")`+"\n");		// maxAngle
+			fprint $fileId (`getAttr ($readXForm+".allowTwist")`+"\n");		// allowTwist
+			fprint $fileId (`getAttr ($readXForm+".minTwist")`+"\n");		// minTwist
+			fprint $fileId (`getAttr ($readXForm+".maxTwist")`+"\n");		// maxTwist
+			fprint $fileId (`getAttr ($readXForm+".allowTranslate")`+"\n");	// allowTranslate
+			fprint $fileId (`getAttr ($readXForm+".minTranslate")`+"\n");	// minTranslate
+			fprint $fileId (`getAttr ($readXForm+".maxTranslate")`+"\n");	// maxTranslate
+			fprint $fileId (`getAttr ($readXForm+".drawDetail")`+"\n");		// drawDetail
+			fprint $fileId (`getAttr ($readXForm+".drawCone")`+"\n");		// drawCone
+			fprint $fileId (`getAttr ($readXForm+".drawText")`+"\n");		// drawText
+			fprint $fileId (`getAttr ($readXForm+".drawReverse")`+"\n");	// drawReverse
+			fprint $fileId (`getAttr ($readXForm+".drawHighlight")`+"\n");	// drawHighlight
+
+			fprint $fileId ("\n") ;
+			
+			
+
+			int $p;
+			for ($p=0; $p < $nPts; ++$p)
+				{
+				string $comp = ($geo+"."+$compStr+"["+$p+"]") ;		// Current pt. myMesh.vtx[3] for example
+					
+				fprint $fileId ("[DELTA] \n");		// tag
+				
+				float $posW[3] = `pointPosition -w $comp`;
+				float $posL[3] = `pointPosition -l $comp`;
+	
+				fprint $fileId ($comp+"\n");			// print full comp name
+				fprint $fileId ($p+"\n");				// just the point index.
+				fprint $fileId ($posW[0]+" "+$posW[1]+" "+$posW[2]+"\n");   // print pos World
+				fprint $fileId ($posL[0]+" "+$posL[1]+" "+$posL[2]+"\n");   // print pos Local
+				
+				float $delta[3] ;
+				$delta[0] = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaX")` ; 
+				$delta[1] = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaY")` ; 
+				$delta[2] = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaZ")` ; 
+
+				fprint $fileId ($delta[0]+" "+$delta[1]+" "+$delta[2]+"\n");   // delta of point.
+					
+					
+				} // end of each delta pt
+			
+
+			fprint $fileId ("[END-POSE-READER] \n") ;			// tag
+			fprint $fileId ("[END-POSE-XFORM] \n") ;		// tag
+			fprint $fileId ("\n") ;
+			
+			} // end of each pose-XForm
+			
+
+		fprint $fileId ("[END-POSE] \n") ;		// tag
+		fprint $fileId ("\n") ;
+		
+		} // end of each pose.
+
+
+	fclose $fileId;
+
+	setAttr ($skinCls[0]+".envelope") 1.0 ;		// Re-enable 		
+	
+    waitCursor -state off; 
+
+    print ("// poseDeformer_export ended successfully. //\n");    
+		
+}
+
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * poseDeformer_importUI() - Wrapper for Import.
+ */
+global proc poseDeformer_importUI()
+{
+	// See the top of fileBrowser.mel in Maya for info.
+	// Basically you call :
+	//		fileBrowser( string $procCB, string $action, string $type, int $mode) ;
+	//
+	//  $procCB = callback proc to be invoked when the action button is pressed
+	//  $action = label of the button in the browser that will do something, like "Load" or "Save"
+	//  $type   = File type to be used... like *.mel
+	//  $mode   = 0=read 1=write 2=write (no paths)  4=Read dir's only
+   	//
+	//
+	//  The Callback proc must take two strings, and return an int
+	// ie:
+	//	global proc int fileProcCB(string $file, string $type) 
+	//
+	//   $file  = file or dir that was chosen
+	//   $type  = type of file
+	//     Returns 1 if dialog should close and success, 0 if keep open and fail.
+	//
+	//  Finally another useful items is: 
+	//		global string $gDefaultFileBrowserDir;
+	//
+	//	This will put the filebrowser to point to the path.  Useful to make
+	//	it go somewhere right before the initial fileBrowser call.
+	//
+	string $dir = "" ;
+	if ($dir != "")
+		pv_goDirectory($dir) ;			// And start in that place...
+    
+    fileBrowser( "poseDeformer_importCB", "Import", "*.*", 0) ;
+
+}
+
+
+// --------------------------------------------------------------------------
+
+
+/*
+ * poseDeformer_importCB() - CB from file proc for importing
+ */
+global proc int poseDeformer_importCB(string $file, string $type) 
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "" || objExists($geo) != true)
+    	{
+    	warning -sl 0 ("You must first choose geometry to adjust.") ;
+    	return 0 ;
+    	}
+
+	string $def = `textField -q -tx tfDef` ;
+    if ($def == "" || objExists($def) != true)
+    	{
+    	warning -sl 0 ("You must first choose a poseDeformer on the geometry.") ;
+    	return 0 ;
+    	}
+
+		
+	int $mode = 1 ;		
+		
+		// What mode?
+	string $ret = `confirmDialog
+					-t "Import Options"
+					-m "Please choose how you would like to import.\n\nPoint Order is fastest, but point count and order must match original.\nWorld Position uses the world space position of the points for a closest match.\nLocal Position uses the local object space position of the points for a match.\n"
+					-ma "left"
+					-button "Point Order"
+					-button "World Position"
+					-button "Local Position"
+					-button "Cancel"
+					-defaultButton "Point Order"
+					-cancelButton "Cancel"
+					-dismissString "Cancel"
+					`;
+	if ($ret == "Point Order")
+		$mode = 1 ;
+	else if ($ret == "World Position")
+		$mode = 2 ;	
+	else if ($ret == "Local Position")
+		$mode = 3 ;	
+	else
+		{
+		print ("// Import aborted at users request. //\n");
+		return 0 ;
+		}
+	
+	poseDeformer_import($def, $file, $mode) ;	
+	return 1 ;
+}
+
+// --------------------------------------------------------------------------
+
+
+/* 
+ * poseDeformer_import() - Imports one or more poses to the given file.
+ *
+ *		$mode	: 1=point-order  2=world position  3=local position
+ *
+ */
+global proc poseDeformer_import(string $def, string $file, int $mode)
+{
+		
+	// Store some vars for pointPosition loads...
+    int $ppCnt = 0 ;	// How many read in?
+	string $ppComps[] ;	// Original component name for the saved pp comp
+	int $ppIdxs[];		// Original vert index for each comp.
+	float $ppDeltaX[] ;	// X Delta for each loaded pt
+    float $ppDeltaY[] ;	// Y Delta for each loaded pt
+    float $ppDeltaZ[] ;	// Z Delta for each loaded pt
+    float $ppXPos[] ;	// X Pos for each loaded pt
+    float $ppYPos[] ;	// Y Pos for each loaded pt
+    float $ppZPos[] ;	// Z Pos for each loaded pt
+
+	
+
+	string $poseNames[] = poseDeformer_getPoseNames($def) ;
+	int $nPoses = size($poseNames) ;
+
+
+	// Now for this xform...Figure out all comps
+	//
+	string $geos[] = `deformer -q -geometry $def` ;  // what geo being deformed?
+	string $geo = $geos[0] ;
+	string $compStr="" ;
+	if (nodeType($geo) == "nurbsSurface" || nodeType($geo) == "nurbsCurve")
+		$compStr = "cv" ;
+	else if (nodeType($geo) == "mesh")
+		$compStr = "vtx" ;
+	else if (nodeType($geo) == "subdiv")
+		$compStr = "smp" ;
+
+	
+	// Now look at how many points current mesh REALLY has now since could be different point count than saved file had.
+	// Bug in prev versions....sigh.
+	select -r ($geo+"."+$compStr+"[*]") ;
+	string $comps[] = `ls -sl -fl` ;
+	select -cl ;
+	int $nPtsCur = size($comps) ;
+	clear $comps ;
+
+
+	// Open file
+    int $fileId = `fopen $file "r"`;
+    if ($fileId == 0) 
+		{
+		error -sl 1 ("poseDeformer_import: Error Opening File: "+$file);
+		return;
+		}
+
+		
+	// Some data we use as we load....
+	string $poseName = "" ;
+	int $nXForms = 0 ;
+	int $pIdx = -1 ;
+
+	string $xform = "" ;
+	int $xformIdx = -1 ;	// what in list of joints
+	int $x = -1 ;			// inside of pose.
+	int $nPts = 0 ;
+	string $trig = "" ;	
+
+	string $reader = "" ;
+	string $readerShape = "" ;
+
+	
+	int $modifySkipMode = 0 ;		// 0=Prompt 1=modify 2=skip
+	
+	setAttr ($def+".envelope") 0.0 ;	// Disable for speed
+
+
+	// Determine skinCl from geo.
+    string $skinCls[] = libSkin_getSkinFromGeo($geo) ;
+    
+	setAttr ($skinCls[0]+".envelope") 0.0 ;		// Disable skin for accurate point position reading. 		
+	
+	
+    waitCursor -state on; 
+
+	// Start the reading...
+    string $line = `fgetline $fileId`;		// get the first comment line/header
+    $line = strip($line);
+    string $parts[] ;
+
+    do
+        {
+        if ($line == "" || substring($line,1,1) == " " || substring($line,1,2) == "//")
+			$line = "[COMMENT]" ;
+	
+		switch ($line)
+	    	{
+			case "[AVGPOSESEPRBF]":
+				float $avgPoseSepRBF = (float)strip(`fgetline $fileId`) ;	// avgPoseSepRBF
+				setAttr ($def+".avgPoseSepRBF") $avgPoseSepRBF ;
+				break ;
+				
+			case "[BLENDMODE]":
+				int $blendMode = (int)strip(`fgetline $fileId`) ;	// blendMode
+				setAttr ($def+".blendMode") $blendMode ;
+				break ;
+
+			case "[DEFORMSPACE]":
+				int $deformSpace = (int)strip(`fgetline $fileId`) ;	// deformSpace
+				setAttr ($def+".deformSpace") $deformSpace ;
+				break ;
+
+			case "[POSE]":
+				$poseName = strip(`fgetline $fileId`) ;		// name of pose
+				$nXForms = (int)strip(`fgetline $fileId`) ;	// num of xforms
+				$pIdx = -1 ;
+				$x = -1 ;
+				
+				// Now check to see if a pose with this name exists..and if so prompt.
+				{
+				int $i;
+				for ($i=0; $i < $nPoses; ++$i)
+					{
+					if ($poseName == $poseNames[$i])
+						{
+						$pIdx = $i ;
+						break ;
+						}
+					}
+				
+						
+				if ($pIdx >= 0)		// Already exists...
+					{
+					if ($modifySkipMode == 0) // prompt!
+						{
+						string $ret = `confirmDialog
+									-t "Import Pose"
+									-m ("A Pose named \""+$poseName+"\" already exists.\n\nWould you like to modify it or skip it?\n\n")
+									-ma "left"
+									-button "Modify"
+									-button "Modify All"
+									-button "Skip"
+									-button "Skip All"
+									-defaultButton "Modify"
+									-cancelButton "Skip"
+									-dismissString "Skip" 
+									`;
+						if ($ret == "Modify All")
+							$modifySkipMode = 1 ;
+						else if ($ret == "Skip All")
+							$modifySkipMode = 2 ;
+						
+						if ($ret == "Modify" || $ret == "Modify All")	// Going to modify...
+							{
+							poseDeformer_deletePose($def, $pIdx) ;	// delete orig data then...
+							}
+						else if ($ret == "Skip" || $ret == "Skip All")	// Going to skip...
+							{
+							$poseName = "" ;
+							$nXForms = 0 ;
+							$pIdx = -1 ;	
+							}
+						}	// end of if need prompt.
+					else if ($modifySkipMode == 1)  // Going to modify all...
+						{
+						poseDeformer_deletePose($def, $pIdx) ;	// delete orig data then...
+						}
+					else if ($modifySkipMode == 2)  // Going to skip all... 
+						{
+						$poseName = "" ;
+						$nXForms = 0 ;
+						$pIdx = -1 ;	
+						}
+					}
+				else	// New Pose
+					{
+					$pIdx = poseDeformer_nextAvailablePoseIdx($def) ;	// Get next avail inedx.
+					}
+				
+				if ($pIdx >= 0)
+					{
+					setAttr -type "string" ($def+".pose["+$pIdx+"].poseName") $poseName ;
+					setAttr ($def+".pose["+$pIdx+"].poseActive") 1 ;
+
+					print ("// Importing pose \""+$poseName+"\". //\n") ;
+					}
+				
+				}
+				break ;
+
+				
+			case "[POSE-XFORM]":
+				{
+				clear $ppComps ;
+				clear $ppIdxs ;
+				clear $ppDeltaX ;
+				clear $ppDeltaY ;
+				clear $ppDeltaZ ;
+				clear $ppXPos ;
+				clear $ppYPos ;
+				clear $ppZPos ;
+				$ppCnt = 0 ;
+
+				if ($pIdx < 0)		// If skipping or invalid ... 
+					break ;
+			
+				
+				$xform = strip(`fgetline $fileId`) ;					// name of xform
+				int $origXFormIdx = (int)strip(`fgetline $fileId`) ;	// orig xform index
+				float $xformStr = (float)strip(`fgetline $fileId`) ;	// xform strength
+				$nPts = (int)strip(`fgetline $fileId`) ;				// Num points
+				$nPts = $nPtsCur ;  // Ok to fix Bug, ignore # pts saved file had, we need to know how many CURRENT object has. 
+			
+				// Now find the true current index of the inf/joint/xform now in this deformer.
+				int $idxs[] = poseDeformer_getTransformIdxs($def, {$xform} ) ;
+				if (size($idxs) <= 0)
+					{
+					warning -sl 0 ("Cannot import XForm \""+$xform+"\" for pose \""+$poseName+"\".  The XForm is not in the current deformer.") ;
+					$xform = "" ;
+					$xformIdx = -1 ; 		// Not found!
+					$nPts = 0 ;
+					}
+				else
+					{
+					$xformIdx = $idxs[0] ;
+					++$x ;
+					setAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormStr") $xformStr ;
+					setAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormIdx") $xformIdx ;
+					setAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormNumPts") $nPts ;
+					}
+				}
+				break ;
+
+				
+				
+			case "[POSE-READER]":
+				{
+				if ($pIdx < 0 || $xformIdx < 0)		// If skipping or invalid ... 
+					break ;
+					
+				$readerName = strip(`fgetline $fileId`) ;					// name of reader xform
+				string $parent = strip(`fgetline $fileId`) ;				// orig parent of reader.
+
+				// Now make a new poseReader...
+				string $readerShape = `createNode "poseReader" -n ($readerName+"Shape")`;
+				string $parents[] = `listRelatives -p $readerShape`;
+				$reader = $parents[0] ;
+				
+				// Now parent to right thing...assuming object with same name exists...if it doesn't
+				// leave it under world so user will know to fix it.
+				//
+				if ($parent != "" && objExists($parent))
+					parent $reader $parent ;
+				
+				// Now set values for all the basic attrs.
+				float $tx = (float)strip(`fgetline $fileId`) ;		// tx
+				float $ty = (float)strip(`fgetline $fileId`) ;		// ty
+				float $tz = (float)strip(`fgetline $fileId`) ;		// tz
+				float $rx = (float)strip(`fgetline $fileId`) ;		// rx
+				float $ry = (float)strip(`fgetline $fileId`) ;		// ry
+				float $rz = (float)strip(`fgetline $fileId`) ;		// rz
+				float $sx = (float)strip(`fgetline $fileId`) ;		// sx
+				float $sy = (float)strip(`fgetline $fileId`) ;		// sy
+				float $sz = (float)strip(`fgetline $fileId`) ;		// sz
+				setAttr ($reader+".translateX") $tx ;
+				setAttr ($reader+".translateY") $ty ;
+				setAttr ($reader+".translateZ") $tz ;
+				setAttr ($reader+".rotateX") $rx ;
+				setAttr ($reader+".rotateY") $ry ;
+				setAttr ($reader+".rotateZ") $rz ;
+				setAttr ($reader+".scaleX") $sx ;
+				setAttr ($reader+".scaleY") $sy ;
+				setAttr ($reader+".scaleZ") $sz ;
+
+				int $readAxis = (int)strip(`fgetline $fileId`) ;			// readAxis
+				float $allowRotate = (float)strip(`fgetline $fileId`) ;		// allowRotate
+				float $minAngle = (float)strip(`fgetline $fileId`) ;		// minAngle
+				float $maxAngle = (float)strip(`fgetline $fileId`) ;		// maxAngle
+				float $allowTwist = (float)strip(`fgetline $fileId`) ;		// allowTwist
+				float $minTwist = (float)strip(`fgetline $fileId`) ;		// minTwist
+				float $maxTwist = (float)strip(`fgetline $fileId`) ;		// maxTwist
+				float $allowTranslate = (float)strip(`fgetline $fileId`) ;		// allowTranslate
+				float $minTranslate = (float)strip(`fgetline $fileId`) ;		// minTranslate
+				float $maxTranslate = (float)strip(`fgetline $fileId`) ;		// maxTranslate
+				int $drawDetail = (int)strip(`fgetline $fileId`) ;		// drawDetail
+				int $drawCone = (int)strip(`fgetline $fileId`) ;		// drawCone
+				int $drawText = (int)strip(`fgetline $fileId`) ;		// drawText
+				int $drawReverse = (int)strip(`fgetline $fileId`) ;		// drawReverse
+				float $drawHighlight = (float)strip(`fgetline $fileId`) ;		// drawHighlight
+				setAttr ($reader+".readAxis") $readAxis ;
+				setAttr ($reader+".allowRotate") $allowRotate ;
+				setAttr ($reader+".minAngle") $minAngle ;
+				setAttr ($reader+".maxAngle") $maxAngle ;
+				setAttr ($reader+".allowTwist") $allowTwist ;
+				setAttr ($reader+".minTwist") $minTwist ;
+				setAttr ($reader+".maxTwist") $maxTwist ;
+				setAttr ($reader+".allowTranslate") $allowTranslate ;
+				setAttr ($reader+".minTranslate") $minTranslate ;
+				setAttr ($reader+".maxTranslate") $maxTranslate ;
+				setAttr ($reader+".drawDetail") $drawDetail ;
+				setAttr ($reader+".drawCone") $drawCone ;
+				setAttr ($reader+".drawText") $drawText ;
+				setAttr ($reader+".drawReverse") $drawReverse ;
+				setAttr ($reader+".drawHighlight") $drawHighlight ;
+
+				// Make a keyable attr people can actually see and use.
+				addAttr -ln "weight" -k 1 $readerShape ;
+				connectAttr -f ($reader+".outWeight") ($readerShape+".weight") ;
+				
+				// Do we need a multi trigger?  true if there are more than 1 xform...
+				if ($nXForms > 1 && $x == 0)	 // Make if we need and it's the first one.
+					{
+					$trig = `createNode "multiTrigger"` ;
+				
+					// Make a keyable attr people can actually see and use.
+					addAttr -ln "weight" -k 1 $trig ;
+					connectAttr -f ($trig+".outWeight") ($trig+".weight") ;
+
+					// Finally connect last mult in chain to actual pose weight.
+					connectAttr -f ($trig+".weight") ($def+".pose["+$pIdx+"].poseWeight") ;
+					}
+				
+				
+					// The next two connects were missing in the old version of the code.  Oops!
+					// Connect to itself for main pose matrix....
+				connectAttr -f ($reader+".worldMatrix") ($reader+".worldMatrixPoseIn") ;
+					// And xform too.
+				connectAttr -f ($xform+".worldMatrix") ($reader+".worldMatrixLiveIn") ;
+				
+					// And the anim curve was missing too...of course we're not importing that
+					// or exporting it...yet...maybe in a future version.
+				string $animCurve = `createNode animCurveUU` ;
+				setKeyframe -f 0.0 -v 1.0 -itt "flat" -ott "flat" $animCurve;
+				setKeyframe -f 0.25 -v 0.85 -itt "spline" -ott "spline" $animCurve;
+				setKeyframe -f 0.75 -v 0.15 -itt "spline" -ott "spline" $animCurve;
+				setKeyframe -f 1.0 -v 0.0 -itt "flat" -ott "flat" $animCurve;
+				connectAttr -f ($animCurve+".message") ($reader+".msgAnimCurve") ;
+				connectAttr -f ($animCurve+".output") ($reader+".animCurveOutput") ;
+				
+					
+					
+				// Now connect into the pose.
+				if ($nXForms == 1)
+					connectAttr -f ($readerShape+".weight") ($def+".pose["+$pIdx+"].poseWeight") ;
+				else
+					{
+					connectAttr -f ($readerShape+".weight") ($trig+".inputValues["+$x+"]") ; 
+					}
+				
+				connectAttr -f ($reader+".worldMatrix") ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormWorldMatrix") ;
+				connectAttr -f ($reader+".readAxis") ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormReadAxis") ;
+				
+				}
+				break ;
+				
+				
+				
+
+			case "[DELTA]":
+				{
+				if ($pIdx < 0 || $xformIdx < 0)		// If skipping or invalid ... 
+					break ;
+					
+					
+				string $comp = strip(`fgetline $fileId`) ;		// Original comp name
+				int $p = (int)strip(`fgetline $fileId`) ;		// point index
+				
+				string $posWStr = strip(`fgetline $fileId`) ;		// string pos W
+				string $posLStr = strip(`fgetline $fileId`) ;		// string pos L
+				string $deltaStr = strip(`fgetline $fileId`) ;		// string pos L
+
+				
+				tokenize($deltaStr, $parts) ;		// Actual Delta info
+				float $delta[3] ;
+				$delta[0] = $parts[0] ;
+				$delta[1] = $parts[1] ;
+				$delta[2] = $parts[2] ;
+	
+				if ($mode == 1)		// Point order
+					{
+					// For basic point order read...just set the data...
+					setAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaX") $delta[0] ; 
+					setAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaY") $delta[1] ; 
+					setAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaZ") $delta[2] ;
+					
+					if ($p % 100 == 0)
+						print ("// Loading point "+$p+" ... //\n") ;
+					}
+				else
+					{
+					if ($mode == 2)							// World Position
+						tokenize($posWStr, $parts) ;		
+					else if ($mode == 3)						// Local Position
+						tokenize($posLStr, $parts) ;		
+
+					float $pos[3] ;
+					$pos[0] = $parts[0] ;
+					$pos[1] = $parts[1] ;
+					$pos[2] = $parts[2] ;
+						
+					// Store stuff for point position method.
+					$ppComps[$ppCnt] = $comp ;
+					$ppIdxs[$ppCnt] = $p ;
+					$ppDeltaX[$ppCnt] = $delta[0] ;
+					$ppDeltaY[$ppCnt] = $delta[1] ;
+					$ppDeltaZ[$ppCnt] = $delta[2] ;
+					$ppXPos[$ppCnt] = $pos[0] ;
+					$ppYPos[$ppCnt] = $pos[1] ;
+					$ppZPos[$ppCnt] = $pos[2] ;
+					++$ppCnt ;
+					}
+
+				}
+				break ;
+				
+
+
+
+
+			case "[END-POSE-XFORM]":
+				{
+				if ($pIdx >= 0 && $xformIdx >= 0 && ($mode == 2 || $mode == 3))		// Point position load...must finish...
+					{
+					print ("// poseDeformer_import: Loading by point position... //\n") ;
+					
+					// At this stage we have stored delta and pos for each original comp pt.
+					// Now for each real selected vert, we can loop thru and load.
+					//
+					
+					// Go thru each selected comp...and find best match for it..
+					int $p;
+					for ($p=0; $p < $nPts; ++$p)
+						{
+						float $tol = 1.0 ;		// tolerance for closest pt.
+						string $comp = ($geo+"."+$compStr+"["+$p+"]") ;		// Current pt. myMesh.vtx[3] for example
+						
+							// Get position of the component
+						float $posC[3] ;
+						if ($mode == 2)
+							$posC = `pointPosition -w $comp`;
+						else if ($mode == 3) 
+							$posC = `pointPosition -l $comp`;
+							
+					
+						int $idxClosest = -1 ;
+						float $closestDist = -1 ;
+						
+						int $j ;
+						for ($j=0; $j < $ppCnt; ++$j)
+							{
+							
+							vector $vDist = << ($posC[0] - $ppXPos[$j]), ($posC[1] - $ppYPos[$j]), ($posC[2] - $ppZPos[$j]) >> ;
+							float $dist = mag($vDist) ;
+			
+							
+							// Now if we are closer, or if first round, store...
+							if ($dist < $closestDist || $idxClosest == -1)
+								{
+								$idxClosest = $j ;
+								$closestDist = $dist ;
+								}
+							
+							}
+					  
+							// Now we have a closest point..but make sure it is within threshold
+						if ($closestDist > $tol && $tol >= 0.0)	// The closest match was not close enough....neg tol means ignore tolerance
+							{
+							print ("// "+$comp+" distance "+$closestDist+" is out of tolerance "+$tol+" for closest point INDEX "+$idxClosest+". //\n") ;
+							continue ;
+							}
+
+							
+						
+					  
+						print ("// "+$comp+" matches "+$ppComps[$idxClosest]+" (Internal Index "+$idxClosest+") //\n") ;
+
+						// Now....just set the data...on proper point from closest delta.
+						setAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaX") $ppDeltaX[$idxClosest] ; 
+						setAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaY") $ppDeltaY[$idxClosest] ; 
+						setAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaZ") $ppDeltaZ[$idxClosest] ; 
+						
+						}
+						
+					print ("// poseDeformer_import: Point position load done for pose \""+$poseName+"\" xform \""+$xform+"\". //\n") ;
+					}
+
+
+			
+				$xform = "" ;
+				$xformIdx = -1 ;
+				$nPts = 0 ;
+				}
+				break ;
+
+	
+			case "[END-POSE]":
+				if ($pIdx >= 0)
+					print ("// poseDeformer_import: Finished reading pose \""+$poseName+"\". //\n") ;
+				$poseName = "" ;
+				$nXForms = 0 ;
+				$pIdx = -1 ;
+				$x = -1 ;
+				break ;
+	
+	
+			case "[COMMENT]":    
+			default:
+				; // Ignore it!
+				break ;
+
+	    	}	// end of tag switch
+
+
+		// Attempt to read next line        
+		$line = `fgetline $fileId`;		// get the first comment line/header
+		$line = strip($line);
+			
+        } while ( !feof($fileId) ) ;
+
+
+	
+	
+
+	fclose $fileId;
+
+    waitCursor -state off; 
+
+	setAttr ($skinCls[0]+".envelope") 1.0 ;		// Re-Enable 		
+	setAttr ($def+".envelope") 1.0 ;	// Re-Enable
+	select -cl ;
+
+    print ("// poseDeformer_import ended successfully. //\n");    
+		
+}
+
+
+// --------------------------------------------------------------------------
+
+/*
+ * poseDeformer_autoSetMembership() - Based on what points actually have deltas,
+ *	auto-sets the membership to all and only those.
+ */
+global proc poseDeformer_autoSetMembership()
+{
+    string $geo = `textField -q -tx tfGeo` ;
+    if ($geo == "" || objExists($geo) != true)
+    	{
+    	warning -sl 0 ("You must first choose geometry to adjust.") ;
+    	return ;
+    	}
+
+	string $def = `textField -q -tx tfDef` ;
+    if ($def == "" || objExists($def) != true)
+    	{
+    	warning -sl 0 ("You must first choose a poseDeformer on the geometry.") ;
+    	return ;
+    	}
+
+		// Do this before we clear it out!
+	string $geos[] = `deformer -q -geometry $def` ;  // what geo being deformed?
+	string $geo = $geos[0] ;
+	string $compStr="" ;
+	if (nodeType($geo) == "nurbsSurface" || nodeType($geo) == "nurbsCurve")
+		$compStr = "cv" ;
+	else if (nodeType($geo) == "mesh")
+		$compStr = "vtx" ;
+	else if (nodeType($geo) == "subdiv")
+		$compStr = "smp" ;
+	
+	
+	string $defSets[] = `listConnections -s 0 -d 1 -p 0 -scn 1 -type "objectSet" ($def+".message")` ;
+	string $defSet = $defSets[0] ;
+	sets -q $defSet ;
+
+	
+	// First remove everything in the set.
+	sets -cl $defSet ;
+	
+	// Now go thru the deformer...and add stuff that we see.
+	string $poseNames[] = poseDeformer_getPoseNames($def) ;
+	if (size($poseNames) <= 0)
+		return ;
+
+	int $start = 0 ;
+	int $end = size($poseNames) - 1 ;
+	
+
+
+    waitCursor -state on; 
+
+		// Look at each pose.
+		//
+	int $pIdx ;
+	for ($pIdx=$start; $pIdx <= $end; ++$pIdx)
+		{
+				// See if pose is active and not deleted...
+		int $bActive = getAttr ($def+".pose["+$pIdx+"].poseActive")  ;
+		if (!$bActive)		// Skip if appears to be deleted
+			continue ;
+
+		
+			// What xforms are used in this pose?
+		string $xforms[] = poseDeformer_getPoseTransformNames($def, $pIdx) ;
+		int $nXForms = size($xforms) ;
+
+		
+		print ("// Checking deformed points from: "+$poseNames[$pIdx]+" ... //\n") ;
+		
+			// Look at each xform for for each pose...  
+		int $x ;
+		for ($x=0; $x < $nXForms; ++$x)
+			{
+			float $nPts = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseXFormNumPts")`;
+
+			int $p;
+			for ($p=0; $p < $nPts; ++$p)
+				{
+				string $comp = ($geo+"."+$compStr+"["+$p+"]") ;		// Current pt. myMesh.vtx[3] for example
+					
+				float $delta[3] ;
+				$delta[0] = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaX")` ; 
+				$delta[1] = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaY")` ; 
+				$delta[2] = `getAttr ($def+".pose["+$pIdx+"].poseXForm["+$x+"].poseDelta["+$p+"].poseDeltaZ")` ; 
+
+				float $tol = 0.00001 ;
+				
+				// Now see if it is not basically zero, and if so, add to deformer set.
+				if ($delta[0] > $tol || $delta[0] < -$tol ||
+					$delta[1] > $tol || $delta[1] < -$tol ||
+					$delta[2] > $tol || $delta[2] < -$tol )
+					{
+					sets -add $defSet $comp ;
+					}
+					
+				} // end of each delta pt
+			
+			} // end of each pose-XForm
+			
+
+		} // end of each pose.
+
+
+    waitCursor -state off; 
+		
+	print ("// poseDeformer_autoSetMembership done. //\n") ;
+	
+}
+
+// --------------------------------------------------------------------------
+

@@ -1,0 +1,35 @@
+// --------------------------------------------------------------------------
+// toggleAffected.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	Changes display options so the purple highlighting is on or off
+//	for being affected by other object.
+//	I usually bind a hotkey to this to CTRL+e.
+//
+// USAGE:
+//	source "toggleAffected.mel"; toggleAffected();
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com - http://www.comet-cartoons.com/
+//	
+// COPYRIGHT:
+//	Copyright ©2004 Michael B. Comet - All Rights Reserved
+//
+// VERSIONS:
+//	1.00 - 07/05/2004 - Michael B. Comet - Initial Release
+//
+// --------------------------------------------------------------------------
+
+/*
+ * toggleAffected() - Main entry
+ */
+global proc toggleAffected()
+{
+    // Toggle purple effects
+    int $state = `displayPref -q -displayAffected` ;
+    displayPref -displayAffected (!$state) ;
+}
+
+
+// --------------------------------------------------------------------------

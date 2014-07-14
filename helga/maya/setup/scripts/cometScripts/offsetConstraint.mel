@@ -1,0 +1,154 @@
+//---------------------------------------------------------------------------
+// offsetConstraint.mel - MEL Script
+//---------------------------------------------------------------------------
+// Copyright ©2004 Michael B. Comet All Rights Reserved
+//
+// DESCRIPTION:	
+//	Does basic offset constriants
+//
+// REQUIRES:
+//	snaps.mel	- For snapping
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com
+//
+//----------------------------------------------------------------------------
+
+source "snaps.mel" ;
+
+//----------------------------------------------------------------------------
+
+/*
+ * offsetConstraintPO() - Does a pt and orient offset on selected
+ */
+global proc offsetConstraintPO()
+{
+    string $objs[] = `ls -sl` ;
+    int $cnt = size($objs) ;
+    if ($cnt < 2)
+        error -sl 0 ("You must select master(s) and then a slave to constrain.")  ;
+
+    string $slave = $objs[$cnt-1] ;	// Last one is slave
+    
+    // Now for each master, constrain...
+    int $i ;
+    for ($i=0; $i < $cnt-1; ++$i)
+        offC_doConstraint($objs[$i], $slave, 1,1) ;
+        
+    select -r $objs ;
+}
+
+
+//----------------------------------------------------------------------------
+
+/*
+ * offsetConstraintPO() - Does a pt and orient offset on selected
+ */
+global proc offsetConstraintP()
+{
+    string $objs[] = `ls -sl` ;
+    int $cnt = size($objs) ;
+    if ($cnt < 2)
+        error -sl 0 ("You must select master(s) and then a slave to constrain.")  ;
+
+    string $slave = $objs[$cnt-1] ;	// Last one is slave
+    
+    // Now for each master, constrain...
+    int $i ;
+    for ($i=0; $i < $cnt-1; ++$i)
+        offC_doConstraint($objs[$i], $slave, 1,0) ;
+
+    select -r $objs ;
+}
+
+
+//----------------------------------------------------------------------------
+
+/*
+ * offsetConstraintO() - Does an orient offset on selected
+ */
+global proc offsetConstraintO()
+{
+    string $objs[] = `ls -sl` ;
+    int $cnt = size($objs) ;
+    if ($cnt < 2)
+        error -sl 0 ("You must select master(s) and then a slave to constrain.")  ;
+
+    string $slave = $objs[$cnt-1] ;	// Last one is slave
+    
+    // Now for each master, constrain...
+    int $i ;
+    for ($i=0; $i < $cnt-1; ++$i)
+        offC_doConstraint($objs[$i], $slave, 0,1) ;
+
+    select -r $objs ;
+}
+
+
+//----------------------------------------------------------------------------
+
+/*
+ * offC_doConstraint() - Main worker proc.
+ */
+global proc offC_doConstraint(string $master, string $slave, int $doPos, int $doRot)
+{
+	// Make an uppercased version of the slave name
+    int $len = size($slave) ;
+    string $Slave = $slave ;
+    string $cap = toupper( substring($slave, 1, 1) ) ;
+    if ($len > 1)
+	{
+	string $end = substring($slave, 2, $len) ;
+	$Slave = $cap + $end ;
+	}
+    else
+	$Slave = $cap ;
+
+
+	// Now if this grp exists, and if it has the same parent object,
+	// just reuse it....
+    string $name = ("grp"+$Slave+"OffConsTgt") ;
+    string $grp = "" ;
+    if (objExists($name))
+        {
+        string $parents[] = `listRelatives -parent $name` ;
+        if ($parents[0] == $master)
+            $grp = $name ; 
+        }
+
+	// Otherwise, if we don't have it yet, or if we need to make a new one...do so
+    if (objExists($name) != true || $grp == "")
+        {
+
+	int $num=1;
+	while (objExists($name))  // find unique name
+	    {
+	    ++$num;
+	    $name = ("grp"+$num+$Slave+"OffConsTgt") ;
+	    }
+	$grp = `group -em -w -n $name` ;
+	}
+
+	// Whew we have a group..now we just snap it and parent it and go!
+	//
+	
+	// Snap grp to slave
+	//
+    snap($slave, $grp) ;
+
+	// Parent if needed
+    string $parents[] = `listRelatives -parent $grp` ;
+    if ($parents[0] != $master)
+        parent $grp $master ;
+
+	// And finally constrain
+	//
+    if ($doPos)
+        pointConstraint -w 1 $grp $slave ;
+    if ($doRot)
+        orientConstraint -w 1 $grp $slave ;
+
+}
+
+//----------------------------------------------------------------------------
+

@@ -1,0 +1,46 @@
+// --------------------------------------------------------------------------
+// toggleAffected.mel - MEL Script
+// --------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//	Changes display options so wireframes is on or off on shaded mode.
+//	I usually bind to CTRL+w
+//
+// USAGE:
+//	source "toggleWireframeOnShaded.mel"; toggleWireframeOnShaded();
+//
+// AUTHORS:
+//	Michael B. Comet - comet@comet-cartoons.com - http://www.comet-cartoons.com/
+//	
+// COPYRIGHT:
+//	Copyright ©2004 Michael B. Comet - All Rights Reserved
+//
+// VERSIONS:
+//	1.00 - 07/05/2004 - Michael B. Comet - Initial Release
+//
+// --------------------------------------------------------------------------
+
+/*
+ * toggleWireframeOnShaded() - Main entry
+ */
+global proc toggleWireframeOnShaded()
+{
+    string $currentPanel = `getPanel -underPointer`;
+    if ("" == $currentPanel) 
+        {
+        $currentPanel = `getPanel -withFocus`;
+        }
+    if ("" != $currentPanel) 
+       {
+        string $panelType = `getPanel -typeOf $currentPanel`;
+        if ($panelType ==  "modelPanel") 
+            {
+            int $state = `modelEditor -q -wireframeOnShaded $currentPanel`;
+            modelEditor -e -wireframeOnShaded (!$state) $currentPanel;
+            }
+       }
+}
+
+
+// --------------------------------------------------------------------------
+

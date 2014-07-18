@@ -250,7 +250,7 @@ except:
 #------------------------------------------------------------------
 
 try:
-	icons_path_list = [PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/icons']
+	icons_path_list = [PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/icons', PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/icons/plugin_images']
 	
 	#Add custom test path if user is twagener
 	if(global_functions.get_user() == 'twagener'):
@@ -347,7 +347,7 @@ try:
 	def load_plugins_deferred():
 		
 		#plugin_list
-		plugin_list = ['vrayformaya.mll', 'rrSubmit_Maya_8.5+.py', 'metadata.py']
+		plugin_list = ['vrayformaya.mll', 'rrSubmit_Maya_8.5+.py', 'metadata.py', 'helga_assets_props_metadata.py']
 		
 		#Add custom test path if user is twagener
 		if(global_functions.get_user() == 'twagener'):

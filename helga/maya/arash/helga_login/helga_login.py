@@ -151,7 +151,7 @@ class Base(object):
             cmds.warning('No Character in Scene')
         else:
             ulfbert_fk2ik_change_query=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-            ulfbert_fk2ik_change_current_name=(str(ulfbert_fk2ik_change_query)+":"+("master_ctrl"))
+            ulfbert_fk2ik_change_current_name=(str(ulfbert_fk2ik_change_query)+":"+("Option_Ctrl"))
             cmds.setAttr(ulfbert_fk2ik_change_current_name+name, 0)
 
     def ik2fk_ulfbert_character(self, name, *args):
@@ -160,7 +160,7 @@ class Base(object):
             cmds.warning('No Character in Scene')
         else:
             ulfbert_ik2fk_change_query=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-            ulfbert_ik2fk_change_current_name=(str(ulfbert_ik2fk_change_query)+":"+("master_ctrl"))
+            ulfbert_ik2fk_change_current_name=(str(ulfbert_ik2fk_change_query)+":"+("Option_Ctrl"))
             cmds.setAttr(ulfbert_ik2fk_change_current_name+name, 1)
 
     def set_name_save_pose(self, *args):
@@ -758,11 +758,11 @@ class Ulfbert_body_UI(Base):
         self.ulfbert_body_UIs['ulfbert_icon_1'] = cmds.symbolButton(h=45, vis=False)
         self.ulfbert_body_UIs['ulfbert_icon_2'] = cmds.symbolButton(h=45, vis=False)
         self.ulfbert_body_UIs['ulfbert_icon_3'] = cmds.symbolButton(h=45, vis=False)
-        self.ulfbert_body_UIs['ulfbert_icon_4'] = cmds.symbolButton(image=image_path+"/cms_fk2ik_R_Clavicle.png", h=45, vis=True, command=partial (self.fk2ik_ulfbert_character,'.R_clavicle3_IkFkBlend'))
-        self.ulfbert_body_UIs['ulfbert_icon_5'] = cmds.symbolButton(image=image_path+"/cms_ik2fk_R_Clavicle.png", h=45, vis=True, command=partial (self.ik2fk_ulfbert_character,'.R_clavicle3_IkFkBlend'))
+        self.ulfbert_body_UIs['ulfbert_icon_4'] = cmds.symbolButton(image=image_path+"/cms_fk2ik_R_Clavicle.png", h=45, vis=False, command=partial (self.fk2ik_ulfbert_character,'.R_clavicle3_IkFkBlend'))
+        self.ulfbert_body_UIs['ulfbert_icon_5'] = cmds.symbolButton(image=image_path+"/cms_ik2fk_R_Clavicle.png", h=45, vis=False, command=partial (self.ik2fk_ulfbert_character,'.R_clavicle3_IkFkBlend'))
         self.ulfbert_body_UIs['ulfbert_icon_6'] = cmds.symbolButton(h=45, vis=False)
-        self.ulfbert_body_UIs['ulfbert_icon_7'] = cmds.symbolButton(image=image_path+"/cms_fk2ik_L_Clavicle.png", h=45, vis=True, command=partial (self.fk2ik_ulfbert_character,'.L_clavicle3_IkFkBlend'))
-        self.ulfbert_body_UIs['ulfbert_icon_8'] = cmds.symbolButton(image=image_path+"/cms_ik2fk_L_Clavicle.png", h=45, vis=True, command=partial (self.ik2fk_ulfbert_character,'.L_clavicle3_IkFkBlend'))
+        self.ulfbert_body_UIs['ulfbert_icon_7'] = cmds.symbolButton(image=image_path+"/cms_fk2ik_L_Clavicle.png", h=45, vis=False, command=partial (self.fk2ik_ulfbert_character,'.L_clavicle3_IkFkBlend'))
+        self.ulfbert_body_UIs['ulfbert_icon_8'] = cmds.symbolButton(image=image_path+"/cms_ik2fk_L_Clavicle.png", h=45, vis=False, command=partial (self.ik2fk_ulfbert_character,'.L_clavicle3_IkFkBlend'))
         self.ulfbert_body_UIs['ulfbert_icon_9'] = cmds.symbolButton( h=45, vis=False)
         self.ulfbert_body_UIs['ulfbert_icon_10'] = cmds.symbolButton( h=45, vis=False)
         self.ulfbert_body_UIs['ulfbert_icon_11'] = cmds.symbolButton( h=45, vis=False)
@@ -770,9 +770,9 @@ class Ulfbert_body_UI(Base):
         self.ulfbert_body_UIs['ulfbert_icon_13'] = cmds.symbolButton(image=image_path+"/cms_R_down_arm_off_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"R_down_arm_off_ctrl"))
         self.ulfbert_body_UIs['ulfbert_icon_14'] = cmds.symbolButton(image=image_path+"/cms_R_arm_off_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"R_arm_off_ctrl"))
         self.ulfbert_body_UIs['ulfbert_icon_15'] = cmds.symbolButton(image=image_path+"/cms_R_up_arm_off_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"R_up_arm_off_ctrl"))
-        self.ulfbert_body_UIs['ulfbert_icon_16'] = cmds.symbolButton(image=image_path+"/cms_R_arm_clavicle_ik_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"R_arm_clavicle_ik_ctrl"))
+        self.ulfbert_body_UIs['ulfbert_icon_16'] = cmds.symbolButton(image=image_path+"/cms_R_arm_clavicle_ik_ctrl.png", h=45, vis=False, command=partial (self.select_ulfbert_character_controller,"R_arm_clavicle_ik_ctrl"))
         self.ulfbert_body_UIs['ulfbert_icon_17'] = cmds.symbolButton(image=image_path+"/cms_head_head_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"head_head_ctrl"))
-        self.ulfbert_body_UIs['ulfbert_icon_18'] = cmds.symbolButton(image=image_path+"/cms_L_arm_clavicle_ik_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"L_arm_clavicle_ik_ctrl"))
+        self.ulfbert_body_UIs['ulfbert_icon_18'] = cmds.symbolButton(image=image_path+"/cms_L_arm_clavicle_ik_ctrl.png", h=45, vis=False, command=partial (self.select_ulfbert_character_controller,"L_arm_clavicle_ik_ctrl"))
         self.ulfbert_body_UIs['ulfbert_icon_20'] = cmds.symbolButton(image=image_path+"/cms_L_up_arm_off_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"L_up_arm_off_ctrl"))
         self.ulfbert_body_UIs['ulfbert_icon_21'] = cmds.symbolButton(image=image_path+"/cms_L_arm_off_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"L_arm_off_ctrl"))
         self.ulfbert_body_UIs['ulfbert_icon_22'] = cmds.symbolButton(image=image_path+"/cms_L_down_arm_off_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"L_down_arm_off_ctrl"))
@@ -824,11 +824,11 @@ class Ulfbert_body_UI(Base):
         self.ulfbert_body_UIs['ulfbert_icon_60'] = cmds.symbolButton(image=image_path+"/cms_reset_main.png",h=45, vis=True, command=self.ulfbert_reset_body_controller)
         self.ulfbert_body_UIs['ulfbert_icon_71'] = cmds.symbolButton( h=45, vis=False)
         self.ulfbert_body_UIs['ulfbert_icon_72'] = cmds.symbolButton( h=45, vis=False)
-        self.ulfbert_body_UIs['ulfbert_icon_73'] = cmds.symbolButton( image=image_path+"/cms_fk2ik_R_Hip.png",h=45, vis=True, command=partial (self.fk2ik_ulfbert_character,'.R_hip1_IkFkBlend'))
-        self.ulfbert_body_UIs['ulfbert_icon_74'] = cmds.symbolButton( image=image_path+"/cms_ik2fk_R_Hip.png",h=45, vis=True, command=partial (self.ik2fk_ulfbert_character,'.R_hip1_IkFkBlend'))
+        self.ulfbert_body_UIs['ulfbert_icon_73'] = cmds.symbolButton( image=image_path+"/cms_fk2ik_R_Hip.png",h=45, vis=False, command=partial (self.fk2ik_ulfbert_character,'.R_hip1_IkFkBlend'))
+        self.ulfbert_body_UIs['ulfbert_icon_74'] = cmds.symbolButton( image=image_path+"/cms_ik2fk_R_Hip.png",h=45, vis=False, command=partial (self.ik2fk_ulfbert_character,'.R_hip1_IkFkBlend'))
         self.ulfbert_body_UIs['ulfbert_icon_75'] = cmds.symbolButton(image=image_path+"/cms_spine_hipsB_ctrl.png", h=45, vis=True, command=partial (self.select_ulfbert_character_controller,"spine_hipsB_ctrl"))
-        self.ulfbert_body_UIs['ulfbert_icon_76'] = cmds.symbolButton(image=image_path+"/cms_fk2ik_L_Hip.png", h=45, vis=True, command=partial (self.fk2ik_ulfbert_character,'.L_hip1_IkFkBlend'))
-        self.ulfbert_body_UIs['ulfbert_icon_77'] = cmds.symbolButton(image=image_path+"/cms_ik2fk_L_Hip.png",h=45, vis=True, command=partial (self.ik2fk_ulfbert_character,'.L_hip1_IkFkBlend'))
+        self.ulfbert_body_UIs['ulfbert_icon_76'] = cmds.symbolButton(image=image_path+"/cms_fk2ik_L_Hip.png", h=45, vis=False, command=partial (self.fk2ik_ulfbert_character,'.L_hip1_IkFkBlend'))
+        self.ulfbert_body_UIs['ulfbert_icon_77'] = cmds.symbolButton(image=image_path+"/cms_ik2fk_L_Hip.png",h=45, vis=False, command=partial (self.ik2fk_ulfbert_character,'.L_hip1_IkFkBlend'))
         self.ulfbert_body_UIs['ulfbert_icon_78'] = cmds.symbolButton(h=45, vis=False)
         self.ulfbert_body_UIs['ulfbert_icon_79'] = cmds.symbolButton(h=45, vis=False)
         self.ulfbert_body_UIs['ulfbert_icon_80'] = cmds.symbolButton(h=45, vis=False)
@@ -978,7 +978,7 @@ class Ulfbert_body_UI(Base):
             cmds.warning('No Character in Scene')
         else:
             query_ulfbert_L_arm_fkik_controller=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-            ulfbert_L_arm_fkik_current_name=(str(query_ulfbert_L_arm_fkik_controller)+":"+("master_ctrl"))
+            ulfbert_L_arm_fkik_current_name=(str(query_ulfbert_L_arm_fkik_controller)+":"+("Option_Ctrl"))
             query_ulfbert_L_arm_fkik_value=cmds.getAttr(ulfbert_L_arm_fkik_current_name+'.L_arm3_IkFkBlend')
             if query_ulfbert_L_arm_fkik_value==0.0:
                 cmds.select(str(query_ulfbert_L_arm_fkik_controller)+":"+str("L_arm_wrist_ik_ctrl"))
@@ -991,7 +991,7 @@ class Ulfbert_body_UI(Base):
             cmds.warning('No Character in Scene')
         else:
             query_ulfbert_R_arm_fkik_controller=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-            ulfbert_R_arm_fkik_current_name=(str(query_ulfbert_R_arm_fkik_controller)+":"+("master_ctrl"))
+            ulfbert_R_arm_fkik_current_name=(str(query_ulfbert_R_arm_fkik_controller)+":"+("Option_Ctrl"))
             query_ulfbert_R_arm_fkik_value=cmds.getAttr(ulfbert_R_arm_fkik_current_name+'.R_arm3_IkFkBlend')
             if query_ulfbert_R_arm_fkik_value==0.0:
                 cmds.select(str(query_ulfbert_R_arm_fkik_controller)+":"+str("R_arm_wrist_ik_ctrl"))
@@ -1005,7 +1005,7 @@ class Ulfbert_body_UI(Base):
             cmds.warning('No Character in Scene')
         else:
             query_ulfbert_L_leg_fkik_controller=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-            ulfbert_L_leg_fkik_current_name=(str(query_ulfbert_L_leg_fkik_controller)+":"+("master_ctrl"))
+            ulfbert_L_leg_fkik_current_name=(str(query_ulfbert_L_leg_fkik_controller)+":"+("Option_Ctrl"))
             query_ulfbert_L_leg_fkik_value=cmds.getAttr(ulfbert_L_leg_fkik_current_name+'.L_leg1_IkFkBlend')
             if query_ulfbert_L_leg_fkik_value==0.0:
                 cmds.select(str(query_ulfbert_L_leg_fkik_controller)+":"+str("L_leg_ankle_ik_ctrl"))
@@ -1018,7 +1018,7 @@ class Ulfbert_body_UI(Base):
             cmds.warning('No Character in Scene')
         else:
             query_ulfbert_R_leg_fkik_controller=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-            ulfbert_R_leg_fkik_current_name=(str(query_ulfbert_R_leg_fkik_controller)+":"+("master_ctrl"))
+            ulfbert_R_leg_fkik_current_name=(str(query_ulfbert_R_leg_fkik_controller)+":"+("Option_Ctrl"))
             query_ulfbert_R_leg_fkik_value=cmds.getAttr(ulfbert_R_leg_fkik_current_name+'.R_leg1_IkFkBlend')
             if query_ulfbert_R_leg_fkik_value==0.0:
                 cmds.select(str(query_ulfbert_R_leg_fkik_controller)+":"+str("R_leg_ankle_ik_ctrl"))

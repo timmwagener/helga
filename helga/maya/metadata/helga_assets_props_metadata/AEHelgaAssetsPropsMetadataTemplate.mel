@@ -1,0 +1,104 @@
+
+//AEHelgaAssetsPropsMetadataTemplate
+global proc AEHelgaAssetsPropsMetadataTemplate( string $nodeName ) { 
+    
+    //Vars
+    //-----------------------------------------
+    //-----------------------------------------
+    string $node[];
+	tokenize $nodeName "." $node;
+
+
+	
+
+
+
+	//Header image
+    //-----------------------------------------
+    //-----------------------------------------
+    
+    //create header image
+    editorTemplate -callCustom "helga_assets_props_metadata_create_header_image" "helga_assets_props_metadata_update_header_image" "Dummy";
+
+
+	
+	
+
+
+
+	//scroll layout
+    editorTemplate -beginScrollLayout;
+
+    
+
+
+    
+    
+    
+
+
+    
+
+    //Helga metadata attrs
+    //-----------------------------------------
+    //-----------------------------------------
+    editorTemplate -beginLayout "Helga Props Metadata" -collapse 0;
+
+    //input_color
+    editorTemplate -addControl "alembic_name";
+
+    //End Layout Input Color
+    editorTemplate -endLayout;
+    
+
+   
+    
+    
+
+
+    //Extra controls for unspecified attributes
+    //-----------------------------------------
+    //-----------------------------------------
+    editorTemplate -addExtraControls; 
+    
+    //end scroll layout
+    editorTemplate -endScrollLayout;
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+//Header image procedures
+//-----------------------------------------
+//-----------------------------------------
+
+global proc helga_assets_props_metadata_create_header_image(string $nodeName)
+{
+    //Header
+    image -w 400 -h 100 -image "helga_aetemplate_header.png";
+}
+
+
+global proc helga_assets_props_metadata_update_header_image(string $nodeName)
+{}
+
+
+
+
+
+
+
+
+
+

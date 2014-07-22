@@ -112,7 +112,8 @@ mock_modules_list = [
   'py2exe',
   'winshell',
   'mf',
-  'modulefinder'
+  'modulefinder',
+  'yaml'
 ]
 
 #create mock objects

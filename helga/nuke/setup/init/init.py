@@ -3,66 +3,12 @@
 
 
 
-#helga init.py (startup procedures)
+#Get pipeline base path from env. var.
 #------------------------------------------------------------------
 
-
-
-
-
-#Helga pipeline exceptions
-#------------------------------------------------------------------
-
-#PipelineBasePathNonExistentException
-class PipelineBasePathNonExistentException(Exception):
-    """
-    Exception to be thrown when os.isdir(HELGA_PIPELINE_BASE_PATH) is False.
-    """
-
-    def __init__(self):
-
-        #log_message
-        self.log_message = 'HELGA_PIPELINE_BASE_PATH does not exist. Helga pipeline not loaded.'
-        #super
-        super(PipelineBasePathNonExistentException, self).__init__(self, self.log_message)
-
-
-
-
-
-
-#Pipeline base path
-#------------------------------------------------------------------
 import os
-
-#PIPELINE_BASE_PATH
-PIPELINE_BASE_PATH = r'//bigfoot/grimmhelga'
-
-#if env. var. exists, replace
-if (os.getenv('HELGA_PIPELINE_BASE_PATH', False)):
-    PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False) #r'//bigfoot/grimmhelga/Production/scripts/deploy'
-
-
-#pipeline path doesnt exist
-if not (os.path.isdir(PIPELINE_BASE_PATH)):
-    #raise custom exception and abort execution of module
-    raise PipelineBasePathNonExistentException
-
-#log
-print('Pipeline base path: {0}'.format(PIPELINE_BASE_PATH))
-
-
-
-
-#Append pipeline script path
-#------------------------------------------------------------------
 import sys
 
-#PIPELINE_SCRIPTS_BASE_PATH
-PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/deploy/helga'
-
-#append
-sys.path.append(PIPELINE_SCRIPTS_BASE_PATH)
 
 
 
@@ -124,55 +70,21 @@ NUKE_PLUGIN_PATH = global_variables.NUKE_PLUGIN_PATH
 
 
 
-#Startup Routine
-#------------------------------------------------------------------
-
-
-
-#Copy init.py
+#Set menu.py path
 #------------------------------------------------------------------
 
 try:
-    source_user_setup_dir = NUKE_INIT_PATH
-    source_user_setup_file = 'init.py'
-
-    user_setup_destination_dir = global_functions.get_user_setup_destination_dir('nuke')
-
-    global_functions.copy_file(source_user_setup_file, source_user_setup_dir, user_setup_destination_dir)
+    
+    #NUKE_MENU_PATH
+    nuke.pluginAddPath(NUKE_MENU_PATH)
 
     #SuccessMsg
-    print('Successfully copied init.py')
-
+    print('Successfully set Helga menu.py path: {0}'.format(NUKE_MENU_PATH))
+    
 except:
     
     #FailMsg
-    print('Failed to copy init.py')
-
-
-
-
-
-#Copy menu.py
-#------------------------------------------------------------------
-
-try:
-    source_user_setup_dir = NUKE_MENU_PATH
-    source_user_setup_file = 'menu.py'
-
-    user_setup_destination_dir = global_functions.get_user_setup_destination_dir('nuke')
-
-    global_functions.copy_file(source_user_setup_file, source_user_setup_dir, user_setup_destination_dir)
-
-    #SuccessMsg
-    print('Successfully copied menu.py')
-
-except:
-    
-    #FailMsg
-    print('Failed to copy menu.py')
-
-
-
+    print('Error setting Helga menu.py path: {0}'.format(NUKE_MENU_PATH))
 
 
 
@@ -400,6 +312,23 @@ except:
     #FailMsg
     print('Error adding custom gizmo pathes')
 
+
+
+
+#OCIO
+#------------------------------------------------------------------
+try:
+
+    #set OCIO
+    nuke.knobDefault('defaultViewerLUT', 'OCIO LUTs')
+
+    #SuccessMsg
+    print('Successfully set OCIO environment')
+    
+except:
+    
+    #FailMsg
+    print('Error setting OCIO environment')
 
 
 

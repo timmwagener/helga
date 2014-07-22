@@ -15,8 +15,6 @@
 #------------------------------------------------------------------
 
 #python
-import sys
-import os
 import functools
 
 #nuke

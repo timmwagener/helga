@@ -1,0 +1,1 @@
+Y:/Production/scripts/deploy/helga/bin/HelgaLauncher/helga_launcher_loader.exe -rnk 1

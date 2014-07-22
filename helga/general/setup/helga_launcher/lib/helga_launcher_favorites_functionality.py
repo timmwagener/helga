@@ -52,8 +52,6 @@ def get_pipeline_icon_path():
     return pipeline_icon_path
 
 
-
-
 def clean_path_for_favorites(path):
     """
     Modify path to match favorite neccessities.

@@ -100,6 +100,7 @@ mock_modules_list = [
   'maya.OpenMaya',
   'maya.OpenMayaUI',
   'maya.api.OpenMaya',
+  'maya.OpenMayaMPx',
   'nuke',
   'nukescripts',
   'PySide',

@@ -142,7 +142,8 @@ if (PIPELINE_BASE_PATH):
     """Helga pipeline Maya python pathes"""
 
 
-    MAYA_ICONS_PATH_LIST = [PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/icons']
+    MAYA_ICONS_PATH_LIST = [PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/icons',
+                            PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/icons/plugin_images']
     """Helga pipeline Maya icons pathes"""
 
 

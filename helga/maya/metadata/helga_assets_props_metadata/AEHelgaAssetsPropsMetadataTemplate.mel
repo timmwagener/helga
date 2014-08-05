@@ -86,7 +86,7 @@ global proc AEHelgaAssetsPropsMetadataTemplate( string $nodeName ) {
 global proc helga_assets_props_metadata_create_header_image(string $nodeName)
 {
     //Header
-    image -w 400 -h 100 -image "helga_aetemplate_header.png";
+    image -w 400 -h 100 -image "helga_aetemplate_header_asset_metadata.png";
 }
 
 

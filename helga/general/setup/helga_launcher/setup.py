@@ -123,7 +123,9 @@ if (__name__ == '__main__'):
                         'media/icons/icon_dcc_button_doc_hover.png',
                         'media/icons/icon_dcc_button_doc_drag.png'
                         ]),
-        ('data', ['data/pipeline_base_data.yaml', 'data/pipeline_base_data_sandbox.yaml'])
+        ('data', ['data/pipeline_base_data.yaml', 
+                    'data/pipeline_base_data_sandbox.yaml',
+                    'data/pipeline_base_data_home.yaml'])
         ]
 
 
@@ -284,6 +286,9 @@ if (__name__ == '__main__'):
         #helga_launcher_path
         helga_launcher_path = r'Y:/Production/scripts/deploy/helga/bin/HelgaLauncher/helga_launcher_loader.exe'
 
+        #helga_launcher_path_home
+        helga_launcher_path_home = r'C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/helga_launcher_loader.exe'
+
         
 
         #helga_launcher
@@ -306,6 +311,9 @@ if (__name__ == '__main__'):
         create_batch(helga_launcher_path, batch_dir, batch_name, [r' -rho 1'])
 
 
+        
+
+
 
         #helga_launcher_sandbox
         #------------------------------------------------------------------
@@ -325,6 +333,17 @@ if (__name__ == '__main__'):
         #helga_launcher_sandbox_houdini
         batch_name = 'helga_launcher_sandbox_houdini.bat'
         create_batch(helga_launcher_path, batch_dir, batch_name, [r' -sbx 1', r' -rho 1'])
+
+
+
+
+        #helga_launcher home
+        #------------------------------------------------------------------
+
+        #helga_launcher_home
+        batch_name = 'helga_launcher_home.bat'
+        create_batch(helga_launcher_path_home, batch_dir, batch_name, 
+                        [r' --custom_yaml_path "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/data/pipeline_base_data_home.yaml"'])
 
 
 

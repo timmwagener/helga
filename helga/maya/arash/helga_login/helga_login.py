@@ -709,19 +709,21 @@ class Ulfbert_body_UI(Base):
         cmds.menuItem('ulfbert_reference_b', label='Reference Editor', command=self.ulfbert_reference_editor)
         cmds.setParent('..', menu=True)
         cmds.menu('ulfbert_optionMenu_window_a', label= 'Pose',tearOff = True)
-        cmds.menuItem ('ulfbert_mirror_pose', label='Mirror', command=self.ulfbert_mirror_pose)
+        cmds.menuItem ('ulfbert_mirror_pose', label='Mirror Left to Right', command=self.ulfbert_mirror_L2R_action)
+        cmds.menuItem ('ulfbert_mirror_pose_a', label='Mirror Right to Left', command=self.ulfbert_mirror_R2L_action)
         cmds.menuItem ('ulfbert_reset_pose', label='Reset', command=self.ulfbert_reset_pose)
         cmds.setParent('..', menu=True)
         cmds.menu('ulfbert_optionMenu_window_b', label= 'Display',tearOff = True)
         cmds.menuItem ('ulfbert_show_controls', label='Show all Controls', command=self.show_all_controls)
         cmds.menuItem ('ulfbert_hide_controls', label='Hide Controls', command=self.hide_all_controls)
+        cmds.menuItem ('ulfbert_hide_bends', label='Hide Bends', command=self.hide_all_bends)
+        cmds.menuItem ('ulfbert_show_all_bends', label='Show Bends', command=self.show_all_bends)
         cmds.menuItem( divider=True )
 
         # #display layer
         cmds.menuItem ('ulfbert_side_submenu', subMenu=True, label='Side Layers')
         cmds.menuItem ('ulfbert_show_left_side', label='Hide Left Side', command=self.hide_left_side)
         cmds.menuItem ('ulfbert_show_right_side', label='Hide Right Side', command=self.hide_right_side)
-        cmds.menuItem ('ulfbert_show_center', label='Hide Center', command=self.hide_center)
         cmds.setParent('..', menu=True)
 
 
@@ -1053,27 +1055,40 @@ class Ulfbert_body_UI(Base):
 
 
     def display_all_member_lists(self, *args):
+        
         #all member
         self.character_main_body_list=[str('head_head_ctrl'), str('head_jaw_ctrl'), str('head_chin_ctrl'), str('spine_hipsA_ctrl'), str('spine_hipsB_ctrl'),
                         str('L_leg_hip_fk_ctrl'), str('L_leg_leg_fk_ctrl'), str('L_leg_ankle_fk_ctrl'), str('L_leg_knee_fk_ctrl'),
-                        str('L_leg_hip_ik_ctrl'), str('L_foot_middle_ctrl'), str('L_up_leg_off_ctrl'), str('L_down_leg_off_ctrl'),
+                        str('L_foot_middle_ctrl'), str('L_up_leg_off_ctrl'), str('L_down_leg_off_ctrl'),
                         str('L_leg_off_ctrl'), str('R_leg_hip_fk_ctrl'), str('R_leg_leg_fk_ctrl'), str('R_leg_ankle_fk_ctrl'),
-                        str('R_leg_knee_fk_ctrl'), str('R_leg_hip_ik_ctrl'), str('R_foot_middle_ctrl'), str('R_up_leg_off_ctrl'),
+                        str('R_leg_knee_fk_ctrl'), str('R_foot_middle_ctrl'), str('R_up_leg_off_ctrl'),
                         str('R_down_leg_off_ctrl'), str('R_leg_off_ctrl'), str('spine_chestA_ctrl'), str('spine_chestB_ctrl'),
                         str('head_neck_ctrl'), str('L_arm_clavicle_fk_ctrl'), str('L_arm_shoulder_fk_ctrl'), str('L_arm_wrist_fk_ctrl'),
-                        str('L_arm_elbow_fk_ctrl'), str('L_arm_elbow_ik_ctrl'), str('L_arm_clavicle_ik_ctrl'), str('L_index_0_ctrl'),
+                        str('L_arm_elbow_fk_ctrl'), str('L_arm_elbow_ik_ctrl'), str('L_index_0_ctrl'),
                         str('L_index_1_ctrl'), str('L_index_2_ctrl'), str('L_index_3_ctrl'), str('L_middle_0_ctrl'), str('L_middle_1_ctrl'),
                         str('L_middle_2_ctrl'), str('L_middle_3_ctrl'), str('L_ring_0_ctrl'), str('L_ring_1_ctrl'), str('L_ring_2_ctrl'),
                         str('L_ring_3_ctrl'), str('L_pink_0_ctrl'), str('L_pink_1_ctrl'), str('L_pink_2_ctrl'), str('L_pink_3_ctrl'),
                         str('L_thumb_0_ctrl'), str('L_thumb_1_ctrl'), str('L_thumb_2_ctrl'), str('L_up_arm_off_ctrl'), str('L_down_arm_off_ctrl'),
                         str('L_arm_off_ctrl'), str('R_arm_clavicle_fk_ctrl'), str('R_arm_shoulder_fk_ctrl'), str('R_arm_wrist_fk_ctrl'),
-                        str('R_arm_elbow_fk_ctrl'), str('R_arm_elbow_ik_ctrl'), str('R_arm_clavicle_ik_ctrl'), str('R_index_0_ctrl'),
+                        str('R_arm_elbow_fk_ctrl'), str('R_arm_elbow_ik_ctrl'), str('R_index_0_ctrl'),
                         str('R_index_1_ctrl'), str('R_index_2_ctrl'), str('R_index_3_ctrl'), str('R_middle_0_ctrl'), str('R_middle_1_ctrl'),
                         str('R_middle_2_ctrl'), str('R_middle_3_ctrl'), str('R_ring_0_ctrl'), str('R_ring_1_ctrl'), str('R_ring_2_ctrl'),
                         str('R_ring_3_ctrl'), str('R_pink_0_ctrl'), str('R_pink_1_ctrl'), str('R_pink_2_ctrl'), str('R_pink_3_ctrl'),
                         str('R_thumb_0_ctrl'), str('R_thumb_1_ctrl'), str('R_thumb_2_ctrl'), str('R_up_arm_off_ctrl'), str('R_down_arm_off_ctrl'),
                         str('R_arm_off_ctrl'), str('L_arm_wrist_ik_ctrl'), str('R_arm_wrist_ik_ctrl'), str('spine_middle1_ctrl'),
-                        str('L_leg_ankle_ik_ctrl'), str('L_leg_knee_ik_ctrl'), str('R_leg_ankle_ik_ctrl'), str('R_leg_knee_ik_ctrl')]
+                        str('L_leg_ankle_ik_ctrl'), str('L_leg_knee_ik_ctrl'), str('R_leg_ankle_ik_ctrl'), str('R_leg_knee_ik_ctrl'),
+                        str('L_Leg_Ankle_ToParent_Ctrl'), str('L_Arm_Wrist_ToParent_Ctrl'), str('R_Arm_Wrist_ToParent_Ctrl'), str('R_Leg_Ankle_ToParent_Ctrl'),
+                        str('sword_Main_Ctrl'), str('sword_main_mounting_Ctrl'), str('sword_main_Ctrl'), str('belt_Ctrl_1'), str('belt_Ctrl_2'), str('belt_Ctrl_3'),
+                        str('belt_Ctrl_4'), str('belt_Ctrl_5'), str('belt_Ctrl_6'), str('belt_Ctrl_7'), str('belt_Ctrl_8'), str('belt_Ctrl_9'), str('belt_Ctrl_10'),
+                        str('belt_Ctrl_11'), str('belt_Ctrl_12'), str('belt_Ctrl_13'), str('belt_EndPart_Ctrl_2'), str('belt_EndPart_Ctrl_3'), str('belt_EndPart_Ctrl_end'),
+                        str('belt_EndPart_Ctrl_1'), str('Belt_buckle_SubMain_Ctrl'), str('Belt_buckle_main_Ctrl'), str('belt_Ctrl_14'), str('button_main_Ctrl')]
+
+
+
+        self.all_bends_list = [str('L_leg_off_ctrl'), str('L_down_leg_off_ctrl'), str('L_up_leg_off_ctrl'), str('R_leg_off_ctrl'), str('R_up_leg_off_ctrl'),
+                        str('R_down_leg_off_ctrl'), str('L_arm_off_ctrl'), str('L_up_arm_off_ctrl'), str('L_down_arm_off_ctrl'), str('R_arm_off_ctrl'), str('R_down_arm_off_ctrl'),
+                        str('R_up_arm_off_ctrl')]
+
         #right_arm
         self.character_R_arm_list=[str('R_arm_wrist_fk_ctrl'),str('R_arm_elbow_fk_ctrl'),
                        str('R_arm_elbow_ik_ctrl'),str('R_index_0_ctrl'),str('R_index_1_ctrl'),
@@ -1084,7 +1099,7 @@ class Ulfbert_body_UI(Base):
                        str('R_pink_2_ctrl'),str('R_pink_3_ctrl'),str('R_thumb_0_ctrl'),
                        str('R_thumb_1_ctrl'),str('R_thumb_2_ctrl'),str('R_up_arm_off_ctrl'),
                        str('R_down_arm_off_ctrl'),str('R_arm_off_ctrl'),str('R_arm_wrist_ik_ctrl'),
-                         str('R_arm_shoulder_fk_ctrl')]
+                        str('R_arm_shoulder_fk_ctrl'), str('R_Arm_Wrist_ToParent_Ctrl')]
 
         self.character_L_arm_list=[str('L_arm_shoulder_fk_ctrl'), str('L_arm_wrist_fk_ctrl'),
                      str('L_arm_elbow_fk_ctrl'), str('L_arm_elbow_ik_ctrl'), str('L_index_0_ctrl'),
@@ -1095,15 +1110,15 @@ class Ulfbert_body_UI(Base):
                        str('L_pink_1_ctrl'), str('L_pink_2_ctrl'), str('L_pink_3_ctrl'),
                        str('L_thumb_0_ctrl'), str('L_thumb_1_ctrl'), str('L_thumb_2_ctrl'),
                        str('L_up_arm_off_ctrl'), str('L_down_arm_off_ctrl'), str('L_arm_off_ctrl'),
-                       str('L_arm_wrist_ik_ctrl')]
+                       str('L_arm_wrist_ik_ctrl'),str('L_Arm_Wrist_ToParent_Ctrl')]
 
         self.character_R_leg_list=[str('R_leg_ankle_fk_ctrl'), str('R_leg_knee_fk_ctrl'), str('R_foot_middle_ctrl'), str('R_up_leg_off_ctrl'),
                         str('R_down_leg_off_ctrl'), str('R_leg_off_ctrl'), str('R_leg_ankle_ik_ctrl'), str('R_leg_knee_ik_ctrl'),
-                        str('R_leg_leg_fk_ctrl'), str('R_leg_hip_ik_ctrl'), str('R_leg_hip_fk_ctrl')]
+                        str('R_leg_leg_fk_ctrl'), str('R_leg_hip_fk_ctrl'),str('R_Leg_Ankle_ToParent_Ctrl')]
 
         self.character_L_leg_list=[str('L_leg_ankle_fk_ctrl'), str('L_foot_middle_ctrl'), str('L_leg_ankle_ik_ctrl'), str('L_leg_knee_ik_ctrl'),
                         str('L_down_leg_off_ctrl'), str('L_leg_knee_fk_ctrl'), str('L_leg_off_ctrl'), str('L_up_leg_off_ctrl'),
-                        str('L_leg_leg_fk_ctrl'), str('L_leg_hip_ik_ctrl'), str('L_leg_hip_fk_ctrl')]
+                        str('L_leg_leg_fk_ctrl'), str('L_leg_hip_fk_ctrl'),str('L_Leg_Ankle_ToParent_Ctrl')]
 
 
         self.character_R_fingers_list=[str('R_thumb_0_ctrl'), str('R_index_0_ctrl'), str('R_middle_0_ctrl'), str('R_ring_0_ctrl'), str('R_pink_0_ctrl'),
@@ -1117,7 +1132,11 @@ class Ulfbert_body_UI(Base):
                        str('L_middle_2_ctrl'),str('L_middle_3_ctrl'),str('L_ring_1_ctrl'),str('L_ring_2_ctrl'),str('L_ring_3_ctrl'),
                        str('L_pink_1_ctrl'),str('L_pink_2_ctrl'),str('L_pink_3_ctrl'),str('L_thumb_2_ctrl')]
 
-        self.character_center_list=[str('head_neck_ctrl'),str('spine_chestA_ctrl'),str('spine_chestB_ctrl'),str('spine_middle1_ctrl'), str('spine_hipsB_ctrl'), str('spine_hipsA_ctrl')]
+        self.character_center_list=[str('head_neck_ctrl'),str('spine_chestA_ctrl'),str('spine_chestB_ctrl'),str('spine_middle1_ctrl'), str('spine_hipsB_ctrl'), str('spine_hipsA_ctrl'),
+                        str('sword_Main_Ctrl'), str('sword_main_mounting_Ctrl'), str('sword_main_Ctrl'), str('belt_Ctrl_1'), str('belt_Ctrl_2'), str('belt_Ctrl_3'),
+                        str('belt_Ctrl_4'), str('belt_Ctrl_5'), str('belt_Ctrl_6'), str('belt_Ctrl_7'), str('belt_Ctrl_8'), str('belt_Ctrl_9'), str('belt_Ctrl_10'),
+                        str('belt_Ctrl_11'), str('belt_Ctrl_12'), str('belt_Ctrl_13'), str('belt_EndPart_Ctrl_2'), str('belt_EndPart_Ctrl_3'), str('belt_EndPart_Ctrl_end'),
+                        str('belt_EndPart_Ctrl_1'), str('Belt_buckle_SubMain_Ctrl'), str('Belt_buckle_main_Ctrl'), str('belt_Ctrl_14'), str('button_main_Ctrl')]
 
     def show_all_controls(self, *args):
         self.display_all_member_lists()
@@ -1131,17 +1150,45 @@ class Ulfbert_body_UI(Base):
         for m in self.character_main_body_list:
             cmds.hide(str(self.query_current_namespace) + str(":") + str(m))
 
+
+    def hide_all_bends(self, *args):
+        self.display_all_member_lists()
+        self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
+        for m in self.all_bends_list:
+            cmds.hide(str(self.query_current_namespace)+ str(":") + str(m))
+
+    def show_all_bends(self, *args):
+        self.display_all_member_lists()
+        self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
+        for m in self.all_bends_list:
+            cmds.showHidden(str(self.query_current_namespace)+ str(":") + str(m))
+
     def hide_right_arm(self, *args):
         self.display_all_member_lists()
         self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
         for m in self.character_R_arm_list:
             cmds.hide(str(self.query_current_namespace) + str(":") + str(m))
 
+
+    # def show_right_arm(self, *args):
+    #     self.display_all_member_lists()
+    #     self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
+    #     for m in self.character_R_arm_list:
+    #         cmds.showHidden(str(self.query_current_namespace) + str(":") + str(m))
+
+
     def hide_left_arm(self, *args):
         self.display_all_member_lists()
         self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
         for m in self.character_L_arm_list:
             cmds.hide(str(self.query_current_namespace) + str(":") + str(m))
+
+    # def show_left_arm(self, *args):
+    #     self.display_all_member_lists()
+    #     self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
+    #     for m in self.character_L_arm_list:
+    #         cmds.showHidden(str(self.query_current_namespace) + str(":") + str(m))
+
 
     def hide_right_fingers(self, *args):
         self.display_all_member_lists()
@@ -1161,28 +1208,38 @@ class Ulfbert_body_UI(Base):
         for m in self.character_R_leg_list:
             cmds.hide(str(self.query_current_namespace) + str(":") + str(m))
 
+    # def show_right_leg(self, *args):
+    #     print "right_leg"
+    #     self.display_all_member_lists()
+    #     self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
+    #     for m in self.character_R_leg_list:
+    #         cmds.showHidden(str(self.query_current_namespace) + str(":") + str(m))
+
     def hide_left_leg(self, *args):
         self.display_all_member_lists()
         self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
         for m in self.character_L_leg_list:
             cmds.hide(str(self.query_current_namespace) + str(":") + str(m))
 
-    def hide_center(self, *args):
-        self.display_all_member_lists()
-        self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-        for m in self.character_center_list:
-            cmds.hide(str(self.query_current_namespace) + str(":") + str(m))
+
+    # def show_left_leg(self, *args):
+    #     print "left_leg"
+    #     self.display_all_member_lists()
+    #     self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
+    #     for m in self.character_L_leg_list:
+    #         cmds.showHidden(str(self.query_current_namespace) + str(":") + str(m))
+
 
     def hide_left_side(self, *args):
         self.display_all_member_lists()
         self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-        for m in self.character_L_arm_list and self.character_L_leg_list and self.character_L_fingers_list:
+        for m in self.character_L_arm_list + self.character_L_leg_list + self.character_L_fingers_list:
             cmds.hide(str(self.query_current_namespace) + str(":") + str(m))
 
     def hide_right_side(self, *args):
         self.display_all_member_lists()
         self.query_current_namespace=cmds.optionMenu('ulfbert_namespace_optionmenu_a', q=True, v=True)
-        for m in self.character_R_arm_list and self.character_R_leg_list and self.character_R_fingers_list:
+        for m in self.character_R_arm_list + self.character_R_leg_list + self.character_R_fingers_list:
             cmds.hide(str(self.query_current_namespace) + str(":") + str(m))
 
 
@@ -1243,34 +1300,34 @@ class Ulfbert_body_UI(Base):
 
 
 
-    def ulfbert_mirror_pose(self, *args):
-        '''ulfbert_mirror_ui'''
-        if cmds.window("ulfbert_mirror", exists=True):
-            cmds.deleteUI("ulfbert_mirror")
-        cmds.window("ulfbert_mirror",title="Mirror Pose",mnb=True, mxb=False,w=300,h=300,sizeable=False)
-        cmds.columnLayout('ulfbert_mirror_column_a', columnAttach=('both', 20), rowSpacing=3, columnWidth=300)
-        cmds.rowColumnLayout('ulfbert_mirror_layout',columnAttach=(20,'both',20), numberOfColumns=2, columnWidth=[(1,150), (2,100)])
-        #cmds.separator(h=5,vis=True, st='none')
-        cmds.radioCollection()
-        cmds.radioButton('ulfbert_mirror_R2L', h=50, label='Right2Left',align='center', parent='ulfbert_mirror_layout')
-        cmds.radioButton( 'ulfbert_mirror_L2R', h=50, label='Left2Right', align='center' ,parent='ulfbert_mirror_layout')
-        cmds.symbolButton(vis=False,parent='ulfbert_mirror_layout')
-        cmds.button(label="Mirror",parent='ulfbert_mirror_layout', w=30, command=self.ulfbert_mirror_ui_action)
-        cmds.setParent('..')
-        cmds.showWindow()
+    # def ulfbert_mirror_pose(self, *args):
+    #     '''ulfbert_mirror_ui'''
+    #     if cmds.window("ulfbert_mirror", exists=True):
+    #         cmds.deleteUI("ulfbert_mirror")
+    #     cmds.window("ulfbert_mirror",title="Mirror Pose",mnb=True, mxb=False,w=300,h=300,sizeable=False)
+    #     cmds.columnLayout('ulfbert_mirror_column_a', columnAttach=('both', 20), rowSpacing=3, columnWidth=300)
+    #     cmds.rowColumnLayout('ulfbert_mirror_layout',columnAttach=(20,'both',20), numberOfColumns=2, columnWidth=[(1,150), (2,100)])
+    #     #cmds.separator(h=5,vis=True, st='none')
+    #     cmds.radioCollection()
+    #     cmds.radioButton('ulfbert_mirror_R2L', h=50, label='Right2Left',align='center', parent='ulfbert_mirror_layout')
+    #     cmds.radioButton( 'ulfbert_mirror_L2R', h=50, label='Left2Right', align='center' ,parent='ulfbert_mirror_layout')
+    #     cmds.symbolButton(vis=False,parent='ulfbert_mirror_layout')
+    #     cmds.button(label="Mirror",parent='ulfbert_mirror_layout', w=30, command=self.ulfbert_mirror_ui_action)
+    #     cmds.setParent('..')
+    #     cmds.showWindow()
 
 
-    def ulfbert_mirror_ui_action(self, *args):
-        '''ulfbert_mirror_ui_function'''
-        ulfbert_query_R2L=cmds.radioButton( 'ulfbert_mirror_R2L',sl=True, q=True)
-        ulfbert_query_L2R=cmds.radioButton( 'ulfbert_mirror_L2R',sl=True, q=True)
+    # def ulfbert_mirror_ui_action(self, *args):
+    #     '''ulfbert_mirror_ui_function'''
+    #     ulfbert_query_R2L=cmds.radioButton( 'ulfbert_mirror_R2L',sl=True, q=True)
+    #     ulfbert_query_L2R=cmds.radioButton( 'ulfbert_mirror_L2R',sl=True, q=True)
 
-        if ulfbert_query_L2R==True:
-            self.ulfbert_mirror_L2R_action()
-        else:
-            pass
-        if ulfbert_query_R2L==True:
-            self.ulfbert_mirror_R2L_action()
+    #     if ulfbert_query_L2R==True:
+    #         self.ulfbert_mirror_L2R_action()
+    #     else:
+    #         pass
+    #     if ulfbert_query_R2L==True:
+    #         self.ulfbert_mirror_R2L_action()
 
     def ulfbert_mirror_L2R_action(self, *args):
         ulfbert_L2R_list = cmds.ls(sl=True)
@@ -1920,7 +1977,7 @@ class Save_character_pose_UI(Base):
 
         export_string_timeslider='file -force -options "precision=8;exportEdits=Y:/Production/rnd/ahosseini/helga_save_pose/'+ str(self.export_name)+'.editMA;statics=1;baked=1;sdk=1;constraint=1;animLayers=0;selected=selectedOnly;whichRange=2;range='+ str(range_in) +":"+ str(range_out) + ';hierarchy=none;controlPoints=0;useChannelBox=1;options=keys;copyKeyCmd=-animation objects -time >' + str(range_in) +":"+ str(range_out) + '> -float >' + str(range_in) +":"+ str(range_out) + '> -option keys -hierarchy none -controlPoints 0 " -typ "atomExport" -es "Y:/Production/rnd/ahosseini/helga_save_pose/'+ str(self.export_name)+'.atom";'
         export_string_start_end='file -force -options "precision=8;exportEdits=Y:/Production/rnd/ahosseini/helga_save_pose/'+ str(self.export_name)+'.editMA;statics=1;baked=1;sdk=1;constraint=1;animLayers=0;selected=selectedOnly;whichRange=2;range='+ str(query_starttime) +":"+ str(query_endtime) + ';hierarchy=none;controlPoints=0;useChannelBox=1;options=keys;copyKeyCmd=-animation objects -time >' + str(query_starttime) +":"+ str(query_endtime) + '> -float >' + str(query_starttime) +":"+ str(query_endtime) + '> -option keys -hierarchy none -controlPoints 0 " -typ "atomExport" -es "Y:/Production/rnd/ahosseini/helga_save_pose/'+ str(self.export_name)+'.atom";'
-        
+
         for o in query_list_item:
             cmds.select(query_save_pose_export_namespace + ":" + o, add=True)
 

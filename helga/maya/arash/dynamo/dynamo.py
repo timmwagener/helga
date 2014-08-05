@@ -26,7 +26,7 @@ if cmds.window("dupSpecialZ", exists=True):
 #/main window/
 def UI():
     cmds.warning("Welcome to Newton. For more Information press the Help Button.")
-    window = cmds.window("dynamo", title = "Jelly", w =330, h=400, mnb=True, mxb=False, menuBar=True,sizeable=False)
+    window = cmds.window("dynamo", title = "Jelly_0.1", w =330, h=400, mnb=True, mxb=False, menuBar=True,sizeable=False)
     cmds.scrollLayout( 'scrollLayout' )
     #/menu/
     cmds.columnLayout( columnAttach=('both', 0), rowSpacing=1, columnWidth=300)
@@ -687,9 +687,10 @@ def buildwithMesh(*args):
 
 
 
-
+        count = 1
         #/cleaning and parenting/
-        cmds.parent("hairSystem1Follicles","root_Joint")
+        cmds.parent("hairSystem"+count+"Follicles","root_Joint")
+        count +=1
         cmds.hide("DynamoOrgCurve")
         cmds.select(clear=True)
         Data=cmds.group(NewDyCurve,ikSplineHandle,"hairSystem1","hairSystem1OutputCurves",w=True,n="Data")

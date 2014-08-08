@@ -42,6 +42,7 @@ Manual
 	manual/pipeline
 	manual/mesh_checklist
 	manual/animation_checklist
+	manual/photogrammetry_checklist
 	manual/i_am_a/i_am_a
 
 

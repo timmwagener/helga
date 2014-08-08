@@ -113,7 +113,8 @@ mock_modules_list = [
   'winshell',
   'mf',
   'modulefinder',
-  'yaml'
+  'yaml',
+  'helga.maya.arash.video_ref_player.video_ref_player'
 ]
 
 #create mock objects

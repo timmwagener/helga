@@ -45,7 +45,7 @@ global proc AEHelgaAssetsPropsMetadataTemplate( string $nodeName ) {
     editorTemplate -beginLayout "Helga Props Metadata" -collapse 0;
 
     //input_color
-    editorTemplate -addControl "alembic_name";
+    editorTemplate -annotation "Propname:\nMust be unique and descriptive.\nYou can have several props of the same file referenced in, but they need a different propname in here.\nExample:\nstool_one_a\nstool_one_b\nstool_one_c\n...if you had 3 times the same stool referenced in." -addControl "propname";
 
     //End Layout Input Color
     editorTemplate -endLayout;
@@ -86,7 +86,7 @@ global proc AEHelgaAssetsPropsMetadataTemplate( string $nodeName ) {
 global proc helga_assets_props_metadata_create_header_image(string $nodeName)
 {
     //Header
-    image -w 400 -h 100 -image "helga_aetemplate_header_asset_metadata.png";
+    image -w 400 -h 100 -image "helga_aetemplate_header_props_metadata.png";
 }
 
 

@@ -32,7 +32,7 @@ class HelgaAssetsPropsMetadata(open_maya_mpx.MPxNode):
 	plugin_name = 'HelgaAssetsPropsMetadata'
  	
  	#attrs
- 	a_alembic_name = open_maya.MObject()
+ 	a_propname = open_maya.MObject()
  	
 
  	#methods
@@ -54,11 +54,11 @@ def initialize():
 	nAttr = open_maya.MFnNumericAttribute()
 	tAttr = open_maya.MFnTypedAttribute()
  	
- 	#a_alembic_name
-	HelgaAssetsPropsMetadata.a_alembic_name = tAttr.create('alembic_name', 'alembic_name', open_maya.MFnData.kString)
+ 	#a_propname
+	HelgaAssetsPropsMetadata.a_propname = tAttr.create('propname', 'propname', open_maya.MFnData.kString)
 	tAttr.setWritable(True)
 	tAttr.setStorable(True)
-	HelgaAssetsPropsMetadata.addAttribute(HelgaAssetsPropsMetadata.a_alembic_name)
+	HelgaAssetsPropsMetadata.addAttribute(HelgaAssetsPropsMetadata.a_propname)
 
 
  

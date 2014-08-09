@@ -54,7 +54,21 @@ if (PIPELINE_BASE_PATH):
     PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/' + os.getenv('HELGA_PIPELINE_FLAVOUR', False) + r'/helga'
     """Pipeline scripts base path. You can import helga from here."""
 
+    PIPELINE_LIBRARIES_PATH_GENERAL = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/general/python2.7libs'
+    PIPELINE_LIBRARIES_PATH_GENERAL_FOR_HOUDINI = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/general' #HOUDINI_PATH searches for python2.7libs folder automatically
+    """General libraries to be used with all our DCCs. All DCCs have a Python 2.7.x interpreter."""
 
+    PIPELINE_LIBRARIES_PATH_HOUDINI = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/houdini'
+    """Specific third party libraries to be used with Houdini."""
+
+    PIPELINE_LIBRARIES_PATH_MAYA = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/maya'
+    """Specific third party libraries to be used with Maya."""
+
+    PIPELINE_LIBRARIES_PATH_NUKE = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/nuke'
+    """Specific third party libraries to be used with Nuke."""
+
+
+    
     OCIO_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/general/setup/ocio/nuke_modified/config.ocio'
     """Helga pipeline OCIO path"""
 
@@ -127,18 +141,19 @@ if (PIPELINE_BASE_PATH):
     MAYA_VERSION = r'2014-x64'
     """Helga pipeline Maya version"""
 
+    MAYA_USERSETUP_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/userSetup'
+    """Path to userSetup.py and userSetup.mel"""
 
-    MAYA_SCRIPTS_PATH_LIST = [PIPELINE_SCRIPTS_BASE_PATH,
-                                PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/userSetup',
+
+    MAYA_SCRIPTS_PATH_LIST = [MAYA_USERSETUP_PATH,
                                 PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts',
-                                PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts/cometScripts']
+                                PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts/cometScripts',
+                                PIPELINE_LIBRARIES_PATH_GENERAL,
+                                PIPELINE_LIBRARIES_PATH_MAYA]
     """Helga pipeline Maya scripts pathes"""
 
 
-    MAYA_PYTHONPATH_LIST = [PIPELINE_SCRIPTS_BASE_PATH,
-                            PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/userSetup',
-                            PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts',
-                            PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts/cometScripts']
+    MAYA_PYTHONPATH_LIST = [PIPELINE_SCRIPTS_BASE_PATH]
     """Helga pipeline Maya python pathes"""
 
 
@@ -206,6 +221,8 @@ if (PIPELINE_BASE_PATH):
 
     HOUDINI_PATH = [HOUDINI_SETUP_PATH,
                     HOUDINI_DIGITAL_ASSETS_PATH,
+                    PIPELINE_LIBRARIES_PATH_GENERAL_FOR_HOUDINI,
+                    PIPELINE_LIBRARIES_PATH_HOUDINI,
                     '&']
     """Helga Houdini path"""
 

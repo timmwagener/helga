@@ -50,6 +50,7 @@ if(do_reload):reload(global_functions)
 
 #helga filmaka project globals
 MAYA_PROJECT_DIR = global_variables.MAYA_PROJECT_PATH #r'//bigfoot/grimmhelga/Production/3d/maya'
+DIVIDERLINE = '-----------------------------------------------------------------------------------\n'
 
 
 
@@ -58,6 +59,41 @@ MAYA_PROJECT_DIR = global_variables.MAYA_PROJECT_PATH #r'//bigfoot/grimmhelga/Pr
 
 
 
+
+#Append MAYA_SCRIPT_PATH pathes to python interpreter sys.path
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+try:
+    
+    #get MAYA_SCRIPT_PATH pathes
+    for path in mel.eval("getenv MAYA_SCRIPT_PATH").split(";"):
+
+        #if path exists append
+        if(os.path.exists(path)):
+            
+            #append
+            sys.path.append(path)
+
+            #SuccessMsg
+            sys.__stdout__.write('->Successfully appended from MAYA_SCRIPT_PATH to sys.path: {0}\n'.format(path))
+
+        else:
+
+            #FailMsg
+            sys.__stdout__.write('->Error appending {0} from MAYA_SCRIPT_PATH to sys.path. Path does not exist.\n'.format(path))
+
+except:
+    
+    #FailMsg
+    sys.__stdout__.write('Failed to append pathes to sys.path from MAYA_SCRIPT_PATH env. variable.\n')
+
+
+
+
+
+
+#Dividerline
+sys.__stdout__.write(DIVIDERLINE)
 
     
     
@@ -88,11 +124,14 @@ try:
         try:
             if not(cmds.pluginInfo(plugin , query = True, loaded = True)):
                 cmds.loadPlugin(plugin)
-                print('->Successfully loaded ' +plugin +' plugin')
+                sys.__stdout__.write('->Successfully loaded ' +plugin +' plugin\n')
             else:
-                print('->Skipped loading ' +plugin +' plugin. Plugin was already loaded.')
+                sys.__stdout__.write('->Skipped loading ' +plugin +' plugin. Plugin was already loaded.\n')
         except:
-            print('->Error loading ' +plugin +' plugin')
+            sys.__stdout__.write('->Error loading ' +plugin +' plugin\n')
+
+    #Dividerline
+    sys.__stdout__.write(DIVIDERLINE)
             
     
 
@@ -121,6 +160,9 @@ try:
                     sys.__stdout__.write('->Skipped loading ' +plugin_name +' deferred. Plugin was already loaded\n')
             except:
                 sys.__stdout__.write('->Error loading ' +plugin_name +' deferred\n')
+
+        #Dividerline
+        sys.__stdout__.write(DIVIDERLINE)
     
     #eval deferred
     cmds.evalDeferred(load_plugins_deferred)
@@ -131,6 +173,13 @@ except:
     
     #FailMsg
     print('->Failed to load Plugins')
+    #Dividerline
+    print(DIVIDERLINE)
+
+
+
+
+
 
 
 
@@ -146,6 +195,8 @@ try:
 
         #SuccessMsg
         sys.__stdout__.write('Successfully set Maya project deferred: {0}\n'.format(MAYA_PROJECT_DIR))
+        #Dividerline
+        sys.__stdout__.write(DIVIDERLINE)
 
     #set project deferred
     cmds.evalDeferred(load_project_deferred)
@@ -156,6 +207,11 @@ except:
     
     #FailMsg
     sys.__stdout__.write('Failed to set Maya project\n')
+    #Dividerline
+    sys.__stdout__.write(DIVIDERLINE)
+
+
+
     
     
 
@@ -180,6 +236,8 @@ try:
         
         #Print to console instead of script editor
         sys.__stdout__.write('Successfully set standard grid deferred\n')
+        #Dividerline
+        sys.__stdout__.write(DIVIDERLINE)
     
     #eval deferred
     cmds.evalDeferred(set_grid_default)
@@ -189,6 +247,14 @@ except:
     
     #FailMsg
     print('Failed to set standard grid\n')
+    #Dividerline
+    print(DIVIDERLINE)
+
+
+
+
+
+
 
 
 
@@ -209,6 +275,8 @@ try:
         
         #Print to console instead of script editor
         sys.__stdout__.write('Successfully sourced comet menu\n')
+        #Dividerline
+        sys.__stdout__.write(DIVIDERLINE)
     
     #eval deferred
     cmds.evalDeferred(source_comet_menu)
@@ -218,3 +286,7 @@ except:
     
     #FailMsg
     print('Failed to source comet menu\n')
+    #Dividerline
+    print(DIVIDERLINE)
+
+

@@ -125,7 +125,9 @@ if (__name__ == '__main__'):
                         ]),
         ('data', ['data/pipeline_base_data.yaml', 
                     'data/pipeline_base_data_sandbox.yaml',
-                    'data/pipeline_base_data_home.yaml'])
+                    'data/pipeline_base_data_home.yaml',
+                    'data/pipeline_base_data_home_sandbox.yaml'
+                    ])
         ]
 
 
@@ -344,6 +346,53 @@ if (__name__ == '__main__'):
         batch_name = 'helga_launcher_home.bat'
         create_batch(helga_launcher_path_home, batch_dir, batch_name, 
                         [r' --custom_yaml_path "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/data/pipeline_base_data_home.yaml"'])
+
+        #helga_launcher_home_maya
+        batch_name = 'helga_launcher_home_maya.bat'
+        create_batch(helga_launcher_path_home, batch_dir, batch_name, 
+                        [r' --custom_yaml_path "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/data/pipeline_base_data_home.yaml"',
+                        r' -rma 1'])
+
+        #helga_launcher_home_houdini
+        batch_name = 'helga_launcher_home_houdini.bat'
+        create_batch(helga_launcher_path_home, batch_dir, batch_name, 
+                        [r' --custom_yaml_path "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/data/pipeline_base_data_home.yaml"',
+                        r' -rho 1'])
+
+        #helga_launcher_home_nuke
+        batch_name = 'helga_launcher_home_nuke.bat'
+        create_batch(helga_launcher_path_home, batch_dir, batch_name, 
+                        [r' --custom_yaml_path "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/data/pipeline_base_data_home.yaml"',
+                        r' -rnk 1'])
+
+        
+
+
+        #helga_launcher home sandbox
+        #------------------------------------------------------------------
+
+        #helga_launcher_home_sandbox
+        batch_name = 'helga_launcher_home_sandbox.bat'
+        create_batch(helga_launcher_path_home, batch_dir, batch_name, 
+                        [r' --custom_yaml_path "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/data/pipeline_base_data_home_sandbox.yaml"'])
+
+        #helga_launcher_home_sandbox_maya
+        batch_name = 'helga_launcher_home_sandbox_maya.bat'
+        create_batch(helga_launcher_path_home, batch_dir, batch_name, 
+                        [r' --custom_yaml_path "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/data/pipeline_base_data_home_sandbox.yaml"',
+                        r' -rma 1'])
+
+        #helga_launcher_home_sandbox_houdini
+        batch_name = 'helga_launcher_home_sandbox_houdini.bat'
+        create_batch(helga_launcher_path_home, batch_dir, batch_name, 
+                        [r' --custom_yaml_path "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/data/pipeline_base_data_home_sandbox.yaml"',
+                        r' -rho 1'])
+
+        #helga_launcher_home_sandbox_nuke
+        batch_name = 'helga_launcher_home_sandbox_nuke.bat'
+        create_batch(helga_launcher_path_home, batch_dir, batch_name, 
+                        [r' --custom_yaml_path "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/data/pipeline_base_data_home_sandbox.yaml"',
+                        r' -rnk 1'])
 
 
 

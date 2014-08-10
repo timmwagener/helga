@@ -30,10 +30,6 @@ class HelgaShotsMetadata(open_maya_mpx.MPxNode):
 	plugin_node_id = open_maya.MTypeId(0x00000003)
 	plugin_name = 'HelgaShotsMetadata'
  	
- 	#attrs
- 	a_shotname = open_maya.MObject()
- 	a_alembic_path = open_maya.MObject()
- 	
 
  	#methods
 	def __init__(self):
@@ -54,11 +50,11 @@ def initialize():
 	nAttr = open_maya.MFnNumericAttribute()
 	tAttr = open_maya.MFnTypedAttribute()
  	
- 	#a_shotname
-	HelgaShotsMetadata.a_shotname = tAttr.create('shotname', 'shotname', open_maya.MFnData.kString)
+ 	#a_shot_name
+	HelgaShotsMetadata.a_shot_name = tAttr.create('shot_name', 'shot_name', open_maya.MFnData.kString)
 	tAttr.setWritable(True)
 	tAttr.setStorable(True)
-	HelgaShotsMetadata.addAttribute(HelgaShotsMetadata.a_shotname)
+	HelgaShotsMetadata.addAttribute(HelgaShotsMetadata.a_shot_name)
 
 	#a_alembic_path
 	HelgaShotsMetadata.a_alembic_path = tAttr.create('alembic_path', 'alembic_path', open_maya.MFnData.kString)
@@ -66,6 +62,12 @@ def initialize():
 	tAttr.setStorable(True)
 	tAttr.setUsedAsFilename(True)
 	HelgaShotsMetadata.addAttribute(HelgaShotsMetadata.a_alembic_path)
+
+	#a_shot_cam
+	HelgaShotsMetadata.a_shot_cam = tAttr.create('shot_cam', 'shot_cam', open_maya.MFnData.kString)
+	tAttr.setWritable(True)
+	tAttr.setStorable(True)
+	HelgaShotsMetadata.addAttribute(HelgaShotsMetadata.a_shot_cam)
 
 
  

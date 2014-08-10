@@ -1,9 +1,9 @@
 
 """
-Helga assets props metadata Package
+Helga asset metadata Package
 ==========================================
 
-Python node plugin to store metadata for props used for automated .abc export.
+Python node plugins to store metadata for helga assets.
 
 -----------------------
 

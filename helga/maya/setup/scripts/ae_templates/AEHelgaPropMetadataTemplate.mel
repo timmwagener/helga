@@ -1,0 +1,136 @@
+
+//AEHelgaPropMetadataTemplate
+global proc AEHelgaPropMetadataTemplate( string $nodeName ) { 
+    
+    //Vars
+    //-----------------------------------------
+    //-----------------------------------------
+    string $node[];
+	tokenize $nodeName "." $node;
+
+
+	
+
+
+
+	//Header image
+    //-----------------------------------------
+    //-----------------------------------------
+    
+    //create header image
+    editorTemplate -callCustom "helga_prop_metadata_create_header_image" "helga_prop_metadata_update_header_image" "Dummy";
+
+
+	
+	
+
+
+
+	//scroll layout
+    editorTemplate -beginScrollLayout;
+
+    
+
+
+    
+    
+    
+
+
+    
+
+    //Helga Asset attrs
+    //-----------------------------------------
+    //-----------------------------------------
+    editorTemplate -beginLayout "Helga Asset Metadata" -collapse 0;
+
+    //asset_name
+    editorTemplate -annotation "Propname:\nMust be unique and descriptive.\nYou can have several props of the same file referenced in, but they need a different propname in here.\nExample:\nstool_one_a\nstool_one_b\nstool_one_c\n...if you had 3 times the same stool referenced in." -addControl "asset_name";
+
+    //End Layout Input Color
+    editorTemplate -endLayout;
+
+
+
+    //Helga Prop attrs
+    //-----------------------------------------
+    //-----------------------------------------
+    editorTemplate -beginLayout "Helga Prop Metadata" -collapse 0;
+
+    //proxy_visible
+    editorTemplate -addControl "proxy_visible";
+
+    //rendergeo_visible
+    editorTemplate -addControl "rendergeo_visible";
+
+    //locator_visible
+    editorTemplate -addControl "locator_visible";
+
+    
+    //Separator
+    //editorTemplate -addSeparator;
+
+    //proxy_export
+    editorTemplate -addControl "proxy_export";
+    
+    //rendergeo_export
+    editorTemplate -addControl "rendergeo_export";
+    
+    //locator_export
+    editorTemplate -addControl "locator_export";
+
+    //End Layout Input Color
+    editorTemplate -endLayout;
+    
+
+   
+    
+    
+
+
+    //Extra controls for unspecified attributes
+    //-----------------------------------------
+    //-----------------------------------------
+    editorTemplate -addExtraControls; 
+    
+    //end scroll layout
+    editorTemplate -endScrollLayout;
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+//Header image procedures
+//-----------------------------------------
+//-----------------------------------------
+
+global proc helga_prop_metadata_create_header_image(string $nodeName)
+{
+    //Header
+    image -w 400 -h 100 -image "helga_aetemplate_header_props_metadata.png";
+}
+
+
+global proc helga_prop_metadata_update_header_image(string $nodeName)
+{}
+
+
+
+
+
+
+
+
+
+

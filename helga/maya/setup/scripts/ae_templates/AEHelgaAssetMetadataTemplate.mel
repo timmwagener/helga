@@ -1,6 +1,6 @@
 
-//AEHelgaAssetsPropsMetadataTemplate
-global proc AEHelgaAssetsPropsMetadataTemplate( string $nodeName ) { 
+//AEHelgaAssetMetadataTemplate
+global proc AEHelgaAssetMetadataTemplate( string $nodeName ) { 
     
     //Vars
     //-----------------------------------------
@@ -18,7 +18,7 @@ global proc AEHelgaAssetsPropsMetadataTemplate( string $nodeName ) {
     //-----------------------------------------
     
     //create header image
-    editorTemplate -callCustom "helga_assets_props_metadata_create_header_image" "helga_assets_props_metadata_update_header_image" "Dummy";
+    editorTemplate -callCustom "helga_asset_metadata_create_header_image" "helga_asset_metadata_update_header_image" "Dummy";
 
 
 	
@@ -42,10 +42,10 @@ global proc AEHelgaAssetsPropsMetadataTemplate( string $nodeName ) {
     //Helga metadata attrs
     //-----------------------------------------
     //-----------------------------------------
-    editorTemplate -beginLayout "Helga Props Metadata" -collapse 0;
+    editorTemplate -beginLayout "Helga Asset Metadata" -collapse 0;
 
     //input_color
-    editorTemplate -annotation "Propname:\nMust be unique and descriptive.\nYou can have several props of the same file referenced in, but they need a different propname in here.\nExample:\nstool_one_a\nstool_one_b\nstool_one_c\n...if you had 3 times the same stool referenced in." -addControl "propname";
+    editorTemplate -annotation "Propname:\nMust be unique and descriptive.\nYou can have several props of the same file referenced in, but they need a different propname in here.\nExample:\nstool_one_a\nstool_one_b\nstool_one_c\n...if you had 3 times the same stool referenced in." -addControl "asset_name";
 
     //End Layout Input Color
     editorTemplate -endLayout;
@@ -83,14 +83,14 @@ global proc AEHelgaAssetsPropsMetadataTemplate( string $nodeName ) {
 //-----------------------------------------
 //-----------------------------------------
 
-global proc helga_assets_props_metadata_create_header_image(string $nodeName)
+global proc helga_asset_metadata_create_header_image(string $nodeName)
 {
     //Header
-    image -w 400 -h 100 -image "helga_aetemplate_header_props_metadata.png";
+    image -w 400 -h 100 -image "helga_aetemplate_header.png";
 }
 
 
-global proc helga_assets_props_metadata_update_header_image(string $nodeName)
+global proc helga_asset_metadata_update_header_image(string $nodeName)
 {}
 
 

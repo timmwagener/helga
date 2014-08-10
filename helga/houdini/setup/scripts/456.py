@@ -38,7 +38,7 @@ if(do_reload):reload(global_functions)
 #Assign all global variables to only use local ones later on
 PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH
 PIPELINE_HDRI_PATH = global_variables.PIPELINE_HDRI_PATH
-
+OCIO_LIN_TO_SRGB_SPI_LUT_HOUDINI = global_variables.OCIO_LIN_TO_SRGB_SPI_LUT_HOUDINI
 
 
 
@@ -107,12 +107,11 @@ except:
 
 #Helga colorsettings
 #------------------------------------------------------------------
-'''
+
 try:
 
     #default houdini startup when opened without hip file
-    hou.hscript("colorsettings -g 1.0")
-    hou.hscript("colorsettings -l c:/my/anus.lut")
+    hou.hscript("colorsettings -g 1.0 -l {0} -c -r".format(OCIO_LIN_TO_SRGB_SPI_LUT_HOUDINI))
 
     #SuccessMsg
     print('Successfully set colorsettings')
@@ -121,7 +120,7 @@ except:
     
     #FailMsg
     print('Failed setting colorsettings')
-'''
+
 
 
 

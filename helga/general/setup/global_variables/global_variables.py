@@ -72,6 +72,9 @@ if (PIPELINE_BASE_PATH):
     OCIO_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/general/setup/ocio/nuke_modified/config.ocio'
     """Helga pipeline OCIO path"""
 
+    OCIO_LIN_TO_SRGB_SPI_LUT_HOUDINI = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/general/setup/ocio/nuke_modified/luts/srgb_s_curve.lut'
+    """Lin to srgb_spi lut in Houdinis LUT format .lut"""
+
 
 
     PIPELINE_ICON_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/general/setup/icons'

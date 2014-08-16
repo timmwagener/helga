@@ -60,7 +60,6 @@ def initialize():
 	HelgaShotsMetadata.a_alembic_path = tAttr.create('alembic_path', 'alembic_path', open_maya.MFnData.kString)
 	tAttr.setWritable(True)
 	tAttr.setStorable(True)
-	tAttr.setUsedAsFilename(True)
 	HelgaShotsMetadata.addAttribute(HelgaShotsMetadata.a_alembic_path)
 
 	#a_shot_cam
@@ -68,6 +67,18 @@ def initialize():
 	tAttr.setWritable(True)
 	tAttr.setStorable(True)
 	HelgaShotsMetadata.addAttribute(HelgaShotsMetadata.a_shot_cam)
+
+	#a_shot_start
+	HelgaShotsMetadata.a_shot_start = nAttr.create('shot_start', 'shot_start', open_maya.MFnNumericData.kInt)
+	tAttr.setWritable(True)
+	tAttr.setStorable(True)
+	HelgaShotsMetadata.addAttribute(HelgaShotsMetadata.a_shot_start)
+
+	#a_shot_end
+	HelgaShotsMetadata.a_shot_end = nAttr.create('shot_end', 'shot_end', open_maya.MFnNumericData.kInt)
+	tAttr.setWritable(True)
+	tAttr.setStorable(True)
+	HelgaShotsMetadata.addAttribute(HelgaShotsMetadata.a_shot_end)
 
 
  

@@ -32,7 +32,8 @@ import sys
 import logging
 import re
 import shutil
-
+from cStringIO import StringIO
+import xml.etree.ElementTree as xml
 
 
 #Import variable
@@ -254,6 +255,233 @@ def divider():
 
 
 
+
+
+
+
+
+#GUI
+#----------------------------------------------------
+
+def create_widget_from_ui_file(ui_file_path, parent =None):
+    """
+    Create widget that remains stylesheets from .ui file.
+    This method is crashy at least in Maya. Probably because of stylesheet
+    issues with Maya QApp custom style.
+    Use with caution.
+    """
+
+    #lazy import
+
+    try:
+        
+        #PySide
+        from PySide import QtGui
+        from PySide import QtCore
+        from PySide import QtUiTools
+        import shiboken
+        import pysideuic
+
+    except Exception as exception_instance:
+        #log
+        print('Import failed: {0}'.format(exception_instance))
+        #return None
+        return None
+
+
+    #create widget
+
+    #Create widget from ui file
+    loader_instance = QtUiTools.QUiLoader()
+    #file to load in as unicode obj
+    ui_file = QtCore.QFile(ui_file_path)
+    ui_file.open(QtCore.QFile.ReadOnly)
+    #Create Widget
+    ui_file_widget = loader_instance.load(ui_file, parent)
+    #close ui_File
+    ui_file.close()
+
+    return ui_file_widget
+     
+
+def load_ui_type(ui_file):
+    """
+    Pyside lacks the "loadUiType" command, so we have to convert the ui file to py code in-memory first
+    and then execute it in a special frame to retrieve the form_class.
+    This function return the form and base classes for the given qtdesigner ui file.
+    """
+
+    #lazy import
+
+    try:
+        
+        #PySide
+        from PySide import QtGui
+        from PySide import QtCore
+        from PySide import QtUiTools
+        import shiboken
+        import pysideuic
+
+    except Exception as exception_instance:
+        #log
+        print('Import failed: {0}'.format(exception_instance))
+        #return None
+        return None
+    
+    
+    #compile ui
+
+    parsed = xml.parse(ui_file)
+    widget_class = parsed.find('widget').get('class')
+    form_class = parsed.find('class').text
+
+    with open(ui_file, 'r') as f:
+        o = StringIO()
+        frame = {}
+
+        pysideuic.compileUi(f, o, indent=0)
+        pyc = compile(o.getvalue(), '<string>', 'exec')
+        exec pyc in frame
+
+        #Fetch the base_class and form class based on their type in the xml from designer
+        form_class = frame['Ui_%s'%form_class]
+        base_class = eval('QtGui.%s'%widget_class)
+    
+    return form_class, base_class
+
+
+def get_helga_header_widget(title, icon_path):
+    """
+    Return QWidget that represents a helga header.
+    The returned widget needs to be added to a layout.
+    """
+
+    #lazy import
+
+    try:
+        #PySide
+        from PySide import QtGui
+        from PySide import QtCore
+        from PySide import QtUiTools
+        import shiboken
+        import pysideuic
+
+    except Exception as exception_instance:
+        #log
+        print('Import failed: {0}'.format(exception_instance))
+        #return None
+        return None
+    
+
+    
+    class GradientWidget(QtGui.QWidget):
+        """
+        Widget that draws a gradient in the background.
+        """
+
+        def __init__(self, parent = None):
+            """
+            init
+            """
+
+            #superclass init
+            super(GradientWidget, self).__init__(parent)
+
+        
+        def paintEvent(self, event):
+            """
+            Subclassed paintEvent
+            """
+
+            #painter
+            painter = QtGui.QPainter(self)
+
+            #gradient
+            gradient = QtGui.QLinearGradient(QtCore.QPointF(self.rect().x(), self.rect().y()), 
+                                                QtCore.QPointF(self.rect().width(), self.rect().height()))
+            gradient.setColorAt(0, QtCore.Qt.white)
+            gradient.setColorAt(1, QtCore.Qt.transparent)
+
+            #brush
+            brush = QtGui.QBrush(gradient)
+
+            #paint
+            painter.fillRect(self.rect(), brush)
+    
+
+    
+
+    #wdgt_helga_header
+    wdgt_helga_header = QtGui.QWidget()
+    wdgt_helga_header.setObjectName("wdgt_helga_header")
+    wdgt_helga_header.resize(439, 52)
+
+    #lyt_helga_header
+    lyt_helga_header = QtGui.QHBoxLayout(wdgt_helga_header)
+    lyt_helga_header.setSpacing(0)
+    lyt_helga_header.setContentsMargins(0, 0, 0, 0)
+    lyt_helga_header.setObjectName("lyt_helga_header")
+
+    #icn_helga_header_image
+    icn_helga_header_image = QtGui.QPixmap(icon_path)
+    icn_helga_header_image = icn_helga_header_image.scaled(32, 32)
+    
+    #lbl_helga_header_image
+    lbl_helga_header_image = QtGui.QLabel(wdgt_helga_header)
+    lbl_helga_header_image.setPixmap(icn_helga_header_image)
+    sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred)
+    sizePolicy.setHorizontalStretch(0)
+    sizePolicy.setVerticalStretch(0)
+    sizePolicy.setHeightForWidth(lbl_helga_header_image.sizePolicy().hasHeightForWidth())
+    lbl_helga_header_image.setSizePolicy(sizePolicy)
+    lbl_helga_header_image.setBaseSize(QtCore.QSize(32, 0))
+    lbl_helga_header_image.setObjectName("lbl_helga_header_image")
+    lyt_helga_header.addWidget(lbl_helga_header_image)
+    
+    
+    #wdgt_header_text
+    wdgt_header_text = GradientWidget(wdgt_helga_header)
+    wdgt_header_text.setObjectName("wdgt_header_text")
+    lyt_helga_header.addWidget(wdgt_header_text)
+
+    #lyt_header_text
+    lyt_header_text = QtGui.QHBoxLayout(wdgt_header_text)
+    lyt_header_text.setContentsMargins(0, 0, 0, 0)
+    lyt_header_text.setObjectName("lyt_header_text")
+    
+    #wdgt_header_spacer_left
+    wdgt_header_spacer_left = QtGui.QWidget(wdgt_header_text)
+    sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+    sizePolicy.setHorizontalStretch(0)
+    sizePolicy.setVerticalStretch(0)
+    sizePolicy.setHeightForWidth(wdgt_header_spacer_left.sizePolicy().hasHeightForWidth())
+    wdgt_header_spacer_left.setSizePolicy(sizePolicy)
+    wdgt_header_spacer_left.setObjectName("wdgt_header_spacer_left")
+    lyt_header_text.addWidget(wdgt_header_spacer_left)
+    
+    #lbl_header_text
+    lbl_header_text = QtGui.QLabel(wdgt_header_text)
+    lbl_header_text.setText(title)
+    lbl_header_text.setStyleSheet("background-color: rgba(255, 255, 255, 0);\n"+"color: rgb(241, 113, 37);\n"+"font: 75 12pt \"MS Shell Dlg 2\";")
+    lbl_header_text.setObjectName("lbl_header_text")
+    lyt_header_text.addWidget(lbl_header_text)
+    
+    #wdgt_header_spacer_right
+    wdgt_header_spacer_right = QtGui.QWidget(wdgt_header_text)
+    sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+    sizePolicy.setHorizontalStretch(0)
+    sizePolicy.setVerticalStretch(0)
+    sizePolicy.setHeightForWidth(wdgt_header_spacer_right.sizePolicy().hasHeightForWidth())
+    wdgt_header_spacer_right.setSizePolicy(sizePolicy)
+    wdgt_header_spacer_right.setMinimumSize(QtCore.QSize(0, 0))
+    wdgt_header_spacer_right.setMaximumSize(QtCore.QSize(32, 16777215))
+    wdgt_header_spacer_right.setObjectName("wdgt_header_spacer_right")
+    lyt_header_text.addWidget(wdgt_header_spacer_right)
+    
+    
+
+    #return
+    return wdgt_helga_header
 
 
 

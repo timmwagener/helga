@@ -53,6 +53,17 @@ global proc AEHelgaShotsMetadataTemplate( string $nodeName ) {
     //shot_cam
     editorTemplate -annotation "Unique path to the shot cam for the shot.\nYou can set it via the AssetManager" -addControl "shot_cam";
 
+    
+    //separator
+    editorTemplate -addSeparator;
+
+
+    //shot_start
+    editorTemplate -annotation "Frame at which the real animation starts.\nDont include the Pre-Roll" -addControl "shot_start";
+
+    //shot_end
+    editorTemplate -annotation "Frame at which the animation ends." -addControl "shot_end";
+
     //End Layout Input Color
     editorTemplate -endLayout;
     

@@ -265,7 +265,6 @@ class AssetManager(form_class, base_class):
 
         #auto_update_models
         self.auto_update_models = auto_update_models
-
         #auto_update_timer
         self.auto_update_timer = None
 
@@ -329,8 +328,7 @@ class AssetManager(form_class, base_class):
         """
         
         #make sure its floating intead of embedded
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Window)
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        self.setWindowFlags(QtCore.Qt.Window)
 
         #set title
         self.setWindowTitle(self.title)
@@ -339,6 +337,9 @@ class AssetManager(form_class, base_class):
         self.wdgt_helga_header = global_functions.get_helga_header_widget(self.title, self.icon_path)
         self.lyt_header.addWidget(self.wdgt_helga_header)
 
+        #setup_stacked_widget
+        self.setup_stacked_widget() #buttons and widgets
+
         #setup_mvc
         self.setup_mvc()
 
@@ -346,9 +347,10 @@ class AssetManager(form_class, base_class):
         if(self.auto_update_models):
             self.setup_auto_update_models()
 
-        #model_update_button
-        else:
-            self.setup_model_update_button()
+        #set_margins_and_spacing
+        self.set_margins_and_spacing()
+
+
         
     
     def connect_ui(self):
@@ -356,13 +358,162 @@ class AssetManager(form_class, base_class):
         Connect UI widgets with slots or functions.
         """
         
+        #btn_show_shot_metadata
+        self.btn_show_shot_metadata.clicked.connect(functools.partial(self.stkwdgt_metadata.setCurrentIndex, 0))
+        #btn_show_prop_metadata
+        self.btn_show_prop_metadata.clicked.connect(functools.partial(self.stkwdgt_metadata.setCurrentIndex, 1))
+        #btn_show_char_metadata
+        self.btn_show_char_metadata.clicked.connect(functools.partial(self.stkwdgt_metadata.setCurrentIndex, 2))
+
+        #btn_export
+        self.btn_export.clicked.connect(functools.partial(self.dummy_method, 'Export'))
+
         #btn_update_models
         if not(self.auto_update_models):
             self.btn_update_models.clicked.connect(self.update_models)
 
-        #btn_close
-        self.btn_close.clicked.connect(self.close)
-        self.btn_close.setStyleSheet('background-color: rgba(255, 255, 255, 0);')
+
+    def setup_stacked_widget(self):
+        """
+        Setup stacked widget ui to test sweet ui design.
+        """
+
+        #setup_stacked_widget_pages
+        self.setup_stacked_widget_pages()
+
+        #setup_stacked_widget_buttons
+        self.setup_stacked_widget_buttons()
+
+    
+    def setup_stacked_widget_pages(self):
+        """
+        Setup stacked widget pages
+        """
+
+        #wdgt_shot_metadata
+        self.wdgt_shot_metadata = QtGui.QWidget()
+        self.lyt_shot_metadata = QtGui.QVBoxLayout()
+        self.wdgt_shot_metadata.setLayout(self.lyt_shot_metadata)
+        self.customize_palette(self.wdgt_shot_metadata, 
+                                self.wdgt_shot_metadata.backgroundRole(), 
+                                QtCore.Qt.green)
+
+        #wdgt_prop_metadata
+        self.wdgt_prop_metadata = QtGui.QWidget()
+        self.lyt_prop_metadata = QtGui.QVBoxLayout()
+        self.wdgt_prop_metadata.setLayout(self.lyt_prop_metadata)
+        self.customize_palette(self.wdgt_prop_metadata, 
+                                self.wdgt_prop_metadata.backgroundRole(), 
+                                QtCore.Qt.blue)
+
+        #wdgt_char_metadata
+        self.wdgt_char_metadata = QtGui.QWidget()
+        self.lyt_char_metadata = QtGui.QVBoxLayout()
+        self.wdgt_char_metadata.setLayout(self.lyt_char_metadata)
+        self.customize_palette(self.wdgt_char_metadata, 
+                                self.wdgt_char_metadata.backgroundRole(), 
+                                QtCore.Qt.red)
+        
+
+        
+        
+
+        #stkwdgt_metadata
+        self.stkwdgt_metadata =  QtGui.QStackedWidget()
+        self.stkwdgt_metadata.addWidget(self.wdgt_shot_metadata)
+        self.stkwdgt_metadata.addWidget(self.wdgt_prop_metadata)
+        self.stkwdgt_metadata.addWidget(self.wdgt_char_metadata)
+        
+        #add stkwdgt_metadata to layout
+        self.lyt_stacked_widget_container.addWidget(self.stkwdgt_metadata, 0, 1)
+
+
+    def setup_stacked_widget_buttons(self):
+        """
+        Setup stacked widget buttons
+        """
+
+        #btn_show_shot_metadata
+        self.btn_show_shot_metadata = QtGui.QPushButton(text = 'ShotMetadata', parent = self)
+        self.btn_show_shot_metadata.setFlat(True)
+        self.lyt_metadata_buttons.addWidget(self.btn_show_shot_metadata)
+        self.customize_palette(self.btn_show_shot_metadata, 
+                                self.btn_show_shot_metadata.backgroundRole(), 
+                                QtCore.Qt.green)
+
+        #btn_show_prop_metadata
+        self.btn_show_prop_metadata = QtGui.QPushButton(text = 'PropMetadata', parent = self)
+        self.btn_show_prop_metadata.setFlat(True)
+        self.lyt_metadata_buttons.addWidget(self.btn_show_prop_metadata)
+        self.customize_palette(self.btn_show_prop_metadata, 
+                                self.btn_show_prop_metadata.backgroundRole(), 
+                                QtCore.Qt.blue)
+
+        #btn_show_char_metadata
+        self.btn_show_char_metadata = QtGui.QPushButton(text = 'CharMetadata', parent = self)
+        self.btn_show_char_metadata.setFlat(True)
+        self.lyt_metadata_buttons.addWidget(self.btn_show_char_metadata)
+        self.customize_palette(self.btn_show_char_metadata, 
+                                self.btn_show_char_metadata.backgroundRole(), 
+                                QtCore.Qt.red)
+
+        #setup_model_update_button
+        if not(self.auto_update_models):
+            self.setup_model_update_button()
+
+        #setup_export_button
+        self.setup_export_button()
+
+        #addSpacing to lyt_metadata_buttons
+        self.lyt_metadata_buttons.addStretch(0)
+
+
+    def set_margins_and_spacing(self):
+        """
+        Eliminate margin and spacing for all layout widgets.
+        """
+
+        #margin_list
+        margin_list = [0,0,0,0]
+
+        #lyt_classes_list
+        lyt_classes_list = [QtGui.QStackedLayout, QtGui.QGridLayout, QtGui.QFormLayout, 
+                            QtGui.QBoxLayout, QtGui.QVBoxLayout, QtGui.QHBoxLayout, QtGui.QBoxLayout]
+
+        #lyt_list
+        lyt_list = []
+        for lyt_class in lyt_classes_list:
+            lyt_list += [wdgt for wdgt in self.findChildren(lyt_class)]
+
+        
+        #set margin and spacing
+        for lyt in lyt_list:
+            lyt.setContentsMargins(*margin_list)
+            lyt.setSpacing(0)
+
+
+    def setup_export_button(self):
+        """
+        Create self.btn_export
+        """
+
+        #btn_export
+        self.btn_export = QtGui.QPushButton(text = 'Export', parent = self)
+
+        #add to lyt_buttons
+        self.lyt_metadata_buttons.addWidget(self.btn_export)
+
+
+    def setup_model_update_button(self):
+        """
+        Create self.btn_update_models
+        """
+
+        #btn_update_models
+        self.btn_update_models = QtGui.QPushButton(text = 'Update Models', parent = self)
+
+        #add to lyt_buttons
+        self.lyt_metadata_buttons.addWidget(self.btn_update_models)
         
     
     def setup_mvc(self):
@@ -435,18 +586,6 @@ class AssetManager(form_class, base_class):
         self.auto_update_timer = QtCore.QTimer(self)
         self.auto_update_timer.timeout.connect(self.update_models)
         self.auto_update_timer.start(interval)
-
-
-    def setup_model_update_button(self):
-        """
-        Create self.btn_update_models
-        """
-
-        #btn_update_models
-        self.btn_update_models = QtGui.QPushButton(text = 'Update Models', parent = self)
-
-        #add to lyt_buttons
-        self.lyt_buttons.insertWidget(0, self.btn_update_models)
 
     
     def update_models(self):
@@ -624,6 +763,33 @@ class AssetManager(form_class, base_class):
         return str(self.le_status.text())
 
 
+    def customize_palette(self, wdgt, role, color):
+        """
+        Set background color for widget.
+        """
+
+        #setAutoFillBackground
+        try:
+            if(role == wdgt.backgroundRole()):
+                wdgt.setAutoFillBackground(True)
+        except:
+            pass
+        
+        try:
+            
+            #palette_to_customize
+            palette_to_customize = wdgt.palette()
+            #set color
+            palette_to_customize.setColor(role, color)
+            wdgt.setPalette(palette_to_customize)
+        
+        except:
+
+            #log
+            self.logger.debug('Error setting palette for {0} - {1}'.format(wdgt.objectName(), wdgt))
+
+
+
     def set_shot_metadata_list(self):
         """
         Set self.shot_metadata_list
@@ -668,24 +834,6 @@ class AssetManager(form_class, base_class):
         self.parent_class.closeEvent(event)
 
 
-    def mouseMoveEvent(self, event):
-        super(AssetManager, self).mouseMoveEvent(event)
-        
-        if (self.leftClick == True):
-            self.move(event.globalPos())
-            
-        
-    def mousePressEvent(self, event):
-        super(AssetManager, self).mousePressEvent(event)
-        if event.button() == QtCore.Qt.LeftButton:
-            self.leftClick = True
-
-    
-    def mouseReleaseEvent(self, event):
-        super(AssetManager, self).mouseReleaseEvent(event)
-        self.leftClick = False
-
-
     
 
 
@@ -704,7 +852,7 @@ class AssetManager(form_class, base_class):
         self.logger.debug('{0}'.format(msg))
         #print
         print('{0}'.format(msg))
-
+        
 
     def test_methods(self):
         """

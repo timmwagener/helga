@@ -119,6 +119,14 @@ if(do_reload):reload(asset_manager_logging_handler)
 from lib import asset_manager_functionality
 if(do_reload):reload(asset_manager_functionality)
 
+#asset_manager_button
+from lib import asset_manager_button
+if(do_reload):reload(asset_manager_button)
+
+#asset_manager_stylesheets
+from media import asset_manager_stylesheets
+if(do_reload):reload(asset_manager_stylesheets)
+
 #shot_metadata_model
 from lib.mvc import shot_metadata_model
 if(do_reload):reload(shot_metadata_model)
@@ -340,6 +348,9 @@ class AssetManager(form_class, base_class):
         #setup_stacked_widget
         self.setup_stacked_widget() #buttons and widgets
 
+        #setup_progressbar
+        self.setup_progressbar()
+
         #setup_mvc
         self.setup_mvc()
 
@@ -350,9 +361,10 @@ class AssetManager(form_class, base_class):
         #set_margins_and_spacing
         self.set_margins_and_spacing()
 
+        #set_stylesheet
+        QtGui.qApp.setStyleSheet(asset_manager_stylesheets.get_stylesheet())
 
-        
-    
+
     def connect_ui(self):
         """
         Connect UI widgets with slots or functions.
@@ -425,7 +437,7 @@ class AssetManager(form_class, base_class):
         self.stkwdgt_metadata.addWidget(self.wdgt_char_metadata)
         
         #add stkwdgt_metadata to layout
-        self.lyt_stacked_widget_container.addWidget(self.stkwdgt_metadata, 0, 1)
+        self.lyt_stacked_widget_container.addWidget(self.stkwdgt_metadata, 1, 1)
 
 
     def setup_stacked_widget_buttons(self):
@@ -434,28 +446,28 @@ class AssetManager(form_class, base_class):
         """
 
         #btn_show_shot_metadata
-        self.btn_show_shot_metadata = QtGui.QPushButton(text = 'ShotMetadata', parent = self)
-        self.btn_show_shot_metadata.setFlat(True)
+        self.btn_show_shot_metadata = asset_manager_button.AssetManagerButton( icon_name = 'icn_docs.png',
+                                                                                icon_hover_name = 'icn_export.png', 
+                                                                                parent = self)
+        self.btn_show_shot_metadata.setObjectName('btn_show_shot_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_shot_metadata)
-        self.customize_palette(self.btn_show_shot_metadata, 
-                                self.btn_show_shot_metadata.backgroundRole(), 
-                                QtCore.Qt.green)
+        
 
         #btn_show_prop_metadata
-        self.btn_show_prop_metadata = QtGui.QPushButton(text = 'PropMetadata', parent = self)
-        self.btn_show_prop_metadata.setFlat(True)
+        self.btn_show_prop_metadata = asset_manager_button.AssetManagerButton(icon_name = 'icn_docs.png',
+                                                                                icon_hover_name = 'icn_export.png', 
+                                                                                parent = self)
+        self.btn_show_prop_metadata.setObjectName('btn_show_prop_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_prop_metadata)
-        self.customize_palette(self.btn_show_prop_metadata, 
-                                self.btn_show_prop_metadata.backgroundRole(), 
-                                QtCore.Qt.blue)
+        
 
         #btn_show_char_metadata
-        self.btn_show_char_metadata = QtGui.QPushButton(text = 'CharMetadata', parent = self)
-        self.btn_show_char_metadata.setFlat(True)
+        self.btn_show_char_metadata = asset_manager_button.AssetManagerButton(icon_name = 'icn_docs.png',
+                                                                                icon_hover_name = 'icn_export.png', 
+                                                                                parent = self)
+        self.btn_show_char_metadata.setObjectName('btn_show_char_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_char_metadata)
-        self.customize_palette(self.btn_show_char_metadata, 
-                                self.btn_show_char_metadata.backgroundRole(), 
-                                QtCore.Qt.red)
+        
 
         #setup_model_update_button
         if not(self.auto_update_models):
@@ -463,9 +475,6 @@ class AssetManager(form_class, base_class):
 
         #setup_export_button
         self.setup_export_button()
-
-        #addSpacing to lyt_metadata_buttons
-        self.lyt_metadata_buttons.addStretch(0)
 
 
     def set_margins_and_spacing(self):
@@ -514,6 +523,23 @@ class AssetManager(form_class, base_class):
 
         #add to lyt_buttons
         self.lyt_metadata_buttons.addWidget(self.btn_update_models)
+
+
+    def setup_progressbar(self):
+        """
+        Setup self.progressbar.
+        """
+
+        #progressbar
+        self.progressbar = QtGui.QProgressBar()
+        #customize
+        self.progressbar.setTextVisible(False)
+        self.progressbar.setValue(30)
+        self.progressbar.setOrientation(QtCore.Qt.Vertical)
+        self.progressbar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+
+        #add to lyt
+        self.lyt_metadata_progress.addWidget(self.progressbar)
         
     
     def setup_mvc(self):

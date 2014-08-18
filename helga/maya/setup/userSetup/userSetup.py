@@ -15,11 +15,17 @@ import os
 import re
 import shutil
 
+#PySide
+from PySide import QtGui
+from PySide import QtCore
+
 #maya
 import maya.mel as mel
 import maya.cmds as cmds
 import maya.utils
 import pymel.core as pm
+
+
 
 
 #Import variable
@@ -286,6 +292,47 @@ except:
     
     #FailMsg
     print('Failed to source comet menu\n')
+    #Dividerline
+    print(DIVIDERLINE)
+
+
+
+
+
+
+
+
+
+
+
+#GUI adjustments
+#------------------------------------------------------------------
+
+try:
+    
+    #adjust_gui
+    def adjust_gui():
+        
+        #rgb formating for position values in attr. editor
+        QtGui.qApp.setStyleSheet(' \
+QLineEdit#A3FGXfield { border-radius: 0; background-color: #222222; color: #ffbbbb } \
+QLineEdit#A3FGYfield { border-radius: 0; background-color: #222222; color: #bbffbb } \
+QLineEdit#A3FGZfield { border-radius: 0; background-color: #222222; color: #bbbbff } \
+') 
+        
+        #Print to console instead of script editor
+        sys.__stdout__.write('Successfully adjusted GUI\n')
+        #Dividerline
+        sys.__stdout__.write(DIVIDERLINE)
+    
+    #eval deferred
+    cmds.evalDeferred(adjust_gui)
+    
+
+except:
+    
+    #FailMsg
+    print('Failed to adjust GUI\n')
     #Dividerline
     print(DIVIDERLINE)
 

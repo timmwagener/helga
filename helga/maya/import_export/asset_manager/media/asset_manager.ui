@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>462</width>
-    <height>699</height>
+    <width>465</width>
+    <height>661</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -65,16 +65,6 @@
          </sizepolicy>
         </property>
         <layout class="QGridLayout" name="lyt_stacked_widget_container">
-         <item row="2" column="1">
-          <widget class="QWidget" name="wdgt_status" native="true">
-           <layout class="QVBoxLayout" name="lyt_status"/>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QWidget" name="wdgt_export" native="true">
-           <layout class="QVBoxLayout" name="lyt_button_export"/>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QWidget" name="wdgt_metadata_buttons_and_progress" native="true">
            <property name="sizePolicy">
@@ -105,7 +95,13 @@
          </item>
          <item row="0" column="0">
           <widget class="QWidget" name="wdgt_docs" native="true">
-           <layout class="QVBoxLayout" name="lyt_btn_docs"/>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <layout class="QVBoxLayout" name="lyt_docs"/>
           </widget>
          </item>
          <item row="0" column="1">
@@ -168,6 +164,29 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QWidget" name="wdgt_footer" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QWidget" name="wdgt_status" native="true">
+        <layout class="QHBoxLayout" name="lyt_status"/>
        </widget>
       </item>
      </layout>

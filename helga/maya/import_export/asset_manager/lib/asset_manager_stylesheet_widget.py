@@ -166,6 +166,9 @@ AssetManagerStylesheetWidget { background-color: %(background_color_active)s; } 
         """
         Setup additional UI.
         """
+
+        #styled_background
+        self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
         
         #set_stylesheet
         self.set_stylesheet()
@@ -199,19 +202,15 @@ AssetManagerStylesheetWidget { background-color: %(background_color_active)s; } 
 
         #active
         if(role == 'active'):
-            #stylesheet unactive in subclassed qwidget
-            #default to setting background palette instead
             
-            #self.setStyleSheet(self.ss_active)
-            self.customize_palette(self, self.backgroundRole(), self.background_color_active)
+            self.setStyleSheet(self.ss_active)
+            
 
         #anyting and normal
         else:
-            #stylesheet unactive in subclassed qwidget
-            #default to setting background palette instead
 
-            #self.setStyleSheet(self.ss_normal)
-            self.customize_palette(self, self.backgroundRole(), self.background_color_normal)
+            self.setStyleSheet(self.ss_normal)
+            
 
 
     def set_size_policy(self, width, height):
@@ -237,32 +236,6 @@ AssetManagerStylesheetWidget { background-color: %(background_color_active)s; } 
             #fixed height
             elif(height):
                 self.setFixedHeight(height)
-
-
-    def customize_palette(self, wdgt, role, color):
-        """
-        Set background color for widget.
-        """
-
-        #setAutoFillBackground
-        try:
-            if(role == wdgt.backgroundRole()):
-                wdgt.setAutoFillBackground(True)
-        except:
-            pass
-        
-        try:
-            
-            #palette_to_customize
-            palette_to_customize = wdgt.palette()
-            #set color
-            palette_to_customize.setColor(role, color)
-            wdgt.setPalette(palette_to_customize)
-        
-        except:
-
-            #log
-            self.logger.debug('Error setting palette for {0} - {1}'.format(wdgt.objectName(), wdgt))
 
 
 

@@ -333,7 +333,7 @@ class AssetManager(form_class, base_class):
     
     def __init__(self, 
                 logging_level = logging.DEBUG,
-                auto_update_models = False,
+                auto_update_models = True,
                 parent = global_functions.get_main_window()):
         """
         Customize instance.
@@ -449,20 +449,35 @@ class AssetManager(form_class, base_class):
         if(self.auto_update_models):
             self.setup_auto_update_models()
 
-        #set_margins_and_spacing
-        self.set_margins_and_spacing()
-
-        #setup_tool_palette
-        self.setup_tool_palette()
-
-        #set_stylesheet
-        QtGui.qApp.setStyleSheet(asset_manager_stylesheets.get_stylesheet())
-
+        #setup_style
+        self.setup_style()
+        
         #helga_tool_header
         self.wdgt_helga_header = global_functions.get_helga_header_widget(self.title, self.icon_path)
         self.lyt_header.addWidget(self.wdgt_helga_header)
 
 
+    def setup_style(self):
+        """
+        Setup tool palette, tool stylesheet and specific widget stylesheets.
+        """
+
+        #correct_styled_background_attribute
+        self.correct_styled_background_attribute()
+
+        #set_margins_and_spacing
+        self.set_margins_and_spacing()
+
+        #setup_tool_palette_global
+        #self.setup_tool_palette_global()
+
+        #setup_tool_palette_specific
+        #self.setup_tool_palette_specific()
+
+        #set_stylesheet
+        self.setStyleSheet(asset_manager_stylesheets.get_stylesheet())
+
+    
     def connect_ui(self):
         """
         Connect UI widgets with slots or functions.
@@ -520,28 +535,28 @@ class AssetManager(form_class, base_class):
         """
 
         #wdgt_shot_metadata
-        self.wdgt_shot_metadata = QtGui.QWidget()
+        self.wdgt_shot_metadata = asset_manager_stylesheet_widget.AssetManagerStylesheetWidget(background_color_normal = DARK_GREY,
+                                                                                                background_color_active = GREY,
+                                                                                                parent = self)
         self.lyt_shot_metadata = QtGui.QVBoxLayout()
         self.wdgt_shot_metadata.setLayout(self.lyt_shot_metadata)
-        self.customize_palette(self.wdgt_shot_metadata, 
-                                self.wdgt_shot_metadata.backgroundRole(), 
-                                QtCore.Qt.green)
+        
 
         #wdgt_prop_metadata
-        self.wdgt_prop_metadata = QtGui.QWidget()
+        self.wdgt_prop_metadata = asset_manager_stylesheet_widget.AssetManagerStylesheetWidget(background_color_normal = DARK_GREY,
+                                                                                                background_color_active = GREY,
+                                                                                                parent = self)
         self.lyt_prop_metadata = QtGui.QVBoxLayout()
         self.wdgt_prop_metadata.setLayout(self.lyt_prop_metadata)
-        self.customize_palette(self.wdgt_prop_metadata, 
-                                self.wdgt_prop_metadata.backgroundRole(), 
-                                QtCore.Qt.blue)
+        
 
         #wdgt_char_metadata
-        self.wdgt_char_metadata = QtGui.QWidget()
+        self.wdgt_char_metadata = asset_manager_stylesheet_widget.AssetManagerStylesheetWidget(background_color_normal = DARK_GREY,
+                                                                                                background_color_active = GREY,
+                                                                                                parent = self)
         self.lyt_char_metadata = QtGui.QVBoxLayout()
         self.wdgt_char_metadata.setLayout(self.lyt_char_metadata)
-        self.customize_palette(self.wdgt_char_metadata, 
-                                self.wdgt_char_metadata.backgroundRole(), 
-                                QtCore.Qt.red)
+        
         
 
         
@@ -620,14 +635,14 @@ class AssetManager(form_class, base_class):
         """
 
         #wdgt_checklist
-        wdgt_checklist = [(self.btn_show_shot_metadata, self.btn_show_shot_metadata_divider),
-                            (self.btn_show_prop_metadata, self.btn_show_prop_metadata_divider),
-                            (self.btn_show_char_metadata, self.btn_show_char_metadata_divider)]
+        wdgt_checklist = [(self.btn_show_shot_metadata, self.btn_show_shot_metadata_divider, self.wdgt_shot_metadata),
+                            (self.btn_show_prop_metadata, self.btn_show_prop_metadata_divider, self.wdgt_prop_metadata),
+                            (self.btn_show_char_metadata, self.btn_show_char_metadata_divider, self.wdgt_char_metadata)]
 
         #iterate and check
         for index, wdgt_list in enumerate(wdgt_checklist):
             
-            for wdgt, wdgt_divider in [wdgt_list]:
+            for wdgt, wdgt_divider, wdgt_metadata in [wdgt_list]:
             
                 #if match set  active
                 if (wdgt is wdgt_sender):
@@ -635,6 +650,7 @@ class AssetManager(form_class, base_class):
                     #set_stylesheet
                     wdgt.set_stylesheet(role = 'active')
                     wdgt_divider.set_stylesheet(role = 'active')
+                    wdgt_metadata.set_stylesheet(role = 'active')
 
                     #emit changed
                     self.stkwdgt_change_current.emit(index)
@@ -645,6 +661,31 @@ class AssetManager(form_class, base_class):
                     #set_stylesheet
                     wdgt.set_stylesheet(role = 'normal')
                     wdgt_divider.set_stylesheet(role = 'normal')
+                    wdgt_metadata.set_stylesheet(role = 'normal')
+
+
+    def correct_styled_background_attribute(self):
+        """
+        Set QtCore.Qt.WA_StyledBackground True for all widgets.
+        Without this attr. set, the background-color stylesheet
+        will have no effect on QWidgets. This should replace the
+        need for palette settings.
+        ToDo:
+        Maybe add exclude list when needed.
+        """
+
+        #wdgt_list
+        wdgt_list = self.findChildren(QtGui.QWidget) #Return several types ?!?!
+
+        #iterate and set
+        for wdgt in wdgt_list:
+            
+            #check type
+            if(type(wdgt) is QtGui.QWidget):
+
+                #styled_background
+                wdgt.setAttribute(QtCore.Qt.WA_StyledBackground, True)
+
 
 
     def set_margins_and_spacing(self):
@@ -664,14 +705,20 @@ class AssetManager(form_class, base_class):
         for lyt_class in lyt_classes_list:
             lyt_list += [wdgt for wdgt in self.findChildren(lyt_class)]
 
+
         
         #set margin and spacing
         for lyt in lyt_list:
-            lyt.setContentsMargins(*margin_list)
-            lyt.setSpacing(0)
+
+            #check type
+            if(type(lyt) in lyt_classes_list):
+
+                #set
+                lyt.setContentsMargins(*margin_list)
+                lyt.setSpacing(0)
 
 
-    def setup_tool_palette(self):
+    def setup_tool_palette_global(self):
         """
         Setup palette for tool and apply to all widgets.
         This should be applied before all unique customizations
@@ -683,6 +730,7 @@ class AssetManager(form_class, base_class):
 
         #customize palette
         for wdgt in wdgt_list:
+            
             try:
                 self.customize_palette(wdgt, QtGui.QPalette.Window, WINDOW_COLOR)
                 self.customize_palette(wdgt, QtGui.QPalette.Background, BACKGROUND_COLOR)
@@ -700,8 +748,19 @@ class AssetManager(form_class, base_class):
                 self.customize_palette(wdgt, QtGui.QPalette.HighlightedText, HIGHLIGHTEDTEXT_COLOR)
                 self.customize_palette(wdgt, QtGui.QPalette.Link, LINK_COLOR)
                 self.customize_palette(wdgt, QtGui.QPalette.LinkVisited, LINKVISITED_COLOR)
+            
             except:
                 pass
+
+
+    def setup_tool_palette_specific(self):
+        """
+        Setup the palette for specific widgets.
+        Mostly needed for QWidgets that refuse to
+        accepts background_color stylesheets
+        """
+
+        pass
 
 
     def setup_additional_buttons(self):
@@ -776,7 +835,7 @@ class AssetManager(form_class, base_class):
                                                                 fixed_height = 64,
                                                                 parent = self)
         self.btn_docs.setObjectName('btn_docs')
-        self.lyt_btn_docs.addWidget(self.btn_docs)
+        self.lyt_docs.addWidget(self.btn_docs)
         
 
 
@@ -821,6 +880,7 @@ class AssetManager(form_class, base_class):
         self.shot_metadata_view.setAlternatingRowColors(True)
         #add to ui
         self.lyt_shot_metadata.addWidget(self.shot_metadata_view)
+
 
         #shot_metadata_item_delegate
         self.shot_metadata_item_delegate = shot_metadata_item_delegate.ShotMetadataItemDelegate(self.logging_level)

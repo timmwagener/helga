@@ -102,7 +102,6 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
         
         #valid
         if(index.isValid()):
-
             
             #data
             data = index.data(QtCore.Qt.DisplayRole)
@@ -135,7 +134,7 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
                 text_size = q_font_metrics.size(0, value_string)
                 return text_size
 
-            #type unknown
+            #other type
             else:
                 
                 #superclass sizeHint
@@ -188,7 +187,7 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
                 #draw
                 painter.drawText(option.rect, QtCore.Qt.AlignLeft, value_string)
 
-            #type unknown
+            #other type
             else:
                 
                 #superclass paint

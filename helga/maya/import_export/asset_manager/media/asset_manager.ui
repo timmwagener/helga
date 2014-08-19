@@ -66,12 +66,8 @@
         </property>
         <layout class="QGridLayout" name="lyt_stacked_widget_container">
          <item row="2" column="1">
-          <widget class="QWidget" name="wdgt_log" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout_3">
-            <item>
-             <widget class="QLineEdit" name="le_status"/>
-            </item>
-           </layout>
+          <widget class="QWidget" name="wdgt_status" native="true">
+           <layout class="QVBoxLayout" name="lyt_status"/>
           </widget>
          </item>
          <item row="2" column="0">
@@ -108,13 +104,13 @@
           </widget>
          </item>
          <item row="0" column="0">
-          <widget class="QWidget" name="wdgt_explanation_icon" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout_2"/>
+          <widget class="QWidget" name="wdgt_docs" native="true">
+           <layout class="QVBoxLayout" name="lyt_btn_docs"/>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QWidget" name="wdgt_explanation_text_container" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout">
+          <widget class="QWidget" name="wdgt_explanation" native="true">
+           <layout class="QVBoxLayout" name="lyt_explanation">
             <item>
              <widget class="QLabel" name="lbl_explanation_header">
               <property name="sizePolicy">
@@ -124,8 +120,7 @@
                </sizepolicy>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 75 20pt &quot;MS Shell Dlg 2&quot;;
-color: rgb(255, 85, 127);</string>
+               <string notr="true"/>
               </property>
               <property name="lineWidth">
                <number>0</number>
@@ -153,8 +148,7 @@ color: rgb(255, 85, 127);</string>
                </sizepolicy>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 75 10pt &quot;MS Shell Dlg 2&quot;;
-color: rgb(255, 85, 127);</string>
+               <string notr="true"/>
               </property>
               <property name="lineWidth">
                <number>0</number>

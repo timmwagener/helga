@@ -45,6 +45,35 @@ from PySide import QtCore
 
 
 
+#Import variable
+do_reload = True
+
+
+#asset_manager
+
+#asset_manager_globals
+import asset_manager_globals
+if(do_reload):reload(asset_manager_globals)
+
+
+
+
+
+
+#Globals
+#------------------------------------------------------------------
+
+#AssetManager colors
+BRIGHT_ORANGE = asset_manager_globals.BRIGHT_ORANGE
+DARK_ORANGE = asset_manager_globals.DARK_ORANGE
+BRIGHT_GREY = asset_manager_globals.BRIGHT_GREY
+GREY = asset_manager_globals.GREY
+DARK_GREY = asset_manager_globals.DARK_GREY
+
+
+
+
+
 
 
 
@@ -72,8 +101,10 @@ class AssetManagerButton(QtGui.QPushButton):
                 button_text = None,
                 icon_name = None,
                 icon_hover_name = None,
-                button_width = 64,
-                button_height = 64,
+                fixed_width = None,
+                fixed_height = None,
+                background_color_normal = DARK_GREY,
+                background_color_active = GREY,
                 parent=None):
         """
         AssetManagerButton instance customization.
@@ -94,8 +125,51 @@ class AssetManagerButton(QtGui.QPushButton):
         self.button_text = button_text
         self.icon_name = icon_name
         self.icon_hover_name = icon_hover_name
-        self.button_width = button_width
-        self.button_height = button_height
+        self.fixed_width = fixed_width
+        self.fixed_height = fixed_height
+        self.background_color_normal = background_color_normal
+        self.background_color_active = background_color_active
+
+        #icon_path
+        self.icon_path = os.path.join(icons_path, self.icon_name)
+        self.icon_path = self.icon_path.replace('\\', '/')
+        #icon_hover_path
+        self.icon_hover_path = os.path.join(icons_path, self.icon_hover_name)
+        self.icon_hover_path = self.icon_hover_path.replace('\\', '/')
+
+        
+        #stylesheets
+        #------------------------------------------------------------------
+
+        #ss_dict
+        self.ss_dict = {'icon_path' : self.icon_path,
+                        'icon_hover_path' : self.icon_hover_path,
+                        'background_color_normal' : self.background_color_normal.name(),
+                        'background_color_active' : self.background_color_active.name()}
+        
+        #ss_normal
+        self.ss_normal = " \
+\
+\
+/* AssetManagerButton - normal */\
+AssetManagerButton { border-image: url(%(icon_path)s); background-color: %(background_color_normal)s; } \
+AssetManagerButton:hover { border-image: url(%(icon_hover_path)s); background-color: %(background_color_normal)s; } \
+AssetManagerButton:pressed { border-image: url(%(icon_hover_path)s); background-color: %(background_color_normal)s; } \
+\
+\
+"%self.ss_dict
+        
+        #ss_active
+        self.ss_active = " \
+\
+\
+/* AssetManagerButton - active */\
+AssetManagerButton { border-image: url(%(icon_path)s); background-color: %(background_color_active)s; } \
+AssetManagerButton:hover { border-image: url(%(icon_hover_path)s); background-color: %(background_color_active)s; } \
+AssetManagerButton:pressed { border-image: url(%(icon_hover_path)s); background-color: %(background_color_active)s; } \
+\
+\
+"%self.ss_dict
 
         
         #logger
@@ -134,11 +208,14 @@ class AssetManagerButton(QtGui.QPushButton):
         #setMouseTracking
         self.setMouseTracking(True)
 
-        #set size
-        self.setFixedSize(self.button_width, self.button_height)
+        #set_size_policy
+        self.set_size_policy(self.fixed_width, self.fixed_height)
 
         #initialize_icons
         #self.initialize_icons()
+
+        #set_stylesheet
+        self.set_stylesheet()
 
 
     def connect_ui(self):
@@ -147,6 +224,28 @@ class AssetManagerButton(QtGui.QPushButton):
         """
         
         pass
+
+
+
+
+    
+
+
+    #Slots
+    #------------------------------------------------------------------
+
+    def set_stylesheet(self, role = 'normal'):
+        """
+        Set stylesheet for this widget based on role.
+        """
+
+        #active
+        if(role == 'active'):
+            self.setStyleSheet(self.ss_active)
+
+        #anyting and normal
+        else:
+            self.setStyleSheet(self.ss_normal)
 
 
 
@@ -186,3 +285,28 @@ class AssetManagerButton(QtGui.QPushButton):
 
         #setIcon
         self.setIcon(self.icon)
+
+
+    def set_size_policy(self, width, height):
+        """
+        Set size policy for self.
+        """
+
+        #fixed width and height
+        if (width and height):
+            self.setFixedSize(width, height)
+
+        #else
+        else:
+
+            #set expanding
+            expanding_size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+            self.setSizePolicy(expanding_size_policy)
+
+            #fixed width
+            if(width):
+                self.setFixedWidth(width)
+
+            #fixed height
+            elif(height):
+                self.setFixedHeight(height)

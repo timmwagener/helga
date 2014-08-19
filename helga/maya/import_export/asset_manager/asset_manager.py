@@ -38,6 +38,16 @@ Idea list:
 
 
 
+
+
+
+
+
+
+
+
+
+
 #Add tool relative pathes
 #------------------------------------------------------------------
 
@@ -108,6 +118,10 @@ if(do_reload):reload(global_variables)
 from helga.general.setup.global_functions import global_functions
 if(do_reload):reload(global_functions)
 
+#doc_link
+from helga.general.setup.doc_link import doc_link
+if(do_reload): reload(doc_link)
+
 
 #asset_manager
 
@@ -123,9 +137,17 @@ if(do_reload):reload(asset_manager_functionality)
 from lib import asset_manager_button
 if(do_reload):reload(asset_manager_button)
 
+#asset_manager_stylesheet_widget
+from lib import asset_manager_stylesheet_widget
+if(do_reload):reload(asset_manager_stylesheet_widget)
+
 #asset_manager_stylesheets
-from media import asset_manager_stylesheets
+from lib import asset_manager_stylesheets
 if(do_reload):reload(asset_manager_stylesheets)
+
+#asset_manager_globals
+from lib import asset_manager_globals
+if(do_reload):reload(asset_manager_globals)
 
 #shot_metadata_model
 from lib.mvc import shot_metadata_model
@@ -140,6 +162,61 @@ from lib.mvc import shot_metadata_item_delegate
 if(do_reload):reload(shot_metadata_item_delegate)
 
 
+
+
+
+
+
+
+#Globals
+#------------------------------------------------------------------
+
+#AssetManager Sizes
+STACKEDWIDGET_DIVIDER_HEIGHT = asset_manager_globals.STACKEDWIDGET_DIVIDER_HEIGHT
+
+
+#AssetManager colors
+BRIGHT_ORANGE = asset_manager_globals.BRIGHT_ORANGE
+DARK_ORANGE = asset_manager_globals.DARK_ORANGE
+BRIGHT_GREY = asset_manager_globals.BRIGHT_GREY
+GREY = asset_manager_globals.GREY
+DARK_GREY = asset_manager_globals.DARK_GREY
+
+
+#AssetManager Icons
+ICON_EXPORT = asset_manager_globals.ICON_EXPORT
+ICON_CHAR = asset_manager_globals.ICON_CHAR
+ICON_PROP = asset_manager_globals.ICON_PROP
+ICON_SHOT = asset_manager_globals.ICON_SHOT
+ICON_UPDATE = asset_manager_globals.ICON_UPDATE
+ICON_DOCS = asset_manager_globals.ICON_DOCS
+
+ICON_EXPORT_HOVER = asset_manager_globals.ICON_EXPORT_HOVER
+ICON_CHAR_HOVER = asset_manager_globals.ICON_CHAR_HOVER
+ICON_PROP_HOVER = asset_manager_globals.ICON_PROP_HOVER
+ICON_SHOT_HOVER = asset_manager_globals.ICON_SHOT_HOVER
+ICON_UPDATE_HOVER = asset_manager_globals.ICON_UPDATE_HOVER
+ICON_DOCS_HOVER = asset_manager_globals.ICON_DOCS_HOVER
+
+
+
+#UI colors
+WINDOW_COLOR = DARK_GREY#QtGui.QPalette.Window // A general background color.
+BACKGROUND_COLOR = DARK_GREY#QtGui.QPalette.Background // This value is obsolete. Use Window instead.
+WINDOWTEXT_COLOR = BRIGHT_GREY#QtGui.QPalette.WindowText // A general foreground color.
+FOREGROUND_COLOR = GREY#QtGui.QPalette.Foreground // This value is obsolete. Use WindowText instead.
+BASE_COLOR = DARK_GREY#QtGui.QPalette.Base // Used mostly as the background color for text entry widgets, but can also be used for other painting - such as the background of combobox drop down lists and toolbar handles. It is usually white or another light color.
+ALTERNATEBASE_COLOR = DARK_GREY#QtGui.QPalette.AlternateBase // Used as the alternate background color in views with alternating row colors (see QAbstractItemView.setAlternatingRowColors() ).
+TOOLTIPBASE_COLOR = DARK_GREY#QtGui.QPalette.ToolTipBase // Used as the background color for PySide.QtGui.QToolTip and PySide.QtGui.QWhatsThis . Tool tips use the Inactive color group of PySide.QtGui.QPalette , because tool tips are not active windows.
+TOOLTIPTEXT_COLOR = BRIGHT_GREY#QtGui.QPalette.ToolTipText // Used as the foreground color for PySide.QtGui.QToolTip and PySide.QtGui.QWhatsThis . Tool tips use the Inactive color group of PySide.QtGui.QPalette , because tool tips are not active windows.
+TEXT_COLOR = BRIGHT_GREY#QtGui.QPalette.Text // The foreground color used with Base. This is usually the same as the WindowText, in which case it must provide good contrast with Window and Base.
+BUTTON_COLOR = QtGui.QColor(QtCore.Qt.black)#QtGui.QPalette.Button // The general button background color. This background can be different from Window as some styles require a different background color for buttons.
+BUTTONTEXT_COLOR = BRIGHT_GREY#QtGui.QPalette.ButtonText // A foreground color used with the Button color.
+BRIGHTTEXT_COLOR = QtGui.QColor(QtCore.Qt.black)#QtGui.QPalette.BrightText // A text color that is very different from WindowText, and contrasts well with e.g. Dark. Typically used for text that needs to be drawn where Text or WindowText would give poor contrast, such as on pressed push buttons. Note that text colors can be used for things other than just words
+HIGHLIGHT_COLOR = BRIGHT_ORANGE#QtGui.QPalette.Highlight // A color to indicate a selected item or the current item. By default, the highlight color is Qt.darkBlue .
+HIGHLIGHTEDTEXT_COLOR = BRIGHT_GREY#QtGui.QPalette.HighlightedText // A text color that contrasts with Highlight. By default, the highlighted text color is Qt.white .
+LINK_COLOR = QtGui.QColor(QtCore.Qt.red)#QtGui.QPalette.Link // A text color used for unvisited hyperlinks. By default, the link color is Qt.blue .
+LINKVISITED_COLOR = QtGui.QColor(QtCore.Qt.red)#QtGui.QPalette.LinkVisited // A text color used for already visited hyperlinks. By default, the linkvisited color is Qt.magenta .
 
 
 
@@ -230,7 +307,16 @@ form_class, base_class = global_functions.load_ui_type(ui_file)
 #AssetManager class
 #------------------------------------------------------------------
 class AssetManager(form_class, base_class):
+    """
+    AssetManager
+    """
 
+    #Signals
+    #------------------------------------------------------------------
+    stkwdgt_change_current = QtCore.Signal(int)
+
+
+    
     def __new__(cls, *args, **kwargs):
         """
         AssetManager instance factory.
@@ -247,7 +333,7 @@ class AssetManager(form_class, base_class):
     
     def __init__(self, 
                 logging_level = logging.DEBUG,
-                auto_update_models = True,
+                auto_update_models = False,
                 parent = global_functions.get_main_window()):
         """
         Customize instance.
@@ -319,8 +405,11 @@ class AssetManager(form_class, base_class):
 
         
 
-        
-        
+    
+
+    
+    
+    
         
         
         
@@ -334,19 +423,21 @@ class AssetManager(form_class, base_class):
         """
         Setup additional UI like mvc or helga tool header.
         """
-        
+
         #make sure its floating intead of embedded
         self.setWindowFlags(QtCore.Qt.Window)
 
         #set title
         self.setWindowTitle(self.title)
 
-        #helga_tool_header
-        self.wdgt_helga_header = global_functions.get_helga_header_widget(self.title, self.icon_path)
-        self.lyt_header.addWidget(self.wdgt_helga_header)
+        #setup_status_widget
+        self.setup_status_widget()
 
         #setup_stacked_widget
         self.setup_stacked_widget() #buttons and widgets
+
+        #setup_additional_buttons
+        self.setup_additional_buttons()
 
         #setup_progressbar
         self.setup_progressbar()
@@ -361,21 +452,36 @@ class AssetManager(form_class, base_class):
         #set_margins_and_spacing
         self.set_margins_and_spacing()
 
+        #setup_tool_palette
+        self.setup_tool_palette()
+
         #set_stylesheet
         QtGui.qApp.setStyleSheet(asset_manager_stylesheets.get_stylesheet())
+
+        #helga_tool_header
+        self.wdgt_helga_header = global_functions.get_helga_header_widget(self.title, self.icon_path)
+        self.lyt_header.addWidget(self.wdgt_helga_header)
 
 
     def connect_ui(self):
         """
         Connect UI widgets with slots or functions.
         """
+
+        #Signals
+        self.stkwdgt_change_current.connect(self.stkwdgt_metadata.setCurrentIndex)
+
+        #Widgets
+
+        #btn_docs
+        self.btn_docs.clicked.connect(doc_link.run)
         
         #btn_show_shot_metadata
-        self.btn_show_shot_metadata.clicked.connect(functools.partial(self.stkwdgt_metadata.setCurrentIndex, 0))
+        self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_shot_metadata))
         #btn_show_prop_metadata
-        self.btn_show_prop_metadata.clicked.connect(functools.partial(self.stkwdgt_metadata.setCurrentIndex, 1))
+        self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_prop_metadata))
         #btn_show_char_metadata
-        self.btn_show_char_metadata.clicked.connect(functools.partial(self.stkwdgt_metadata.setCurrentIndex, 2))
+        self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_char_metadata))
 
         #btn_export
         self.btn_export.clicked.connect(functools.partial(self.dummy_method, 'Export'))
@@ -384,7 +490,18 @@ class AssetManager(form_class, base_class):
         if not(self.auto_update_models):
             self.btn_update_models.clicked.connect(self.update_models)
 
+    
+    def setup_status_widget(self):
+        """
+        Setup status widget for logging
+        """
 
+        #le_status
+        self.le_status = QtGui.QLineEdit()
+        #set in lyt
+        self.lyt_status.addWidget(self.le_status)
+
+    
     def setup_stacked_widget(self):
         """
         Setup stacked widget ui to test sweet ui design.
@@ -446,35 +563,88 @@ class AssetManager(form_class, base_class):
         """
 
         #btn_show_shot_metadata
-        self.btn_show_shot_metadata = asset_manager_button.AssetManagerButton( icon_name = 'icn_docs.png',
-                                                                                icon_hover_name = 'icn_export.png', 
+        self.btn_show_shot_metadata = asset_manager_button.AssetManagerButton( icon_name = ICON_SHOT,
+                                                                                icon_hover_name = ICON_SHOT_HOVER,
+                                                                                fixed_width = 64,
+                                                                                fixed_height = 64,
                                                                                 parent = self)
         self.btn_show_shot_metadata.setObjectName('btn_show_shot_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_shot_metadata)
+        #btn_show_shot_metadata_divider
+        self.btn_show_shot_metadata_divider = asset_manager_stylesheet_widget.AssetManagerStylesheetWidget(fixed_height = STACKEDWIDGET_DIVIDER_HEIGHT,
+                                                                                                            fixed_width = 64,
+                                                                                                            parent = self)
+        self.btn_show_shot_metadata_divider.setObjectName('btn_show_shot_metadata_divider')
+        self.lyt_metadata_buttons.addWidget(self.btn_show_shot_metadata_divider)
+        
+
         
 
         #btn_show_prop_metadata
-        self.btn_show_prop_metadata = asset_manager_button.AssetManagerButton(icon_name = 'icn_docs.png',
-                                                                                icon_hover_name = 'icn_export.png', 
+        self.btn_show_prop_metadata = asset_manager_button.AssetManagerButton(icon_name = ICON_PROP,
+                                                                                icon_hover_name = ICON_PROP_HOVER,
+                                                                                fixed_width = 64,
+                                                                                fixed_height = 64,
                                                                                 parent = self)
         self.btn_show_prop_metadata.setObjectName('btn_show_prop_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_prop_metadata)
+        #btn_show_prop_metadata_divider
+        self.btn_show_prop_metadata_divider = asset_manager_stylesheet_widget.AssetManagerStylesheetWidget(fixed_height = STACKEDWIDGET_DIVIDER_HEIGHT,
+                                                                                                            fixed_width = 64,
+                                                                                                            parent = self)
+        self.btn_show_prop_metadata_divider.setObjectName('btn_show_prop_metadata_divider')
+        self.lyt_metadata_buttons.addWidget(self.btn_show_prop_metadata_divider)
+        
+
         
 
         #btn_show_char_metadata
-        self.btn_show_char_metadata = asset_manager_button.AssetManagerButton(icon_name = 'icn_docs.png',
-                                                                                icon_hover_name = 'icn_export.png', 
+        self.btn_show_char_metadata = asset_manager_button.AssetManagerButton(icon_name = ICON_CHAR,
+                                                                                icon_hover_name = ICON_CHAR_HOVER,
+                                                                                fixed_width = 64,
+                                                                                fixed_height = 64,
                                                                                 parent = self)
         self.btn_show_char_metadata.setObjectName('btn_show_char_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_char_metadata)
-        
+        #btn_show_char_metadata_divider
+        self.btn_show_char_metadata_divider = asset_manager_stylesheet_widget.AssetManagerStylesheetWidget(fixed_height = STACKEDWIDGET_DIVIDER_HEIGHT,
+                                                                                                            fixed_width = 64,
+                                                                                                            parent = self)
+        self.btn_show_char_metadata_divider.setObjectName('btn_show_char_metadata_divider')
+        self.lyt_metadata_buttons.addWidget(self.btn_show_char_metadata_divider)
 
-        #setup_model_update_button
-        if not(self.auto_update_models):
-            self.setup_model_update_button()
 
-        #setup_export_button
-        self.setup_export_button()
+    def set_active_stacked_widget(self, wdgt_sender):
+        """
+        Set active stacked widget based on wdgt_sender.
+        """
+
+        #wdgt_checklist
+        wdgt_checklist = [(self.btn_show_shot_metadata, self.btn_show_shot_metadata_divider),
+                            (self.btn_show_prop_metadata, self.btn_show_prop_metadata_divider),
+                            (self.btn_show_char_metadata, self.btn_show_char_metadata_divider)]
+
+        #iterate and check
+        for index, wdgt_list in enumerate(wdgt_checklist):
+            
+            for wdgt, wdgt_divider in [wdgt_list]:
+            
+                #if match set  active
+                if (wdgt is wdgt_sender):
+
+                    #set_stylesheet
+                    wdgt.set_stylesheet(role = 'active')
+                    wdgt_divider.set_stylesheet(role = 'active')
+
+                    #emit changed
+                    self.stkwdgt_change_current.emit(index)
+
+                #else normal
+                else:
+
+                    #set_stylesheet
+                    wdgt.set_stylesheet(role = 'normal')
+                    wdgt_divider.set_stylesheet(role = 'normal')
 
 
     def set_margins_and_spacing(self):
@@ -501,16 +671,74 @@ class AssetManager(form_class, base_class):
             lyt.setSpacing(0)
 
 
+    def setup_tool_palette(self):
+        """
+        Setup palette for tool and apply to all widgets.
+        This should be applied before all unique customizations
+        and stylesheets.
+        """
+
+        #wdgt_list
+        wdgt_list = self.findChildren(QtCore.QObject)
+
+        #customize palette
+        for wdgt in wdgt_list:
+            try:
+                self.customize_palette(wdgt, QtGui.QPalette.Window, WINDOW_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.Background, BACKGROUND_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.WindowText, WINDOWTEXT_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.Foreground, FOREGROUND_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.Base, BASE_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.AlternateBase, ALTERNATEBASE_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.ToolTipBase, TOOLTIPBASE_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.ToolTipText, TOOLTIPTEXT_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.Text, TEXT_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.Button, BUTTON_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.ButtonText, BUTTONTEXT_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.BrightText, BRIGHTTEXT_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.Highlight, HIGHLIGHT_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.HighlightedText, HIGHLIGHTEDTEXT_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.Link, LINK_COLOR)
+                self.customize_palette(wdgt, QtGui.QPalette.LinkVisited, LINKVISITED_COLOR)
+            except:
+                pass
+
+
+    def setup_additional_buttons(self):
+        """
+        Setup additional buttons anywhere in the tool.
+        """
+
+        #setup_model_update_button
+        if not(self.auto_update_models):
+            self.setup_model_update_button()
+
+        #setup_export_button
+        self.setup_export_button()
+
+        #setup_docs_button
+        self.setup_docs_button()
+
+
     def setup_export_button(self):
         """
         Create self.btn_export
         """
 
         #btn_export
-        self.btn_export = QtGui.QPushButton(text = 'Export', parent = self)
-
-        #add to lyt_buttons
+        self.btn_export = asset_manager_button.AssetManagerButton(icon_name = ICON_EXPORT,
+                                                                                icon_hover_name = ICON_EXPORT_HOVER,
+                                                                                fixed_width = 64,
+                                                                                fixed_height = 64,
+                                                                                parent = self)
+        self.btn_export.setObjectName('btn_export')
         self.lyt_metadata_buttons.addWidget(self.btn_export)
+        #btn_export_divider
+        self.btn_export_divider = asset_manager_stylesheet_widget.AssetManagerStylesheetWidget(fixed_height = STACKEDWIDGET_DIVIDER_HEIGHT,
+                                                                                                fixed_width = 64,
+                                                                                                parent = self)
+        self.btn_export_divider.setObjectName('btn_export_divider')
+        self.lyt_metadata_buttons.addWidget(self.btn_export_divider)
 
 
     def setup_model_update_button(self):
@@ -519,10 +747,37 @@ class AssetManager(form_class, base_class):
         """
 
         #btn_update_models
-        self.btn_update_models = QtGui.QPushButton(text = 'Update Models', parent = self)
-
-        #add to lyt_buttons
+        self.btn_update_models = asset_manager_button.AssetManagerButton(icon_name = ICON_UPDATE,
+                                                                                icon_hover_name = ICON_UPDATE_HOVER,
+                                                                                fixed_width = 64,
+                                                                                fixed_height = 64,
+                                                                                parent = self)
+        self.btn_update_models.setObjectName('btn_update_models')
         self.lyt_metadata_buttons.addWidget(self.btn_update_models)
+        #btn_update_models_divider
+        self.btn_update_models_divider = asset_manager_stylesheet_widget.AssetManagerStylesheetWidget(fixed_height = STACKEDWIDGET_DIVIDER_HEIGHT,
+                                                                                                            fixed_width = 64,
+                                                                                                            parent = self)
+        self.btn_update_models_divider.setObjectName('btn_update_models_divider')
+        self.lyt_metadata_buttons.addWidget(self.btn_update_models_divider)
+
+
+    def setup_docs_button(self):
+        """
+        Create self.btn_docs
+        """
+
+        #btn_docs
+        self.btn_docs = asset_manager_button.AssetManagerButton(icon_name = ICON_DOCS,
+                                                                icon_hover_name = ICON_DOCS_HOVER,
+                                                                background_color_normal = DARK_ORANGE,
+                                                                background_color_active = DARK_ORANGE,
+                                                                fixed_width = 64,
+                                                                fixed_height = 64,
+                                                                parent = self)
+        self.btn_docs.setObjectName('btn_docs')
+        self.lyt_btn_docs.addWidget(self.btn_docs)
+        
 
 
     def setup_progressbar(self):
@@ -774,11 +1029,16 @@ class AssetManager(form_class, base_class):
         """
         Set le_status text
         """
-        
-        #clear
-        self.le_status.clear()
-        #set text
-        self.le_status.setText(new_value)
+        try:
+            
+            #clear
+            self.le_status.clear()
+            #set text
+            self.le_status.setText(new_value)
+
+        except:
+
+            pass
         
 
     def get_status(self):
@@ -786,7 +1046,10 @@ class AssetManager(form_class, base_class):
         Return content of le_status
         """
 
-        return str(self.le_status.text())
+        try:
+            return str(self.le_status.text())
+        except:
+            pass
 
 
     def customize_palette(self, wdgt, role, color):
@@ -935,6 +1198,76 @@ def run():
 
 
 
+
+
+#Test setup home
+#------------------------------------------------------------------
+
+def asset_manager_run_home():
+    """
+    Copy and run @ home.
+    Not to be used by anyone ever.
+    """
+
+    #Import
+    #------------------------------------------------------------------
+    #python
+    import os
+    import sys
+    import shutil
+    
+
+
+    #Globals
+    #------------------------------------------------------------------
+    SOURCE_DIR = r'D:/filmaka/projects/helga/Production/scripts/work/helga/helga/maya/import_export'#dir to copy
+    TARGET_DIR = r'D:/filmaka/projects/helga/Production/scripts/sandbox/helga/helga/maya/import_export'#source_dir is deleted from here if it exists and then copied in there
+
+    
+
+    #Delete existing
+    #------------------------------------------------------------------
+    try:
+        if(os.path.isdir(TARGET_DIR)):
+            print('Delete Dir: {0}'.format(TARGET_DIR))
+            shutil.rmtree(TARGET_DIR)
+
+    except:
+        print('Delete Dir doesnt exist. Returning. - {0}'.format(TARGET_DIR))
+        return
+
+
+    #Copy
+    #------------------------------------------------------------------
+    
+    try:
+        if(os.path.isdir(SOURCE_DIR)):
+            print('Copy {0} to {1}'.format(SOURCE_DIR, TARGET_DIR))
+            shutil.copytree(SOURCE_DIR, TARGET_DIR)
+            
+    
+    except:
+        print('Copying failed. Returning. {0} to {1}'.format(SOURCE_DIR, TARGET_DIR))
+        return
+    
+
+
+
+
+
+    #Run
+    #------------------------------------------------------------------
+    #helga
+    from helga.maya.import_export.asset_manager import asset_manager
+    reload(asset_manager)
+    
+    #asset_manager_instance
+    asset_manager_instance = asset_manager.AssetManager()
+    asset_manager_instance.show()
+
+
+
+#asset_manager_run_home()
 
 
 

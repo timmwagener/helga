@@ -34,6 +34,8 @@ import re
 import shutil
 from cStringIO import StringIO
 import xml.etree.ElementTree as xml
+import types
+
 
 
 #Import variable
@@ -484,6 +486,123 @@ def get_helga_header_widget(title, icon_path):
     return wdgt_helga_header
 
 
+def get_maya_toplevel_shelf_widget(shelf_object):
+    """
+    Convert ptr to shelf object to Qt instance.
+    """
+
+    #Lazy Import
+    #----------------------------------------------------
+    #PySide
+    from PySide import QtGui
+    from PySide import QtCore
+    from PySide import QtUiTools
+    import shiboken
+    import pysideuic
+    #maya
+    import maya.OpenMayaUI as open_maya_ui
+    import pymel.core as pm
+    #----------------------------------------------------
+
+    
+    #ptr_shelf_object
+    ptr_shelf_object = open_maya_ui.MQtUtil.findLayout(shelf_object)
+    #ptr exists
+    if (ptr_shelf_object is not None):
+        return shiboken.wrapInstance(long(ptr_shelf_object), QtGui.QWidget)
+    #else
+    return None
+
+
+def style_maya_shelves():
+    """
+    Style Maya shelves.
+    """
+
+    #Lazy Import
+    #----------------------------------------------------
+    #PySide
+    from PySide import QtGui
+    from PySide import QtCore
+    from PySide import QtUiTools
+    import shiboken
+    import pysideuic
+    #maya
+    import pymel.core as pm
+    #----------------------------------------------------
+
+    
+    #Tabwidgets (Shelves)
+    #----------------------------------------------------
+
+    #wdgt_toplevel_shelf_name
+    wdgt_toplevel_shelf_name = pm.MelGlobals()['gShelfTopLevel']
+
+    #wdgt_toplevel_shelf
+    wdgt_toplevel_shelf = get_maya_toplevel_shelf_widget(wdgt_toplevel_shelf_name)
+
+    #shelf not found
+    if not(wdgt_toplevel_shelf):
+        print('Shelf {0} not found. Not customizing, returning.'.format(wdgt_toplevel_shelf_name))
+        return None
+
+
+    #tab_wdgt_list
+    tab_wdgt_list = [tab_wdgt for tab_wdgt in wdgt_toplevel_shelf.findChildren(QtGui.QTabWidget)]
+    
+    
+    
+
+
+    #Stylesheets
+    #----------------------------------------------------
+
+    #ss_shelf
+    ss_shelf = " \
+\
+\
+QWidget#%s { background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0.5 rgba(0, 0, 0, 0), stop:1 rgba(255, 255, 255, 255)); }\
+\
+\
+"
+    
+    #----------------------------------------------------
+
+
+
+
+    #Style
+    #----------------------------------------------------
+    
+    #iterate and style
+    for tab_wdgt in tab_wdgt_list:
+
+        #index
+        index = tab_wdgt.count()
+
+        #setDocumentMode
+        tab_wdgt.setDocumentMode(True)
+
+        #iterate and style page
+        for index in range(index):
+            
+            #wdgt_page
+            wdgt_page = tab_wdgt.widget(index)
+
+            #iterate scrollareas
+            for wdgt_scrollarea in wdgt_page.findChildren(QtGui.QScrollArea):
+
+                #wdgt_scrollarea_child
+                wdgt_scrollarea_child = wdgt_scrollarea.widget()
+                
+                try:
+
+                    #set_stylesheet
+                    wdgt_scrollarea_child.setStyleSheet(ss_shelf%(wdgt_scrollarea_child.objectName()))
+
+                except:
+                    pass
+
 
 
 
@@ -501,51 +620,8 @@ def get_helga_header_widget(title, icon_path):
 
 if(__name__ == '__main__'):
 
-    #test interpreter maya
-    interpreter_keyword = 'maya'
-    print('Interpreter matches keyword {0}: {1}'.format(interpreter_keyword, 
-                                                        check_interpreter(interpreter_keyword)))
-
-    #test interpreter nuke
-    interpreter_keyword = 'Nuke'
-    print('Interpreter matches keyword {0}: {1}'.format(interpreter_keyword, 
-                                                        check_interpreter(interpreter_keyword)))
-
-    
-    divider()
-
-
-    #test get_maya_main_window
-    maya_main_window = get_maya_main_window()
-
-    if(maya_main_window):
-        print('Maya main window: {0} \nof type: {1}'.format(maya_main_window.windowTitle(),
-                                                                type(maya_main_window)))
-    else:
-        print('Maya main window pointer could not be aquired')
-
-    
-    divider()
-
-    #test get_nuke_main_window
-    nuke_main_window = get_nuke_main_window()
-
-    if(nuke_main_window):
-        print('Nuke main window: {0} \nof type: {1}'.format(nuke_main_window.windowTitle(),
-                                                                type(nuke_main_window)))
-    else:
-        print('Nuke main window pointer could not be aquired')
-
-
-    divider()
-
-    #test get_main_window
-    main_window = get_main_window()
-
-    if(main_window):
-        print('Main window: {0} \nof type: {1}'.format(main_window.windowTitle(),
-                                                                type(main_window)))
-    else:
-        print('Main window pointer could not be aquired')
+    #style_maya_shelves
+    #style_maya_shelves()
+    pass
 
 

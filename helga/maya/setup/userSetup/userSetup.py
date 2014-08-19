@@ -313,12 +313,11 @@ try:
     #adjust_gui
     def adjust_gui():
         
-        #rgb formating for position values in attr. editor
-        QtGui.qApp.setStyleSheet(' \
-QLineEdit#A3FGXfield { border-radius: 0; background-color: #222222; color: #ffbbbb } \
-QLineEdit#A3FGYfield { border-radius: 0; background-color: #222222; color: #bbffbb } \
-QLineEdit#A3FGZfield { border-radius: 0; background-color: #222222; color: #bbbbff } \
-') 
+        #set global stylesheet
+        QtGui.qApp.setStyleSheet(global_variables.MAYA_STYLESHEET)
+
+        #style shelf background
+        global_functions.style_maya_shelves()
         
         #Print to console instead of script editor
         sys.__stdout__.write('Successfully adjusted GUI\n')

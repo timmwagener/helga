@@ -232,5 +232,35 @@ if (PIPELINE_BASE_PATH):
 
 
 
+
+
+
+
+
+    #Stylesheets
+    #----------------------------------------------------
+
+    MAYA_STYLESHEET_DICT = {}
+    """Dictionary to format Maya stylesheet string"""
+
+    MAYA_STYLESHEET = "\
+\
+\
+/* QLineEdit#A3FGXfield */\
+QLineEdit#A3FGXfield { border-radius: 0; background-color: #222222; color: #ffbbbb } \
+QLineEdit#A3FGYfield { border-radius: 0; background-color: #222222; color: #bbffbb } \
+QLineEdit#A3FGZfield { border-radius: 0; background-color: #222222; color: #bbbbff } \
+\
+\
+/* QTabBar */\
+QTabBar::tab { background-color: rgba(255, 255, 255, 0); color: #dbdce0; alignment: center; }\
+QTabBar::tab:selected { background-color: #b13b00; }\
+QTabBar::tab:hover { background-color: #f9661e; }\
+\
+\
+\
+"
+
+
     
 

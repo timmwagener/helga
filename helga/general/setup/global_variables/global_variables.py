@@ -50,8 +50,10 @@ PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False)
 #everything from here on will fail if the ancor PIPELINE_BASE_PATH fails
 if (PIPELINE_BASE_PATH):
 
+    HELGA_PIPELINE_FLAVOUR = os.getenv('HELGA_PIPELINE_FLAVOUR', False)
+    """Pipeline flavour. Can be sandbox or deploy."""
 
-    PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/' + os.getenv('HELGA_PIPELINE_FLAVOUR', False) + r'/helga'
+    PIPELINE_SCRIPTS_BASE_PATH = PIPELINE_BASE_PATH + r'/Production/scripts/' + HELGA_PIPELINE_FLAVOUR + r'/helga'
     """Pipeline scripts base path. You can import helga from here."""
 
     PIPELINE_LIBRARIES_PATH_GENERAL = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/general/python2.7libs'
@@ -240,7 +242,12 @@ if (PIPELINE_BASE_PATH):
     #Stylesheets
     #----------------------------------------------------
 
-    MAYA_STYLESHEET_DICT = {}
+
+    #Maya
+    #----------------------------------------------------
+
+    MAYA_STYLESHEET_DICT = {'tab_selected_background_color' : '#b13b00' if(HELGA_PIPELINE_FLAVOUR == 'deploy') else '#006cbf',
+                            'tab_hover_background_color' : '#f9661e' if(HELGA_PIPELINE_FLAVOUR == 'deploy') else '#008df9'}
     """Dictionary to format Maya stylesheet string"""
 
     MAYA_STYLESHEET = "\
@@ -254,12 +261,36 @@ QLineEdit#A3FGZfield { border-radius: 0; background-color: #222222; color: #bbbb
 \
 /* QTabBar */\
 QTabBar::tab { background-color: rgba(255, 255, 255, 0); color: #dbdce0; alignment: center; }\
-QTabBar::tab:selected { background-color: #b13b00; }\
-QTabBar::tab:hover { background-color: #f9661e; }\
+QTabBar::tab:selected { background-color: %(tab_selected_background_color)s; }\
+QTabBar::tab:hover { background-color: %(tab_hover_background_color)s; }\
 \
 \
 \
-"
+"%MAYA_STYLESHEET_DICT
+    #----------------------------------------------------
+
+    
+
+
+    #Nuke
+    #----------------------------------------------------
+
+    NUKE_STYLESHEET_DICT = {'tab_selected_background_color' : '#b13b00' if(HELGA_PIPELINE_FLAVOUR == 'deploy') else '#006cbf',
+                            'tab_hover_background_color' : '#f9661e' if(HELGA_PIPELINE_FLAVOUR == 'deploy') else '#008df9'}
+    """Dictionary to format Nuke stylesheet string"""
+
+    NUKE_STYLESHEET = "\
+\
+\
+/* QTabBar */\
+QTabBar::tab { background-color: rgba(255, 255, 255, 0); color: #dbdce0; alignment: center; }\
+QTabBar::tab:selected { background-color: %(tab_selected_background_color)s; }\
+QTabBar::tab:hover { background-color: %(tab_hover_background_color)s; }\
+\
+\
+\
+"%NUKE_STYLESHEET_DICT
+    #----------------------------------------------------
 
 
     

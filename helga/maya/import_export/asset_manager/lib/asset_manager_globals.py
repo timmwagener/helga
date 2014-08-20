@@ -63,6 +63,9 @@ DARK_ORANGE = QtGui.QColor('#b13b00')
 BRIGHT_GREY = QtGui.QColor('#dbdce0')
 GREY = QtGui.QColor('#1f1f1f')
 DARK_GREY = QtGui.QColor('#131313')
+DARK_BLUE = QtGui.QColor('#006cbf')
+BRIGHT_BLUE = QtGui.QColor('#008df9')
+WHITE = QtGui.QColor('#ffffff')
 
 #AssetManager Icons
 ICON_EXPORT = os.path.join(icons_path, 'icn_export.png').replace('\\', '/')

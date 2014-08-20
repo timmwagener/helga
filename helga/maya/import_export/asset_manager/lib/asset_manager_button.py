@@ -100,11 +100,13 @@ class AssetManagerButton(QtGui.QPushButton):
                 logging_level = logging.DEBUG,
                 button_text = None,
                 icon_name = None,
-                icon_hover_name = None,
                 fixed_width = None,
                 fixed_height = None,
                 background_color_normal = DARK_GREY,
+                hover_radial_color_normal = DARK_ORANGE,
                 background_color_active = GREY,
+                hover_radial_color_active = DARK_ORANGE,
+                hover_radial_radius = 0.45,
                 parent=None):
         """
         AssetManagerButton instance customization.
@@ -124,18 +126,24 @@ class AssetManagerButton(QtGui.QPushButton):
         #------------------------------------------------------------------
         self.button_text = button_text
         self.icon_name = icon_name
-        self.icon_hover_name = icon_hover_name
         self.fixed_width = fixed_width
         self.fixed_height = fixed_height
+        
+        #colors
         self.background_color_normal = background_color_normal
+        self.hover_radial_color_normal = hover_radial_color_normal
         self.background_color_active = background_color_active
+        self.hover_radial_color_active = hover_radial_color_active
+
+        #hover_radial_radius
+        self.hover_radial_radius = hover_radial_radius
 
         #icon_path
         self.icon_path = os.path.join(icons_path, self.icon_name)
         self.icon_path = self.icon_path.replace('\\', '/')
-        #icon_hover_path
-        self.icon_hover_path = os.path.join(icons_path, self.icon_hover_name)
-        self.icon_hover_path = self.icon_hover_path.replace('\\', '/')
+        
+
+        
 
         
         #stylesheets
@@ -143,9 +151,11 @@ class AssetManagerButton(QtGui.QPushButton):
 
         #ss_dict
         self.ss_dict = {'icon_path' : self.icon_path,
-                        'icon_hover_path' : self.icon_hover_path,
+                        'hover_radial_radius' : self.hover_radial_radius,
                         'background_color_normal' : self.background_color_normal.name(),
-                        'background_color_active' : self.background_color_active.name()}
+                        'hover_radial_color_normal' : self.hover_radial_color_normal.name(),
+                        'background_color_active' : self.background_color_active.name(),
+                        'hover_radial_color_active' : self.hover_radial_color_active.name(),}
         
         #ss_normal
         self.ss_normal = " \
@@ -153,8 +163,8 @@ class AssetManagerButton(QtGui.QPushButton):
 \
 /* AssetManagerButton - normal */\
 AssetManagerButton { border-image: url(%(icon_path)s); background-color: %(background_color_normal)s; } \
-AssetManagerButton:hover { border-image: url(%(icon_hover_path)s); background-color: %(background_color_normal)s; } \
-AssetManagerButton:pressed { border-image: url(%(icon_hover_path)s); background-color: %(background_color_normal)s; } \
+AssetManagerButton:hover { border-image: url(%(icon_path)s); background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, stop:0 %(hover_radial_color_normal)s, stop:1 %(background_color_normal)s); } \
+AssetManagerButton:pressed { border-image: url(%(icon_path)s); background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, stop:0 %(hover_radial_color_normal)s, stop:1 %(background_color_normal)s); } \
 \
 \
 "%self.ss_dict
@@ -165,8 +175,8 @@ AssetManagerButton:pressed { border-image: url(%(icon_hover_path)s); background-
 \
 /* AssetManagerButton - active */\
 AssetManagerButton { border-image: url(%(icon_path)s); background-color: %(background_color_active)s; } \
-AssetManagerButton:hover { border-image: url(%(icon_hover_path)s); background-color: %(background_color_active)s; } \
-AssetManagerButton:pressed { border-image: url(%(icon_hover_path)s); background-color: %(background_color_active)s; } \
+AssetManagerButton:hover { border-image: url(%(icon_path)s); background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, stop:0 %(hover_radial_color_active)s, stop:1 %(background_color_active)s); } \
+AssetManagerButton:pressed { border-image: url(%(icon_path)s); background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, stop:0 %(hover_radial_color_active)s, stop:1 %(background_color_active)s); } \
 \
 \
 "%self.ss_dict
@@ -274,14 +284,6 @@ AssetManagerButton:pressed { border-image: url(%(icon_hover_path)s); background-
 
         #log
         self.logger.debug('Initialized icon {0} for button {1}'.format(self.icon_name, self))
-        
-        #icon_hover
-        self.pixmap_icon_hover = QtGui.QPixmap(os.path.join(icons_path, self.icon_hover_name))
-        self.pixmap_icon_hover = self.pixmap_icon_hover.scaled(icon_width, icon_height, mode = QtCore.Qt.FastTransformation)
-        self.icon_hover = QtGui.QIcon(self.pixmap_icon_hover)
-
-        #log
-        self.logger.debug('Initialized icon_hover {0} for button {1}'.format(self.icon_hover_name, self))
 
         #setIcon
         self.setIcon(self.icon)

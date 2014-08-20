@@ -181,6 +181,9 @@ DARK_ORANGE = asset_manager_globals.DARK_ORANGE
 BRIGHT_GREY = asset_manager_globals.BRIGHT_GREY
 GREY = asset_manager_globals.GREY
 DARK_GREY = asset_manager_globals.DARK_GREY
+DARK_BLUE = asset_manager_globals.DARK_BLUE
+BRIGHT_BLUE = asset_manager_globals.BRIGHT_BLUE
+WHITE = asset_manager_globals.WHITE
 
 
 #AssetManager Icons
@@ -579,7 +582,6 @@ class AssetManager(form_class, base_class):
 
         #btn_show_shot_metadata
         self.btn_show_shot_metadata = asset_manager_button.AssetManagerButton( icon_name = ICON_SHOT,
-                                                                                icon_hover_name = ICON_SHOT_HOVER,
                                                                                 fixed_width = 64,
                                                                                 fixed_height = 64,
                                                                                 parent = self)
@@ -597,7 +599,6 @@ class AssetManager(form_class, base_class):
 
         #btn_show_prop_metadata
         self.btn_show_prop_metadata = asset_manager_button.AssetManagerButton(icon_name = ICON_PROP,
-                                                                                icon_hover_name = ICON_PROP_HOVER,
                                                                                 fixed_width = 64,
                                                                                 fixed_height = 64,
                                                                                 parent = self)
@@ -615,7 +616,6 @@ class AssetManager(form_class, base_class):
 
         #btn_show_char_metadata
         self.btn_show_char_metadata = asset_manager_button.AssetManagerButton(icon_name = ICON_CHAR,
-                                                                                icon_hover_name = ICON_CHAR_HOVER,
                                                                                 fixed_width = 64,
                                                                                 fixed_height = 64,
                                                                                 parent = self)
@@ -786,10 +786,9 @@ class AssetManager(form_class, base_class):
 
         #btn_export
         self.btn_export = asset_manager_button.AssetManagerButton(icon_name = ICON_EXPORT,
-                                                                                icon_hover_name = ICON_EXPORT_HOVER,
-                                                                                fixed_width = 64,
-                                                                                fixed_height = 64,
-                                                                                parent = self)
+                                                                    fixed_width = 64,
+                                                                    fixed_height = 64,
+                                                                    parent = self)
         self.btn_export.setObjectName('btn_export')
         self.lyt_metadata_buttons.addWidget(self.btn_export)
         #btn_export_divider
@@ -807,10 +806,9 @@ class AssetManager(form_class, base_class):
 
         #btn_update_models
         self.btn_update_models = asset_manager_button.AssetManagerButton(icon_name = ICON_UPDATE,
-                                                                                icon_hover_name = ICON_UPDATE_HOVER,
-                                                                                fixed_width = 64,
-                                                                                fixed_height = 64,
-                                                                                parent = self)
+                                                                            fixed_width = 64,
+                                                                            fixed_height = 64,
+                                                                            parent = self)
         self.btn_update_models.setObjectName('btn_update_models')
         self.lyt_metadata_buttons.addWidget(self.btn_update_models)
         #btn_update_models_divider
@@ -828,9 +826,9 @@ class AssetManager(form_class, base_class):
 
         #btn_docs
         self.btn_docs = asset_manager_button.AssetManagerButton(icon_name = ICON_DOCS,
-                                                                icon_hover_name = ICON_DOCS_HOVER,
                                                                 background_color_normal = DARK_ORANGE,
-                                                                background_color_active = DARK_ORANGE,
+                                                                hover_radial_color_normal = WHITE,
+                                                                hover_radial_radius = 0.4,
                                                                 fixed_width = 64,
                                                                 fixed_height = 64,
                                                                 parent = self)

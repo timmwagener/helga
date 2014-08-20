@@ -17,6 +17,8 @@
 #python
 import functools
 
+
+
 #nuke
 import nuke
 from nukescripts import panels
@@ -81,6 +83,14 @@ nuke.addFormat ("1280 720 0 0 1280 720 1.0 HD_medium")
 nuke.addFormat ("3840 2160 0 0 3840 2160 1.0 HD_double")
 nuke.addFormat ("4096 4096 0 0 4096 4096 1.0 square_4k")
 nuke.addFormat ("8192 8192 0 0 8192 8192 1.0 square_8k")
+
+
+
+
+
+
+
+
 
 
 
@@ -343,6 +353,67 @@ except:
     
     #FailMsg
     nuke.tprint('Error setting Helga menu')
+
+
+
+
+
+
+#GUI adjustments
+#------------------------------------------------------------------
+
+
+def set_nuke_stylesheet():
+    """
+    Set Nuke Application stylesheet to indicate whether 
+    we are in sandbox or deploy.
+    """
+    
+    try:
+        
+        #Lazy import
+        #------------------------------------------------------------------
+
+        #PySide
+        from PySide import QtGui
+        from PySide import QtCore
+
+        #Reload Bool
+        do_reload = True
+
+        from helga.general.setup.global_variables import global_variables
+        if(do_reload): reload(global_variables)
+
+        #global_functions
+        from helga.general.setup.global_functions import global_functions
+        if(do_reload):reload(global_functions)
+
+        #------------------------------------------------------------------
+        
+
+
+        #set global stylesheet
+        QtGui.qApp.setStyleSheet(global_variables.NUKE_STYLESHEET)
+
+        #log
+        print('Succesfully adjusted GUI')
+
+    except:
+
+        #log
+        print('Error adjusting GUI')
+
+
+#Print to console instead of script editor
+print('Registering GUI adjustment callback')
+
+#add startup callback
+nuke.addOnUserCreate(set_nuke_stylesheet, nodeClass='Root')
+
+
+
+    
+
 
 
 

@@ -112,11 +112,23 @@ QWidget#wdgt_docs { background-color: %(dark_orange)s; } \
 \
 \
 /* QLabel - lbl_explanation_header */\
-QLabel#lbl_explanation_header { background-color: transparent; font: 75 20pt \"MS Shell Dlg 2\"; color: %(bright_grey)s; margin-top: 10; margin-left: 10; margin-bottom: 4; margin-right: 10; } \
+QLabel#lbl_explanation_header { background-color: transparent; \
+                                font: 75 20pt \"MS Shell Dlg 2\"; \
+                                color: %(bright_grey)s; \
+                                margin-top: 10; \
+                                margin-left: 10; \
+                                margin-bottom: 4; \
+                                margin-right: 10; } \
 \
 \
 /* QLabel - lbl_explanation_text */\
-QLabel#lbl_explanation_text { background-color: transparent; font: 75 10pt \"MS Shell Dlg 2\"; color: %(bright_grey)s; margin-top: 4; margin-left: 10; margin-bottom: 4; margin-right: 10; } \
+QLabel#lbl_explanation_text { background-color: transparent; \
+                                font: 75 10pt \"MS Shell Dlg 2\"; \
+                                color: %(bright_grey)s; \
+                                margin-top: 4; \
+                                margin-left: 10; \
+                                margin-bottom: 4; \
+                                margin-right: 10; } \
 \
 \
 \
@@ -124,7 +136,18 @@ QLabel#lbl_explanation_text { background-color: transparent; font: 75 10pt \"MS 
 \
 \
 /* ShotMetadataView */\
-ShotMetadataView { background-color: %(dark_orange)s; } \
+ShotMetadataView { background-color: %(grey)s; } \
+\
+\
+\
+\
+\
+\
+/* QProgressBar */\
+QProgressBar { border: 2px solid grey;\
+                 border-radius: 5px;\
+                 text-align: center;\
+ } \
 \
 \
 "%ss_dict

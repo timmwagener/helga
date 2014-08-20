@@ -96,7 +96,7 @@ QWidget { background-color: %(dark_grey)s; } \
 \
 \
 /* QWidget - wdgt_explanation */\
-QWidget#wdgt_explanation { background-color: %(bright_orange)s; } \
+QWidget#wdgt_explanation { background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 %(dark_orange)s, stop:1 %(bright_orange)s); } \
 \
 \
 /* QWidget - wdgt_export */\
@@ -135,19 +135,113 @@ QLabel#lbl_explanation_text { background-color: transparent; \
 \
 \
 \
-/* ShotMetadataView */\
-ShotMetadataView { background-color: %(grey)s; } \
-\
-\
-\
-\
-\
-\
 /* QProgressBar */\
-QProgressBar { border: 2px solid grey;\
-                 border-radius: 5px;\
+QProgressBar { border: none;\
+                 background-color: %(dark_grey)s;\
                  text-align: center;\
- } \
+} \
+\
+\
+/* QProgressBar - chunk */\
+QProgressBar::chunk { border: none;\
+                        background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 %(dark_orange)s, stop:1 %(bright_orange)s); \
+} \
+\
+\
+\
+\
+\
+\
+/* QLineEdit */\
+QLineEdit { border: none;\
+            background-color: %(grey)s;\
+} \
+\
+\
+/* QLineEdit - le_status*/\
+QLineEdit#le_status { border: none;\
+                        background-color: %(dark_orange)s;\
+                        color: %(bright_grey)s; \
+} \
+\
+\
+\
+\
+\
+\
+/* QScrollBar */\
+QScrollBar { background: %(dark_grey)s; \
+                    border: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QTableCornerButton */\
+QTableCornerButton { background-color: %(grey)s; \
+                        border: none; \
+}\
+\
+\
+/* QTableCornerButton - section */\
+QTableCornerButton::section { background-color: %(grey)s; \
+                                border: none; \
+}\
+\
+\
+\
+\
+\
+\
+/* ShotMetadataView */\
+ShotMetadataView { background-color: %(grey)s; \
+                    border-left: none; \
+                    border-top: none; \
+                    border-bottom: none; \
+                    border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QHeaderView - shot_metadata_view_hor_header*/\
+QHeaderView#shot_metadata_view_hor_header{ background-color: %(grey)s; \
+                                                    border-left: none; \
+                                                    border-top: none; \
+                                                    border-bottom: none; \
+                                                    border-right: none; \
+} \
+\
+\
+/* QHeaderView - shot_metadata_view_hor_header - section */\
+QHeaderView#shot_metadata_view_hor_header::section { background-color: qlineargradient(spread:reflect, x1:0.02, y1:0.02, x2:0, y2:0, stop:0.8 %(grey)s, stop:1 %(dark_orange)s); \
+                                                    border-left: none; \
+                                                    border-top: none; \
+                                                    border-bottom: none; \
+                                                    border-right: 1px solid %(bright_grey)s; \
+} \
+\
+\
+/* QHeaderView - shot_metadata_view_ver_header */\
+QHeaderView#shot_metadata_view_ver_header { background-color: %(grey)s; \
+                                                    border-left: none; \
+                                                    border-top: none; \
+                                                    border-bottom: none; \
+                                                    border-right: none; \
+} \
+\
+\
+/* QHeaderView - shot_metadata_view_ver_header - section */\
+QHeaderView#shot_metadata_view_ver_header::section { background-color: %(grey)s; \
+                                                    border-left: none; \
+                                                    border-top: none; \
+                                                    border-bottom: none; \
+                                                    border-right: none; \
+} \
 \
 \
 "%ss_dict

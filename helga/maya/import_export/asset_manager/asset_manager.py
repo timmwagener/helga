@@ -459,6 +459,9 @@ class AssetManager(form_class, base_class):
         self.wdgt_helga_header = global_functions.get_helga_header_widget(self.title, self.icon_path)
         self.lyt_header.addWidget(self.wdgt_helga_header)
 
+        #set_active_stacked_widget 
+        self.set_active_stacked_widget(self.btn_show_shot_metadata)
+
 
     def setup_style(self):
         """
@@ -516,6 +519,7 @@ class AssetManager(form_class, base_class):
 
         #le_status
         self.le_status = QtGui.QLineEdit()
+        self.le_status.setObjectName('le_status')
         #set in lyt
         self.lyt_status.addWidget(self.le_status)
 
@@ -844,9 +848,10 @@ class AssetManager(form_class, base_class):
 
         #progressbar
         self.progressbar = QtGui.QProgressBar()
+        self.progressbar.setObjectName('progressbar')
         #customize
         self.progressbar.setTextVisible(False)
-        self.progressbar.setValue(30)
+        self.progressbar.setValue(0)
         self.progressbar.setOrientation(QtCore.Qt.Vertical)
         self.progressbar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
 
@@ -876,6 +881,10 @@ class AssetManager(form_class, base_class):
         self.shot_metadata_view.horizontalHeader().setStretchLastSection(True)
         self.shot_metadata_view.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
         self.shot_metadata_view.setAlternatingRowColors(True)
+        #objectNames
+        self.shot_metadata_view.setObjectName('shot_metadata_view')
+        self.shot_metadata_view.horizontalHeader().setObjectName('shot_metadata_view_hor_header')
+        self.shot_metadata_view.verticalHeader().setObjectName('shot_metadata_view_ver_header')
         #add to ui
         self.lyt_shot_metadata.addWidget(self.shot_metadata_view)
 

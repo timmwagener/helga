@@ -162,9 +162,27 @@ class AssetManagerButton(QtGui.QPushButton):
 \
 \
 /* AssetManagerButton - normal */\
-AssetManagerButton { border-image: url(%(icon_path)s); background-color: %(background_color_normal)s; } \
-AssetManagerButton:hover { border-image: url(%(icon_path)s); background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, stop:0 %(hover_radial_color_normal)s, stop:1 %(background_color_normal)s); } \
-AssetManagerButton:pressed { border-image: url(%(icon_path)s); background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, stop:0 %(hover_radial_color_normal)s, stop:1 %(background_color_normal)s); } \
+AssetManagerButton { border-image: url(%(icon_path)s); \
+                        background-color: %(background_color_normal)s; \
+} \
+\
+\
+/* AssetManagerButton - normal - hover */\
+AssetManagerButton:hover { border-image: url(%(icon_path)s); \
+                            background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
+                                                                radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
+                                                                stop:0 %(hover_radial_color_normal)s, \
+                                                                stop:1 %(background_color_normal)s); \
+} \
+\
+\
+/* AssetManagerButton - normal - pressed */\
+AssetManagerButton:pressed { border-image: url(%(icon_path)s); \
+                                background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
+                                                                    radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
+                                                                    stop:0 %(hover_radial_color_normal)s, \
+                                                                    stop:1 %(background_color_normal)s); \
+} \
 \
 \
 "%self.ss_dict
@@ -174,9 +192,27 @@ AssetManagerButton:pressed { border-image: url(%(icon_path)s); background-color:
 \
 \
 /* AssetManagerButton - active */\
-AssetManagerButton { border-image: url(%(icon_path)s); background-color: %(background_color_active)s; } \
-AssetManagerButton:hover { border-image: url(%(icon_path)s); background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, stop:0 %(hover_radial_color_active)s, stop:1 %(background_color_active)s); } \
-AssetManagerButton:pressed { border-image: url(%(icon_path)s); background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, stop:0 %(hover_radial_color_active)s, stop:1 %(background_color_active)s); } \
+AssetManagerButton { border-image: url(%(icon_path)s); \
+                        background-color: %(background_color_active)s; \
+} \
+\
+\
+/* AssetManagerButton - active - hover */\
+AssetManagerButton:hover { border-image: url(%(icon_path)s); \
+                            background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
+                                                                radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
+                                                                stop:0 %(hover_radial_color_active)s, \
+                                                                stop:1 %(background_color_active)s); \
+} \
+\
+\
+/* AssetManagerButton - active - pressed */\
+AssetManagerButton:pressed { border-image: url(%(icon_path)s); \
+                                background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
+                                                                    radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
+                                                                    stop:0 %(hover_radial_color_active)s, \
+                                                                    stop:1 %(background_color_active)s); \
+} \
 \
 \
 "%self.ss_dict

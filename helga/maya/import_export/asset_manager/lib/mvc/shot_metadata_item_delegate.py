@@ -29,10 +29,14 @@ from PySide import QtCore
 #Import variable
 do_reload = True
 
+#table_view_editor_framerange
+import table_view_editor_framerange
+if(do_reload):reload(table_view_editor_framerange)
 
-#table_view_editor_integer
-import table_view_editor_integer
-if(do_reload):reload(table_view_editor_integer)
+#table_view_editor_nodepicker
+import table_view_editor_nodepicker
+if(do_reload):reload(table_view_editor_nodepicker)
+
 
 
 
@@ -230,28 +234,33 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
             
             return file_dialog
 
+
+        #column shotcam
+        elif(col == 2):
+
+            #nodepicker_editor
+            nodepicker_editor = table_view_editor_nodepicker.TableViewEditorNodepicker(node_type = 'camera',
+                                                                                        use_parent_in_model = True,
+                                                                                        parent = parent)
+            
+            return nodepicker_editor
+
+        
         #column start
         elif(col == 3):
 
-            #integer_editor
-            integer_editor = table_view_editor_integer.TableViewEditorInteger(parent = parent)
+            #framerange_editor
+            framerange_editor = table_view_editor_framerange.TableViewEditorFramerange(parent = parent)
             
-            return integer_editor
+            return framerange_editor
 
         #column end
         elif(col == 4):
 
-            combo = QtGui.QComboBox(parent)
-            li = []
-            li.append("Zero")
-            li.append("One")
-            li.append("Two")
-            li.append("Three")
-            li.append("Four")
-            li.append("Five")
-            combo.addItems(li)
+            #framerange_editor
+            framerange_editor = table_view_editor_framerange.TableViewEditorFramerange(parent = parent)
             
-            return combo
+            return framerange_editor
 
         #other columns
         else:
@@ -276,20 +285,32 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
         row = index.row()
         col = index.column()
 
-        #center_point
-        center_point = QtGui.QCursor.pos()
+        #mouse_pos
+        mouse_pos = QtGui.QCursor.pos()
         
 
         #column alembic path
         if(col == 1):
 
-            editor.move(center_point)
+            editor.move(mouse_pos)
+
+
+        #column shotcam
+        elif(col == 2):
+
+            editor.move(mouse_pos)
 
         
         #column start
         elif(col == 3):
 
-            editor.move(center_point)
+            editor.move(mouse_pos)
+
+
+        #column end
+        elif(col == 4):
+
+            editor.move(mouse_pos)
 
 
         #other columns
@@ -325,11 +346,21 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
                 pass
 
 
+        #column shotcam
+        elif(col == 2):
+
+            try:
+                editor.set_selection_from_node_name(str(index.model().data(index)))
+                
+            except:
+                pass
+
+
         #column start
         elif(col == 3):
 
             try:
-                editor.set_integer(int(index.model().data(index)))
+                editor.set_frame(int(index.model().data(index)))
                 
             except:
                 pass
@@ -339,11 +370,10 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
         elif(col == 4):
 
             try:
-                editor.blockSignals(True)
-                editor.setCurrentIndex(int(index.model().data(index)))
-                editor.blockSignals(False)
+                editor.set_frame(int(index.model().data(index)))
+                
             except:
-                editor.setCurrentIndex(-1)
+                pass
 
         #other columns
         else:
@@ -375,15 +405,20 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
 
             model.setData(index, editor.directory().absolutePath())
 
+        #column shotcam
+        elif(col == 2):
+
+            model.setData(index, editor.get_selected_node_name())
+
         #column start
         elif(col == 3):
 
-            model.setData(index, editor.get_integer())
+            model.setData(index, editor.get_frame())
 
         #column end
         elif(col == 4):
 
-            model.setData(index, editor.currentIndex())
+            model.setData(index, editor.get_frame())
 
         #other columns
         else:

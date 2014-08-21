@@ -57,6 +57,9 @@ from PySide import QtCore
 #AssetManager Sizes
 STACKEDWIDGET_DIVIDER_HEIGHT = 3
 
+#transparency
+TABLEVIEW_EDITOR_TRANSPARENCY = 125
+
 #AssetManager colors
 BRIGHT_ORANGE = QtGui.QColor('#f9661e')
 DARK_ORANGE = QtGui.QColor('#b13b00')

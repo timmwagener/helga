@@ -456,8 +456,8 @@ class AssetManager(form_class, base_class):
         self.setup_style()
         
         #helga_tool_header
-        self.wdgt_helga_header = global_functions.get_helga_header_widget(self.title, self.icon_path)
-        self.lyt_header.addWidget(self.wdgt_helga_header)
+        #self.wdgt_helga_header = global_functions.get_helga_header_widget(self.title, self.icon_path)
+        #self.lyt_header.addWidget(self.wdgt_helga_header)
 
         #set_active_stacked_widget 
         self.set_active_stacked_widget(self.btn_show_shot_metadata)
@@ -878,7 +878,7 @@ class AssetManager(form_class, base_class):
         self.shot_metadata_view.setWordWrap(True)
         #set resize mode for horizontal header
         self.shot_metadata_view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-        self.shot_metadata_view.horizontalHeader().setStretchLastSection(True)
+        self.shot_metadata_view.horizontalHeader().setStretchLastSection(False)
         self.shot_metadata_view.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
         self.shot_metadata_view.setAlternatingRowColors(True)
         #objectNames

@@ -22,8 +22,16 @@ Module that has only one method.
 import sys
 import os
 
+#tool_root_path
+tool_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+sys.path.append(tool_root_path)
+
+#media_path
+media_path = os.path.join(tool_root_path, 'media')
+sys.path.append(media_path)
+
 #icons_path
-icons_path = os.path.join(os.path.dirname(__file__), 'icons')
+icons_path = os.path.join(media_path, 'icons')
 sys.path.append(icons_path)
 
 
@@ -59,6 +67,9 @@ if(do_reload):reload(asset_manager_globals)
 #Globals
 #------------------------------------------------------------------
 
+#Transparency
+TABLEVIEW_EDITOR_TRANSPARENCY = asset_manager_globals.TABLEVIEW_EDITOR_TRANSPARENCY
+
 #AssetManager colors
 BRIGHT_ORANGE = asset_manager_globals.BRIGHT_ORANGE
 DARK_ORANGE = asset_manager_globals.DARK_ORANGE
@@ -80,11 +91,17 @@ def get_stylesheet():
     """
 
     #ss_dict
-    ss_dict = {'bright_orange' : BRIGHT_ORANGE.name(),
+    ss_dict = {'icon_path' : os.path.abspath(os.path.join(icons_path, 'icn_asset_manager_header_one.png')).replace('\\', '/'), 
+                'bright_orange' : BRIGHT_ORANGE.name(),
+                'bright_orange_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_ORANGE.red(), BRIGHT_ORANGE.green(), BRIGHT_ORANGE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
 			    'dark_orange' : DARK_ORANGE.name(),
+                'dark_orange_transparent' : 'rgba({0},{1},{2},{3})'.format(DARK_ORANGE.red(), DARK_ORANGE.green(), DARK_ORANGE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
 			    'bright_grey' : BRIGHT_GREY.name(),
+                'bright_grey_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_GREY.red(), BRIGHT_GREY.green(), BRIGHT_GREY.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
 			    'grey' : GREY.name(),
-			    'dark_grey' : DARK_GREY.name()}
+                'grey_transparent' : 'rgba({0},{1},{2},{3})'.format(GREY.red(), GREY.green(), GREY.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
+			    'dark_grey' : DARK_GREY.name(),
+                'dark_grey_transparent' : 'rgba({0},{1},{2},{3})'.format(DARK_GREY.red(), DARK_GREY.green(), DARK_GREY.blue(), TABLEVIEW_EDITOR_TRANSPARENCY)}
 
 
     #str_stylesheet
@@ -93,6 +110,10 @@ def get_stylesheet():
 \
 /* QWidget */\
 QWidget { background-color: %(dark_grey)s; } \
+\
+\
+/* QWidget - wdgt_header_icon */\
+QWidget#wdgt_header_icon { border-image: url(%(icon_path)s); } \
 \
 \
 /* QWidget - wdgt_explanation */\
@@ -118,7 +139,8 @@ QLabel#lbl_explanation_header { background-color: transparent; \
                                 margin-top: 10; \
                                 margin-left: 10; \
                                 margin-bottom: 4; \
-                                margin-right: 10; } \
+                                margin-right: 10; \
+} \
 \
 \
 /* QLabel - lbl_explanation_text */\
@@ -128,7 +150,8 @@ QLabel#lbl_explanation_text { background-color: transparent; \
                                 margin-top: 4; \
                                 margin-left: 10; \
                                 margin-bottom: 4; \
-                                margin-right: 10; } \
+                                margin-right: 10; \
+} \
 \
 \
 \
@@ -241,6 +264,134 @@ QHeaderView#shot_metadata_view_ver_header::section { background-color: %(grey)s;
                                                     border-top: none; \
                                                     border-bottom: none; \
                                                     border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* TableViewEditorFramerange */\
+/* This widget has a transparent background. Below are the stylesheets for the */\
+/* children of this widget. */\
+\
+\
+/* QSpinBox - spnbx_frame */\
+QSpinBox#spnbx_frame { background-color: transparent; \
+                        border-left: none; \
+                        border-top: 1px solid %(bright_orange_transparent)s; \
+                        border-bottom: 1px solid %(bright_orange_transparent)s; \
+                        border-right: none; \
+} \
+\
+\
+/* QWidget - wdgt_table_view_editor_framerange_main */\
+QWidget#wdgt_table_view_editor_framerange_main { background-color: %(grey_transparent)s; \
+                                                    border: 1px solid %(bright_orange_transparent)s; \
+} \
+\
+\
+/* QWidget - wdgt_frame */\
+QWidget#wdgt_frame { background-color: transparent; \
+} \
+\
+\
+/* QWidget - wdgt_range_and_time_slider */\
+QWidget#wdgt_range_and_time_slider { background-color: transparent; \
+} \
+\
+\
+/* QWidget - wdgt_frame_slider */\
+QWidget#wdgt_frame_slider { background-color: transparent; \
+                            border-left: none; \
+                            border-top: none; \
+                            border-bottom: none; \
+                            border-right: none; \
+} \
+\
+\
+/* QWidget - wdgt_frame_slider_left */\
+QWidget#wdgt_frame_slider_left { background-color: qlineargradient(spread:reflect, x1:0.3, y1:0, x2:0, y2:0, \
+                                                                    stop:0.45 transparent, \
+                                                                    stop:0.5 %(dark_orange_transparent)s, \
+                                                                    stop:0.55 transparent); \
+} \
+\
+\
+/* QWidget - wdgt_frame_slider_right */\
+QWidget#wdgt_frame_slider_right { background-color: qlineargradient(spread:reflect, x1:0.1, y1:0, x2:0, y2:0, \
+                                                                    stop:0.45 transparent, \
+                                                                    stop:0.5 %(dark_orange_transparent)s, \
+                                                                    stop:0.55 transparent); \
+} \
+\
+\
+/* AssetManagerHoverButton - btn_get_current_frame*/\
+AssetManagerHoverButton#btn_get_current_frame { background-color: %(bright_grey_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border: none; \
+} \
+\
+\
+/* QWidget - wdgt_range_slider */\
+QWidget#wdgt_range_slider { background-color: transparent; \
+                            border-left: none; \
+                            border-top: none; \
+                            border-bottom: none; \
+                            border-right: none; \
+} \
+\
+\
+/* QWidget - wdgt_range_scrollbar */\
+QWidget#wdgt_range_scrollbar { background-color: transparent; \
+} \
+\
+\
+/* QWidget - wdgt_range_slider_left */\
+QWidget#wdgt_range_slider_left { background-color: %(dark_grey_transparent)s; \
+} \
+\
+\
+/* QWidget - wdgt_range_slider_middle */\
+QWidget#wdgt_range_slider_middle { background-color: %(bright_grey_transparent)s; \
+} \
+\
+\
+/* QWidget - wdgt_range_slider_right */\
+QWidget#wdgt_range_slider_right { background-color: %(dark_grey_transparent)s; \
+} \
+\
+\
+/* QLabel - lbl_framesource */\
+QLabel#lbl_framesource { background-color: transparent; \
+} \
+\
+\
+/* AssetManagerHoverButton - btn_complete_range_start*/\
+AssetManagerHoverButton#btn_complete_range_start { background-color: %(grey_transparent)s; \
+                                                    color: %(bright_grey)s; \
+                                                    border: 1px solid %(bright_orange_transparent)s; \
+} \
+\
+\
+/* AssetManagerHoverButton - btn_current_range_start*/\
+AssetManagerHoverButton#btn_current_range_start { background-color: %(dark_orange_transparent)s; \
+                                                    color: %(bright_grey)s; \
+                                                    border: 1px solid %(bright_orange_transparent)s; \
+} \
+\
+\
+/* AssetManagerHoverButton - btn_complete_range_end*/\
+AssetManagerHoverButton#btn_complete_range_end { background-color: %(grey_transparent)s; \
+                                                    color: %(bright_grey)s; \
+                                                    border: 1px solid %(bright_orange_transparent)s; \
+} \
+\
+\
+/* AssetManagerHoverButton - btn_current_range_end*/\
+AssetManagerHoverButton#btn_current_range_end { background-color: %(dark_orange_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border: 1px solid %(bright_orange_transparent)s; \
 } \
 \
 \

@@ -83,3 +83,45 @@ class AssetManagerFunctionality(object):
             pass
 
         return []
+
+
+    def get_current_frame(self):
+        """
+        Return current frame.
+        """
+
+        return pm.animation.currentTime()
+
+
+    def get_current_framerange_start(self):
+        """
+        Return start of current framerange. (Not complete range)
+        """
+
+        return pm.playbackOptions(q = True, min = True)
+
+
+    def get_current_framerange_end(self):
+        """
+        Return end of current framerange. (Not complete range)
+        """
+
+        return pm.playbackOptions(q = True, max = True)
+
+
+    def get_complete_framerange_start(self):
+        """
+        Return start of complete framerange.
+        """
+
+        return pm.playbackOptions(q = True, ast = True)
+
+
+    def get_complete_framerange_end(self):
+        """
+        Return end of complete framerange.
+        """
+
+        return pm.playbackOptions(q = True, aet = True)
+
+

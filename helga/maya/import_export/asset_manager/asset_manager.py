@@ -924,10 +924,11 @@ class AssetManager(form_class, base_class):
         """
         Create and display shot metadata context menu.
         """
-    
-        menu = shot_metadata_context_menu.ShotMetadataContextMenu(parent = self)
-        menu.set_view(self.shot_metadata_view)
-        menu.popup(self.shot_metadata_view.mapToGlobal(pos))
+        
+        #context_menu
+        context_menu = shot_metadata_context_menu.ShotMetadataContextMenu(parent = self)
+        context_menu.set_view(self.shot_metadata_view)
+        context_menu.popup(self.shot_metadata_view.mapToGlobal(pos))
 
 
 

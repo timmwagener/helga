@@ -15,26 +15,6 @@ Module that has only one method.
 
 
 
-#Add tool relative pathes
-#------------------------------------------------------------------
-
-#import
-import sys
-import os
-
-#tool_root_path
-tool_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
-sys.path.append(tool_root_path)
-
-#media_path
-media_path = os.path.join(tool_root_path, 'media')
-sys.path.append(media_path)
-
-#icons_path
-icons_path = os.path.join(media_path, 'icons')
-sys.path.append(icons_path)
-
-
 
 
 
@@ -43,11 +23,6 @@ sys.path.append(icons_path)
 #Import
 #------------------------------------------------------------------
 
-#PySide
-from PySide import QtGui
-from PySide import QtCore
-
-
 #Import variable
 do_reload = True
 
@@ -55,7 +30,7 @@ do_reload = True
 #asset_manager
 
 #asset_manager_globals
-import asset_manager_globals
+from lib import asset_manager_globals
 if(do_reload):reload(asset_manager_globals)
 
 
@@ -66,6 +41,14 @@ if(do_reload):reload(asset_manager_globals)
 
 #Globals
 #------------------------------------------------------------------
+
+#Pathes
+TOOL_ROOT_PATH = asset_manager_globals.TOOL_ROOT_PATH
+MEDIA_PATH = asset_manager_globals.MEDIA_PATH
+ICONS_PATH = asset_manager_globals.ICONS_PATH
+
+#Header
+HEADER_IMAGE = asset_manager_globals.HEADER_IMAGE
 
 #Transparency
 TABLEVIEW_EDITOR_TRANSPARENCY = asset_manager_globals.TABLEVIEW_EDITOR_TRANSPARENCY
@@ -91,7 +74,7 @@ def get_stylesheet():
     """
 
     #ss_dict
-    ss_dict = {'icon_path' : os.path.abspath(os.path.join(icons_path, 'icn_asset_manager_header_one.png')).replace('\\', '/'), 
+    ss_dict = {'icon_path' : HEADER_IMAGE, 
                 'bright_orange' : BRIGHT_ORANGE.name(),
                 'bright_orange_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_ORANGE.red(), BRIGHT_ORANGE.green(), BRIGHT_ORANGE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
 			    'dark_orange' : DARK_ORANGE.name(),
@@ -126,6 +109,20 @@ QWidget#wdgt_export { background-color: %(bright_orange)s; } \
 \
 /* QWidget - wdgt_docs */\
 QWidget#wdgt_docs { background-color: %(dark_orange)s; } \
+\
+\
+\
+\
+\
+\
+/* QToolTip */\
+QToolTip { background-color: %(dark_grey)s; \
+            color: %(bright_grey)s; \
+            border-left: none; \
+            border-top: 1px solid %(bright_orange)s; \
+            border-bottom: none; \
+            border-right: none; \
+} \
 \
 \
 \
@@ -220,6 +217,9 @@ QTableCornerButton::section { background-color: %(grey)s; \
 \
 /* ShotMetadataView */\
 ShotMetadataView { background-color: %(grey)s; \
+                    selection-background-color: qlineargradient(spread:pad, x1:0.7, y1:0.9, x2:1, y2:1, \
+                    stop:0 %(grey)s, \
+                    stop:1 %(bright_orange_transparent)s); \
                     border-left: none; \
                     border-top: none; \
                     border-bottom: none; \
@@ -264,6 +264,25 @@ QHeaderView#shot_metadata_view_ver_header::section { background-color: %(grey)s;
                                                     border-top: none; \
                                                     border-bottom: none; \
                                                     border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* ShotMetadataContextMenu */\
+ShotMetadataContextMenu { background-color: %(dark_grey_transparent)s; \
+                            color: %(bright_grey)s; \
+                            border-left: none; \
+                            border-top: 1px solid %(bright_orange)s; \
+                            border-bottom: none; \
+                            border-right: none; \
+} \
+\
+\
+/* ShotMetadataContextMenu -item - selected */\
+ShotMetadataContextMenu::item:selected { background-color: %(bright_orange_transparent)s; \
 } \
 \
 \
@@ -392,6 +411,51 @@ AssetManagerHoverButton#btn_complete_range_end { background-color: %(grey_transp
 AssetManagerHoverButton#btn_current_range_end { background-color: %(dark_orange_transparent)s; \
                                                 color: %(bright_grey)s; \
                                                 border: 1px solid %(bright_orange_transparent)s; \
+} \
+\
+\
+\
+\
+\
+\
+/* TableViewEditorNodepicker */\
+/* This widget has a transparent background. Below are the stylesheets for the */\
+/* children of this widget. */\
+\
+\
+/* QWidget - wdgt_table_view_editor_nodepicker_main */\
+QWidget#wdgt_table_view_editor_nodepicker_main { background-color: %(grey_transparent)s; \
+                                                    border: 1px solid %(bright_orange_transparent)s; \
+} \
+\
+\
+/* QLabel - lbl_nodetype */\
+QLabel#lbl_nodetype { background-color: %(grey_transparent)s; \
+} \
+\
+\
+/* QLineEdit - le_filter */\
+QLineEdit#le_filter { background-color: %(dark_grey_transparent)s; \
+                        border: 1px solid %(dark_orange_transparent)s; \
+} \
+\
+\
+/* QListView - node_view */\
+QListView#node_view { background-color: %(grey_transparent)s; \
+                        alternate-background-color: %(dark_grey_transparent)s; \
+                        border-left: none; \
+                        border-top: none; \
+                        border-bottom: none; \
+                        border-right: none; \
+} \
+\
+\
+/* QListView - node_view - item selected */\
+QListView#node_view::item:selected { background-color: %(bright_orange)s; \
+                                        border-left: none; \
+                                        border-top: none; \
+                                        border-bottom: none; \
+                                        border-right: none; \
 } \
 \
 \

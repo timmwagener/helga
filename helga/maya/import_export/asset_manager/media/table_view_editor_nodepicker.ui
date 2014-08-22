@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QWidget" name="wdgt_main" native="true">
+    <widget class="QWidget" name="wdgt_table_view_editor_nodepicker_main" native="true">
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <widget class="QLabel" name="lbl_nodetype">

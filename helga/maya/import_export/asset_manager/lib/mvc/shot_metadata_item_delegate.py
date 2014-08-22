@@ -30,11 +30,11 @@ from PySide import QtCore
 do_reload = True
 
 #table_view_editor_framerange
-import table_view_editor_framerange
+from lib.mvc import table_view_editor_framerange
 if(do_reload):reload(table_view_editor_framerange)
 
 #table_view_editor_nodepicker
-import table_view_editor_nodepicker
+from lib.mvc import table_view_editor_nodepicker
 if(do_reload):reload(table_view_editor_nodepicker)
 
 

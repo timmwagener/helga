@@ -18,8 +18,6 @@ and a normal and active color.
 #Import
 #------------------------------------------------------------------
 #python
-import sys
-import os
 import logging
 #PySide
 from PySide import QtGui
@@ -36,7 +34,7 @@ do_reload = True
 #asset_manager
 
 #asset_manager_globals
-import asset_manager_globals
+from lib import asset_manager_globals
 if(do_reload):reload(asset_manager_globals)
 
 

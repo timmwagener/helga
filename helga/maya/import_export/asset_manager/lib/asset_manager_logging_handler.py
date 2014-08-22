@@ -14,9 +14,6 @@ Automaticaly log to le_status from given widget.
 #------------------------------------------------------------------
 #python
 import logging
-#PySide
-from PySide import QtGui
-from PySide import QtCore
 
 
 

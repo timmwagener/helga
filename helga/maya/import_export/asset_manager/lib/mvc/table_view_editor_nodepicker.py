@@ -22,45 +22,12 @@ node type and allows to pick from all nodes of the same type that are in the sce
 
 
 
-#Add tool relative pathes
-#------------------------------------------------------------------
-
-#import
-import sys
-import os
-
-#tool_root_path
-tool_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir))
-sys.path.append(tool_root_path)
-
-#media_path
-media_path = os.path.join(tool_root_path, 'media')
-sys.path.append(media_path)
-
-#icons_path
-icons_path = os.path.join(media_path, 'icons')
-sys.path.append(icons_path)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #Import
 #------------------------------------------------------------------
 #python
+import sys
+import os
 import functools
 import logging
 import subprocess
@@ -92,6 +59,12 @@ if(do_reload):reload(global_variables)
 from helga.general.setup.global_functions import global_functions
 if(do_reload):reload(global_functions)
 
+#asset_manager
+
+#asset_manager_globals
+from lib import asset_manager_globals
+if(do_reload):reload(asset_manager_globals)
+
 #asset_manager_functionality
 from lib import asset_manager_functionality
 if(do_reload):reload(asset_manager_functionality)
@@ -104,7 +77,13 @@ if(do_reload):reload(asset_manager_functionality)
 
 
 
+#Globals
+#------------------------------------------------------------------
 
+#Pathes
+TOOL_ROOT_PATH = asset_manager_globals.TOOL_ROOT_PATH
+MEDIA_PATH = asset_manager_globals.MEDIA_PATH
+ICONS_PATH = asset_manager_globals.ICONS_PATH
 
 
 
@@ -119,7 +98,7 @@ if(do_reload):reload(asset_manager_functionality)
 
 #ui_file
 ui_file_name = 'table_view_editor_nodepicker.ui'
-ui_file = os.path.join(media_path, ui_file_name)
+ui_file = os.path.join(MEDIA_PATH, ui_file_name)
 
 #form_class, base_class
 form_class, base_class = global_functions.load_ui_type(ui_file)

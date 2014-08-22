@@ -69,6 +69,46 @@ class AssetManagerFunctionality(object):
     #Maya
     #------------------------------------------------------------------
 
+    def create_node(self, node_type):
+        """
+        Create node of given type. Node type is given as string.
+        """
+        
+        #select
+        new_node = pm.createNode(node_type)
+
+        return new_node
+
+
+    def select_nodes(self, pynode_list):
+        """
+        Select all pynodes from pynode_list.
+        """
+        
+        #clear
+        pm.select(cl = True)
+
+        #select
+        pm.select(pynode_list, r = True)
+
+
+    def delete_nodes(self, pynode_list):
+        """
+        Delete all pynodes from pynode_list.
+        """
+        
+        #clear
+        pm.select(cl = True)
+
+        #iterate and delete
+        for pynode in pynode_list:
+            
+            try:
+                pm.delete(pynode)
+            except:
+                self.logger.debug('Error deleting node {0}'.format(pynode.name()))
+
+
     def get_nodes_of_type(self, node_type, selection = False):
         """
         Return list of asset metadata nodes.
@@ -123,5 +163,35 @@ class AssetManagerFunctionality(object):
         """
 
         return pm.playbackOptions(q = True, aet = True)
+
+
+    def remove_duplicate_pynodes(self, pynode_list):
+        """
+        Remove duplicate pynodes from list and return corrected list.
+        This does NOT detect several PyNodes pointing to the same object,
+        it only detects references to the same PyNode.
+        """
+
+        #pynode_id_list
+        pynode_id_list = []
+
+        #clean_pynode_list
+        clean_pynode_list = []
+
+        #iterate
+        for pynode in pynode_list:
+
+            #pynode_id
+            pynode_id = id(pynode)
+
+            #pynode already in list, continue
+            if (pynode_id in pynode_id_list):
+                continue
+
+            #else append
+            pynode_id_list.append(pynode_id)
+            clean_pynode_list.append(pynode)
+
+        return clean_pynode_list
 
 

@@ -9,24 +9,6 @@ Subclass of QPushButton to allow for hover signal when hovered with mouse.
 
 
 
-#Add tool relative pathes
-#------------------------------------------------------------------
-
-#import
-import sys
-import os
-
-#tool_root_path
-tool_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
-sys.path.append(tool_root_path)
-
-#media_path
-media_path = os.path.join(tool_root_path, 'media')
-sys.path.append(media_path)
-
-#icons_path
-icons_path = os.path.join(media_path, 'icons')
-sys.path.append(icons_path)
 
 
 
@@ -52,7 +34,7 @@ do_reload = True
 #asset_manager
 
 #asset_manager_globals
-import asset_manager_globals
+from lib import asset_manager_globals
 if(do_reload):reload(asset_manager_globals)
 
 
@@ -62,6 +44,11 @@ if(do_reload):reload(asset_manager_globals)
 
 #Globals
 #------------------------------------------------------------------
+
+#Pathes
+TOOL_ROOT_PATH = asset_manager_globals.TOOL_ROOT_PATH
+MEDIA_PATH = asset_manager_globals.MEDIA_PATH
+ICONS_PATH = asset_manager_globals.ICONS_PATH
 
 #AssetManager colors
 BRIGHT_ORANGE = asset_manager_globals.BRIGHT_ORANGE

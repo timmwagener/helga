@@ -9,24 +9,6 @@ Subclass of QPushButton to allow for customized drag&drop behaviour
 
 
 
-#Add tool relative pathes
-#------------------------------------------------------------------
-
-#import
-import sys
-import os
-
-#tool_root_path
-tool_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
-sys.path.append(tool_root_path)
-
-#media_path
-media_path = os.path.join(tool_root_path, 'media')
-sys.path.append(media_path)
-
-#icons_path
-icons_path = os.path.join(media_path, 'icons')
-sys.path.append(icons_path)
 
 
 
@@ -38,6 +20,7 @@ sys.path.append(icons_path)
 #Import
 #------------------------------------------------------------------
 #python
+import os
 import logging
 #PySide
 from PySide import QtGui
@@ -52,7 +35,7 @@ do_reload = True
 #asset_manager
 
 #asset_manager_globals
-import asset_manager_globals
+from lib import asset_manager_globals
 if(do_reload):reload(asset_manager_globals)
 
 
@@ -62,6 +45,11 @@ if(do_reload):reload(asset_manager_globals)
 
 #Globals
 #------------------------------------------------------------------
+
+#Pathes
+TOOL_ROOT_PATH = asset_manager_globals.TOOL_ROOT_PATH
+MEDIA_PATH = asset_manager_globals.MEDIA_PATH
+ICONS_PATH = asset_manager_globals.ICONS_PATH
 
 #AssetManager colors
 BRIGHT_ORANGE = asset_manager_globals.BRIGHT_ORANGE
@@ -107,6 +95,8 @@ class AssetManagerButton(QtGui.QPushButton):
                 background_color_active = GREY,
                 hover_radial_color_active = DARK_ORANGE,
                 hover_radial_radius = 0.45,
+                label_header_text = 'label_header_text',
+                label_text = 'label_text',
                 parent=None):
         """
         AssetManagerButton instance customization.
@@ -139,8 +129,13 @@ class AssetManagerButton(QtGui.QPushButton):
         self.hover_radial_radius = hover_radial_radius
 
         #icon_path
-        self.icon_path = os.path.join(icons_path, self.icon_name)
+        self.icon_path = os.path.join(ICONS_PATH, self.icon_name)
         self.icon_path = self.icon_path.replace('\\', '/')
+
+        #label_header_text
+        self.label_header_text = label_header_text
+        #label_text
+        self.label_text = label_text
         
 
         
@@ -314,7 +309,7 @@ AssetManagerButton:pressed { border-image: url(%(icon_path)s); \
         icon_height = int(self.height() * resize_factor)
 
         #icon
-        self.pixmap_icon = QtGui.QPixmap(os.path.join(icons_path, self.icon_name))
+        self.pixmap_icon = QtGui.QPixmap(os.path.join(ICONS_PATH, self.icon_name))
         self.pixmap_icon = self.pixmap_icon.scaled(icon_width, icon_height, mode = QtCore.Qt.FastTransformation)
         self.icon = QtGui.QIcon(self.pixmap_icon)
 

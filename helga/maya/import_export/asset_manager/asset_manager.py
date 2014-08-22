@@ -31,24 +31,7 @@ Idea list:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Add tool relative pathes
+#Add tool root path
 #------------------------------------------------------------------
 
 #import
@@ -56,29 +39,8 @@ import sys
 import os
 
 #tool_root_path
-tool_root_path = os.path.dirname(__file__)
+tool_root_path = os.path.abspath(__file__)
 sys.path.append(tool_root_path)
-
-#media_path
-media_path = os.path.join(tool_root_path, 'media')
-sys.path.append(media_path)
-
-#icons_path
-icons_path = os.path.join(media_path, 'icons')
-sys.path.append(icons_path)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -125,6 +87,10 @@ if(do_reload): reload(doc_link)
 
 #asset_manager
 
+#asset_manager_globals
+from lib import asset_manager_globals
+if(do_reload):reload(asset_manager_globals)
+
 #asset_manager_logging_handler
 from lib import asset_manager_logging_handler
 if(do_reload):reload(asset_manager_logging_handler)
@@ -133,21 +99,19 @@ if(do_reload):reload(asset_manager_logging_handler)
 from lib import asset_manager_functionality
 if(do_reload):reload(asset_manager_functionality)
 
+
 #asset_manager_button
-from lib import asset_manager_button
+from lib.gui import asset_manager_button
 if(do_reload):reload(asset_manager_button)
 
 #asset_manager_stylesheet_widget
-from lib import asset_manager_stylesheet_widget
+from lib.gui import asset_manager_stylesheet_widget
 if(do_reload):reload(asset_manager_stylesheet_widget)
 
 #asset_manager_stylesheets
-from lib import asset_manager_stylesheets
+from lib.gui import asset_manager_stylesheets
 if(do_reload):reload(asset_manager_stylesheets)
 
-#asset_manager_globals
-from lib import asset_manager_globals
-if(do_reload):reload(asset_manager_globals)
 
 #shot_metadata_model
 from lib.mvc import shot_metadata_model
@@ -161,6 +125,10 @@ if(do_reload):reload(shot_metadata_view)
 from lib.mvc import shot_metadata_item_delegate
 if(do_reload):reload(shot_metadata_item_delegate)
 
+#shot_metadata_context_menu
+from lib.mvc import shot_metadata_context_menu
+if(do_reload):reload(shot_metadata_context_menu)
+
 
 
 
@@ -171,9 +139,13 @@ if(do_reload):reload(shot_metadata_item_delegate)
 #Globals
 #------------------------------------------------------------------
 
+#Pathes
+TOOL_ROOT_PATH = asset_manager_globals.TOOL_ROOT_PATH
+MEDIA_PATH = asset_manager_globals.MEDIA_PATH
+ICONS_PATH = asset_manager_globals.ICONS_PATH
+
 #AssetManager Sizes
 STACKEDWIDGET_DIVIDER_HEIGHT = asset_manager_globals.STACKEDWIDGET_DIVIDER_HEIGHT
-
 
 #AssetManager colors
 BRIGHT_ORANGE = asset_manager_globals.BRIGHT_ORANGE
@@ -194,16 +166,16 @@ ICON_SHOT = asset_manager_globals.ICON_SHOT
 ICON_UPDATE = asset_manager_globals.ICON_UPDATE
 ICON_DOCS = asset_manager_globals.ICON_DOCS
 
-ICON_EXPORT_HOVER = asset_manager_globals.ICON_EXPORT_HOVER
-ICON_CHAR_HOVER = asset_manager_globals.ICON_CHAR_HOVER
-ICON_PROP_HOVER = asset_manager_globals.ICON_PROP_HOVER
-ICON_SHOT_HOVER = asset_manager_globals.ICON_SHOT_HOVER
-ICON_UPDATE_HOVER = asset_manager_globals.ICON_UPDATE_HOVER
-ICON_DOCS_HOVER = asset_manager_globals.ICON_DOCS_HOVER
+#Text
+SHOT_METADATA_EXPLANATION_HEADER = asset_manager_globals.SHOT_METADATA_EXPLANATION_HEADER
+SHOT_METADATA_EXPLANATION_TEXT = asset_manager_globals.SHOT_METADATA_EXPLANATION_TEXT
+PROP_METADATA_EXPLANATION_HEADER = asset_manager_globals.PROP_METADATA_EXPLANATION_HEADER
+PROP_METADATA_EXPLANATION_TEXT = asset_manager_globals.PROP_METADATA_EXPLANATION_TEXT
+CHAR_METADATA_EXPLANATION_HEADER = asset_manager_globals.CHAR_METADATA_EXPLANATION_HEADER
+CHAR_METADATA_EXPLANATION_TEXT = asset_manager_globals.CHAR_METADATA_EXPLANATION_TEXT
 
 
-
-#UI colors
+#UI Palette
 WINDOW_COLOR = DARK_GREY#QtGui.QPalette.Window // A general background color.
 BACKGROUND_COLOR = DARK_GREY#QtGui.QPalette.Background // This value is obsolete. Use Window instead.
 WINDOWTEXT_COLOR = BRIGHT_GREY#QtGui.QPalette.WindowText // A general foreground color.
@@ -295,7 +267,7 @@ def check_and_delete_wdgt_instances_with_name(wdgt_name):
 
 #ui_file
 ui_file_name = 'asset_manager.ui'
-ui_file = os.path.join(media_path, ui_file_name)
+ui_file = os.path.join(MEDIA_PATH, ui_file_name)
 
 #form_class, base_class
 form_class, base_class = global_functions.load_ui_type(ui_file)
@@ -317,6 +289,8 @@ class AssetManager(form_class, base_class):
     #Signals
     #------------------------------------------------------------------
     stkwdgt_change_current = QtCore.Signal(int)
+    explanation_header_set_text = QtCore.Signal(str)
+    explanation_text_set_text = QtCore.Signal(str)
 
 
     
@@ -355,7 +329,7 @@ class AssetManager(form_class, base_class):
         self.title_name = self.__class__.__name__
         self.version = 0.1
         self.title = self.title_name +' ' + str(self.version)
-        self.icon_path = os.path.join(icons_path, 'icon_asset_manager.png')
+        self.icon_path = os.path.join(ICONS_PATH, 'icon_asset_manager.png')
 
         #asset_manager_functionality
         self.asset_manager_functionality = asset_manager_functionality.AssetManagerFunctionality()
@@ -398,6 +372,9 @@ class AssetManager(form_class, base_class):
 
         #connect_ui
         self.connect_ui()
+
+        #style_ui
+        self.style_ui()
 
         #test_methods
         self.test_methods()
@@ -452,18 +429,48 @@ class AssetManager(form_class, base_class):
         if(self.auto_update_models):
             self.setup_auto_update_models()
 
-        #setup_style
-        self.setup_style()
+
+    def connect_ui(self):
+        """
+        Connect UI widgets with slots or functions.
+        """
+
+        #Signals
+        self.stkwdgt_change_current.connect(self.stkwdgt_metadata.setCurrentIndex)
+        self.explanation_header_set_text.connect(self.lbl_explanation_header.setText)
+        self.explanation_text_set_text.connect(self.lbl_explanation_text.setText)
+
         
-        #helga_tool_header
-        #self.wdgt_helga_header = global_functions.get_helga_header_widget(self.title, self.icon_path)
-        #self.lyt_header.addWidget(self.wdgt_helga_header)
+        #Context Menus
 
-        #set_active_stacked_widget 
-        self.set_active_stacked_widget(self.btn_show_shot_metadata)
+        #shot_metadata_view
+        self.shot_metadata_view.customContextMenuRequested.connect(self.display_shot_metadata_context_menu)
 
+        
+        #Widgets
 
-    def setup_style(self):
+        #btn_docs
+        self.btn_docs.clicked.connect(doc_link.run)
+        
+        #btn_show_shot_metadata
+        self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_shot_metadata))
+        self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_explanation_text, self.btn_show_shot_metadata))
+        #btn_show_prop_metadata
+        self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_prop_metadata))
+        self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_explanation_text, self.btn_show_prop_metadata))
+        #btn_show_char_metadata
+        self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_char_metadata))
+        self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_explanation_text, self.btn_show_char_metadata))
+
+        #btn_export
+        self.btn_export.clicked.connect(functools.partial(self.dummy_method, 'Export'))
+
+        #btn_update_models
+        if not(self.auto_update_models):
+            self.btn_update_models.clicked.connect(self.update_models)
+
+    
+    def style_ui(self):
         """
         Setup tool palette, tool stylesheet and specific widget stylesheets.
         """
@@ -480,36 +487,14 @@ class AssetManager(form_class, base_class):
         #setup_tool_palette_specific
         #self.setup_tool_palette_specific()
 
+        #set_active_stacked_widget 
+        self.set_active_stacked_widget(self.btn_show_shot_metadata)
+
+        #set_explanation_text
+        self.set_explanation_text(self.btn_show_shot_metadata)
+
         #set_stylesheet
         self.setStyleSheet(asset_manager_stylesheets.get_stylesheet())
-
-    
-    def connect_ui(self):
-        """
-        Connect UI widgets with slots or functions.
-        """
-
-        #Signals
-        self.stkwdgt_change_current.connect(self.stkwdgt_metadata.setCurrentIndex)
-
-        #Widgets
-
-        #btn_docs
-        self.btn_docs.clicked.connect(doc_link.run)
-        
-        #btn_show_shot_metadata
-        self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_shot_metadata))
-        #btn_show_prop_metadata
-        self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_prop_metadata))
-        #btn_show_char_metadata
-        self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_char_metadata))
-
-        #btn_export
-        self.btn_export.clicked.connect(functools.partial(self.dummy_method, 'Export'))
-
-        #btn_update_models
-        if not(self.auto_update_models):
-            self.btn_update_models.clicked.connect(self.update_models)
 
     
     def setup_status_widget(self):
@@ -588,6 +573,8 @@ class AssetManager(form_class, base_class):
         self.btn_show_shot_metadata = asset_manager_button.AssetManagerButton( icon_name = ICON_SHOT,
                                                                                 fixed_width = 64,
                                                                                 fixed_height = 64,
+                                                                                label_header_text = SHOT_METADATA_EXPLANATION_HEADER,
+                                                                                label_text = SHOT_METADATA_EXPLANATION_TEXT,
                                                                                 parent = self)
         self.btn_show_shot_metadata.setObjectName('btn_show_shot_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_shot_metadata)
@@ -605,6 +592,8 @@ class AssetManager(form_class, base_class):
         self.btn_show_prop_metadata = asset_manager_button.AssetManagerButton(icon_name = ICON_PROP,
                                                                                 fixed_width = 64,
                                                                                 fixed_height = 64,
+                                                                                label_header_text = PROP_METADATA_EXPLANATION_HEADER,
+                                                                                label_text = PROP_METADATA_EXPLANATION_TEXT,
                                                                                 parent = self)
         self.btn_show_prop_metadata.setObjectName('btn_show_prop_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_prop_metadata)
@@ -622,6 +611,8 @@ class AssetManager(form_class, base_class):
         self.btn_show_char_metadata = asset_manager_button.AssetManagerButton(icon_name = ICON_CHAR,
                                                                                 fixed_width = 64,
                                                                                 fixed_height = 64,
+                                                                                label_header_text = CHAR_METADATA_EXPLANATION_HEADER,
+                                                                                label_text = CHAR_METADATA_EXPLANATION_TEXT,
                                                                                 parent = self)
         self.btn_show_char_metadata.setObjectName('btn_show_char_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_char_metadata)
@@ -666,6 +657,28 @@ class AssetManager(form_class, base_class):
                     wdgt.set_stylesheet(role = 'normal')
                     wdgt_divider.set_stylesheet(role = 'normal')
                     wdgt_metadata.set_stylesheet(role = 'normal')
+
+
+    def set_explanation_text(self, wdgt_sender):
+        """
+        Set explanation text. Means setting the text for self.lbl_explanation_header
+        and self.lbl_explanation_text.
+        """
+
+        #wdgt_checklist
+        wdgt_checklist = [self.btn_show_shot_metadata, 
+                            self.btn_show_prop_metadata, 
+                            self.btn_show_char_metadata]
+
+        #iterate and check
+        for index, wdgt in enumerate(wdgt_checklist):
+            
+            #if match set text
+            if (wdgt is wdgt_sender):
+
+                #emit
+                self.explanation_header_set_text.emit(wdgt_sender.label_header_text)
+                self.explanation_text_set_text.emit(wdgt_sender.label_text)
 
 
     def correct_styled_background_attribute(self):
@@ -885,6 +898,8 @@ class AssetManager(form_class, base_class):
         self.shot_metadata_view.setObjectName('shot_metadata_view')
         self.shot_metadata_view.horizontalHeader().setObjectName('shot_metadata_view_hor_header')
         self.shot_metadata_view.verticalHeader().setObjectName('shot_metadata_view_ver_header')
+        #context menu
+        self.shot_metadata_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         #add to ui
         self.lyt_shot_metadata.addWidget(self.shot_metadata_view)
 
@@ -903,7 +918,16 @@ class AssetManager(form_class, base_class):
         #shot_metadata_selection_model
         self.shot_metadata_selection_model = QtGui.QItemSelectionModel(self.shot_metadata_model)
         self.shot_metadata_view.setSelectionModel(self.shot_metadata_selection_model)
+
+
+    def display_shot_metadata_context_menu(self, pos):
+        """
+        Create and display shot metadata context menu.
+        """
     
+        menu = shot_metadata_context_menu.ShotMetadataContextMenu(parent = self)
+        menu.set_view(self.shot_metadata_view)
+        menu.popup(self.shot_metadata_view.mapToGlobal(pos))
 
 
 

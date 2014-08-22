@@ -19,7 +19,6 @@ import re
 from PySide import QtGui
 from PySide import QtCore
 #maya
-import maya.cmds as cmds
 import pymel.core as pm
 
 
@@ -148,6 +147,7 @@ class ShotMetadataModel(QtCore.QAbstractTableModel):
         #DisplayRole and EditRole (return identical in most cases,
         #if not then do recheck later...as with shot_cam attr.)
         if (role == QtCore.Qt.DisplayRole or
+            role == QtCore.Qt.ToolTipRole or
             role == QtCore.Qt.EditRole):
 
             #column Shotname
@@ -170,7 +170,8 @@ class ShotMetadataModel(QtCore.QAbstractTableModel):
             elif (current_header == self.header_name_list[2]):
                 
                 #DisplayRole
-                if (role == QtCore.Qt.DisplayRole):
+                if (role == QtCore.Qt.DisplayRole or
+                    role == QtCore.Qt.ToolTipRole):
                     
                     #shot_cam
                     shot_cam = pynode.shot_cam.get()

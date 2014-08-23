@@ -323,6 +323,7 @@ class AssetManager(form_class, base_class):
     def __init__(self, 
                 logging_level = logging.DEBUG,
                 auto_update_models = True,
+                dock_it = False,
                 parent = global_functions.get_main_window()):
         """
         Customize instance.
@@ -350,6 +351,9 @@ class AssetManager(form_class, base_class):
         self.auto_update_models = auto_update_models
         #auto_update_timer
         self.auto_update_timer = None
+
+        #dock_it
+        self.dock_it = dock_it
 
         #shot_metadata_list
         self.shot_metadata_list = []

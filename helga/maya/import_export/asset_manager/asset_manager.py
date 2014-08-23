@@ -39,7 +39,7 @@ import sys
 import os
 
 #tool_root_path
-tool_root_path = os.path.abspath(__file__)
+tool_root_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(tool_root_path)
 
 
@@ -147,9 +147,18 @@ ICONS_PATH = asset_manager_globals.ICONS_PATH
 #AssetManager Sizes
 STACKEDWIDGET_DIVIDER_HEIGHT = asset_manager_globals.STACKEDWIDGET_DIVIDER_HEIGHT
 
+#darkening_factor
+DARKENING_FACTOR = asset_manager_globals.DARKENING_FACTOR
+#brightening_factor
+BRIGHTENING_FACTOR = asset_manager_globals.BRIGHTENING_FACTOR
+
 #AssetManager colors
 BRIGHT_ORANGE = asset_manager_globals.BRIGHT_ORANGE
 DARK_ORANGE = asset_manager_globals.DARK_ORANGE
+BRIGHT_BLUE = asset_manager_globals.BRIGHT_BLUE
+DARK_BLUE = asset_manager_globals.DARK_BLUE
+BRIGHT_GREEN = asset_manager_globals.BRIGHT_GREEN
+DARK_GREEN = asset_manager_globals.DARK_GREEN
 BRIGHT_GREY = asset_manager_globals.BRIGHT_GREY
 GREY = asset_manager_globals.GREY
 DARK_GREY = asset_manager_globals.DARK_GREY
@@ -288,9 +297,12 @@ class AssetManager(form_class, base_class):
 
     #Signals
     #------------------------------------------------------------------
+    
     stkwdgt_change_current = QtCore.Signal(int)
     explanation_header_set_text = QtCore.Signal(str)
     explanation_text_set_text = QtCore.Signal(str)
+    change_metadata_color = QtCore.Signal(QtGui.QColor)
+
 
 
     
@@ -345,6 +357,8 @@ class AssetManager(form_class, base_class):
         self.prop_metadata_list = []
         #char_metadata_list
         self.char_metadata_list = []
+
+        
 
         
 
@@ -439,6 +453,7 @@ class AssetManager(form_class, base_class):
         self.stkwdgt_change_current.connect(self.stkwdgt_metadata.setCurrentIndex)
         self.explanation_header_set_text.connect(self.lbl_explanation_header.setText)
         self.explanation_text_set_text.connect(self.lbl_explanation_text.setText)
+        self.change_metadata_color.connect(self.on_change_metadata_color)
 
         
         #Context Menus
@@ -455,12 +470,15 @@ class AssetManager(form_class, base_class):
         #btn_show_shot_metadata
         self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_shot_metadata))
         self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_explanation_text, self.btn_show_shot_metadata))
+        self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_metadata_color, self.btn_show_shot_metadata))
         #btn_show_prop_metadata
         self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_prop_metadata))
         self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_explanation_text, self.btn_show_prop_metadata))
+        self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_metadata_color, self.btn_show_prop_metadata))
         #btn_show_char_metadata
         self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_char_metadata))
         self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_explanation_text, self.btn_show_char_metadata))
+        self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_metadata_color, self.btn_show_char_metadata))
 
         #btn_export
         self.btn_export.clicked.connect(functools.partial(self.dummy_method, 'Export'))
@@ -489,6 +507,9 @@ class AssetManager(form_class, base_class):
 
         #set_active_stacked_widget 
         self.set_active_stacked_widget(self.btn_show_shot_metadata)
+
+        #set_metadata_color
+        self.set_metadata_color(self.btn_show_shot_metadata)
 
         #set_explanation_text
         self.set_explanation_text(self.btn_show_shot_metadata)
@@ -575,6 +596,7 @@ class AssetManager(form_class, base_class):
                                                                                 fixed_height = 64,
                                                                                 label_header_text = SHOT_METADATA_EXPLANATION_HEADER,
                                                                                 label_text = SHOT_METADATA_EXPLANATION_TEXT,
+                                                                                metadata_color_active = BRIGHT_ORANGE,
                                                                                 parent = self)
         self.btn_show_shot_metadata.setObjectName('btn_show_shot_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_shot_metadata)
@@ -594,6 +616,7 @@ class AssetManager(form_class, base_class):
                                                                                 fixed_height = 64,
                                                                                 label_header_text = PROP_METADATA_EXPLANATION_HEADER,
                                                                                 label_text = PROP_METADATA_EXPLANATION_TEXT,
+                                                                                metadata_color_active = BRIGHT_BLUE,
                                                                                 parent = self)
         self.btn_show_prop_metadata.setObjectName('btn_show_prop_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_prop_metadata)
@@ -613,6 +636,7 @@ class AssetManager(form_class, base_class):
                                                                                 fixed_height = 64,
                                                                                 label_header_text = CHAR_METADATA_EXPLANATION_HEADER,
                                                                                 label_text = CHAR_METADATA_EXPLANATION_TEXT,
+                                                                                metadata_color_active = BRIGHT_GREEN,
                                                                                 parent = self)
         self.btn_show_char_metadata.setObjectName('btn_show_char_metadata')
         self.lyt_metadata_buttons.addWidget(self.btn_show_char_metadata)
@@ -634,28 +658,62 @@ class AssetManager(form_class, base_class):
                             (self.btn_show_prop_metadata, self.btn_show_prop_metadata_divider, self.wdgt_prop_metadata),
                             (self.btn_show_char_metadata, self.btn_show_char_metadata_divider, self.wdgt_char_metadata)]
 
+        #metadata_color_active (color to differentiate shots, props, chars)
+        metadata_color_active = wdgt_sender.metadata_color_active
+        #metadata_color_normal (color to differentiate shots, props, chars)
+        metadata_color_normal = wdgt_sender.metadata_color_normal
+
         #iterate and check
         for index, wdgt_list in enumerate(wdgt_checklist):
             
             for wdgt, wdgt_divider, wdgt_metadata in [wdgt_list]:
             
-                #if match set  active
+                #if match set active
                 if (wdgt is wdgt_sender):
 
-                    #set_stylesheet
+                    #set stylesheets
+
+                    #wdgt
+                    wdgt.set_hover_radial_color_active(metadata_color_active)
                     wdgt.set_stylesheet(role = 'active')
+                    
+                    #wdgt_divider
+                    wdgt_divider.set_background_color_active(metadata_color_active)
                     wdgt_divider.set_stylesheet(role = 'active')
+                    
+                    #wdgt_metadata
                     wdgt_metadata.set_stylesheet(role = 'active')
 
+                    #btn_docs
+                    self.btn_docs.set_background_color_normal(metadata_color_active.darker(DARKENING_FACTOR))
+                    self.btn_docs.set_stylesheet(role = 'normal')
+
+                    #btn_export
+                    self.btn_export.set_hover_radial_color_normal(metadata_color_active)
+                    self.btn_export.set_stylesheet(role = 'normal')
+
+                    #btn_update_models
+                    if not(self.auto_update_models):
+                        self.btn_update_models.set_hover_radial_color_normal(metadata_color_active)
+                        self.btn_update_models.set_stylesheet(role = 'normal')
+
                     #emit changed
-                    self.stkwdgt_change_current.emit(index)
+                    self.stkwdgt_change_current.emit(index) #sets active widget
 
                 #else normal
                 else:
 
-                    #set_stylesheet
+                    #set_stylesheets
+
+                    #wdgt
+                    wdgt.set_hover_radial_color_normal(metadata_color_active)
                     wdgt.set_stylesheet(role = 'normal')
+
+                    #wdgt_divider
+                    wdgt_divider.set_background_color_normal(metadata_color_normal)
                     wdgt_divider.set_stylesheet(role = 'normal')
+                    
+                    #wdgt_metadata
                     wdgt_metadata.set_stylesheet(role = 'normal')
 
 
@@ -679,6 +737,29 @@ class AssetManager(form_class, base_class):
                 #emit
                 self.explanation_header_set_text.emit(wdgt_sender.label_header_text)
                 self.explanation_text_set_text.emit(wdgt_sender.label_text)
+
+
+    def set_metadata_color(self, wdgt_sender):
+        """
+        Set color of some widgets based on the current metadata mode.
+        This mode can be either shots, props or characters.
+        The needed color comes from wdgt_sender.
+        Time will tell if that was a good idea....
+        """
+
+        #wdgt_checklist
+        wdgt_checklist = [self.btn_show_shot_metadata, 
+                            self.btn_show_prop_metadata, 
+                            self.btn_show_char_metadata]
+
+        #iterate and check
+        for index, wdgt in enumerate(wdgt_checklist):
+            
+            #if match set text
+            if (wdgt is wdgt_sender):
+
+                #emit
+                self.change_metadata_color.emit(wdgt_sender.metadata_color_active)
 
 
     def correct_styled_background_attribute(self):
@@ -864,7 +945,7 @@ class AssetManager(form_class, base_class):
         self.progressbar.setObjectName('progressbar')
         #customize
         self.progressbar.setTextVisible(False)
-        self.progressbar.setValue(0)
+        self.progressbar.setValue(50)
         self.progressbar.setOrientation(QtCore.Qt.Vertical)
         self.progressbar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
 
@@ -1199,6 +1280,129 @@ class AssetManager(form_class, base_class):
 
 
 
+    #Slots
+    #------------------------------------------------------------------
+
+    @QtCore.Slot(QtGui.QColor)
+    def on_change_metadata_color(self, metadata_color):
+        """
+        Set stylesheets for widgets to background with
+        metadata_color.
+        """
+        
+        #set_stylesheet_wdgt_docs
+        self.set_stylesheet_wdgt_docs(metadata_color)
+
+        #set_stylesheet_le_status
+        self.set_stylesheet_le_status(metadata_color)
+
+        #set_stylesheet_wdgt_explanation
+        self.set_stylesheet_wdgt_explanation(metadata_color)
+
+        #set_stylesheet_progressbar
+        self.set_stylesheet_progressbar(metadata_color)
+
+
+    def set_stylesheet_wdgt_docs(self, metadata_color):
+        """
+        Set stylesheet for self.wdgt_docs
+        """
+
+        #ss_dict
+        ss_dict = {'metadata_color' : metadata_color.darker(DARKENING_FACTOR).name()}
+
+        #str_stylesheet
+        str_stylesheet = " \
+            /* QWidget - wdgt_docs */\
+            QWidget#wdgt_docs { background-color: %(metadata_color)s; } \
+        "%ss_dict
+        
+        #set
+        self.wdgt_docs.setStyleSheet(str_stylesheet)
+
+
+    def set_stylesheet_le_status(self, metadata_color):
+        """
+        Set stylesheet for self.le_status
+        """
+
+        #ss_dict
+        ss_dict = {'metadata_color' : metadata_color.name(),
+                    'metadata_color_darker' : metadata_color.darker(DARKENING_FACTOR).name(),
+                    'bright_grey' : BRIGHT_GREY.name(),
+                    'grey' : GREY.name(),
+                    'stackwidget_divider_height': STACKEDWIDGET_DIVIDER_HEIGHT - STACKEDWIDGET_DIVIDER_HEIGHT} #remove minus to enable it
+
+        #str_stylesheet
+        str_stylesheet = " \
+            /* QLineEdit - le_status*/\
+            QLineEdit#le_status { border: none; \
+                                    background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, \
+                                    stop:0 %(metadata_color_darker)s, \
+                                    stop:1 %(metadata_color)s); \
+                                    color: %(bright_grey)s; \
+                                    border-left: none; \
+                                    border-top: %(stackwidget_divider_height)spx solid %(grey)s; \
+                                    border-bottom: none; \
+                                    border-right: none; \
+        } \
+        "%ss_dict
+        
+        #set
+        self.le_status.setStyleSheet(str_stylesheet)
+
+
+    def set_stylesheet_wdgt_explanation(self, metadata_color):
+        """
+        Set stylesheet for self.wdgt_explanation
+        """
+
+        #ss_dict
+        ss_dict = {'metadata_color' : metadata_color.name(),
+                    'metadata_color_brighter' : metadata_color.lighter(BRIGHTENING_FACTOR).name()}
+
+        #str_stylesheet
+        str_stylesheet = " \
+            /* QWidget - wdgt_explanation */\
+            QWidget#wdgt_explanation { background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, \
+                                        stop:0 %(metadata_color)s, \
+                                        stop:1 %(metadata_color_brighter)s); \
+                                        } \
+                                        \
+        "%ss_dict
+        
+        #set
+        self.wdgt_explanation.setStyleSheet(str_stylesheet)
+
+
+    def set_stylesheet_progressbar(self, metadata_color):
+        """
+        Set stylesheet for self.progressbar
+        """
+
+        #ss_dict
+        ss_dict = {'metadata_color' : metadata_color.name(),
+                    'metadata_color_brighter' : metadata_color.lighter(BRIGHTENING_FACTOR).name()}
+
+        #str_stylesheet
+        str_stylesheet = " \
+            /* QProgressBar - chunk */\
+            QProgressBar::chunk { border: none;\
+                                    background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, \
+                                    stop:0 %(metadata_color)s, \
+                                    stop:1 %(metadata_color_brighter)s); \
+            } \
+        "%ss_dict
+        
+        #set
+        self.progressbar.setStyleSheet(str_stylesheet)
+
+
+    
+
+
+
+
     #Events
     #------------------------------------------------------------------
 
@@ -1233,6 +1437,19 @@ class AssetManager(form_class, base_class):
         self.logger.debug('{0}'.format(msg))
         #print
         print('{0}'.format(msg))
+
+
+    def stylesheet_test(self, wdgt):
+        """
+        Test if setting a stylesheet overrides all attributes or just
+        the one it is setting.
+        """
+
+        #stylesheet_str
+        stylesheet_str = 'background-color: red;'
+        
+        #set stylesheet
+        wdgt.setStyleSheet(stylesheet_str)
         
 
     def test_methods(self):
@@ -1253,6 +1470,9 @@ class AssetManager(form_class, base_class):
 
         #asset_manager_functionality test
         print(self.asset_manager_functionality.get_nodes_of_type('HelgaShotsMetadata'))
+
+        #stylesheet_test
+        #self.stylesheet_test(self.wdgt_explanation)
 
         #------------------------------------------------------------------
 

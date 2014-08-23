@@ -47,6 +47,9 @@ TOOL_ROOT_PATH = asset_manager_globals.TOOL_ROOT_PATH
 MEDIA_PATH = asset_manager_globals.MEDIA_PATH
 ICONS_PATH = asset_manager_globals.ICONS_PATH
 
+#Fonts
+FUTURA_LT_LIGHT = asset_manager_globals.FUTURA_LT_LIGHT
+
 #Header
 HEADER_IMAGE = asset_manager_globals.HEADER_IMAGE
 
@@ -74,7 +77,8 @@ def get_stylesheet():
     """
 
     #ss_dict
-    ss_dict = {'icon_path' : HEADER_IMAGE, 
+    ss_dict = {'icon_path' : HEADER_IMAGE,
+                'futura_lt_light' : FUTURA_LT_LIGHT,
                 'bright_orange' : BRIGHT_ORANGE.name(),
                 'bright_orange_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_ORANGE.red(), BRIGHT_ORANGE.green(), BRIGHT_ORANGE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
 			    'dark_orange' : DARK_ORANGE.name(),
@@ -92,23 +96,12 @@ def get_stylesheet():
 \
 \
 /* QWidget */\
-QWidget { background-color: %(dark_grey)s; } \
+QWidget { background-color: %(dark_grey)s; \
+} \
 \
 \
 /* QWidget - wdgt_header_icon */\
 QWidget#wdgt_header_icon { border-image: url(%(icon_path)s); } \
-\
-\
-/* QWidget - wdgt_explanation */\
-QWidget#wdgt_explanation { background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 %(dark_orange)s, stop:1 %(bright_orange)s); } \
-\
-\
-/* QWidget - wdgt_export */\
-QWidget#wdgt_export { background-color: %(bright_orange)s; } \
-\
-\
-/* QWidget - wdgt_docs */\
-QWidget#wdgt_docs { background-color: %(dark_orange)s; } \
 \
 \
 \
@@ -131,7 +124,9 @@ QToolTip { background-color: %(dark_grey)s; \
 \
 /* QLabel - lbl_explanation_header */\
 QLabel#lbl_explanation_header { background-color: transparent; \
-                                font: 75 20pt \"MS Shell Dlg 2\"; \
+                                font-family: \"%(futura_lt_light)s\"; \
+                                font-weight: bold; \
+                                font-size: 20pt; \
                                 color: %(bright_grey)s; \
                                 margin-top: 10; \
                                 margin-left: 10; \
@@ -142,7 +137,9 @@ QLabel#lbl_explanation_header { background-color: transparent; \
 \
 /* QLabel - lbl_explanation_text */\
 QLabel#lbl_explanation_text { background-color: transparent; \
-                                font: 75 10pt \"MS Shell Dlg 2\"; \
+                                font-family: \"%(futura_lt_light)s\"; \
+                                font-weight: bold; \
+                                font-size: 10pt; \
                                 color: %(bright_grey)s; \
                                 margin-top: 4; \
                                 margin-left: 10; \
@@ -162,10 +159,6 @@ QProgressBar { border: none;\
 } \
 \
 \
-/* QProgressBar - chunk */\
-QProgressBar::chunk { border: none;\
-                        background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 %(dark_orange)s, stop:1 %(bright_orange)s); \
-} \
 \
 \
 \
@@ -178,11 +171,6 @@ QLineEdit { border: none;\
 } \
 \
 \
-/* QLineEdit - le_status*/\
-QLineEdit#le_status { border: none;\
-                        background-color: %(dark_orange)s;\
-                        color: %(bright_grey)s; \
-} \
 \
 \
 \

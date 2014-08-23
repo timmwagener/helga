@@ -114,29 +114,9 @@ class AssetManagerStylesheetWidget(QtGui.QWidget):
         #stylesheets
         #------------------------------------------------------------------
 
-        #ss_dict
-        self.ss_dict = {'background_color_normal' : self.background_color_normal.name(),
-                        'background_color_active' : self.background_color_active.name()}
         
-        #ss_normal
-        self.ss_normal = " \
-\
-\
-/* AssetManagerStylesheetWidget - normal */\
-AssetManagerStylesheetWidget { background-color: %(background_color_normal)s; } \
-\
-\
-"%self.ss_dict
         
-        #ss_active
-        self.ss_active = " \
-\
-\
-/* AssetManagerStylesheetWidget - active */\
-AssetManagerStylesheetWidget { background-color: %(background_color_active)s; } \
-\
-\
-"%self.ss_dict
+        
 
 
         
@@ -185,6 +165,23 @@ AssetManagerStylesheetWidget { background-color: %(background_color_active)s; } 
 
 
 
+    #Getter & Setter
+    #------------------------------------------------------------------
+
+    def set_background_color_normal(self, color):
+        """
+        Set self.background_color_normal
+        """
+        
+        self.background_color_normal = color
+
+
+    def set_background_color_active(self, color):
+        """
+        Set self.background_color_active
+        """
+        
+        self.background_color_active = color
     
 
 
@@ -196,21 +193,73 @@ AssetManagerStylesheetWidget { background-color: %(background_color_active)s; } 
         Set stylesheet for this widget based on role.
         """
 
+        #log
         self.logger.debug('Set stylesheet for role: {0}'.format(role))
 
+        #stylesheet_str
+        stylesheet_str = self.get_stylesheet(role)
+        #set stylesheet
+        self.setStyleSheet(stylesheet_str)
+
+
+    def get_stylesheet(self, role = 'normal'):
+        """
+        Get stylesheet for a certain role.
+        """
+
+        #normal
+        if (role == 'normal'):
+            return self.get_stylesheet_normal()
+
         #active
-        if(role == 'active'):
-            
-            self.setStyleSheet(self.ss_active)
-            
-
-        #anyting and normal
-        else:
-
-            self.setStyleSheet(self.ss_normal)
+        elif (role == 'active'):
+            return self.get_stylesheet_active()
             
 
+    def get_stylesheet_normal(self):
+        """
+        Get stylesheet for role "normal".
+        """
 
+        #ss_dict
+        ss_dict = {'background_color_normal' : self.background_color_normal.name(),
+                        'background_color_active' : self.background_color_active.name()}
+        
+        #ss_normal
+        ss_normal = " \
+\
+\
+/* AssetManagerStylesheetWidget - normal */\
+AssetManagerStylesheetWidget { background-color: %(background_color_normal)s; } \
+\
+\
+"%ss_dict
+        
+        return ss_normal
+
+
+    def get_stylesheet_active(self):
+        """
+        Get stylesheet for role "active".
+        """
+
+        #ss_dict
+        ss_dict = {'background_color_normal' : self.background_color_normal.name(),
+                        'background_color_active' : self.background_color_active.name()}
+        
+        #ss_active
+        ss_active = " \
+\
+\
+/* AssetManagerStylesheetWidget - active */\
+AssetManagerStylesheetWidget { background-color: %(background_color_active)s; } \
+\
+\
+"%ss_dict
+        
+        return ss_active
+
+    
     def set_size_policy(self, width, height):
         """
         Set size policy for self.

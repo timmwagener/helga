@@ -28,6 +28,7 @@ from PySide import QtCore
 
 
 
+
 #Import variable
 do_reload = True
 
@@ -97,6 +98,8 @@ class AssetManagerButton(QtGui.QPushButton):
                 hover_radial_radius = 0.45,
                 label_header_text = 'label_header_text',
                 label_text = 'label_text',
+                metadata_color_normal = GREY,
+                metadata_color_active = QtGui.QColor(255, 0, 0),
                 parent=None):
         """
         AssetManagerButton instance customization.
@@ -136,81 +139,15 @@ class AssetManagerButton(QtGui.QPushButton):
         self.label_header_text = label_header_text
         #label_text
         self.label_text = label_text
-        
+
+        #metadata_color_normal
+        self.metadata_color_normal = metadata_color_normal
+        #metadata_color_active
+        self.metadata_color_active = metadata_color_active
 
         
-
         
-        #stylesheets
-        #------------------------------------------------------------------
-
-        #ss_dict
-        self.ss_dict = {'icon_path' : self.icon_path,
-                        'hover_radial_radius' : self.hover_radial_radius,
-                        'background_color_normal' : self.background_color_normal.name(),
-                        'hover_radial_color_normal' : self.hover_radial_color_normal.name(),
-                        'background_color_active' : self.background_color_active.name(),
-                        'hover_radial_color_active' : self.hover_radial_color_active.name(),}
         
-        #ss_normal
-        self.ss_normal = " \
-\
-\
-/* AssetManagerButton - normal */\
-AssetManagerButton { border-image: url(%(icon_path)s); \
-                        background-color: %(background_color_normal)s; \
-} \
-\
-\
-/* AssetManagerButton - normal - hover */\
-AssetManagerButton:hover { border-image: url(%(icon_path)s); \
-                            background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
-                                                                radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
-                                                                stop:0 %(hover_radial_color_normal)s, \
-                                                                stop:1 %(background_color_normal)s); \
-} \
-\
-\
-/* AssetManagerButton - normal - pressed */\
-AssetManagerButton:pressed { border-image: url(%(icon_path)s); \
-                                background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
-                                                                    radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
-                                                                    stop:0 %(hover_radial_color_normal)s, \
-                                                                    stop:1 %(background_color_normal)s); \
-} \
-\
-\
-"%self.ss_dict
-        
-        #ss_active
-        self.ss_active = " \
-\
-\
-/* AssetManagerButton - active */\
-AssetManagerButton { border-image: url(%(icon_path)s); \
-                        background-color: %(background_color_active)s; \
-} \
-\
-\
-/* AssetManagerButton - active - hover */\
-AssetManagerButton:hover { border-image: url(%(icon_path)s); \
-                            background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
-                                                                radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
-                                                                stop:0 %(hover_radial_color_active)s, \
-                                                                stop:1 %(background_color_active)s); \
-} \
-\
-\
-/* AssetManagerButton - active - pressed */\
-AssetManagerButton:pressed { border-image: url(%(icon_path)s); \
-                                background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
-                                                                    radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
-                                                                    stop:0 %(hover_radial_color_active)s, \
-                                                                    stop:1 %(background_color_active)s); \
-} \
-\
-\
-"%self.ss_dict
 
         
         #logger
@@ -280,13 +217,121 @@ AssetManagerButton:pressed { border-image: url(%(icon_path)s); \
         Set stylesheet for this widget based on role.
         """
 
+        #log
+        self.logger.debug('Set stylesheet for role: {0}'.format(role))
+
+        #stylesheet_str
+        stylesheet_str = self.get_stylesheet(role)
+        #set stylesheet
+        self.setStyleSheet(stylesheet_str)
+
+
+    def get_stylesheet(self, role = 'normal'):
+        """
+        Get stylesheet for a certain role.
+        """
+
+        #normal
+        if (role == 'normal'):
+            return self.get_stylesheet_normal()
+
         #active
-        if(role == 'active'):
-            self.setStyleSheet(self.ss_active)
+        elif (role == 'active'):
+            return self.get_stylesheet_active()
+            
 
-        #anyting and normal
-        else:
-            self.setStyleSheet(self.ss_normal)
+    def get_stylesheet_normal(self):
+        """
+        Get stylesheet for role "normal".
+        """
+
+        #ss_dict
+        ss_dict = {'icon_path' : self.icon_path,
+                    'hover_radial_radius' : self.hover_radial_radius,
+                    'background_color_normal' : self.background_color_normal.name(),
+                    'hover_radial_color_normal' : self.hover_radial_color_normal.name(),
+                    'background_color_active' : self.background_color_active.name(),
+                    'hover_radial_color_active' : self.hover_radial_color_active.name(),}
+        
+        #ss_normal
+        ss_normal = " \
+\
+\
+/* AssetManagerButton - normal */\
+AssetManagerButton { border-image: url(%(icon_path)s); \
+                        background-color: %(background_color_normal)s; \
+} \
+\
+\
+/* AssetManagerButton - normal - hover */\
+AssetManagerButton:hover { border-image: url(%(icon_path)s); \
+                            background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
+                                                                radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
+                                                                stop:0 %(hover_radial_color_normal)s, \
+                                                                stop:1 %(background_color_normal)s); \
+} \
+\
+\
+/* AssetManagerButton - normal - pressed */\
+AssetManagerButton:pressed { border-image: url(%(icon_path)s); \
+                                background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
+                                                                    radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
+                                                                    stop:0 %(hover_radial_color_normal)s, \
+                                                                    stop:1 %(background_color_normal)s); \
+} \
+\
+\
+"%ss_dict
+        
+        #return
+        return ss_normal
+
+
+    def get_stylesheet_active(self):
+        """
+        Get stylesheet for role "active".
+        """
+
+        #ss_dict
+        ss_dict = {'icon_path' : self.icon_path,
+                    'hover_radial_radius' : self.hover_radial_radius,
+                    'background_color_normal' : self.background_color_normal.name(),
+                    'hover_radial_color_normal' : self.hover_radial_color_normal.name(),
+                    'background_color_active' : self.background_color_active.name(),
+                    'hover_radial_color_active' : self.hover_radial_color_active.name(),}
+
+        #ss_active
+        ss_active = " \
+\
+\
+/* AssetManagerButton - active */\
+AssetManagerButton { border-image: url(%(icon_path)s); \
+                        background-color: %(background_color_active)s; \
+} \
+\
+\
+/* AssetManagerButton - active - hover */\
+AssetManagerButton:hover { border-image: url(%(icon_path)s); \
+                            background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
+                                                                radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
+                                                                stop:0 %(hover_radial_color_active)s, \
+                                                                stop:1 %(background_color_active)s); \
+} \
+\
+\
+/* AssetManagerButton - active - pressed */\
+AssetManagerButton:pressed { border-image: url(%(icon_path)s); \
+                                background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, \
+                                                                    radius:%(hover_radial_radius)s, fx:0.5, fy:0.5, \
+                                                                    stop:0 %(hover_radial_color_active)s, \
+                                                                    stop:1 %(background_color_active)s); \
+} \
+\
+\
+"%ss_dict
+
+        #return
+        return ss_active
 
 
 
@@ -294,6 +339,54 @@ AssetManagerButton:pressed { border-image: url(%(icon_path)s); \
 
 
 
+
+    
+
+
+    #Getter & Setter
+    #------------------------------------------------------------------
+
+    def set_background_color_normal(self, color):
+        """
+        Set self.background_color_normal
+        """
+        
+        self.background_color_normal = color
+
+
+    def set_background_color_active(self, color):
+        """
+        Set self.background_color_active
+        """
+        
+        self.background_color_active = color
+
+
+    def set_hover_radial_color_normal(self, color):
+        """
+        Set self.hover_radial_color_normal
+        """
+        
+        self.hover_radial_color_normal = color
+
+
+    def set_hover_radial_color_active(self, color):
+        """
+        Set self.hover_radial_color_active
+        """
+        
+        self.hover_radial_color_active = color
+
+
+
+
+
+
+
+
+
+
+    
 
     #Methods
     #------------------------------------------------------------------

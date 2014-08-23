@@ -1,6 +1,8 @@
 
 helga
 =====
+[![Documentation Status](https://readthedocs.org/projects/helga-docs/badge/?version=latest)](https://readthedocs.org/projects/helga-docs/?badge=latest)
+=====
 
 Pipeline repo for our diploma movie with the working title "Helga". Contains the script environment for the whole project.
 

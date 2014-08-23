@@ -35,9 +35,14 @@ ICONS_PATH = os.path.join(MEDIA_PATH, 'icons')
 FONTS_PATH = os.path.join(MEDIA_PATH, 'fonts')
 
 #Fonts (append if non existent)
+
+#futura-lt-light
 FUTURA_LT_LIGHT = 'Futura LT Light'
 if not (FUTURA_LT_LIGHT in QtGui.QFontDatabase().families()):
-	QtGui.QFontDatabase.addApplicationFont(os.path.join(FONTS_PATH, 'futura-lt-light.ttf').replace('\\', '/'))
+	current_font_path = os.path.join(FONTS_PATH, 'futura-lt-light.ttf').replace('\\', '/')
+	QtGui.QFontDatabase.addApplicationFont(current_font_path)
+	#log
+	print('Installed tool relative font: {0} from {1}'.format(FUTURA_LT_LIGHT, current_font_path))
 
 
 #AssetManager Sizes

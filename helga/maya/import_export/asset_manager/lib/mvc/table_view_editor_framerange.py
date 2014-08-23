@@ -364,7 +364,7 @@ class TableViewEditorFramerange(form_class, base_class):
 
         #btn_get_current_frame
         index = self.lyt_frame_slider.indexOf(self.tmp_btn_get_current_frame)
-        self.btn_get_current_frame = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 30)
+        self.btn_get_current_frame = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 60)
         self.btn_get_current_frame.setObjectName('btn_get_current_frame')
         #current_frame
         current_frame = self.asset_manager_functionality.get_current_frame()
@@ -376,7 +376,7 @@ class TableViewEditorFramerange(form_class, base_class):
 
         #btn_complete_range_start
         index = self.lyt_range_slider.indexOf(self.tmp_btn_complete_range_start)
-        self.btn_complete_range_start = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 30)
+        self.btn_complete_range_start = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 60)
         self.btn_complete_range_start.setObjectName('btn_complete_range_start')
         #complete_range_start
         complete_range_start = self.asset_manager_functionality.get_complete_framerange_start()
@@ -386,7 +386,7 @@ class TableViewEditorFramerange(form_class, base_class):
         
         #btn_current_range_start
         index = self.lyt_range_slider.indexOf(self.tmp_btn_current_range_start)
-        self.btn_current_range_start = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 30)
+        self.btn_current_range_start = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 60)
         self.btn_current_range_start.setObjectName('btn_current_range_start')
         #current_range_start
         current_range_start = self.asset_manager_functionality.get_current_framerange_start()
@@ -396,7 +396,7 @@ class TableViewEditorFramerange(form_class, base_class):
 
         #btn_current_range_end
         index = self.lyt_range_slider.indexOf(self.tmp_btn_current_range_end)
-        self.btn_current_range_end = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 30)
+        self.btn_current_range_end = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 60)
         self.btn_current_range_end.setObjectName('btn_current_range_end')
         #current_range_end
         current_range_end = self.asset_manager_functionality.get_current_framerange_end()
@@ -406,7 +406,7 @@ class TableViewEditorFramerange(form_class, base_class):
 
         #btn_complete_range_end
         index = self.lyt_range_slider.indexOf(self.tmp_btn_complete_range_end)
-        self.btn_complete_range_end = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 30)
+        self.btn_complete_range_end = asset_manager_hover_button.AssetManagerHoverButton(fixed_width = 60)
         self.btn_complete_range_end.setObjectName('btn_complete_range_end')
         #complete_range_end
         complete_range_end = self.asset_manager_functionality.get_complete_framerange_end()

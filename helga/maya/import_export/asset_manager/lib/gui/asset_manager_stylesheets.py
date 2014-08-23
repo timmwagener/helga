@@ -59,6 +59,8 @@ TABLEVIEW_EDITOR_TRANSPARENCY = asset_manager_globals.TABLEVIEW_EDITOR_TRANSPARE
 #AssetManager colors
 BRIGHT_ORANGE = asset_manager_globals.BRIGHT_ORANGE
 DARK_ORANGE = asset_manager_globals.DARK_ORANGE
+BRIGHT_BLUE = asset_manager_globals.BRIGHT_BLUE
+DARK_BLUE = asset_manager_globals.DARK_BLUE
 BRIGHT_GREY = asset_manager_globals.BRIGHT_GREY
 GREY = asset_manager_globals.GREY
 DARK_GREY = asset_manager_globals.DARK_GREY
@@ -81,8 +83,12 @@ def get_stylesheet():
                 'futura_lt_light' : FUTURA_LT_LIGHT,
                 'bright_orange' : BRIGHT_ORANGE.name(),
                 'bright_orange_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_ORANGE.red(), BRIGHT_ORANGE.green(), BRIGHT_ORANGE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
-			    'dark_orange' : DARK_ORANGE.name(),
+                'dark_orange' : DARK_ORANGE.name(),
                 'dark_orange_transparent' : 'rgba({0},{1},{2},{3})'.format(DARK_ORANGE.red(), DARK_ORANGE.green(), DARK_ORANGE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
+                'bright_blue' : BRIGHT_BLUE.name(),
+                'bright_blue_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_BLUE.red(), BRIGHT_BLUE.green(), BRIGHT_BLUE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
+                'dark_blue' : DARK_BLUE.name(),
+                'dark_blue_transparent' : 'rgba({0},{1},{2},{3})'.format(DARK_BLUE.red(), DARK_BLUE.green(), DARK_BLUE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
 			    'bright_grey' : BRIGHT_GREY.name(),
                 'bright_grey_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_GREY.red(), BRIGHT_GREY.green(), BRIGHT_GREY.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
 			    'grey' : GREY.name(),
@@ -97,6 +103,9 @@ def get_stylesheet():
 \
 /* QWidget */\
 QWidget { background-color: %(dark_grey)s; \
+            font-family: \"%(futura_lt_light)s\"; \
+            font-size: 14pt; \
+            selection-background-color: %(bright_blue)s; \
 } \
 \
 \
@@ -110,6 +119,7 @@ QWidget#wdgt_header_icon { border-image: url(%(icon_path)s); } \
 \
 /* QToolTip */\
 QToolTip { background-color: %(dark_grey)s; \
+            font-size: 14pt; \
             color: %(bright_grey)s; \
             border-left: none; \
             border-top: 1px solid %(bright_orange)s; \
@@ -124,7 +134,6 @@ QToolTip { background-color: %(dark_grey)s; \
 \
 /* QLabel - lbl_explanation_header */\
 QLabel#lbl_explanation_header { background-color: transparent; \
-                                font-family: \"%(futura_lt_light)s\"; \
                                 font-weight: bold; \
                                 font-size: 20pt; \
                                 color: %(bright_grey)s; \
@@ -137,9 +146,6 @@ QLabel#lbl_explanation_header { background-color: transparent; \
 \
 /* QLabel - lbl_explanation_text */\
 QLabel#lbl_explanation_text { background-color: transparent; \
-                                font-family: \"%(futura_lt_light)s\"; \
-                                font-weight: bold; \
-                                font-size: 10pt; \
                                 color: %(bright_grey)s; \
                                 margin-top: 4; \
                                 margin-left: 10; \
@@ -229,7 +235,10 @@ QHeaderView#shot_metadata_view_hor_header{ background-color: %(grey)s; \
 \
 \
 /* QHeaderView - shot_metadata_view_hor_header - section */\
-QHeaderView#shot_metadata_view_hor_header::section { background-color: qlineargradient(spread:reflect, x1:0.02, y1:0.02, x2:0, y2:0, stop:0.8 %(grey)s, stop:1 %(dark_orange)s); \
+QHeaderView#shot_metadata_view_hor_header::section { background-color: qlineargradient(spread:reflect, x1:0.06, y1:0.04, x2:0, y2:0, \
+                                                    stop:0.8 %(grey)s, \
+                                                    stop:1 %(dark_orange)s); \
+                                                    font-weight: bold; \
                                                     border-left: none; \
                                                     border-top: none; \
                                                     border-bottom: none; \

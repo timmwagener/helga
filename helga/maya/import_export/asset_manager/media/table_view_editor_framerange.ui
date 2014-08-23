@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>486</width>
+    <width>556</width>
     <height>205</height>
    </rect>
   </property>
@@ -225,10 +225,16 @@
                <item>
                 <widget class="QWidget" name="wdgt_range_slider_left" native="true">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                    <horstretch>60</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>60</width>
+                   <height>0</height>
+                  </size>
                  </property>
                 </widget>
                </item>
@@ -251,10 +257,16 @@
                <item>
                 <widget class="QWidget" name="wdgt_range_slider_right" native="true">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                    <horstretch>30</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>30</width>
+                   <height>0</height>
+                  </size>
                  </property>
                 </widget>
                </item>

@@ -183,6 +183,104 @@ QLineEdit { border: none;\
 \
 \
 \
+/* QMenuBar - mnubar_dev */\
+QMenuBar#mnubar_dev { background-color: transparent;\
+                        border-left: none; \
+                        border-right: none; \
+                        border-bottom: none; \
+                        border-top: none; \
+} \
+\
+\
+/* QMenuBar - mnubar_dev - item */\
+QMenuBar#mnubar_dev::item { background: transparent;\
+                            margin-left: 8; \
+                            margin-right: 8; \
+                            border-left: none; \
+                            border-right: none; \
+                            border-bottom: none; \
+                            border-top: none; \
+} \
+\
+\
+/* QMenuBar - mnubar_dev - item - selected */\
+QMenuBar#mnubar_dev::item:selected { background: transparent;\
+                                        color: %(bright_orange)s; \
+                                        border-left: none; \
+                                        border-right: none; \
+                                        border-bottom: none; \
+                                        border-top: none; \
+} \
+\
+\
+/* QMenuBar - mnubar_dev - item - pressed */\
+QMenuBar#mnubar_dev::item:pressed { background: transparent;\
+                                        color: %(dark_orange)s; \
+                                        border-left: none; \
+                                        border-right: none; \
+                                        border-bottom: none; \
+                                        border-top: none; \
+} \
+\
+\
+\
+\
+\
+\
+\
+\
+/* QMenu - mnu_threads */\
+QMenu#mnu_threads { background-color: %(dark_grey)s;\
+                    border-left: none; \
+                    border-right: none; \
+                    border-bottom: none; \
+                    border-top: none; \
+} \
+\
+\
+/* QMenu - mnu_threads - item */\
+QMenu#mnu_threads::item { background: transparent;\
+                            margin-left: 8; \
+                            margin-right: 8; \
+                            border: none;\
+} \
+\
+\
+/* QMenu - mnu_threads - item - selected */\
+QMenu#mnu_threads::item:selected { color: %(dark_orange)s;\
+                                    border: none; \
+} \
+\
+\
+/* QMenu - mnu_gui */\
+QMenu#mnu_gui { background-color: %(dark_grey)s;\
+                border-left: none; \
+                border-right: none; \
+                border-bottom: none; \
+                border-top: none; \
+} \
+\
+\
+/* QMenu - mnu_gui - item */\
+QMenu#mnu_gui::item { background: transparent;\
+                        margin-left: 8; \
+                        margin-right: 8; \
+                        border: none;\
+} \
+\
+\
+/* QMenu - mnu_gui - item - selected */\
+QMenu#mnu_gui::item:selected { color: %(dark_orange)s;\
+                                border: none; \
+} \
+\
+\
+\
+\
+\
+\
+\
+\
 /* QScrollBar */\
 QScrollBar { background: %(dark_grey)s; \
                     border: none; \

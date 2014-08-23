@@ -99,6 +99,10 @@ if(do_reload):reload(asset_manager_logging_handler)
 from lib import asset_manager_functionality
 if(do_reload):reload(asset_manager_functionality)
 
+#asset_manager_threads_functionality
+from lib import asset_manager_threads_functionality
+if(do_reload):reload(asset_manager_threads_functionality)
+
 
 #asset_manager_button
 from lib.gui import asset_manager_button
@@ -211,6 +215,29 @@ LINKVISITED_COLOR = QtGui.QColor(QtCore.Qt.red)#QtGui.QPalette.LinkVisited // A 
 #Cleanup old instances
 #------------------------------------------------------------------
 
+def get_widget_by_class_name_closure(wdgt_class_name):
+    """
+    Practicing closures. Doesnt really make sense here, or could at least
+    be done much simpler/better.
+    Want to try it with filter in order to get more into the builtins.
+    """
+
+    def get_widget_by_class_name(wdgt):
+        """
+        Function that is closed in. Accepts and checks all
+        widgets against wdgt_class_name from enclosing function.
+        ALl this mess to be able to use it with filter.
+        """
+        try:
+            if (type(wdgt).__name__ == wdgt_class_name):
+                return True
+        except:
+            pass
+        return False
+
+    return get_widget_by_class_name
+
+
 def get_widget_by_name_closure(wdgt_name):
     """
     Practicing closures. Doesnt really make sense here, or could at least
@@ -234,6 +261,38 @@ def get_widget_by_name_closure(wdgt_name):
     return get_widget_by_name
 
 
+def check_and_delete_wdgt_instances_with_class_name(wdgt_class_name):
+    """
+    Search for all occurences with wdgt_class_name and delete them.
+    """
+
+    #get_wdgt_closure
+    get_wdgt_closure = get_widget_by_class_name_closure(wdgt_class_name)
+
+    #wdgt_list
+    wdgt_list = filter(get_wdgt_closure, QtGui.QApplication.allWidgets())
+
+    #iterate and delete
+    for index, wdgt in enumerate(wdgt_list):
+
+        #try to stop threads (wdgt == AssetManager)
+        try:
+            print('Stop threads for wdgt {0}'.format(wdgt.objectName()))
+            wdgt.asset_manager_threads_functionality.stop_threads()
+        except:
+            pass
+
+        #schedule widget for deletion
+        try:
+            print('Scheduled wdgt {0} for deletion'.format(wdgt.objectName()))
+            #delete
+            wdgt.deleteLater()
+        except:
+            pass
+
+    return wdgt_list
+
+
 def check_and_delete_wdgt_instances_with_name(wdgt_name):
     """
     Search for all occurences with wdgt_name and delete them.
@@ -242,30 +301,21 @@ def check_and_delete_wdgt_instances_with_name(wdgt_name):
     #get_wdgt_closure
     get_wdgt_closure = get_widget_by_name_closure(wdgt_name)
 
-    #wdgt_asset_manager_list
-    wdgt_asset_manager_list = filter(get_wdgt_closure, QtGui.QApplication.allWidgets())
+    #wdgt_list
+    wdgt_list = filter(get_wdgt_closure, QtGui.QApplication.allWidgets())
 
     #iterate and delete
-    for index, wdgt_asset_manager in enumerate(wdgt_asset_manager_list):
-
-        #try to mute logger
-        try:
-            #mute logger
-            wdgt_asset_manager.status_handler.wdgt_status = None
-        
-        except:
-            pass
+    for index, wdgt in enumerate(wdgt_list):
 
         #schedule widget for deletion
         try:
-            #log
-            print('Scheduled {0} for deletion'.format(wdgt_asset_manager.objectName()))
+            print('Scheduled wdgt {0} for deletion'.format(wdgt.objectName()))
             #delete
-            wdgt_asset_manager.deleteLater()
+            wdgt.deleteLater()
         except:
             pass
 
-    return wdgt_asset_manager_list
+    return wdgt_list
 
 
 
@@ -321,8 +371,8 @@ class AssetManager(form_class, base_class):
         AssetManager instance factory.
         """
 
-        #delete old instances
-        check_and_delete_wdgt_instances_with_name(cls.__name__)
+        #delete and cleanup old instances
+        check_and_delete_wdgt_instances_with_class_name(cls.__name__)
         check_and_delete_wdgt_instances_with_name('dockwdgt_' + cls.__name__)
 
         #asset_manager_instance
@@ -351,6 +401,7 @@ class AssetManager(form_class, base_class):
 
         #instance variables
         #------------------------------------------------------------------
+        
         self.title_name = self.__class__.__name__
         self.version = 0.1
         self.title = self.title_name +' ' + str(self.version)
@@ -358,6 +409,9 @@ class AssetManager(form_class, base_class):
 
         #asset_manager_functionality
         self.asset_manager_functionality = asset_manager_functionality.AssetManagerFunctionality()
+
+        #asset_manager_threads_functionality
+        self.asset_manager_threads_functionality = asset_manager_threads_functionality.AssetManagerThreadsFunctionality()
 
         #auto_update_models
         self.auto_update_models = auto_update_models
@@ -469,6 +523,9 @@ class AssetManager(form_class, base_class):
         if(self.auto_update_models):
             self.setup_auto_update_models()
 
+        #setup_threads
+        self.setup_threads()
+
 
     def connect_ui(self):
         """
@@ -526,12 +583,6 @@ class AssetManager(form_class, base_class):
 
         #set_margins_and_spacing
         self.set_margins_and_spacing()
-
-        #setup_tool_palette_global
-        #self.setup_tool_palette_global()
-
-        #setup_tool_palette_specific
-        #self.setup_tool_palette_specific()
 
         #set_active_stacked_widget 
         self.set_active_stacked_widget(self.btn_show_shot_metadata)
@@ -1244,6 +1295,7 @@ class AssetManager(form_class, base_class):
 
         #mnubar_dev
         self.mnubar_dev = QtGui.QMenuBar(parent = self)
+        self.mnubar_dev.setObjectName('mnubar_dev')
         self.lyt_dev.addWidget(self.mnubar_dev)        
 
 
@@ -1254,6 +1306,31 @@ class AssetManager(form_class, base_class):
         self.mnu_threads = QtGui.QMenu('Threads', parent = self)
         self.mnu_threads.setObjectName('mnu_threads')
         self.mnubar_dev.addMenu(self.mnu_threads)
+
+
+        #acn_add_tasks_to_queue
+        self.acn_add_tasks_to_queue = QtGui.QAction('Add tasks to queue', self)
+        self.acn_add_tasks_to_queue.setObjectName('acn_add_tasks_to_queue')
+        self.acn_add_tasks_to_queue.triggered.connect(self.asset_manager_threads_functionality.test_setup)
+        self.mnu_threads.addAction(self.acn_add_tasks_to_queue)
+
+        #acn_start_threads
+        self.acn_start_threads = QtGui.QAction('Re/Start threads', self)
+        self.acn_start_threads.setObjectName('acn_start_threads')
+        self.acn_start_threads.triggered.connect(self.asset_manager_threads_functionality.start_threads)
+        self.mnu_threads.addAction(self.acn_start_threads)
+
+        #acn_stop_threads
+        self.acn_stop_threads = QtGui.QAction('Stop threads', self)
+        self.acn_stop_threads.setObjectName('acn_stop_threads')
+        self.acn_stop_threads.triggered.connect(self.asset_manager_threads_functionality.stop_threads)
+        self.mnu_threads.addAction(self.acn_stop_threads)
+
+        #acn_print_queue_size
+        self.acn_print_queue_size = QtGui.QAction('Queue size', self)
+        self.acn_print_queue_size.setObjectName('acn_print_queue_size')
+        self.acn_print_queue_size.triggered.connect(self.asset_manager_threads_functionality.print_queue_size)
+        self.mnu_threads.addAction(self.acn_print_queue_size)
 
 
 
@@ -1274,10 +1351,23 @@ class AssetManager(form_class, base_class):
 
 
 
+
+
+
+
+
+    #Threads
+    #------------------------------------------------------------------
         
+    def setup_threads(self):
+        """
+        Setup threads.
+        """
 
+        #start threads
+        self.asset_manager_threads_functionality.setup_threads()
 
-    
+        
 
 
 
@@ -1521,6 +1611,9 @@ class AssetManager(form_class, base_class):
         #stop timer
         if(self.auto_update_timer):
             self.auto_update_timer.stop()
+
+        #stop threads
+        self.asset_manager_threads_functionality.stop_threads()
 
         #parent close event
         self.parent_class.closeEvent(event)

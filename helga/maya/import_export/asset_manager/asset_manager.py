@@ -225,7 +225,7 @@ def get_widget_by_name_closure(wdgt_name):
         ALl this mess to be able to use it with filter.
         """
         try:
-            if (wdgt.__class__.__name__ == wdgt_name):
+            if (wdgt.objectName() == wdgt_name):
                 return True
         except:
             pass
@@ -248,12 +248,20 @@ def check_and_delete_wdgt_instances_with_name(wdgt_name):
     #iterate and delete
     for index, wdgt_asset_manager in enumerate(wdgt_asset_manager_list):
 
+        #try to mute logger
         try:
             #mute logger
             wdgt_asset_manager.status_handler.wdgt_status = None
+        
+        except:
+            pass
+
+        #schedule widget for deletion
+        try:
+            #log
+            print('Scheduled {0} for deletion'.format(wdgt_asset_manager.objectName()))
             #delete
             wdgt_asset_manager.deleteLater()
-       
         except:
             pass
 
@@ -313,6 +321,7 @@ class AssetManager(form_class, base_class):
 
         #delete old instances
         check_and_delete_wdgt_instances_with_name(cls.__name__)
+        check_and_delete_wdgt_instances_with_name('dockwdgt_' + cls.__name__)
 
         #asset_manager_instance
         asset_manager_instance = super(AssetManager, cls).__new__(cls, args, kwargs)
@@ -323,7 +332,7 @@ class AssetManager(form_class, base_class):
     def __init__(self, 
                 logging_level = logging.DEBUG,
                 auto_update_models = True,
-                dock_it = False,
+                dock_it = True,
                 parent = global_functions.get_main_window()):
         """
         Customize instance.
@@ -396,6 +405,10 @@ class AssetManager(form_class, base_class):
 
         #test_methods
         self.test_methods()
+
+        #dock_it
+        if (self.dock_it):
+            self.make_dockable()
 
         
 
@@ -1424,6 +1437,39 @@ class AssetManager(form_class, base_class):
 
 
     
+
+
+
+
+    
+
+
+    #Docking
+    #------------------------------------------------------------------
+
+    def make_dockable(self):
+        """
+        Make this window dockable.
+        """
+
+        #maya_main_window
+        maya_main_window = global_functions.get_main_window()
+
+        #wdgt_dock
+        self.wdgt_dock = QtGui.QDockWidget(parent = maya_main_window)
+        self.wdgt_dock.setObjectName('dockwdgt_' + self.__class__.__name__)
+
+
+        #set wdgt
+        self.wdgt_dock.setWidget(self)
+        
+        #add to maya main window
+        maya_main_window.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.wdgt_dock)
+
+
+
+
+
 
 
 

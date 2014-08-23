@@ -203,7 +203,7 @@ def get_maya_main_window():
     
     #if True
     if (ptr_main_window):
-        return shiboken.wrapInstance(long(ptr_main_window), QtGui.QWidget)
+        return shiboken.wrapInstance(long(ptr_main_window), QtGui.QMainWindow)
 
     return None
 

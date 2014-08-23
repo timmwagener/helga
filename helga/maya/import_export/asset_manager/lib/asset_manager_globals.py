@@ -84,16 +84,11 @@ ICON_DOCS = os.path.join(ICONS_PATH, 'icn_docs.png').replace('\\', '/')
 
 #Text
 SHOT_METADATA_EXPLANATION_HEADER = 'Shot Metadata'
-SHOT_METADATA_EXPLANATION_TEXT = 'Displays the metadata needed for a shot.\
-When you hit export, you will export the camera specified in shotcam.\
-Only one shot metadata node per shot, otherwise exporting is disabled.'
+SHOT_METADATA_EXPLANATION_TEXT = 'Displays the metadata needed for a shot. When you hit export, you will export the camera specified in shotcam. Only one shot metadata node per shot, otherwise exporting is disabled.'
 PROP_METADATA_EXPLANATION_HEADER = 'Prop Metadata'
-PROP_METADATA_EXPLANATION_TEXT = 'Displays all the props in the scene and their metadata. \
-When you hit export, you will export the ones that are active as Alembic files. You can export either \
-the proxy, a locator or the render geo. Anything thats active in the spreadsheet will be processed.'
+PROP_METADATA_EXPLANATION_TEXT = 'Displays all the props in the scene and their metadata. When you hit export, you will export the ones that are active as Alembic files. You can export either the proxy, a locator or the render geo. Anything thats active in the spreadsheet will be processed.'
 CHAR_METADATA_EXPLANATION_HEADER = 'Character Metadata'
-CHAR_METADATA_EXPLANATION_TEXT = 'Displays all the characters in the scene and their metadata. \
-When you hit export, you will export the ones that are active as Alembic files.'
+CHAR_METADATA_EXPLANATION_TEXT = 'Displays all the characters in the scene and their metadata. When you hit export, you will export the ones that are active as Alembic files.'
 
 
 

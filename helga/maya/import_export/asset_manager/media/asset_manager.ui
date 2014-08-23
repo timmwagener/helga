@@ -84,6 +84,11 @@
     </widget>
    </item>
    <item>
+    <widget class="QWidget" name="wdgt_dev" native="true">
+     <layout class="QVBoxLayout" name="lyt_dev"/>
+    </widget>
+   </item>
+   <item>
     <widget class="QWidget" name="wdgt_content" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">

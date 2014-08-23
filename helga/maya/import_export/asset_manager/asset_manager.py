@@ -310,6 +310,8 @@ class AssetManager(form_class, base_class):
     explanation_header_set_text = QtCore.Signal(str)
     explanation_text_set_text = QtCore.Signal(str)
     change_metadata_color = QtCore.Signal(QtGui.QColor)
+    set_progressbar_range = QtCore.Signal(int, int)
+    progressbar_reset = QtCore.Signal()
 
 
 
@@ -333,6 +335,7 @@ class AssetManager(form_class, base_class):
                 logging_level = logging.DEBUG,
                 auto_update_models = True,
                 dock_it = True,
+                dev = True,
                 parent = global_functions.get_main_window()):
         """
         Customize instance.
@@ -363,6 +366,9 @@ class AssetManager(form_class, base_class):
 
         #dock_it
         self.dock_it = dock_it
+
+        #dev
+        self.dev = dev
 
         #shot_metadata_list
         self.shot_metadata_list = []
@@ -456,6 +462,9 @@ class AssetManager(form_class, base_class):
         #setup_mvc
         self.setup_mvc()
 
+        #setup_dev_mode
+        self.setup_dev_mode()
+
         #auto_update_models
         if(self.auto_update_models):
             self.setup_auto_update_models()
@@ -471,6 +480,8 @@ class AssetManager(form_class, base_class):
         self.explanation_header_set_text.connect(self.lbl_explanation_header.setText)
         self.explanation_text_set_text.connect(self.lbl_explanation_text.setText)
         self.change_metadata_color.connect(self.on_change_metadata_color)
+        self.set_progressbar_range.connect(self.progressbar.setRange)
+        self.progressbar_reset.connect(self.progressbar.reset)
 
         
         #Context Menus
@@ -962,9 +973,12 @@ class AssetManager(form_class, base_class):
         self.progressbar.setObjectName('progressbar')
         #customize
         self.progressbar.setTextVisible(False)
-        self.progressbar.setValue(50)
         self.progressbar.setOrientation(QtCore.Qt.Vertical)
         self.progressbar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+
+        #set min, max and reset
+        self.set_progressbar_range.emit(0, 100)
+        self.progressbar_reset.emit()
 
         #add to lyt
         self.lyt_metadata_progress.addWidget(self.progressbar)
@@ -996,6 +1010,8 @@ class AssetManager(form_class, base_class):
         self.shot_metadata_view.setObjectName('shot_metadata_view')
         self.shot_metadata_view.horizontalHeader().setObjectName('shot_metadata_view_hor_header')
         self.shot_metadata_view.verticalHeader().setObjectName('shot_metadata_view_ver_header')
+        #hide vertical header
+        self.shot_metadata_view.verticalHeader().hide()
         #context menu
         self.shot_metadata_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         #add to ui
@@ -1212,6 +1228,63 @@ class AssetManager(form_class, base_class):
         '''
 
 
+
+
+
+
+    
+
+    #Dev mode
+    #------------------------------------------------------------------
+    
+    def setup_dev_mode(self):
+        """
+        Setup dev mode to expose test functionality for devs.
+        """
+
+        #mnubar_dev
+        self.mnubar_dev = QtGui.QMenuBar(parent = self)
+        self.lyt_dev.addWidget(self.mnubar_dev)        
+
+
+        #Threads
+        #------------------------------------------------------------------
+
+        #mnu_threads
+        self.mnu_threads = QtGui.QMenu('Threads', parent = self)
+        self.mnu_threads.setObjectName('mnu_threads')
+        self.mnubar_dev.addMenu(self.mnu_threads)
+
+
+
+        #GUI
+        #------------------------------------------------------------------
+
+        #mnu_gui
+        self.mnu_gui = QtGui.QMenu('GUI', parent = self)
+        self.mnu_gui.setObjectName('mnu_gui')
+        self.mnubar_dev.addMenu(self.mnu_gui)
+
+
+        #acn_progressbar_test_run
+        self.acn_progressbar_test_run = QtGui.QAction('Progressbar test run', self)
+        self.acn_progressbar_test_run.setObjectName('acn_progressbar_test_run')
+        self.acn_progressbar_test_run.triggered.connect(functools.partial(self.progressbar_test_run, 0, 200))
+        self.mnu_gui.addAction(self.acn_progressbar_test_run)
+
+
+
+        
+
+
+    
+
+
+
+
+    
+
+
     #Getter & Setter
     #------------------------------------------------------------------
 
@@ -1415,6 +1488,23 @@ class AssetManager(form_class, base_class):
         self.progressbar.setStyleSheet(str_stylesheet)
 
 
+    @QtCore.Slot(int)
+    def increment_progressbar(self, step_size = 1):
+        """
+        Increment self.progressbar by step_size
+        """
+
+        #current_value
+        current_value = self.progressbar.value()
+
+        #incremented_value
+        incremented_value = current_value + step_size
+        print(incremented_value)
+
+        #set
+        self.progressbar.setValue(incremented_value)
+
+
     
 
 
@@ -1504,6 +1594,48 @@ class AssetManager(form_class, base_class):
         
         #set stylesheet
         wdgt.setStyleSheet(stylesheet_str)
+
+
+    def progressbar_test_run(self, minimum, maximum, interval = 50):
+        """
+        Test the progressbar in action.
+        """
+
+        try:
+            
+            try:
+                #stop timer
+                self.progress_bar_test_timer.stop()
+            except:
+                pass
+
+            #set range
+            self.set_progressbar_range.emit(minimum, maximum)
+            #reset
+            self.progressbar_reset.emit()
+
+            #progress_bar_test_timer
+            self.progress_bar_test_timer = QtCore.QTimer(self)
+            self.progress_bar_test_timer.setObjectName('progress_bar_test_timer')
+            self.progress_bar_test_timer.timeout.connect(self.increment_progressbar)
+            self.progress_bar_test_timer.start(interval)
+
+            #while
+            while (self.progressbar.value() < maximum):
+                QtGui.qApp.processEvents()
+
+            #stop timer
+            self.progress_bar_test_timer.stop()
+            
+            #reset
+            self.progressbar_reset.emit()
+        
+        except:
+            
+            #log
+            self.logger.debug('Error in progressbar test run. Maybe the object has been destroyed.')
+
+        
         
 
     def test_methods(self):

@@ -1458,6 +1458,10 @@ class AssetManager(form_class, base_class):
         #wdgt_dock
         self.wdgt_dock = QtGui.QDockWidget(parent = maya_main_window)
         self.wdgt_dock.setObjectName('dockwdgt_' + self.__class__.__name__)
+        self.wdgt_dock.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+
+        #set title
+        self.wdgt_dock.setWindowTitle(self.title)
 
 
         #set wdgt

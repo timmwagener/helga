@@ -229,6 +229,18 @@ QMenuBar#mnubar_dev::item:pressed { background: transparent;\
 \
 \
 \
+/* QMenu - separator */\
+QMenu::separator { background: %(bright_orange)s;\
+                    height: 1px; \
+                    margin-left: 8; \
+                    margin-right: 8; \
+                    border-left: none; \
+                    border-right: none; \
+                    border-bottom: none; \
+                    border-top: none; \
+} \
+\
+\
 /* QMenu - mnu_threads */\
 QMenu#mnu_threads { background-color: %(dark_grey)s;\
                     border-left: none; \
@@ -551,6 +563,51 @@ QListView#node_view::item:selected { background-color: %(bright_orange)s; \
                                         border-top: none; \
                                         border-bottom: none; \
                                         border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* AssetManagerSliderAction */\
+/* QWidgetAction that draws a slider and an LCD Display */\
+\
+\
+/* AssetManagerSliderAction - QLabel */\
+QLabel#AssetManagerSliderActionQLabel { background-color: transparent; \
+                                        margin-left: 8; \
+                                        margin-right: 8; \
+} \
+\
+\
+/* AssetManagerSliderAction - QWidget */\
+QWidget#AssetManagerSliderActionQWidget { background-color: transparent; \
+                                            margin-left: 8; \
+                                            margin-right: 8; \
+} \
+\
+\
+/* AssetManagerSliderAction - QSlider - groove - horizontal */\
+QSlider#AssetManagerSliderActionQSlider::groove:horizontal { background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, \
+                                                                stop:0 transparent, \
+                                                                stop:1 %(bright_orange)s); \
+                                                                height: 1px; \
+                                                                margin-left: 8; \
+                                                                margin-right: 8; \
+} \
+\
+\
+/* AssetManagerSliderAction - QSlider - handle - horizontal */\
+QSlider#AssetManagerSliderActionQSlider::handle:horizontal { background: %(bright_grey)s; \
+                                                                width: 20px; \
+} \
+\
+\
+/* AssetManagerSliderAction - QLCDNumber */\
+QLCDNumber#AssetManagerSliderActionQLCDNumber { background: transparent; \
+                                                color: %(bright_orange)s; \
+                                                border: none; \
 } \
 \
 \

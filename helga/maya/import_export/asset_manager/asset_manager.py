@@ -116,6 +116,10 @@ if(do_reload):reload(asset_manager_stylesheet_widget)
 from lib.gui import asset_manager_stylesheets
 if(do_reload):reload(asset_manager_stylesheets)
 
+#asset_manager_slider_action
+from lib.gui import asset_manager_slider_action
+if(do_reload):reload(asset_manager_slider_action)
+
 
 #shot_metadata_model
 from lib.mvc import shot_metadata_model
@@ -1331,6 +1335,39 @@ class AssetManager(form_class, base_class):
         self.acn_print_queue_size.setObjectName('acn_print_queue_size')
         self.acn_print_queue_size.triggered.connect(self.asset_manager_threads_functionality.print_queue_size)
         self.mnu_threads.addAction(self.acn_print_queue_size)
+
+        
+        #separator
+        self.mnu_threads.addSeparator()
+        
+        
+        #acn_set_thread_timer_interval
+        self.acn_set_thread_timer_interval = asset_manager_slider_action.AssetManagerSliderAction(minimum = 1, 
+                                                                                                    maximum = 10000,
+                                                                                                    initial_value = 2000,
+                                                                                                    text = 'Set thread interval:',
+                                                                                                    parent = self)
+        self.acn_set_thread_timer_interval.setObjectName('acn_set_thread_timer_interval')
+        self.acn_set_thread_timer_interval.value_changed.connect(self.asset_manager_threads_functionality.set_interval)
+        self.mnu_threads.addAction(self.acn_set_thread_timer_interval)
+
+
+        #separator
+        self.mnu_threads.addSeparator()
+        
+        
+        #acn_set_thread_count
+        max_threads = self.asset_manager_threads_functionality.get_max_threads()
+        self.acn_set_thread_count = asset_manager_slider_action.AssetManagerSliderAction(maximum = max_threads,
+                                                                                            initial_value = max_threads,
+                                                                                            text = 'Set active thread count:',
+                                                                                            parent = self)
+        self.acn_set_thread_count.setObjectName('acn_set_thread_count')
+        self.acn_set_thread_count.value_changed.connect(self.asset_manager_threads_functionality.set_thread_count)
+        self.mnu_threads.addAction(self.acn_set_thread_count)
+
+
+
 
 
 

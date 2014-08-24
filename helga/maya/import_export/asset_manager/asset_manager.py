@@ -521,7 +521,8 @@ class AssetManager(form_class, base_class):
         self.setup_mvc()
 
         #setup_dev_mode
-        self.setup_dev_mode()
+        if(self.dev):
+            self.setup_dev_mode()
 
         #auto_update_models
         if(self.auto_update_models):
@@ -536,6 +537,27 @@ class AssetManager(form_class, base_class):
         Connect UI widgets with slots or functions.
         """
 
+        #connect_signals
+        self.connect_signals()
+
+        #connect_buttons
+        self.connect_buttons()
+
+        #connect_widgets
+        self.connect_widgets()
+
+        #dev
+        if (self.dev):
+
+            #connect_dev
+            self.connect_dev()
+
+    
+    def connect_signals(self):
+        """
+        Connect Signals for the ui.
+        """
+
         #Signals
         self.stkwdgt_change_current.connect(self.stkwdgt_metadata.setCurrentIndex)
         self.explanation_header_set_text.connect(self.lbl_explanation_header.setText)
@@ -544,14 +566,11 @@ class AssetManager(form_class, base_class):
         self.set_progressbar_range.connect(self.progressbar.setRange)
         self.progressbar_reset.connect(self.progressbar.reset)
 
-        
-        #Context Menus
 
-        #shot_metadata_view
-        self.shot_metadata_view.customContextMenuRequested.connect(self.display_shot_metadata_context_menu)
-
-        
-        #Widgets
+    def connect_buttons(self):
+        """
+        Connect buttons.
+        """
 
         #btn_docs
         self.btn_docs.clicked.connect(doc_link.run)
@@ -575,6 +594,40 @@ class AssetManager(form_class, base_class):
         #btn_update_models
         if not(self.auto_update_models):
             self.btn_update_models.clicked.connect(self.update_models)
+
+
+    def connect_widgets(self):
+        """
+        Connect widgets.
+        """
+
+        #Context Menus
+
+        #shot_metadata_view
+        self.shot_metadata_view.customContextMenuRequested.connect(self.display_shot_metadata_context_menu)
+
+    
+    def connect_dev(self):
+        """
+        Connect everything exclusive to dev mode.
+        """
+
+        #acn_add_tasks_to_queue
+        self.acn_add_tasks_to_queue.triggered.connect(self.asset_manager_threads_functionality.test_setup)
+        #acn_start_threads
+        self.acn_start_threads.triggered.connect(self.asset_manager_threads_functionality.start_threads)
+        #acn_stop_threads
+        self.acn_stop_threads.triggered.connect(self.asset_manager_threads_functionality.stop_threads)
+        #acn_print_queue_size
+        self.acn_print_queue_size.triggered.connect(self.asset_manager_threads_functionality.print_queue_size)
+
+        #acn_set_thread_timer_interval
+        self.acn_set_thread_timer_interval.value_changed.connect(self.asset_manager_threads_functionality.set_interval)
+        #acn_set_thread_count
+        self.acn_set_thread_count.value_changed.connect(self.asset_manager_threads_functionality.set_thread_count)
+
+        #acn_progressbar_test_run
+        self.acn_progressbar_test_run.triggered.connect(functools.partial(self.progressbar_test_run, 0, 200))
 
     
     def style_ui(self):
@@ -1297,6 +1350,15 @@ class AssetManager(form_class, base_class):
         Setup dev mode to expose test functionality for devs.
         """
 
+        #setup_dev_menu
+        self.setup_dev_menu()
+
+    
+    def setup_dev_menu(self):
+        """
+        Setup dev menu.
+        """
+
         #mnubar_dev
         self.mnubar_dev = QtGui.QMenuBar(parent = self)
         self.mnubar_dev.setObjectName('mnubar_dev')
@@ -1315,25 +1377,21 @@ class AssetManager(form_class, base_class):
         #acn_add_tasks_to_queue
         self.acn_add_tasks_to_queue = QtGui.QAction('Add tasks to queue', self)
         self.acn_add_tasks_to_queue.setObjectName('acn_add_tasks_to_queue')
-        self.acn_add_tasks_to_queue.triggered.connect(self.asset_manager_threads_functionality.test_setup)
         self.mnu_threads.addAction(self.acn_add_tasks_to_queue)
 
         #acn_start_threads
         self.acn_start_threads = QtGui.QAction('Re/Start threads', self)
         self.acn_start_threads.setObjectName('acn_start_threads')
-        self.acn_start_threads.triggered.connect(self.asset_manager_threads_functionality.start_threads)
         self.mnu_threads.addAction(self.acn_start_threads)
 
         #acn_stop_threads
         self.acn_stop_threads = QtGui.QAction('Stop threads', self)
         self.acn_stop_threads.setObjectName('acn_stop_threads')
-        self.acn_stop_threads.triggered.connect(self.asset_manager_threads_functionality.stop_threads)
         self.mnu_threads.addAction(self.acn_stop_threads)
 
         #acn_print_queue_size
         self.acn_print_queue_size = QtGui.QAction('Queue size', self)
         self.acn_print_queue_size.setObjectName('acn_print_queue_size')
-        self.acn_print_queue_size.triggered.connect(self.asset_manager_threads_functionality.print_queue_size)
         self.mnu_threads.addAction(self.acn_print_queue_size)
 
         
@@ -1348,7 +1406,6 @@ class AssetManager(form_class, base_class):
                                                                                                     text = 'Set thread interval:',
                                                                                                     parent = self)
         self.acn_set_thread_timer_interval.setObjectName('acn_set_thread_timer_interval')
-        self.acn_set_thread_timer_interval.value_changed.connect(self.asset_manager_threads_functionality.set_interval)
         self.mnu_threads.addAction(self.acn_set_thread_timer_interval)
 
 
@@ -1363,7 +1420,6 @@ class AssetManager(form_class, base_class):
                                                                                             text = 'Set active thread count:',
                                                                                             parent = self)
         self.acn_set_thread_count.setObjectName('acn_set_thread_count')
-        self.acn_set_thread_count.value_changed.connect(self.asset_manager_threads_functionality.set_thread_count)
         self.mnu_threads.addAction(self.acn_set_thread_count)
 
 
@@ -1383,11 +1439,7 @@ class AssetManager(form_class, base_class):
         #acn_progressbar_test_run
         self.acn_progressbar_test_run = QtGui.QAction('Progressbar test run', self)
         self.acn_progressbar_test_run.setObjectName('acn_progressbar_test_run')
-        self.acn_progressbar_test_run.triggered.connect(functools.partial(self.progressbar_test_run, 0, 200))
         self.mnu_gui.addAction(self.acn_progressbar_test_run)
-
-
-
 
 
 

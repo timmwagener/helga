@@ -339,6 +339,9 @@ class ShotMetadataModel(QtCore.QAbstractTableModel):
 
 
 
+
+
+
     #Custom data methods
     #------------------------------------------------------------------
 
@@ -373,6 +376,39 @@ class ShotMetadataModel(QtCore.QAbstractTableModel):
         #return
         return selected_node.name()
 
+
+    def get_data_list(self):
+        """
+        Return self.data_list
+        """
+
+        return self.data_list
+
+
+    def get_data_list_flat(self):
+        """
+        Return self.data_list pynodes as flat list.
+        [[pynode], [pynode]] >> [pynode, pynode, pynode]
+        """
+
+        #data_list_flat
+        data_list_flat = []
+
+        #iterate
+        for pynode_list in self.data_list:
+            
+            #check if index exists
+            try:
+                pynode = pynode_list[0]
+            except:
+                continue
+
+            #append
+            data_list_flat.append(pynode)
+
+
+        #return
+        return data_list_flat
 
 
 

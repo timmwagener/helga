@@ -138,6 +138,9 @@ if (PIPELINE_BASE_PATH):
     MAYA_EXE = os.getenv('HELGA_MAYA_EXE', False)
     """Helga pipeline Maya exe"""
 
+    MAYA_PY = os.path.abspath(os.path.join(os.path.dirname(MAYA_EXE), 'mayapy.exe')).replace('\\', '/')
+    """Helga pipeline Maya Python interpreter path"""
+
 
     MAYA_PROJECT_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya'
     """Helga pipeline Maya project path"""

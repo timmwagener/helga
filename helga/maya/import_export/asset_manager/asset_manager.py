@@ -103,6 +103,10 @@ if(do_reload):reload(asset_manager_functionality)
 from lib import asset_manager_threads_functionality
 if(do_reload):reload(asset_manager_threads_functionality)
 
+#asset_manager_alembic_functionality
+from lib import asset_manager_alembic_functionality
+if(do_reload):reload(asset_manager_alembic_functionality)
+
 
 #asset_manager_button
 from lib.gui import asset_manager_button
@@ -282,7 +286,7 @@ def check_and_delete_wdgt_instances_with_class_name(wdgt_class_name):
         #try to stop threads (wdgt == AssetManager)
         try:
             print('Stop threads for wdgt {0}'.format(wdgt.objectName()))
-            wdgt.asset_manager_threads_functionality.stop_threads()
+            wdgt.threads_functionality.stop_threads()
         except:
             pass
 
@@ -411,11 +415,12 @@ class AssetManager(form_class, base_class):
         self.title = self.title_name +' ' + str(self.version)
         self.icon_path = os.path.join(ICONS_PATH, 'icon_asset_manager.png')
 
-        #asset_manager_functionality
-        self.asset_manager_functionality = asset_manager_functionality.AssetManagerFunctionality()
-
-        #asset_manager_threads_functionality
-        self.asset_manager_threads_functionality = asset_manager_threads_functionality.AssetManagerThreadsFunctionality()
+        #maya_functionality
+        self.maya_functionality = asset_manager_functionality.AssetManagerFunctionality()
+        #threads_functionality
+        self.threads_functionality = asset_manager_threads_functionality.AssetManagerThreadsFunctionality()
+        #alembic_functionality
+        self.alembic_functionality = asset_manager_alembic_functionality.AssetManagerAlembicFunctionality()
 
         #auto_update_models
         self.auto_update_models = auto_update_models
@@ -434,6 +439,9 @@ class AssetManager(form_class, base_class):
         self.prop_metadata_list = []
         #char_metadata_list
         self.char_metadata_list = []
+
+        #metadata_mode
+        self.metadata_mode = 'shot'
 
         
 
@@ -579,17 +587,20 @@ class AssetManager(form_class, base_class):
         self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_shot_metadata))
         self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_explanation_text, self.btn_show_shot_metadata))
         self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_metadata_color, self.btn_show_shot_metadata))
+        self.btn_show_shot_metadata.clicked.connect(functools.partial(self.set_metadata_mode, 'shot'))
         #btn_show_prop_metadata
         self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_prop_metadata))
         self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_explanation_text, self.btn_show_prop_metadata))
         self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_metadata_color, self.btn_show_prop_metadata))
+        self.btn_show_prop_metadata.clicked.connect(functools.partial(self.set_metadata_mode, 'prop'))
         #btn_show_char_metadata
         self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_active_stacked_widget, self.btn_show_char_metadata))
         self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_explanation_text, self.btn_show_char_metadata))
         self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_metadata_color, self.btn_show_char_metadata))
+        self.btn_show_char_metadata.clicked.connect(functools.partial(self.set_metadata_mode, 'char'))
 
         #btn_export
-        self.btn_export.clicked.connect(functools.partial(self.dummy_method, 'Export'))
+        self.btn_export.clicked.connect(self.export)
 
         #btn_update_models
         if not(self.auto_update_models):
@@ -613,18 +624,18 @@ class AssetManager(form_class, base_class):
         """
 
         #acn_add_tasks_to_queue
-        self.acn_add_tasks_to_queue.triggered.connect(self.asset_manager_threads_functionality.test_setup)
+        self.acn_add_tasks_to_queue.triggered.connect(self.threads_functionality.test_setup)
         #acn_start_threads
-        self.acn_start_threads.triggered.connect(self.asset_manager_threads_functionality.start_threads)
+        self.acn_start_threads.triggered.connect(self.threads_functionality.start_threads)
         #acn_stop_threads
-        self.acn_stop_threads.triggered.connect(self.asset_manager_threads_functionality.stop_threads)
+        self.acn_stop_threads.triggered.connect(self.threads_functionality.stop_threads)
         #acn_print_queue_size
-        self.acn_print_queue_size.triggered.connect(self.asset_manager_threads_functionality.print_queue_size)
+        self.acn_print_queue_size.triggered.connect(self.threads_functionality.print_queue_size)
 
         #acn_set_thread_timer_interval
-        self.acn_set_thread_timer_interval.value_changed.connect(self.asset_manager_threads_functionality.set_interval)
+        self.acn_set_thread_timer_interval.value_changed.connect(self.threads_functionality.set_interval)
         #acn_set_thread_count
-        self.acn_set_thread_count.value_changed.connect(self.asset_manager_threads_functionality.set_thread_count)
+        self.acn_set_thread_count.value_changed.connect(self.threads_functionality.set_thread_count)
 
         #acn_progressbar_test_run
         self.acn_progressbar_test_run.triggered.connect(functools.partial(self.progressbar_test_run, 0, 200))
@@ -1256,11 +1267,11 @@ class AssetManager(form_class, base_class):
         #scene data
         
         #new_shot_metadata_list
-        new_shot_metadata_list = self.asset_manager_functionality.get_nodes_of_type('HelgaShotsMetadata')
+        new_shot_metadata_list = self.maya_functionality.get_nodes_of_type('HelgaShotsMetadata')
         #new_prop_metadata_list
-        new_prop_metadata_list = self.asset_manager_functionality.get_nodes_of_type('HelgaPropMetadata')
+        new_prop_metadata_list = self.maya_functionality.get_nodes_of_type('HelgaPropMetadata')
         #new_char_metadata_list
-        new_char_metadata_list = self.asset_manager_functionality.get_nodes_of_type('HelgaCharacterMetadata')
+        new_char_metadata_list = self.maya_functionality.get_nodes_of_type('HelgaCharacterMetadata')
 
         #new_shot_metadata_list_string
         new_shot_metadata_list_string = self.get_hashstring_from_list(new_shot_metadata_list)
@@ -1362,8 +1373,23 @@ class AssetManager(form_class, base_class):
         #mnubar_dev
         self.mnubar_dev = QtGui.QMenuBar(parent = self)
         self.mnubar_dev.setObjectName('mnubar_dev')
-        self.lyt_dev.addWidget(self.mnubar_dev)        
+        self.lyt_dev.addWidget(self.mnubar_dev)
 
+        
+        #setup_dev_menu_threads
+        self.setup_dev_menu_threads(self.mnubar_dev)
+
+        #setup_dev_menu_gui
+        self.setup_dev_menu_gui(self.mnubar_dev)
+
+        #setup_dev_menu_alembic
+        self.setup_dev_menu_alembic(self.mnubar_dev)
+
+    
+    def setup_dev_menu_threads(self, menubar):
+        """
+        Setup dev menu threads.
+        """
 
         #Threads
         #------------------------------------------------------------------
@@ -1371,7 +1397,7 @@ class AssetManager(form_class, base_class):
         #mnu_threads
         self.mnu_threads = QtGui.QMenu('Threads', parent = self)
         self.mnu_threads.setObjectName('mnu_threads')
-        self.mnubar_dev.addMenu(self.mnu_threads)
+        menubar.addMenu(self.mnu_threads)
 
 
         #acn_add_tasks_to_queue
@@ -1414,7 +1440,7 @@ class AssetManager(form_class, base_class):
         
         
         #acn_set_thread_count
-        max_threads = self.asset_manager_threads_functionality.get_max_threads()
+        max_threads = self.threads_functionality.get_max_threads()
         self.acn_set_thread_count = asset_manager_slider_action.AssetManagerSliderAction(maximum = max_threads,
                                                                                             initial_value = max_threads,
                                                                                             text = 'Set active thread count:',
@@ -1423,9 +1449,10 @@ class AssetManager(form_class, base_class):
         self.mnu_threads.addAction(self.acn_set_thread_count)
 
 
-
-
-
+    def setup_dev_menu_gui(self, menubar):
+        """
+        Setup dev menu gui.
+        """
 
         #GUI
         #------------------------------------------------------------------
@@ -1433,7 +1460,7 @@ class AssetManager(form_class, base_class):
         #mnu_gui
         self.mnu_gui = QtGui.QMenu('GUI', parent = self)
         self.mnu_gui.setObjectName('mnu_gui')
-        self.mnubar_dev.addMenu(self.mnu_gui)
+        menubar.addMenu(self.mnu_gui)
 
 
         #acn_progressbar_test_run
@@ -1442,6 +1469,25 @@ class AssetManager(form_class, base_class):
         self.mnu_gui.addAction(self.acn_progressbar_test_run)
 
 
+    def setup_dev_menu_alembic(self, menubar):
+        """
+        Setup dev menu alembic.
+        """
+
+        #Alembic
+        #------------------------------------------------------------------
+
+        #mnu_alembic
+        self.mnu_alembic = QtGui.QMenu('Alembic', parent = self)
+        self.mnu_alembic.setObjectName('mnu_alembic')
+        menubar.addMenu(self.mnu_alembic)
+
+
+        #acn_progressbar_print_attr
+        self.acn_progressbar_print_attr = QtGui.QAction('Print Alembic Flag', self)
+        self.acn_progressbar_print_attr.setObjectName('acn_progressbar_print_attr')
+        self.acn_progressbar_print_attr.triggered.connect(self.alembic_functionality.print_frameRange)
+        self.mnu_alembic.addAction(self.acn_progressbar_print_attr)
 
 
 
@@ -1454,7 +1500,7 @@ class AssetManager(form_class, base_class):
         """
 
         #start threads
-        self.asset_manager_threads_functionality.setup_threads()
+        self.threads_functionality.setup_threads()
 
         
 
@@ -1526,7 +1572,7 @@ class AssetManager(form_class, base_class):
         Set self.shot_metadata_list
         """
         
-        self.shot_metadata_list = self.asset_manager_functionality.get_nodes_of_type('HelgaShotsMetadata')
+        self.shot_metadata_list = self.maya_functionality.get_nodes_of_type('HelgaShotsMetadata')
 
 
     def set_prop_metadata_list(self):
@@ -1534,7 +1580,7 @@ class AssetManager(form_class, base_class):
         Set self.prop_metadata_list
         """
         
-        self.prop_metadata_list = self.asset_manager_functionality.get_nodes_of_type('HelgaPropMetadata')
+        self.prop_metadata_list = self.maya_functionality.get_nodes_of_type('HelgaPropMetadata')
 
 
     def set_char_metadata_list(self):
@@ -1542,7 +1588,23 @@ class AssetManager(form_class, base_class):
         Set self.char_metadata_list
         """
         
-        self.char_metadata_list = self.asset_manager_functionality.get_nodes_of_type('HelgaCharacterMetadata')
+        self.char_metadata_list = self.maya_functionality.get_nodes_of_type('HelgaCharacterMetadata')
+
+
+    def get_metadata_mode(self):
+        """
+        Return self.metadata_mode
+        """
+
+        return self.metadata_mode
+
+
+    def set_metadata_mode(self, value):
+        """
+        Set self.metadata_mode
+        """
+
+        self.metadata_mode = value
 
 
 
@@ -1702,7 +1764,7 @@ class AssetManager(form_class, base_class):
             self.auto_update_timer.stop()
 
         #stop threads
-        self.asset_manager_threads_functionality.stop_threads()
+        self.threads_functionality.stop_threads()
 
         #parent close event
         self.parent_class.closeEvent(event)
@@ -1745,9 +1807,94 @@ class AssetManager(form_class, base_class):
 
 
 
+    
 
 
 
+
+
+
+    
+
+
+
+    #Export
+    #------------------------------------------------------------------
+
+    def export(self):
+        """
+        Export Alembic. This function is called when the export button is pressed.
+        """
+
+        #metadata_mode
+        metadata_mode = self.get_metadata_mode()
+
+        #shot
+        if (metadata_mode == 'shot'):
+
+            #log
+            self.logger.debug('Metadata Mode: {0}'.format(metadata_mode))
+
+            #node_list
+            node_list = self.shot_metadata_model.get_data_list_flat()
+            
+            #pynode_shot_metadata
+            pynode_shot_metadata = node_list[0]
+
+            #shot_cam
+            shot_cam = pynode_shot_metadata.shot_cam.get()
+
+            #alembic_path
+            alembic_path = pynode_shot_metadata.alembic_path.get()
+
+            #shot_start
+            shot_start = pynode_shot_metadata.shot_start.get()
+
+            #shot_end
+            shot_end = pynode_shot_metadata.shot_end.get()
+
+
+        #prop
+        elif (metadata_mode == 'prop'):
+
+            #log
+            self.logger.debug('Metadata Mode: {0}'.format(metadata_mode))
+
+        #char
+        elif (metadata_mode == 'char'):
+
+            #log
+            self.logger.debug('Metadata Mode: {0}'.format(metadata_mode))
+
+        #else (unknow, return)
+        else:
+
+            #log
+            self.logger.debug('Unknow metadata type {0}. Not exporting, returning.'.format(metadata_mode))
+            return
+
+        
+
+        #temp
+        self.alembic_functionality.set_frameRange('1 100')
+        self.alembic_functionality.export(node_list = shot_cam, 
+                                            abc_path = alembic_path + '/shot_cam.abc'
+                                            )
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+    
 
 
 
@@ -1836,8 +1983,8 @@ class AssetManager(form_class, base_class):
         #dummy_method
         self.dummy_method()
 
-        #asset_manager_functionality test
-        print(self.asset_manager_functionality.get_nodes_of_type('HelgaShotsMetadata'))
+        #maya_functionality test
+        print(self.maya_functionality.get_nodes_of_type('HelgaShotsMetadata'))
 
         #stylesheet_test
         #self.stylesheet_test(self.wdgt_explanation)

@@ -69,6 +69,14 @@ class AssetManagerFunctionality(object):
     #Maya
     #------------------------------------------------------------------
 
+    def plugin_loaded(self, plugin_name):
+        """
+        Check if plugin is loaded.
+        """
+
+        pass
+
+
     def create_node(self, node_type):
         """
         Create node of given type. Node type is given as string.

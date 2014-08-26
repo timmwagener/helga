@@ -1652,6 +1652,7 @@ class AssetManager(form_class, base_class):
         #acn_set_preRollStartFrame
         self.acn_set_preRollStartFrame = asset_manager_doublespinbox_checkable_action.AssetManagerDoubleSpinBoxCheckableAction(text = 'preRollStartFrame',
                                                                                                                                 initial_state = self.alembic_functionality.get_preRollStartFrame_enabled(),
+                                                                                                                                initial_value = self.alembic_functionality.get_preRollStartFrame(),
                                                                                                                                 parent = self)
         self.acn_set_preRollStartFrame.setObjectName('acn_set_preRollStartFrame')
         self.acn_set_preRollStartFrame.value_changed.connect(self.alembic_functionality.sgnl_set_preRollStartFrame)
@@ -2052,6 +2053,12 @@ class AssetManager(form_class, base_class):
         #metadata_mode
         metadata_mode = self.get_metadata_mode()
 
+        #get base data
+
+        #run checks on base data
+
+        #get specific data
+
         #shot
         if (metadata_mode == 'shot'):
 
@@ -2098,11 +2105,10 @@ class AssetManager(form_class, base_class):
 
         
 
-        #temp
-        self.alembic_functionality.set_frameRange('1 100')
-        self.alembic_functionality.export(node_list = shot_cam, 
-                                            abc_path = alembic_path + '/shot_cam.abc'
-                                            )
+        #temp export
+        self.alembic_functionality.export([shot_cam], 
+                                            [shot_start, shot_end], 
+                                            alembic_path + '/shot_cam.abc')
 
 
 

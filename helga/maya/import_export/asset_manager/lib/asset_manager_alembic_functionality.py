@@ -50,71 +50,72 @@ if(do_reload):reload(global_functions)
 #Globals
 #------------------------------------------------------------------
 
+#FLAG_ONLY_ATTR
+FLAG_ONLY_ATTR = '"flag_only"'
+
 #ALEMBIC_OPTIONS_DICT
-ALEMBIC_OPTIONS_DICT = {'help' : None,
-                        'preRollStartFrame' : None,
-                        'dontSkipUnwrittenFrames' : None,
-                        'verbose' : None,
-                        'jobArg' : None}
+ALEMBIC_OPTIONS_DICT = {'help' : FLAG_ONLY_ATTR,
+                        'preRollStartFrame' : 0.0,
+                        'dontSkipUnwrittenFrames' : FLAG_ONLY_ATTR,
+                        'verbose' : FLAG_ONLY_ATTR}
 
 #ALEMBIC_OPTIONS_ENABLED_DICT
 ALEMBIC_OPTIONS_ENABLED_DICT = {'help_enabled' : False,
                                 'preRollStartFrame_enabled' : True,
                                 'dontSkipUnwrittenFrames_enabled' : True,
-                                'verbose_enabled' : True,
-                                'jobArg_enabled' : True}
+                                'verbose_enabled' : True}
 
 #ALEMBIC_JOB_ARG_FLAGS_DICT
 ALEMBIC_JOB_ARG_FLAGS_DICT = {'attr' : None,
                                 'attrPrefix' : None,
-                                'eulerFilter' : '"is_flag"',
+                                'eulerFilter' : FLAG_ONLY_ATTR,
                                 'file' : None,
                                 'frameRange' : None,
-                                'frameRelativeSample' : None,
-                                'noNormals' : '"is_flag"',
-                                'renderableOnly' : '"is_flag"',
+                                'frameRelativeSample' : 0.0,
+                                'noNormals' : FLAG_ONLY_ATTR,
+                                'renderableOnly' : FLAG_ONLY_ATTR,
                                 'root' : None,
-                                'step' : None,
-                                'selection' : None,
-                                'stripNamespaces' : None,
+                                'step' : 1.0,
+                                'selection' : FLAG_ONLY_ATTR,
+                                'stripNamespaces' : FLAG_ONLY_ATTR,
                                 'userAttr' : None,
                                 'userAttrPrefix' : None,
-                                'uvWrite' : None,
-                                'writeColorSets' : None,
-                                'writeFaceSets' : None,
-                                'wholeFrameGeo' : None,
-                                'worldSpace' : None,
-                                'writeVisibility' : None,
+                                'uvWrite' : FLAG_ONLY_ATTR,
+                                'writeColorSets' : FLAG_ONLY_ATTR,
+                                'writeFaceSets' : FLAG_ONLY_ATTR,
+                                'wholeFrameGeo' : FLAG_ONLY_ATTR,
+                                'worldSpace' : FLAG_ONLY_ATTR,
+                                'writeVisibility' : FLAG_ONLY_ATTR,
                                 'melPerFrameCallback': None,
                                 'melPostJobCallback' : None,
                                 'pythonPerFrameCallback' : None,
                                 'pythonPostJobCallback' : None}
 
 #ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT
-ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT = {'attr_enabled' : True,
-                                        'attrPrefix_enabled' : True,
-                                        'eulerFilter_enabled' : True,
+ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT = {'attr_enabled' : False,
+                                        'attrPrefix_enabled' : False,
+                                        'eulerFilter_enabled' : False,
                                         'file_enabled' : True,
                                         'frameRange_enabled' : True,
                                         'frameRelativeSample_enabled' : True,
-                                        'noNormals_enabled' : True,
-                                        'renderableOnly_enabled' : True,
+                                        'noNormals_enabled' : False,
+                                        'renderableOnly_enabled' : False,
                                         'root_enabled' : True,
                                         'step_enabled' : True,
-                                        'selection_enabled' : True,
+                                        'selection_enabled' : False,
                                         'stripNamespaces_enabled' : True,
-                                        'userAttr_enabled' : True,
-                                        'userAttrPrefix_enabled' : True,
+                                        'userAttr_enabled' : False,
+                                        'userAttrPrefix_enabled' : False,
                                         'uvWrite_enabled' : True,
-                                        'writeColorSets_enabled' : True,
-                                        'writeFaceSets_enabled' : True,
-                                        'wholeFrameGeo_enabled' : True,
+                                        'writeColorSets_enabled' : False,
+                                        'writeFaceSets_enabled' : False,
+                                        'wholeFrameGeo_enabled' : False,
                                         'worldSpace_enabled' : True,
                                         'writeVisibility_enabled' : True,
-                                        'melPerFrameCallback_enabled': True,
-                                        'melPostJobCallback_enabled' : True,
-                                        'pythonPerFrameCallback_enabled' : True,
-                                        'pythonPostJobCallback_enabled' : True}
+                                        'melPerFrameCallback_enabled': False,
+                                        'melPostJobCallback_enabled' : False,
+                                        'pythonPerFrameCallback_enabled' : False,
+                                        'pythonPostJobCallback_enabled' : False}
 
 
 #ALEMBIC_ATTR_DICT
@@ -362,59 +363,20 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
         #instance variables
         #------------------------------------------------------------------
 
-        #alembic_attr_dict
-        self.alembic_attr_dict = {}
-        #alembic_attr_enabled_dict
-        self.alembic_attr_enabled_dict = {}
+        #alembic_options_dict
+        self.alembic_options_dict = {}
+        #alembic_options_enabled_dict
+        self.alembic_options_enabled_dict = {}
+        #alembic_job_arg_flags_dict
+        self.alembic_job_arg_flags_dict = {}
+        #alembic_job_arg_flags_enabled_dict
+        self.alembic_job_arg_flags_enabled_dict = {}
 
-        #alembic vars
-        for attr_name, default_value in ALEMBIC_ATTR_DICT.iteritems():
-
-            #create attr
-            #------------------------------------------------------------------
-            
-            #attr_name
-
-            #code_object
-            code_object = compile("self.{0} = {1}".format(attr_name, default_value), 
-                                    '<string>', 
-                                    'exec')
-            #exec
-            exec(code_object)
-
-            #log
-            self.logger.debug('Created instance attr.: {0}'.format(attr_name))
-
-
-            
-
-
-            #add to attr lists
-            #------------------------------------------------------------------
-
-            #enabled
-            if(attr_name.endswith('_enabled')):
-
-                #code_object
-                code_object = compile('self.alembic_attr_enabled_dict["{0}"] = self.{0}'.format(attr_name), 
-                                        '<string>',
-                                        'exec')
-                #exec
-                exec(code_object)
-
-            #not enabled (normal)
-            else:
-
-                #code_object
-                code_object = compile('self.alembic_attr_dict["{0}"] = self.{0}'.format(attr_name), 
-                                        '<string>', 
-                                        'exec')
-                #exec
-                exec(code_object)
-
-            
-
-
+        #create and store instance attrs for dicts
+        self.create_and_store_instance_attrs(ALEMBIC_OPTIONS_DICT, 'self.alembic_options_dict')
+        self.create_and_store_instance_attrs(ALEMBIC_OPTIONS_ENABLED_DICT, 'self.alembic_options_enabled_dict')
+        self.create_and_store_instance_attrs(ALEMBIC_JOB_ARG_FLAGS_DICT, 'self.alembic_job_arg_flags_dict')
+        self.create_and_store_instance_attrs(ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT, 'self.alembic_job_arg_flags_enabled_dict')
 
         #Startup
         #------------------------------------------------------------------
@@ -525,15 +487,52 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
         self.sgnl_set_writeVisibility_enabled.connect(self.set_writeVisibility_enabled)
         
         
-        
+    def create_and_store_instance_attrs(self, attr_dict, instance_attr_dict_variable_name):
+        """
+        Create and store instance attributes
+        """
+
+        #alembic vars
+        for attr_name, default_value in attr_dict.iteritems():
+
+            #create attr
+            #------------------------------------------------------------------
+            
+            #attr_name
+
+            #code_object
+            code_object = compile('self.{0} = {1}'.format(attr_name, default_value), 
+                                    '<string>', 
+                                    'exec')
+            #exec
+            exec(code_object)
+
+            #log
+            self.logger.debug('Created instance attr.: {0}'.format(attr_name))
+
+
+            
+
+
+            #add to instance_attr_dict
+            #------------------------------------------------------------------
+
+            #code_object
+            code_object = compile('{0}["{1}"] = self.{1}'.format(instance_attr_dict_variable_name, attr_name), 
+                                    '<string>',
+                                    'exec')
+            #exec
+            exec(code_object)
 
 
 
 
-    #Maya
+
+
+    #Argument Value Formatter
     #------------------------------------------------------------------
 
-    def node_list_to_abc_root_string(self, node_list):
+    def node_list_to_abc_root_string(self, node_name_list):
         """
         Convert node name list ['node_name', 'node_name'] to abc root string
         of this form '-root node_name -root node_name '.
@@ -543,18 +542,50 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
         #node_list_string
         node_list_string = ''
         #iterate
-        for index, node_name in enumerate(node_list):
+        for index, node_name in enumerate(node_name_list):
+            
+            #first element
+            if not (index):
+                
+                #no -root no whitespace at start
+                node_list_string += '{0}'.format(node_name)
+
+                #add whitespace if len of list > 1
+                if (len(node_name_list) > 1):
+                    node_list_string += ' '
+                
+
             #last element
-            if (index == len(node_list) - 1):
+            elif (index == len(node_name_list) - 1):
+                
                 #no whitespace at end
                 node_list_string += '-root {0}'.format(node_name)
-                continue
+                
             
-            #append string (with whitespace at end)
-            node_list_string += '-root {0} '.format(node_name)
+            #normal
+            else:
+                #append string (with whitespace at end)
+                node_list_string += '-root {0} '.format(node_name)
 
         return node_list_string
 
+
+    def float_list_to_framerange_string(self, float_list):
+        """
+        Convert float list of type [float, float] to string
+        of type '1.0 10.0'
+        """
+
+        #framerange_string
+        framerange_string = '{0} {1}'.format(float_list[0], float_list[1])
+
+        return framerange_string
+
+
+
+
+    #Maya
+    #------------------------------------------------------------------
 
     def string_to_list(self, string_to_convert):
         """
@@ -573,46 +604,130 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
         #abc_command
         abc_command = 'AbcExport'
 
-        #iterate options
-        for attr_name in self.alembic_attr_enabled_dict.keys():
-            if(eval('self.{0}'.format(attr_name))):
-                print('Enabled attr: {0} Value: {1}'.format(attr_name, eval('self.{0}'.format(attr_name))))
-
-
-        '''
-        #iterate and print
-        for attr_name, value in self.alembic_attr_dict.iteritems():
-            print('{0} - {1}'.format(attr_name, value))
-
-        print('------------------------')
-
-        #iterate and print
-        for attr_name, value in self.alembic_attr_enabled_dict.iteritems():
-            print('{0} - {1}'.format(attr_name, value))
-        '''
-
-
-
-    
-    def export(self, node_list = 'Test', abc_path = 'C:/Huso/sick', step = 1):
-        """
-        Export each node in node_list as abc file to abc_path.
-        """
-
-        #node_list convenience convert (allows to pass in node name instead of list)
-        if (type(node_list) is str or
-            type(node_list) is unicode):
-            node_list = self.string_to_list(node_list)
-
-        #node_list_string
-        node_list_string = self.node_list_to_abc_root_string(node_list)
         
-        #abc_command
-        abc_command = 'AbcExport -j "-frameRange {0} -step {1} -ws {2} -file {3}"'.format(self.frameRange,
-                                                                                            step,
-                                                                                            node_list_string, 
-                                                                                            abc_path)
+        #Options
+        #------------------------------------------------------------------
 
+        #attr in options dict
+        for attr_name in sorted(self.alembic_options_dict.keys()):
+
+            #arg enabled?
+            if(eval('self.get_{0}_enabled()'.format(attr_name))):
+
+                #attr_value
+                attr_value = eval('self.get_{0}()'.format(attr_name))
+                
+                #arg has no value / flag only
+                if (attr_value == "flag_only"):
+
+                    #append
+                    abc_command = abc_command +' ' +'-' +attr_name
+
+                #else append attr name and value
+                else:
+
+                    #append
+                    abc_command = abc_command +' ' +'-' +attr_name +' ' +str(attr_value)
+
+        
+        
+        #jobArg
+        #------------------------------------------------------------------
+
+        #append
+        abc_command = abc_command +' ' +'-' +'jobArg' +' ' +'"'
+
+
+
+        #jobArg Flags
+        #------------------------------------------------------------------
+
+        #first_flag
+        first_flag = True
+
+        #iterate
+        for attr_name in sorted(self.alembic_job_arg_flags_dict.keys()):
+
+            #arg enabled?
+            if(eval('self.get_{0}_enabled()'.format(attr_name))):
+
+                #attr_value
+                attr_value = eval('self.get_{0}()'.format(attr_name))
+                
+                #attr has no value / flag only
+                if (attr_value == "flag_only"):
+
+                    #first element no space upfront
+                    if (first_flag):
+                        
+                        #append
+                        abc_command = abc_command +'-' +attr_name
+                        #first_flag
+                        first_flag = False
+
+                    #else
+                    else:
+                        
+                        #append
+                        abc_command = abc_command +' ' +'-' +attr_name
+
+                #attr has value
+                else:
+
+                    #first element no space upfront
+                    if (first_flag):
+                        
+                        #append
+                        abc_command = abc_command +'-' +attr_name +' ' +str(attr_value)
+                        #first_flag
+                        first_flag = False
+
+                    #else
+                    else:
+
+                        #append
+                        abc_command = abc_command +' ' +'-' +attr_name +' ' +str(attr_value)
+
+
+
+
+
+        #append
+        abc_command = abc_command +'"'
+
+        #print .abc cmd
+        print('{0}'.format(abc_command))
+
+        #return
+        return abc_command
+
+
+    def export(self, node_name_list, frameRange_list, file_string):
+        """
+        Export alembic file
+        """
+
+        #set user parameter
+        #------------------------------------------------------------------
+
+        #root
+        root_value = self.node_list_to_abc_root_string(node_name_list)
+        self.set_root(root_value)
+
+        #frameRange
+        framerange_value = self.float_list_to_framerange_string(frameRange_list)
+        self.set_frameRange(framerange_value)
+
+        #file
+        self.set_file(file_string)
+
+
+        #export
+        #------------------------------------------------------------------
+
+        #abc_command
+        abc_command = self.get_export_command()
+        
         #log
         self.logger.debug('AbcExport command: {0}'.format(abc_command))
 

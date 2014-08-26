@@ -77,6 +77,17 @@ class AssetManagerFunctionality(object):
         pass
 
 
+    def get_maya_file(self):
+        """
+        Return path + name + extension of current maya file.
+        """
+
+        #maya_file
+        maya_file = pm.system.sceneName()
+
+        return maya_file
+
+
     def create_node(self, node_type):
         """
         Create node of given type. Node type is given as string.

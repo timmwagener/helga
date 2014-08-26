@@ -50,6 +50,9 @@ if(do_reload):reload(global_functions)
 #Globals
 #------------------------------------------------------------------
 
+#MAYA_PY
+MAYA_PY = global_variables.MAYA_PY
+
 #FLAG_ONLY_ATTR
 FLAG_ONLY_ATTR = '"flag_only"'
 
@@ -595,11 +598,30 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
         return [str(string_to_convert)]
 
 
-    @QtCore.Slot()
-    def get_export_command(self):
+    def build_export_command(self, node_name_list, frameRange_list, file_string):
         """
         Build and return Alembic export command. The command syntax is MEL.
         """
+
+        #set user parameter
+        #------------------------------------------------------------------
+
+        #root
+        root_value = self.node_list_to_abc_root_string(node_name_list)
+        self.set_root(root_value)
+
+        #frameRange
+        framerange_value = self.float_list_to_framerange_string(frameRange_list)
+        self.set_frameRange(framerange_value)
+
+        #file
+        self.set_file(file_string)
+
+        
+
+
+        #Alembic cmd
+        #------------------------------------------------------------------
 
         #abc_command
         abc_command = 'AbcExport'
@@ -695,43 +717,131 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
         #append
         abc_command = abc_command +'"'
 
-        #print .abc cmd
-        print('{0}'.format(abc_command))
-
         #return
         return abc_command
 
 
-    def export(self, node_name_list, frameRange_list, file_string):
+    def export(self, node_name_list, frameRange_list, file_string, dry_run = False):
         """
         Export alembic file
         """
 
-        #set user parameter
-        #------------------------------------------------------------------
-
-        #root
-        root_value = self.node_list_to_abc_root_string(node_name_list)
-        self.set_root(root_value)
-
-        #frameRange
-        framerange_value = self.float_list_to_framerange_string(frameRange_list)
-        self.set_frameRange(framerange_value)
-
-        #file
-        self.set_file(file_string)
-
-
-        #export
-        #------------------------------------------------------------------
-
         #abc_command
-        abc_command = self.get_export_command()
+        abc_command = self.build_export_command(node_name_list, frameRange_list, file_string)
         
-        #log
-        self.logger.debug('AbcExport command: {0}'.format(abc_command))
+        #dry_run
+        if(dry_run):
+            
+            #log
+            self.logger.debug('{0}'.format(abc_command))
+            #return cmd
+            return abc_command
 
         #export
         pm.mel.eval(abc_command)
 
 
+    def get_export_closure(self, abc_command, maya_file):
+        """
+        Return a function object that does the following when called:
+
+        1. Get a dict. of modified env. variables. Add ABC_COMMAND and MAYA_FILE.
+        2. Start subprocess that runs Mayapy with __file__. (__file__ being this module)
+        3. Wait till process is finished.
+        """
+
+        def export_function():
+            """
+            Function object to be returned and
+            put to queue to be called by threads run().
+            """
+
+            import os
+            import subprocess
+            import logging
+
+            #env_dict
+            env_dict = os.environ.copy()
+            #add abc_command
+            env_dict.setdefault('HELGA_ABC_COMMAND', abc_command)
+            #add maya_file_path
+            env_dict.setdefault('HELGA_ABC_MAYA_FILE', str(maya_file))
+
+            
+            #process
+            process = subprocess.Popen('{0} {1}'.format(MAYA_PY, __file__), 
+                                        stdout = subprocess.PIPE,
+                                        stderr = subprocess.PIPE,
+                                        env = env_dict)
+            #stdout_value, stderr_value
+            stdout_value, stderr_value = process.communicate()
+
+            #temp
+            print(stdout_value)
+            #print(stderr_value)
+
+            #exitcode
+            exitcode = process.returncode
+            
+
+
+
+
+        return export_function
+
+
+
+
+
+
+#Execute
+#------------------------------------------------------------------
+
+if (__name__ == '__main__'):
+
+    #initialize standalone maya
+    #------------------------------------------------------------------
+    import maya.standalone as standalone
+    standalone.initialize(name='python')
+
+
+    #import
+    #------------------------------------------------------------------
+
+    #python
+    import sys
+    import os
+    #maya
+    import maya.cmds as cmds
+    import pymel.core as pm
+
+
+
+
+    #run
+    #------------------------------------------------------------------
+
+
+    
+
+    #abc_command
+    abc_command = os.environ.get('HELGA_ABC_COMMAND', None)
+
+    #maya_file
+    maya_file = os.environ.get('HELGA_ABC_MAYA_FILE', None)
+
+
+
+    #open file
+    try:
+        pm.openFile(maya_file)
+    except:
+        print('Error opening {0}'.format(maya_file))
+
+    #export abc
+    try:
+        pm.mel.eval(abc_command)
+    except:
+        print('Error exporting Alembic.\nAbc cmd: {0}'.format(abc_command))
+
+    

@@ -109,6 +109,10 @@ if(do_reload):reload(asset_manager_threads_functionality)
 from lib import asset_manager_alembic_functionality
 if(do_reload):reload(asset_manager_alembic_functionality)
 
+#asset_manager_checks
+from lib import asset_manager_checks
+if(do_reload):reload(asset_manager_checks)
+
 #lib.gui
 
 #asset_manager_button
@@ -437,6 +441,8 @@ class AssetManager(form_class, base_class):
         self.threads_functionality = asset_manager_threads_functionality.AssetManagerThreadsFunctionality()
         #alembic_functionality
         self.alembic_functionality = asset_manager_alembic_functionality.AssetManagerAlembicFunctionality()
+        #checks_functionality
+        self.checks_functionality = asset_manager_checks.AssetManagerChecks()
 
         #auto_update_models
         self.auto_update_models = auto_update_models
@@ -1708,11 +1714,11 @@ class AssetManager(form_class, base_class):
         self.mnu_alembic.addSeparator()
 
 
-        #acn_get_export_command
-        self.acn_get_export_command = QtGui.QAction('Print .abc export command', self)
-        self.acn_get_export_command.setObjectName('acn_get_export_command')
-        self.acn_get_export_command.triggered.connect(self.alembic_functionality.get_export_command)
-        self.mnu_alembic.addAction(self.acn_get_export_command)
+        #acn_print_export_command
+        self.acn_print_export_command = QtGui.QAction('Print .abc export command', self)
+        self.acn_print_export_command.setObjectName('acn_print_export_command')
+        self.acn_print_export_command.triggered.connect(functools.partial(self.export, dry_run = True))
+        self.mnu_alembic.addAction(self.acn_print_export_command)
 
 
     #Threads
@@ -2045,43 +2051,90 @@ class AssetManager(form_class, base_class):
     #Export
     #------------------------------------------------------------------
 
-    def export(self):
+    def export(self, dry_run = False):
         """
         Export Alembic. This function is called when the export button is pressed.
+        If dry_run is True, only print the export command.
         """
+
+        #Get and check base data
+        #------------------------------------------------------------------
+
+        #maya_file
+        maya_file = self.maya_functionality.get_maya_file()
+        #file exists
+        if not(os.path.isfile(maya_file)):
+            #log
+            self.logger.debug('Maya file {0} does not exist. Not exporting.'.format(maya_file))
+            return
+
+        
+        #node_list
+        node_list = self.shot_metadata_model.get_data_list_flat()
+        #check node_list len
+        if not(len(node_list) == 1):
+            #log
+            self.logger.debug('No or too many shot metatdata nodes. Please make sure there is only one. Not exporting.')
+            return
+
+        #pynode_shot_metadata
+        pynode_shot_metadata = node_list[0]
+
+        
+        #run checks on base data
+        if not(self.checks_functionality.check_base_data(pynode_shot_metadata)):
+            #log
+            self.logger.debug('Base data check failed. Check Alembic path, shot start and end settings. Not exporting.')
+            return
+        
+
+        #alembic_path, shot_start, shot_end
+        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(pynode_shot_metadata)
+        
+
+        
+
+
+        #Get and check specific data
+        #------------------------------------------------------------------
 
         #metadata_mode
         metadata_mode = self.get_metadata_mode()
 
-        #get base data
-
-        #run checks on base data
-
-        #get specific data
-
         #shot
         if (metadata_mode == 'shot'):
 
-            #log
-            self.logger.debug('Metadata Mode: {0}'.format(metadata_mode))
+            #fake loop to simulate same behaviour as for other modes
+            for pynode_shot_metadata in [pynode_shot_metadata]:
+                
+                #run checks shot data
+                if not(self.checks_functionality.check_shot_data(pynode_shot_metadata)):
+                    
+                    #log
+                    self.logger.debug('Shot data check failed. Check shot cam settings. Not exporting.')
+                    continue
 
-            #node_list
-            node_list = self.shot_metadata_model.get_data_list_flat()
-            
-            #pynode_shot_metadata
-            pynode_shot_metadata = node_list[0]
+                #shot_cam
+                shot_cam = self.checks_functionality.check_shot_data(pynode_shot_metadata)
 
-            #shot_cam
-            shot_cam = pynode_shot_metadata.shot_cam.get()
+                '''
+                #export
+                self.alembic_functionality.export([shot_cam], 
+                                                    [shot_start, shot_end], 
+                                                    alembic_path + '/shot_cam.abc',
+                                                    dry_run = dry_run)
+                '''
 
-            #alembic_path
-            alembic_path = pynode_shot_metadata.alembic_path.get()
+                #abc_command
+                abc_command = self.alembic_functionality.build_export_command([shot_cam], 
+                                                                                [shot_start, shot_end], 
+                                                                                alembic_path + '/shot_cam.abc')
 
-            #shot_start
-            shot_start = pynode_shot_metadata.shot_start.get()
+                #export_function
+                export_function = self.alembic_functionality.get_export_closure(abc_command, maya_file)
 
-            #shot_end
-            shot_end = pynode_shot_metadata.shot_end.get()
+                #add to queue
+                self.threads_functionality.add_to_queue(export_function)
 
 
         #prop
@@ -2090,12 +2143,14 @@ class AssetManager(form_class, base_class):
             #log
             self.logger.debug('Metadata Mode: {0}'.format(metadata_mode))
 
+        
         #char
         elif (metadata_mode == 'char'):
 
             #log
             self.logger.debug('Metadata Mode: {0}'.format(metadata_mode))
 
+        
         #else (unknow, return)
         else:
 
@@ -2105,10 +2160,7 @@ class AssetManager(form_class, base_class):
 
         
 
-        #temp export
-        self.alembic_functionality.export([shot_cam], 
-                                            [shot_start, shot_end], 
-                                            alembic_path + '/shot_cam.abc')
+        
 
 
 

@@ -16,6 +16,9 @@ functionality via ALembic from Maya.
 #python
 import subprocess
 import logging
+#PySide
+from PySide import QtGui
+from PySide import QtCore
 #maya
 import pymel.core as pm
 
@@ -35,11 +38,7 @@ if(do_reload):reload(global_variables)
 from helga.general.setup.global_functions import global_functions
 if(do_reload):reload(global_functions)
 
-#asset_manager
 
-#asset_manager_functionality
-from lib import asset_manager_functionality
-if(do_reload):reload(asset_manager_functionality)
 
 
 
@@ -51,35 +50,78 @@ if(do_reload):reload(asset_manager_functionality)
 #Globals
 #------------------------------------------------------------------
 
+#ALEMBIC_OPTIONS_DICT
+ALEMBIC_OPTIONS_DICT = {'help' : None,
+                        'preRollStartFrame' : None,
+                        'dontSkipUnwrittenFrames' : None,
+                        'verbose' : None,
+                        'jobArg' : None}
+
+#ALEMBIC_OPTIONS_ENABLED_DICT
+ALEMBIC_OPTIONS_ENABLED_DICT = {'help_enabled' : False,
+                                'preRollStartFrame_enabled' : True,
+                                'dontSkipUnwrittenFrames_enabled' : True,
+                                'verbose_enabled' : True,
+                                'jobArg_enabled' : True}
+
+#ALEMBIC_JOB_ARG_FLAGS_DICT
+ALEMBIC_JOB_ARG_FLAGS_DICT = {'attr' : None,
+                                'attrPrefix' : None,
+                                'eulerFilter' : '"is_flag"',
+                                'file' : None,
+                                'frameRange' : None,
+                                'frameRelativeSample' : None,
+                                'noNormals' : '"is_flag"',
+                                'renderableOnly' : '"is_flag"',
+                                'root' : None,
+                                'step' : None,
+                                'selection' : None,
+                                'stripNamespaces' : None,
+                                'userAttr' : None,
+                                'userAttrPrefix' : None,
+                                'uvWrite' : None,
+                                'writeColorSets' : None,
+                                'writeFaceSets' : None,
+                                'wholeFrameGeo' : None,
+                                'worldSpace' : None,
+                                'writeVisibility' : None,
+                                'melPerFrameCallback': None,
+                                'melPostJobCallback' : None,
+                                'pythonPerFrameCallback' : None,
+                                'pythonPostJobCallback' : None}
+
+#ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT
+ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT = {'attr_enabled' : True,
+                                        'attrPrefix_enabled' : True,
+                                        'eulerFilter_enabled' : True,
+                                        'file_enabled' : True,
+                                        'frameRange_enabled' : True,
+                                        'frameRelativeSample_enabled' : True,
+                                        'noNormals_enabled' : True,
+                                        'renderableOnly_enabled' : True,
+                                        'root_enabled' : True,
+                                        'step_enabled' : True,
+                                        'selection_enabled' : True,
+                                        'stripNamespaces_enabled' : True,
+                                        'userAttr_enabled' : True,
+                                        'userAttrPrefix_enabled' : True,
+                                        'uvWrite_enabled' : True,
+                                        'writeColorSets_enabled' : True,
+                                        'writeFaceSets_enabled' : True,
+                                        'wholeFrameGeo_enabled' : True,
+                                        'worldSpace_enabled' : True,
+                                        'writeVisibility_enabled' : True,
+                                        'melPerFrameCallback_enabled': True,
+                                        'melPostJobCallback_enabled' : True,
+                                        'pythonPerFrameCallback_enabled' : True,
+                                        'pythonPostJobCallback_enabled' : True}
+
+
 #ALEMBIC_ATTR_DICT
-ALEMBIC_ATTR_DICT = {'attr' : None,
-                        'attrPrefix' : None,
-                        'eulerFilter' : '"is_flag"',
-                        'file' : None,
-                        'frameRange' : None,
-                        'frameRelativeSample' : None,
-                        'noNormals' : '"is_flag"',
-                        'renderableOnly' : '"is_flag"',
-                        'root' : None,
-                        'step' : None,
-                        'selection' : None,
-                        'stripNamespaces' : None,
-                        'userAttr' : None,
-                        'userAttrPrefix' : None,
-                        'uvWrite' : None,
-                        'writeColorSets' : None,
-                        'writeFaceSets' : None,
-                        'wholeFrameGeo' : None,
-                        'worldSpace' : None,
-                        'writeVisibility' : None,
-                        'melPerFrameCallback': None,
-                        'melPostJobCallback' : None,
-                        'pythonPerFrameCallback' : None,
-                        'pythonPostJobCallback' : None,
-                        'test_attribute' : 5}
-
-
-
+ALEMBIC_ATTR_DICT = reduce(lambda a, b: dict(a, **b), (ALEMBIC_OPTIONS_DICT,
+                                                        ALEMBIC_OPTIONS_ENABLED_DICT,
+                                                        ALEMBIC_JOB_ARG_FLAGS_DICT, 
+                                                        ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT))
 
 
 
@@ -160,7 +202,7 @@ def print_function_factory(attr_name):
 
 #MetaAssetManagerAlembicFunctionality class
 #------------------------------------------------------------------
-class MetaAssetManagerAlembicFunctionality(type):
+class MetaAssetManagerAlembicFunctionality(type(QtCore.QObject)):
     """
     MetaAssetManagerAlembicFunctionality is the meta class for AssetManagerAlembicFunctionality.
     It customizes the class members at creation to add setter/getter methods for all
@@ -205,32 +247,6 @@ class MetaAssetManagerAlembicFunctionality(type):
             #log
             logger.debug('Added printer {0} for attr: {1}'.format(printer_name, attr_name))
 
-
-
-            #attribute_enabled
-            #------------------------------------------------------------------
-            
-            #getter_name
-            getter_name = 'get_' +attr_name +'_enabled'
-            #get
-            attr_dict[getter_name] = getter_function_factory(attr_name +'_enabled')
-            #log
-            logger.debug('Added getter {0} for attr: {1}'.format(getter_name, attr_name +'_enabled'))
-            
-            #setter_name
-            setter_name = 'set_'+attr_name +'_enabled'
-            #set
-            attr_dict[setter_name] = setter_function_factory(attr_name +'_enabled')
-            #log
-            logger.debug('Added setter {0} for attr: {1}'.format(setter_name, attr_name +'_enabled'))
-
-            #printer_name
-            printer_name = 'print_' +attr_name +'_enabled'
-            #set
-            attr_dict[printer_name] = print_function_factory(attr_name +'_enabled')
-            #log
-            logger.debug('Added printer {0} for attr: {1}'.format(printer_name, attr_name +'_enabled'))
-
         
 
         #meta_class_parent
@@ -251,12 +267,66 @@ class MetaAssetManagerAlembicFunctionality(type):
 
 #AssetManagerAlembicFunctionality class
 #------------------------------------------------------------------
-class AssetManagerAlembicFunctionality(object):
+class AssetManagerAlembicFunctionality(QtCore.QObject):
     """
     AssetManagerAlembicFunctionality class.
     """
 
     __metaclass__ = MetaAssetManagerAlembicFunctionality
+
+
+    #Signals
+    #------------------------------------------------------------------
+
+    sgnl_set_help_enabled = QtCore.Signal(bool)
+
+    sgnl_set_preRollStartFrame = QtCore.Signal(float)
+    sgnl_set_preRollStartFrame_enabled = QtCore.Signal(bool)
+
+    sgnl_set_dontSkipUnwrittenFrames_enabled = QtCore.Signal(bool)
+    sgnl_set_verbose_enabled = QtCore.Signal(bool)
+
+    sgnl_set_attr = QtCore.Signal(str)
+    sgnl_set_attr_enabled = QtCore.Signal(bool)
+
+    sgnl_set_attrPrefix = QtCore.Signal(str)
+    sgnl_set_attrPrefix_enabled = QtCore.Signal(bool)
+
+    sgnl_set_eulerFilter_enabled = QtCore.Signal(bool)
+
+    sgnl_set_frameRelativeSample = QtCore.Signal(float)
+    sgnl_set_frameRelativeSample_enabled = QtCore.Signal(bool)
+
+    sgnl_set_noNormals_enabled = QtCore.Signal(bool)
+
+    sgnl_set_renderableOnly_enabled = QtCore.Signal(bool)
+
+    sgnl_set_step = QtCore.Signal(float)
+    sgnl_set_step_enabled = QtCore.Signal(bool)
+
+    sgnl_set_selection_enabled = QtCore.Signal(bool)
+
+    sgnl_set_stripNamespaces_enabled = QtCore.Signal(bool)
+
+    sgnl_set_userAttr = QtCore.Signal(str)
+    sgnl_set_userAttr_enabled = QtCore.Signal(bool)
+
+    sgnl_set_userAttrPrefix = QtCore.Signal(str)
+    sgnl_set_userAttrPrefix_enabled = QtCore.Signal(bool)
+
+    sgnl_set_uvWrite_enabled = QtCore.Signal(bool)
+
+    sgnl_set_writeColorSets_enabled = QtCore.Signal(bool)
+
+    sgnl_set_writeFaceSets_enabled = QtCore.Signal(bool)
+
+    sgnl_set_wholeFrameGeo_enabled = QtCore.Signal(bool)
+
+    sgnl_set_worldSpace_enabled = QtCore.Signal(bool)
+
+    sgnl_set_writeVisibility_enabled = QtCore.Signal(bool)
+
+
 
     def __new__(cls, *args, **kwargs):
         """
@@ -292,11 +362,16 @@ class AssetManagerAlembicFunctionality(object):
         #instance variables
         #------------------------------------------------------------------
 
-        #maya_functionality
-        self.maya_functionality = asset_manager_functionality.AssetManagerFunctionality()
+        #alembic_attr_dict
+        self.alembic_attr_dict = {}
+        #alembic_attr_enabled_dict
+        self.alembic_attr_enabled_dict = {}
 
         #alembic vars
         for attr_name, default_value in ALEMBIC_ATTR_DICT.iteritems():
+
+            #create attr
+            #------------------------------------------------------------------
             
             #attr_name
 
@@ -311,17 +386,143 @@ class AssetManagerAlembicFunctionality(object):
             self.logger.debug('Created instance attr.: {0}'.format(attr_name))
 
 
-            #attr_name_enabled
+            
 
-            #code_object
-            code_object = compile("self.{0} = {1}".format(attr_name +'_enabled', default_value), 
-                                    '<string>', 
-                                    'exec')
-            #exec
-            exec(code_object)
 
-            #log
-            self.logger.debug('Created instance attr.: {0}'.format(attr_name +'_enabled'))
+            #add to attr lists
+            #------------------------------------------------------------------
+
+            #enabled
+            if(attr_name.endswith('_enabled')):
+
+                #code_object
+                code_object = compile('self.alembic_attr_enabled_dict["{0}"] = self.{0}'.format(attr_name), 
+                                        '<string>',
+                                        'exec')
+                #exec
+                exec(code_object)
+
+            #not enabled (normal)
+            else:
+
+                #code_object
+                code_object = compile('self.alembic_attr_dict["{0}"] = self.{0}'.format(attr_name), 
+                                        '<string>', 
+                                        'exec')
+                #exec
+                exec(code_object)
+
+            
+
+
+
+        #Startup
+        #------------------------------------------------------------------
+
+        #connect_signals
+        self.connect_signals()
+
+
+
+    def connect_signals(self):
+        """
+        No ui here. Connect signals with methods.
+        """
+
+        #sgnl_set_help_enabled
+        self.sgnl_set_help_enabled.connect(self.set_help_enabled)
+
+        
+        #sgnl_set_preRollStartFrame
+        self.sgnl_set_preRollStartFrame.connect(self.set_preRollStartFrame)
+        #sgnl_set_preRollStartFrame_enabled
+        self.sgnl_set_preRollStartFrame_enabled.connect(self.set_preRollStartFrame_enabled)
+
+        
+        #sgnl_set_dontSkipUnwrittenFrames_enabled
+        self.sgnl_set_dontSkipUnwrittenFrames_enabled.connect(self.set_dontSkipUnwrittenFrames_enabled)
+
+        
+        #sgnl_set_verbose_enabled
+        self.sgnl_set_verbose_enabled.connect(self.set_verbose_enabled)
+
+        
+        #sgnl_set_attr
+        self.sgnl_set_attr.connect(self.set_attr)
+        #sgnl_set_attr_enabled
+        self.sgnl_set_attr_enabled.connect(self.set_attr_enabled)
+
+        
+        #sgnl_set_attrPrefix
+        self.sgnl_set_attrPrefix.connect(self.set_attrPrefix)
+        #sgnl_set_attrPrefix_enabled
+        self.sgnl_set_attrPrefix_enabled.connect(self.set_attrPrefix_enabled)
+
+        
+        #sgnl_set_eulerFilter_enabled
+        self.sgnl_set_eulerFilter_enabled.connect(self.set_eulerFilter_enabled)
+
+
+        #sgnl_set_frameRelativeSample
+        self.sgnl_set_frameRelativeSample.connect(self.set_frameRelativeSample)
+        #sgnl_set_frameRelativeSample_enabled
+        self.sgnl_set_frameRelativeSample_enabled.connect(self.set_frameRelativeSample_enabled)
+
+        
+        #sgnl_set_noNormals_enabled
+        self.sgnl_set_noNormals_enabled.connect(self.set_noNormals_enabled)
+
+
+        #sgnl_set_renderableOnly_enabled
+        self.sgnl_set_renderableOnly_enabled.connect(self.set_renderableOnly_enabled)
+
+
+        #sgnl_set_step
+        self.sgnl_set_step.connect(self.set_step)
+        #sgnl_set_step_enabled
+        self.sgnl_set_step_enabled.connect(self.set_step_enabled)
+
+
+        #sgnl_set_selection_enabled
+        self.sgnl_set_selection_enabled.connect(self.set_selection_enabled)
+
+
+        #sgnl_set_stripNamespaces_enabled
+        self.sgnl_set_stripNamespaces_enabled.connect(self.set_stripNamespaces_enabled)
+
+
+        #sgnl_set_userAttr
+        self.sgnl_set_userAttr.connect(self.set_userAttr)
+        #sgnl_set_userAttr_enabled
+        self.sgnl_set_userAttr_enabled.connect(self.set_userAttr_enabled)
+
+
+        #sgnl_set_userAttrPrefix
+        self.sgnl_set_userAttrPrefix.connect(self.set_userAttrPrefix)
+        #sgnl_set_userAttrPrefix_enabled
+        self.sgnl_set_userAttrPrefix_enabled.connect(self.set_userAttrPrefix_enabled)
+
+
+        #sgnl_set_uvWrite_enabled
+        self.sgnl_set_uvWrite_enabled.connect(self.set_uvWrite_enabled)
+
+
+        #sgnl_set_writeColorSets_enabled
+        self.sgnl_set_writeColorSets_enabled.connect(self.set_writeColorSets_enabled)
+
+
+        #sgnl_set_writeFaceSets_enabled
+        self.sgnl_set_writeFaceSets_enabled.connect(self.set_writeFaceSets_enabled)
+
+
+        #sgnl_set_wholeFrameGeo_enabled
+        self.sgnl_set_wholeFrameGeo_enabled.connect(self.set_wholeFrameGeo_enabled)
+
+        #sgnl_set_worldSpace_enabled
+        self.sgnl_set_worldSpace_enabled.connect(self.set_worldSpace_enabled)
+
+        #sgnl_set_writeVisibility_enabled
+        self.sgnl_set_writeVisibility_enabled.connect(self.set_writeVisibility_enabled)
         
         
         
@@ -361,6 +562,36 @@ class AssetManagerAlembicFunctionality(object):
         """
 
         return [str(string_to_convert)]
+
+
+    @QtCore.Slot()
+    def get_export_command(self):
+        """
+        Build and return Alembic export command. The command syntax is MEL.
+        """
+
+        #abc_command
+        abc_command = 'AbcExport'
+
+        #iterate options
+        for attr_name in self.alembic_attr_enabled_dict.keys():
+            if(eval('self.{0}'.format(attr_name))):
+                print('Enabled attr: {0} Value: {1}'.format(attr_name, eval('self.{0}'.format(attr_name))))
+
+
+        '''
+        #iterate and print
+        for attr_name, value in self.alembic_attr_dict.iteritems():
+            print('{0} - {1}'.format(attr_name, value))
+
+        print('------------------------')
+
+        #iterate and print
+        for attr_name, value in self.alembic_attr_enabled_dict.iteritems():
+            print('{0} - {1}'.format(attr_name, value))
+        '''
+
+
 
     
     def export(self, node_list = 'Test', abc_path = 'C:/Huso/sick', step = 1):

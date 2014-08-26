@@ -1,9 +1,10 @@
 
 """
-asset_manager_slider_action
-==========================================
+asset_manager_line_edit_checkable_action
+============================================
 
-Subclass of QWidgetAction to allow for slider in menu.
+Subclass of QWidgetAction to allow for QLineEdit in menu which has
+a checkable state.
 """
 
 
@@ -65,44 +66,43 @@ DARK_GREY = asset_manager_globals.DARK_GREY
 
 
 
-#AssetManagerSliderAction class
+#AssetManagerLineEditCheckableAction class
 #------------------------------------------------------------------
-class AssetManagerSliderAction(QtGui.QWidgetAction):
+class AssetManagerLineEditCheckableAction(QtGui.QWidgetAction):
     """
-    Subclass of QWidgetAction to allow for QSlider to be added as
-    an action to a menu.
+    Subclass of QWidgetAction to allow for QLineEdit to be added as
+    an action to a menu. The state of the QLineEdit is checkable.
     """
 
     #Signals
     #------------------------------------------------------------------
 
-    value_changed = QtCore.Signal(int)
+    state_changed = QtCore.Signal(bool)
+    text_changed = QtCore.Signal(str)
 
 
     def __new__(cls, *args, **kwargs):
         """
-        AssetManagerSliderAction instance factory.
+        AssetManagerLineEditCheckableAction instance factory.
         """
 
-        #asset_manager_slider_action_instance
-        asset_manager_slider_action_instance = super(AssetManagerSliderAction, cls).__new__(cls, args, kwargs)
+        #asset_manager_line_edit_checkable_action_instance
+        asset_manager_line_edit_checkable_action_instance = super(AssetManagerLineEditCheckableAction, cls).__new__(cls, args, kwargs)
 
-        return asset_manager_slider_action_instance
+        return asset_manager_line_edit_checkable_action_instance
 
     
     def __init__(self, 
                     logging_level = logging.DEBUG,
-                    text = 'Slider',
-                    minimum = 1,
-                    maximum = 10000,
-                    initial_value = 2000,
+                    text = 'LineEdit',
+                    initial_state = True,
                     parent = None):
         """
-        AssetManagerSliderAction instance customization.
+        AssetManagerLineEditCheckableAction instance customization.
         """
 
         #parent_class
-        self.parent_class = super(AssetManagerSliderAction, self)
+        self.parent_class = super(AssetManagerLineEditCheckableAction, self)
         #super class constructor
         self.parent_class.__init__(parent)
 
@@ -113,17 +113,10 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
         #instance variables
         #------------------------------------------------------------------
         
-        #initial_value
-        self.initial_value = initial_value
-        #minimum
-        self.minimum = minimum
-        #maximum
-        self.maximum = maximum
         #text
         self.text = text
-
-        #wdgt_slider_complete
-        self.wdgt_slider_complete = None
+        #initial_state
+        self.initial_state = initial_state
 
         
         #logger
@@ -154,68 +147,44 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
         Setup additional UI.
         """
         
-        #wdgt_slider_complete
-        self.wdgt_slider_complete = QtGui.QWidget(parent = parent)
-        self.wdgt_slider_complete.setObjectName(self.__class__.__name__ + 
-                                                type(self.wdgt_slider_complete).__name__)
+        #wdgt_line_edit_complete
+        self.wdgt_line_edit_complete = QtGui.QWidget(parent = parent)
+        self.wdgt_line_edit_complete.setObjectName(self.__class__.__name__ + 
+                                                    type(self.wdgt_line_edit_complete).__name__)
 
-        #lyt_slider_complete
-        self.lyt_slider_complete = QtGui.QVBoxLayout(self.wdgt_slider_complete)
+        #lyt_line_edit_complete
+        self.lyt_line_edit_complete = QtGui.QHBoxLayout(self.wdgt_line_edit_complete)
 
+        #chkbx_line_edit
+        self.chkbx_line_edit = QtGui.QCheckBox()
+        self.chkbx_line_edit.setObjectName(self.__class__.__name__ + 
+                                            type(self.chkbx_line_edit).__name__)
+        self.chkbx_line_edit.setText('')
+        self.chkbx_line_edit.setCheckable(True)
+        self.chkbx_line_edit.setChecked(self.initial_state)
+        self.lyt_line_edit_complete.addWidget(self.chkbx_line_edit)
+
+
+        #line_edit
+        self.line_edit = QtGui.QLineEdit()
+        self.line_edit.setObjectName(self.__class__.__name__ + 
+                                        type(self.line_edit).__name__)
         
-        #Header
-
-        #wdgt_slider_header
-        self.wdgt_slider_header = QtGui.QWidget()
-        self.wdgt_slider_header.setObjectName(self.__class__.__name__ + 
-                                                type(self.wdgt_slider_header).__name__)
-        self.lyt_slider_complete.addWidget(self.wdgt_slider_header)
-
-        #lyt_slider_header
-        self.lyt_slider_header = QtGui.QHBoxLayout(self.wdgt_slider_header)
-
-        #lbl_slider
-        self.lbl_slider = QtGui.QLabel(text = self.text)
-        self.lbl_slider.setObjectName(self.__class__.__name__ + type(self.lbl_slider).__name__)
-        self.lyt_slider_header.addWidget(self.lbl_slider)
-
-
-        #Slider
-
-        #wdgt_slider
-        self.wdgt_slider = QtGui.QWidget()
-        self.wdgt_slider.setObjectName(self.__class__.__name__ + 
-                                                type(self.wdgt_slider).__name__)
-        self.lyt_slider_complete.addWidget(self.wdgt_slider)
-
-        #lyt_slider
-        self.lyt_slider = QtGui.QHBoxLayout(self.wdgt_slider)
-
-        #slider
-        self.slider = QtGui.QSlider()
-        self.slider.setObjectName(self.__class__.__name__ + 
-                                    type(self.slider).__name__)
-        self.slider.setOrientation(QtCore.Qt.Horizontal)
-        self.slider.setRange(self.minimum, self.maximum)
-        self.slider.setValue(self.initial_value)
-        self.lyt_slider.addWidget(self.slider)
-
-        #lcd_number
-        self.lcd_number = QtGui.QLCDNumber()
-        self.lcd_number.setObjectName(self.__class__.__name__ + 
-                                        type(self.lcd_number).__name__)
-        self.lcd_number.display(self.initial_value)
-        self.lcd_number.setSegmentStyle(QtGui.QLCDNumber.Flat)
-        self.lyt_slider.addWidget(self.lcd_number)
+        self.line_edit.setPlaceholderText(self.text)
+        self.line_edit.setEnabled(self.initial_state)
+        self.lyt_line_edit_complete.addWidget(self.line_edit)
 
 
     def connect_ui(self):
         """
         Connect UI widgets with slots or functions.
         """
+
+        #chkbx_line_edit
+        self.chkbx_line_edit.stateChanged.connect(self.on_state_changed)
         
-        #slider
-        self.slider.valueChanged.connect(self.on_value_changed)
+        #line_edit
+        self.line_edit.textChanged.connect(self.on_text_changed)
 
 
     def style_ui(self):
@@ -230,7 +199,7 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
         self.set_margins_and_spacing()
 
         #adjust size (Shrink to minimum size)
-        self.wdgt_slider_complete.adjustSize()
+        self.wdgt_line_edit_complete.adjustSize()
 
         
 
@@ -265,7 +234,7 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
 
         
 
-        return self.wdgt_slider_complete
+        return self.wdgt_line_edit_complete
     
     
     
@@ -329,17 +298,27 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
     #Slots
     #------------------------------------------------------------------
 
-    @QtCore.Slot(int)
-    def on_value_changed(self, value):
+    @QtCore.Slot(bool)
+    def on_state_changed(self, value):
         """
-        Value of slider changed.
+        Value of chkbx_line_edit changed.
         """
 
-        #set value in lcd display
-        self.lcd_number.display(value)
+        #line_edit
+        self.line_edit.setEnabled(value)
         
-        #emit value_changed
-        self.value_changed.emit(value)
+        #emit state_changed
+        self.state_changed.emit(value)
+
+    
+    @QtCore.Slot(str)
+    def on_text_changed(self, value):
+        """
+        Value of line_edit changed.
+        """
+        
+        #emit text_changed
+        self.text_changed.emit(value)
 
     
 

@@ -87,6 +87,8 @@ if(do_reload): reload(doc_link)
 
 #asset_manager
 
+#lib
+
 #asset_manager_globals
 from lib import asset_manager_globals
 if(do_reload):reload(asset_manager_globals)
@@ -107,6 +109,7 @@ if(do_reload):reload(asset_manager_threads_functionality)
 from lib import asset_manager_alembic_functionality
 if(do_reload):reload(asset_manager_alembic_functionality)
 
+#lib.gui
 
 #asset_manager_button
 from lib.gui import asset_manager_button
@@ -124,6 +127,19 @@ if(do_reload):reload(asset_manager_stylesheets)
 from lib.gui import asset_manager_slider_action
 if(do_reload):reload(asset_manager_slider_action)
 
+#asset_manager_doublespinbox_action
+from lib.gui import asset_manager_doublespinbox_action
+if(do_reload):reload(asset_manager_doublespinbox_action)
+
+#asset_manager_doublespinbox_checkable_action
+from lib.gui import asset_manager_doublespinbox_checkable_action
+if(do_reload):reload(asset_manager_doublespinbox_checkable_action)
+
+#asset_manager_line_edit_checkable_action
+from lib.gui import asset_manager_line_edit_checkable_action
+if(do_reload):reload(asset_manager_line_edit_checkable_action)
+
+#lib.mvc
 
 #shot_metadata_model
 from lib.mvc import shot_metadata_model
@@ -1482,13 +1498,220 @@ class AssetManager(form_class, base_class):
         self.mnu_alembic.setObjectName('mnu_alembic')
         menubar.addMenu(self.mnu_alembic)
 
+        
+        #acn_set_help_enabled
+        self.acn_set_help_enabled = QtGui.QAction('help', self)
+        self.acn_set_help_enabled.setObjectName('acn_set_help_enabled')
+        self.acn_set_help_enabled.setCheckable(True)
+        self.acn_set_help_enabled.setChecked(self.alembic_functionality.get_help_enabled())
+        self.acn_set_help_enabled.toggled.connect(self.alembic_functionality.sgnl_set_help_enabled)
+        self.mnu_alembic.addAction(self.acn_set_help_enabled)
 
-        #acn_progressbar_print_attr
-        self.acn_progressbar_print_attr = QtGui.QAction('Print Alembic Flag', self)
-        self.acn_progressbar_print_attr.setObjectName('acn_progressbar_print_attr')
-        self.acn_progressbar_print_attr.triggered.connect(self.alembic_functionality.print_frameRange)
-        self.mnu_alembic.addAction(self.acn_progressbar_print_attr)
+        
+        #acn_set_dontSkipUnwrittenFrames_enabled
+        self.acn_set_dontSkipUnwrittenFrames_enabled = QtGui.QAction('dontSkipUnwrittenFrames', self)
+        self.acn_set_dontSkipUnwrittenFrames_enabled.setObjectName('acn_set_dontSkipUnwrittenFrames_enabled')
+        self.acn_set_dontSkipUnwrittenFrames_enabled.setCheckable(True)
+        self.acn_set_dontSkipUnwrittenFrames_enabled.setChecked(self.alembic_functionality.get_dontSkipUnwrittenFrames_enabled())
+        self.acn_set_dontSkipUnwrittenFrames_enabled.toggled.connect(self.alembic_functionality.sgnl_set_dontSkipUnwrittenFrames_enabled)
+        self.mnu_alembic.addAction(self.acn_set_dontSkipUnwrittenFrames_enabled)
 
+        
+        #acn_set_verbose_enabled
+        self.acn_set_verbose_enabled = QtGui.QAction('verbose', self)
+        self.acn_set_verbose_enabled.setObjectName('acn_set_verbose_enabled')
+        self.acn_set_verbose_enabled.setCheckable(True)
+        self.acn_set_verbose_enabled.setChecked(self.alembic_functionality.get_verbose_enabled())
+        self.acn_set_verbose_enabled.toggled.connect(self.alembic_functionality.sgnl_set_verbose_enabled)
+        self.mnu_alembic.addAction(self.acn_set_verbose_enabled)
+
+
+        #acn_set_eulerFilter_enabled
+        self.acn_set_eulerFilter_enabled = QtGui.QAction('eulerFilter', self)
+        self.acn_set_eulerFilter_enabled.setObjectName('acn_set_eulerFilter_enabled')
+        self.acn_set_eulerFilter_enabled.setCheckable(True)
+        self.acn_set_eulerFilter_enabled.setChecked(self.alembic_functionality.get_eulerFilter_enabled())
+        self.acn_set_eulerFilter_enabled.toggled.connect(self.alembic_functionality.sgnl_set_eulerFilter_enabled)
+        self.mnu_alembic.addAction(self.acn_set_eulerFilter_enabled)
+
+
+        #acn_set_noNormals_enabled
+        self.acn_set_noNormals_enabled = QtGui.QAction('noNormals', self)
+        self.acn_set_noNormals_enabled.setObjectName('acn_set_noNormals_enabled')
+        self.acn_set_noNormals_enabled.setCheckable(True)
+        self.acn_set_noNormals_enabled.setChecked(self.alembic_functionality.get_noNormals_enabled())
+        self.acn_set_noNormals_enabled.toggled.connect(self.alembic_functionality.sgnl_set_noNormals_enabled)
+        self.mnu_alembic.addAction(self.acn_set_noNormals_enabled)
+
+
+        #acn_set_renderableOnly_enabled
+        self.acn_set_renderableOnly_enabled = QtGui.QAction('renderableOnly', self)
+        self.acn_set_renderableOnly_enabled.setObjectName('acn_set_renderableOnly_enabled')
+        self.acn_set_renderableOnly_enabled.setCheckable(True)
+        self.acn_set_renderableOnly_enabled.setChecked(self.alembic_functionality.get_renderableOnly_enabled())
+        self.acn_set_renderableOnly_enabled.toggled.connect(self.alembic_functionality.sgnl_set_renderableOnly_enabled)
+        self.mnu_alembic.addAction(self.acn_set_renderableOnly_enabled)
+
+
+        #acn_set_selection_enabled
+        self.acn_set_selection_enabled = QtGui.QAction('selection', self)
+        self.acn_set_selection_enabled.setObjectName('acn_set_selection_enabled')
+        self.acn_set_selection_enabled.setCheckable(True)
+        self.acn_set_selection_enabled.setChecked(self.alembic_functionality.get_selection_enabled())
+        self.acn_set_selection_enabled.toggled.connect(self.alembic_functionality.sgnl_set_selection_enabled)
+        self.mnu_alembic.addAction(self.acn_set_selection_enabled)
+
+
+        #acn_set_stripNamespaces_enabled
+        self.acn_set_stripNamespaces_enabled = QtGui.QAction('stripNamespaces', self)
+        self.acn_set_stripNamespaces_enabled.setObjectName('acn_set_stripNamespaces_enabled')
+        self.acn_set_stripNamespaces_enabled.setCheckable(True)
+        self.acn_set_stripNamespaces_enabled.setChecked(self.alembic_functionality.get_stripNamespaces_enabled())
+        self.acn_set_stripNamespaces_enabled.toggled.connect(self.alembic_functionality.sgnl_set_stripNamespaces_enabled)
+        self.mnu_alembic.addAction(self.acn_set_stripNamespaces_enabled)
+
+
+        #acn_set_uvWrite_enabled
+        self.acn_set_uvWrite_enabled = QtGui.QAction('uvWrite', self)
+        self.acn_set_uvWrite_enabled.setObjectName('acn_set_uvWrite_enabled')
+        self.acn_set_uvWrite_enabled.setCheckable(True)
+        self.acn_set_uvWrite_enabled.setChecked(self.alembic_functionality.get_uvWrite_enabled())
+        self.acn_set_uvWrite_enabled.toggled.connect(self.alembic_functionality.sgnl_set_uvWrite_enabled)
+        self.mnu_alembic.addAction(self.acn_set_uvWrite_enabled)
+
+
+        #acn_set_writeColorSets_enabled
+        self.acn_set_writeColorSets_enabled = QtGui.QAction('writeColorSets', self)
+        self.acn_set_writeColorSets_enabled.setObjectName('acn_set_writeColorSets_enabled')
+        self.acn_set_writeColorSets_enabled.setCheckable(True)
+        self.acn_set_writeColorSets_enabled.setChecked(self.alembic_functionality.get_writeColorSets_enabled())
+        self.acn_set_writeColorSets_enabled.toggled.connect(self.alembic_functionality.sgnl_set_writeColorSets_enabled)
+        self.mnu_alembic.addAction(self.acn_set_writeColorSets_enabled)
+
+
+        #acn_set_writeFaceSets_enabled
+        self.acn_set_writeFaceSets_enabled = QtGui.QAction('writeFaceSets', self)
+        self.acn_set_writeFaceSets_enabled.setObjectName('acn_set_writeFaceSets_enabled')
+        self.acn_set_writeFaceSets_enabled.setCheckable(True)
+        self.acn_set_writeFaceSets_enabled.setChecked(self.alembic_functionality.get_writeFaceSets_enabled())
+        self.acn_set_writeFaceSets_enabled.toggled.connect(self.alembic_functionality.sgnl_set_writeFaceSets_enabled)
+        self.mnu_alembic.addAction(self.acn_set_writeFaceSets_enabled)
+
+
+        #acn_set_wholeFrameGeo_enabled
+        self.acn_set_wholeFrameGeo_enabled = QtGui.QAction('wholeFrameGeo', self)
+        self.acn_set_wholeFrameGeo_enabled.setObjectName('acn_set_wholeFrameGeo_enabled')
+        self.acn_set_wholeFrameGeo_enabled.setCheckable(True)
+        self.acn_set_wholeFrameGeo_enabled.setChecked(self.alembic_functionality.get_wholeFrameGeo_enabled())
+        self.acn_set_wholeFrameGeo_enabled.toggled.connect(self.alembic_functionality.sgnl_set_wholeFrameGeo_enabled)
+        self.mnu_alembic.addAction(self.acn_set_wholeFrameGeo_enabled)
+
+
+        #acn_set_worldSpace_enabled
+        self.acn_set_worldSpace_enabled = QtGui.QAction('worldSpace', self)
+        self.acn_set_worldSpace_enabled.setObjectName('acn_set_worldSpace_enabled')
+        self.acn_set_worldSpace_enabled.setCheckable(True)
+        self.acn_set_worldSpace_enabled.setChecked(self.alembic_functionality.get_worldSpace_enabled())
+        self.acn_set_worldSpace_enabled.toggled.connect(self.alembic_functionality.sgnl_set_worldSpace_enabled)
+        self.mnu_alembic.addAction(self.acn_set_worldSpace_enabled)
+
+
+        #acn_set_writeVisibility_enabled
+        self.acn_set_writeVisibility_enabled = QtGui.QAction('writeVisibility', self)
+        self.acn_set_writeVisibility_enabled.setObjectName('acn_set_writeVisibility_enabled')
+        self.acn_set_writeVisibility_enabled.setCheckable(True)
+        self.acn_set_writeVisibility_enabled.setChecked(self.alembic_functionality.get_writeVisibility_enabled())
+        self.acn_set_writeVisibility_enabled.toggled.connect(self.alembic_functionality.sgnl_set_writeVisibility_enabled)
+        self.mnu_alembic.addAction(self.acn_set_writeVisibility_enabled)
+
+
+        #separator
+        self.mnu_alembic.addSeparator()
+
+
+        #acn_set_step
+        self.acn_set_step = asset_manager_doublespinbox_checkable_action.AssetManagerDoubleSpinBoxCheckableAction(text = 'step',
+                                                                                                                    initial_state = self.alembic_functionality.get_step_enabled(),
+                                                                                                                    parent = self)
+        self.acn_set_step.setObjectName('acn_set_step')
+        self.acn_set_step.value_changed.connect(self.alembic_functionality.sgnl_set_step)
+        self.acn_set_step.state_changed.connect(self.alembic_functionality.sgnl_set_step_enabled)
+        self.mnu_alembic.addAction(self.acn_set_step)
+
+
+        #acn_set_frameRelativeSample
+        self.acn_set_frameRelativeSample = asset_manager_doublespinbox_checkable_action.AssetManagerDoubleSpinBoxCheckableAction(text = 'frameRelativeSample',
+                                                                                                                                initial_state = self.alembic_functionality.get_frameRelativeSample_enabled(),
+                                                                                                                                parent = self)
+        self.acn_set_frameRelativeSample.setObjectName('acn_set_frameRelativeSample')
+        self.acn_set_frameRelativeSample.value_changed.connect(self.alembic_functionality.sgnl_set_frameRelativeSample)
+        self.acn_set_frameRelativeSample.state_changed.connect(self.alembic_functionality.sgnl_set_frameRelativeSample_enabled)
+        self.mnu_alembic.addAction(self.acn_set_frameRelativeSample)
+
+
+        #acn_set_preRollStartFrame
+        self.acn_set_preRollStartFrame = asset_manager_doublespinbox_checkable_action.AssetManagerDoubleSpinBoxCheckableAction(text = 'preRollStartFrame',
+                                                                                                                                initial_state = self.alembic_functionality.get_preRollStartFrame_enabled(),
+                                                                                                                                parent = self)
+        self.acn_set_preRollStartFrame.setObjectName('acn_set_preRollStartFrame')
+        self.acn_set_preRollStartFrame.value_changed.connect(self.alembic_functionality.sgnl_set_preRollStartFrame)
+        self.acn_set_preRollStartFrame.state_changed.connect(self.alembic_functionality.sgnl_set_preRollStartFrame_enabled)
+        self.mnu_alembic.addAction(self.acn_set_preRollStartFrame)
+
+
+        #separator
+        self.mnu_alembic.addSeparator()
+
+
+        #acn_set_attr
+        self.acn_set_attr = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(text = 'attr',
+                                                                                                            initial_state = self.alembic_functionality.get_attr_enabled(),
+                                                                                                            parent = self)
+        self.acn_set_attr.setObjectName('acn_set_attr')
+        self.acn_set_attr.text_changed.connect(self.alembic_functionality.sgnl_set_attr)
+        self.acn_set_attr.state_changed.connect(self.alembic_functionality.sgnl_set_attr_enabled)
+        self.mnu_alembic.addAction(self.acn_set_attr)
+
+
+        #acn_set_attrPrefix
+        self.acn_set_attrPrefix = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(text = 'attrPrefix',
+                                                                                                                        initial_state = self.alembic_functionality.get_attrPrefix_enabled(),
+                                                                                                                        parent = self)
+        self.acn_set_attrPrefix.setObjectName('acn_set_attrPrefix')
+        self.acn_set_attrPrefix.text_changed.connect(self.alembic_functionality.sgnl_set_attrPrefix)
+        self.acn_set_attrPrefix.state_changed.connect(self.alembic_functionality.sgnl_set_attrPrefix_enabled)
+        self.mnu_alembic.addAction(self.acn_set_attrPrefix)
+
+
+        #acn_set_userAttr
+        self.acn_set_userAttr = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(text = 'userAttr',
+                                                                                                                initial_state = self.alembic_functionality.get_userAttr_enabled(),
+                                                                                                                parent = self)
+        self.acn_set_userAttr.setObjectName('acn_set_userAttr')
+        self.acn_set_userAttr.text_changed.connect(self.alembic_functionality.sgnl_set_userAttr)
+        self.acn_set_userAttr.state_changed.connect(self.alembic_functionality.sgnl_set_userAttr_enabled)
+        self.mnu_alembic.addAction(self.acn_set_userAttr)
+
+
+        #acn_set_userAttrPrefix
+        self.acn_set_userAttrPrefix = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(text = 'userAttrPrefix',
+                                                                                                                    initial_state = self.alembic_functionality.get_userAttrPrefix_enabled(),
+                                                                                                                    parent = self)
+        self.acn_set_userAttrPrefix.setObjectName('acn_set_userAttrPrefix')
+        self.acn_set_userAttrPrefix.text_changed.connect(self.alembic_functionality.sgnl_set_userAttrPrefix)
+        self.acn_set_userAttrPrefix.state_changed.connect(self.alembic_functionality.sgnl_set_userAttrPrefix_enabled)
+        self.mnu_alembic.addAction(self.acn_set_userAttrPrefix)
+
+
+        #separator
+        self.mnu_alembic.addSeparator()
+
+
+        #acn_get_export_command
+        self.acn_get_export_command = QtGui.QAction('Print .abc export command', self)
+        self.acn_get_export_command.setObjectName('acn_get_export_command')
+        self.acn_get_export_command.triggered.connect(self.alembic_functionality.get_export_command)
+        self.mnu_alembic.addAction(self.acn_get_export_command)
 
 
     #Threads

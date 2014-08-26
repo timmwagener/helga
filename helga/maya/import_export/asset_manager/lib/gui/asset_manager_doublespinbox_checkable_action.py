@@ -1,9 +1,10 @@
 
 """
-asset_manager_slider_action
-==========================================
+asset_manager_doublespinbox_checkable_action
+============================================
 
-Subclass of QWidgetAction to allow for slider in menu.
+Subclass of QWidgetAction to allow for QDoubleSpinbox in menu which has
+a checkable state.
 """
 
 
@@ -65,44 +66,46 @@ DARK_GREY = asset_manager_globals.DARK_GREY
 
 
 
-#AssetManagerSliderAction class
+#AssetManagerDoubleSpinBoxCheckableAction class
 #------------------------------------------------------------------
-class AssetManagerSliderAction(QtGui.QWidgetAction):
+class AssetManagerDoubleSpinBoxCheckableAction(QtGui.QWidgetAction):
     """
-    Subclass of QWidgetAction to allow for QSlider to be added as
-    an action to a menu.
+    Subclass of QWidgetAction to allow for QDoubleSpinBox to be added as
+    an action to a menu. The state of the QDoubleSpinBox is checkable.
     """
 
     #Signals
     #------------------------------------------------------------------
 
-    value_changed = QtCore.Signal(int)
+    state_changed = QtCore.Signal(bool)
+    value_changed = QtCore.Signal(float)
 
 
     def __new__(cls, *args, **kwargs):
         """
-        AssetManagerSliderAction instance factory.
+        AssetManagerDoubleSpinBoxCheckableAction instance factory.
         """
 
-        #asset_manager_slider_action_instance
-        asset_manager_slider_action_instance = super(AssetManagerSliderAction, cls).__new__(cls, args, kwargs)
+        #asset_manager_doublespinbox_checkable_action_instance
+        asset_manager_doublespinbox_checkable_action_instance = super(AssetManagerDoubleSpinBoxCheckableAction, cls).__new__(cls, args, kwargs)
 
-        return asset_manager_slider_action_instance
+        return asset_manager_doublespinbox_checkable_action_instance
 
     
     def __init__(self, 
                     logging_level = logging.DEBUG,
-                    text = 'Slider',
-                    minimum = 1,
-                    maximum = 10000,
-                    initial_value = 2000,
+                    text = 'Spinbox',
+                    minimum = 0.0,
+                    maximum = 10000.0,
+                    initial_value = 0.0,
+                    initial_state = True,
                     parent = None):
         """
-        AssetManagerSliderAction instance customization.
+        AssetManagerDoubleSpinBoxCheckableAction instance customization.
         """
 
         #parent_class
-        self.parent_class = super(AssetManagerSliderAction, self)
+        self.parent_class = super(AssetManagerDoubleSpinBoxCheckableAction, self)
         #super class constructor
         self.parent_class.__init__(parent)
 
@@ -121,9 +124,11 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
         self.maximum = maximum
         #text
         self.text = text
+        #initial_state
+        self.initial_state = initial_state
 
-        #wdgt_slider_complete
-        self.wdgt_slider_complete = None
+        #wdgt_spinbox_complete
+        self.wdgt_spinbox_complete = None
 
         
         #logger
@@ -154,68 +159,44 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
         Setup additional UI.
         """
         
-        #wdgt_slider_complete
-        self.wdgt_slider_complete = QtGui.QWidget(parent = parent)
-        self.wdgt_slider_complete.setObjectName(self.__class__.__name__ + 
-                                                type(self.wdgt_slider_complete).__name__)
+        #wdgt_spinbox_complete
+        self.wdgt_spinbox_complete = QtGui.QWidget(parent = parent)
+        self.wdgt_spinbox_complete.setObjectName(self.__class__.__name__ + 
+                                                type(self.wdgt_spinbox_complete).__name__)
 
-        #lyt_slider_complete
-        self.lyt_slider_complete = QtGui.QVBoxLayout(self.wdgt_slider_complete)
+        #lyt_spinbox_complete
+        self.lyt_spinbox_complete = QtGui.QHBoxLayout(self.wdgt_spinbox_complete)
 
-        
-        #Header
-
-        #wdgt_slider_header
-        self.wdgt_slider_header = QtGui.QWidget()
-        self.wdgt_slider_header.setObjectName(self.__class__.__name__ + 
-                                                type(self.wdgt_slider_header).__name__)
-        self.lyt_slider_complete.addWidget(self.wdgt_slider_header)
-
-        #lyt_slider_header
-        self.lyt_slider_header = QtGui.QHBoxLayout(self.wdgt_slider_header)
-
-        #lbl_slider
-        self.lbl_slider = QtGui.QLabel(text = self.text)
-        self.lbl_slider.setObjectName(self.__class__.__name__ + type(self.lbl_slider).__name__)
-        self.lyt_slider_header.addWidget(self.lbl_slider)
+        #chkbx_spinbox
+        self.chkbx_spinbox = QtGui.QCheckBox()
+        self.chkbx_spinbox.setObjectName(self.__class__.__name__ + 
+                                            type(self.chkbx_spinbox).__name__)
+        self.chkbx_spinbox.setText(self.text)
+        self.chkbx_spinbox.setCheckable(True)
+        self.chkbx_spinbox.setChecked(self.initial_state)
+        self.lyt_spinbox_complete.addWidget(self.chkbx_spinbox)
 
 
-        #Slider
-
-        #wdgt_slider
-        self.wdgt_slider = QtGui.QWidget()
-        self.wdgt_slider.setObjectName(self.__class__.__name__ + 
-                                                type(self.wdgt_slider).__name__)
-        self.lyt_slider_complete.addWidget(self.wdgt_slider)
-
-        #lyt_slider
-        self.lyt_slider = QtGui.QHBoxLayout(self.wdgt_slider)
-
-        #slider
-        self.slider = QtGui.QSlider()
-        self.slider.setObjectName(self.__class__.__name__ + 
-                                    type(self.slider).__name__)
-        self.slider.setOrientation(QtCore.Qt.Horizontal)
-        self.slider.setRange(self.minimum, self.maximum)
-        self.slider.setValue(self.initial_value)
-        self.lyt_slider.addWidget(self.slider)
-
-        #lcd_number
-        self.lcd_number = QtGui.QLCDNumber()
-        self.lcd_number.setObjectName(self.__class__.__name__ + 
-                                        type(self.lcd_number).__name__)
-        self.lcd_number.display(self.initial_value)
-        self.lcd_number.setSegmentStyle(QtGui.QLCDNumber.Flat)
-        self.lyt_slider.addWidget(self.lcd_number)
+        #spinbox
+        self.spinbox = QtGui.QDoubleSpinBox()
+        self.spinbox.setObjectName(self.__class__.__name__ + 
+                                    type(self.spinbox).__name__)
+        self.spinbox.setRange(self.minimum, self.maximum)
+        self.spinbox.setValue(self.initial_value)
+        self.spinbox.setEnabled(self.initial_state)
+        self.lyt_spinbox_complete.addWidget(self.spinbox)
 
 
     def connect_ui(self):
         """
         Connect UI widgets with slots or functions.
         """
+
+        #chkbx_spinbox
+        self.chkbx_spinbox.stateChanged.connect(self.on_state_changed)
         
-        #slider
-        self.slider.valueChanged.connect(self.on_value_changed)
+        #spinbox
+        self.spinbox.valueChanged.connect(self.on_value_changed)
 
 
     def style_ui(self):
@@ -230,7 +211,7 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
         self.set_margins_and_spacing()
 
         #adjust size (Shrink to minimum size)
-        self.wdgt_slider_complete.adjustSize()
+        self.wdgt_spinbox_complete.adjustSize()
 
         
 
@@ -265,7 +246,7 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
 
         
 
-        return self.wdgt_slider_complete
+        return self.wdgt_spinbox_complete
     
     
     
@@ -329,14 +310,24 @@ class AssetManagerSliderAction(QtGui.QWidgetAction):
     #Slots
     #------------------------------------------------------------------
 
-    @QtCore.Slot(int)
-    def on_value_changed(self, value):
+    @QtCore.Slot(bool)
+    def on_state_changed(self, value):
         """
-        Value of slider changed.
+        Value of chkbx_spinbox changed.
         """
 
-        #set value in lcd display
-        self.lcd_number.display(value)
+        #spinbox
+        self.spinbox.setEnabled(value)
+        
+        #emit value_changed
+        self.state_changed.emit(value)
+
+    
+    @QtCore.Slot(float)
+    def on_value_changed(self, value):
+        """
+        Value of spinbox changed.
+        """
         
         #emit value_changed
         self.value_changed.emit(value)

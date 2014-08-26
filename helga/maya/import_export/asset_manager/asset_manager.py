@@ -1743,6 +1743,7 @@ class AssetManager(form_class, base_class):
     #Getter & Setter
     #------------------------------------------------------------------
 
+    @QtCore.Slot(str)
     def set_status(self, new_value):
         """
         Set le_status text
@@ -2117,18 +2118,17 @@ class AssetManager(form_class, base_class):
                 #shot_cam
                 shot_cam = self.checks_functionality.check_shot_data(pynode_shot_metadata)
 
-                '''
-                #export
-                self.alembic_functionality.export([shot_cam], 
-                                                    [shot_start, shot_end], 
-                                                    alembic_path + '/shot_cam.abc',
-                                                    dry_run = dry_run)
-                '''
-
                 #abc_command
                 abc_command = self.alembic_functionality.build_export_command([shot_cam], 
                                                                                 [shot_start, shot_end], 
                                                                                 alembic_path + '/shot_cam.abc')
+
+                #dry_run
+                if(dry_run):
+
+                    #log
+                    self.logger.debug('{0}'.format(abc_command))
+                    continue
 
                 #export_function
                 export_function = self.alembic_functionality.get_export_closure(abc_command, maya_file)

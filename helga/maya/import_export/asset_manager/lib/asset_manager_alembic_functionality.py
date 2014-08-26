@@ -142,13 +142,9 @@ def getter_function_factory(attr_name):
         Getter function
         """
 
-        print('New getter func start')
-
         self = args[0]
 
         value = getattr(self, attr_name)
-
-        print('New getter func end')
 
         return value
 
@@ -165,14 +161,10 @@ def setter_function_factory(attr_name):
         Getter function
         """
 
-        print('New setter func start')
-
         self = args[0]
         value = args[1]
 
         setattr(self, attr_name, value)
-
-        print('New setter func end')
 
     return new_func
 
@@ -187,13 +179,9 @@ def print_function_factory(attr_name):
         Print function
         """
 
-        print('New print func start')
-
         self = args[0]
 
         print(getattr(self, attr_name))
-
-        print('New print func end')
 
     return new_func
 
@@ -778,14 +766,11 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
 
             #temp
             print(stdout_value)
-            #print(stderr_value)
+            print(stderr_value)
 
             #exitcode
             exitcode = process.returncode
             
-
-
-
 
         return export_function
 
@@ -799,10 +784,7 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
 
 if (__name__ == '__main__'):
 
-    #initialize standalone maya
-    #------------------------------------------------------------------
-    import maya.standalone as standalone
-    standalone.initialize(name='python')
+    
 
 
     #import
@@ -811,18 +793,35 @@ if (__name__ == '__main__'):
     #python
     import sys
     import os
-    #maya
-    import maya.cmds as cmds
-    import pymel.core as pm
+
+
+    #Import variable
+    do_reload = True
+
+    #helga
+
+    #global_variables
+    from helga.general.setup.global_variables import global_variables
+    if(do_reload):reload(global_variables)
+
+    #global_functions
+    from helga.general.setup.global_functions import global_functions
+    if(do_reload):reload(global_functions)
+
+
+
+
+
+    #initialize standalone maya
+    #------------------------------------------------------------------
+    
+    global_functions.initialize_maya_standalone()
 
 
 
 
     #run
     #------------------------------------------------------------------
-
-
-    
 
     #abc_command
     abc_command = os.environ.get('HELGA_ABC_COMMAND', None)

@@ -239,6 +239,33 @@ def get_nuke_main_window():
     return None
 
 
+def initialize_maya_standalone(complete = True):
+    """
+    Initializes mayapy.
+    """
+
+    #initialize standalone maya
+    #------------------------------------------------------------------
+    import maya.standalone as standalone
+    standalone.initialize(name='python')
+
+
+    #complete
+    if(complete):
+
+        #scripting
+        import maya.cmds as cmds
+        import pymel.core as pm
+        #api 1
+        import maya.OpenMaya as open_maya
+        import maya.OpenMayaAnim as open_maya_anim
+        import maya.OpenMayaFX as open_maya_fx
+        import maya.OpenMayaRender as open_maya_render
+        import maya.OpenMayaUI as open_maya_ui
+        #api 2
+        import maya.api.OpenMaya as open_maya_2
+
+
 #divider
 def divider():
     """
@@ -246,6 +273,9 @@ def divider():
     """
 
     print('----------------------------------------------------')
+
+
+
 
 
 

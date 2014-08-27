@@ -406,6 +406,7 @@ class AssetManager(form_class, base_class):
     change_metadata_color = QtCore.Signal(QtGui.QColor)
     set_progressbar_range = QtCore.Signal(int, int)
     progressbar_reset = QtCore.Signal()
+    
 
 
 
@@ -1322,7 +1323,7 @@ class AssetManager(form_class, base_class):
         
 
         #sorted_list
-        sorted_list = sorted([pynode.name() for pynode in list_to_convert])
+        sorted_list = sorted([pynode.name() for pynode in list_to_convert if(pynode.exists())])
 
         #hashable_string
         hashable_string = ''
@@ -1480,6 +1481,9 @@ class AssetManager(form_class, base_class):
 
         #setup_dev_menu_alembic
         self.setup_dev_menu_alembic(self.mnubar_dev)
+
+        #setup_dev_menu_assets
+        self.setup_dev_menu_assets(self.mnubar_dev)
 
     
     def setup_dev_menu_threads(self, menubar):
@@ -1793,6 +1797,89 @@ class AssetManager(form_class, base_class):
         self.acn_print_export_command.setObjectName('acn_print_export_command')
         self.acn_print_export_command.triggered.connect(functools.partial(self.export, dry_run = True))
         self.mnu_alembic.addAction(self.acn_print_export_command)
+
+
+    def setup_dev_menu_assets(self, menubar):
+        """
+        Setup dev menu assets.
+        """
+
+        #Assets
+        #------------------------------------------------------------------
+
+        #mnu_assets
+        self.mnu_assets = QtGui.QMenu('Assets', parent = self)
+        self.mnu_assets.setObjectName('mnu_assets')
+        menubar.addMenu(self.mnu_assets)
+
+
+        #Attributes
+        #------------------------------------------------------------------
+
+        #mnu_attributes
+        self.mnu_attributes = QtGui.QMenu('Attributes', parent = self)
+        self.mnu_attributes.setObjectName('mnu_attributes')
+        self.mnu_assets.addMenu(self.mnu_attributes)
+
+
+        #acn_add_proxy_attributes
+        self.acn_add_proxy_attributes = QtGui.QAction('Add proxy attributes to selected geo', self)
+        self.acn_add_proxy_attributes.setObjectName('acn_add_proxy_attributes')
+        self.acn_add_proxy_attributes.triggered.connect(functools.partial(self.maya_functionality.add_attribute_to_selected_nodes, 
+                                                                            'helga_proxy',
+                                                                            'transform',
+                                                                            'Mesh'))
+        self.mnu_attributes.addAction(self.acn_add_proxy_attributes)
+
+        #acn_add_rendergeo_attributes
+        self.acn_add_rendergeo_attributes = QtGui.QAction('Add rendergeo attributes to selected geo', self)
+        self.acn_add_rendergeo_attributes.setObjectName('acn_add_rendergeo_attributes')
+        self.acn_add_rendergeo_attributes.triggered.connect(functools.partial(self.maya_functionality.add_attribute_to_selected_nodes, 
+                                                                            'helga_rendergeo',
+                                                                            'transform',
+                                                                            'Mesh'))
+        self.mnu_attributes.addAction(self.acn_add_rendergeo_attributes)
+
+        #acn_add_locator_attributes
+        self.acn_add_locator_attributes = QtGui.QAction('Add locator attributes to selected locator', self)
+        self.acn_add_locator_attributes.setObjectName('acn_add_locator_attributes')
+        self.acn_add_locator_attributes.triggered.connect(functools.partial(self.maya_functionality.add_attribute_to_selected_nodes, 
+                                                                            'helga_locator',
+                                                                            'transform',
+                                                                            'Mesh'))
+        self.mnu_attributes.addAction(self.acn_add_locator_attributes)
+
+
+        #separator
+        self.mnu_attributes.addSeparator()
+
+
+        #acn_remove_proxy_attributes
+        self.acn_remove_proxy_attributes = QtGui.QAction('Remove proxy attributes from selected geo', self)
+        self.acn_remove_proxy_attributes.setObjectName('acn_remove_proxy_attributes')
+        self.acn_remove_proxy_attributes.triggered.connect(functools.partial(self.maya_functionality.remove_attribute_from_selected_nodes, 
+                                                                            'helga_proxy',
+                                                                            'transform',
+                                                                            'Mesh'))
+        self.mnu_attributes.addAction(self.acn_remove_proxy_attributes)
+
+        #acn_remove_rendergeo_attributes
+        self.acn_remove_rendergeo_attributes = QtGui.QAction('Remove rendergeo attributes from selected geo', self)
+        self.acn_remove_rendergeo_attributes.setObjectName('acn_remove_rendergeo_attributes')
+        self.acn_remove_rendergeo_attributes.triggered.connect(functools.partial(self.maya_functionality.remove_attribute_from_selected_nodes, 
+                                                                            'helga_rendergeo',
+                                                                            'transform',
+                                                                            'Mesh'))
+        self.mnu_attributes.addAction(self.acn_remove_rendergeo_attributes)
+
+        #acn_remove_locator_attributes
+        self.acn_remove_locator_attributes = QtGui.QAction('Remove locator attributes from selected locator', self)
+        self.acn_remove_locator_attributes.setObjectName('acn_remove_locator_attributes')
+        self.acn_remove_locator_attributes.triggered.connect(functools.partial(self.maya_functionality.remove_attribute_from_selected_nodes, 
+                                                                            'helga_locator',
+                                                                            'transform',
+                                                                            'Mesh'))
+        self.mnu_attributes.addAction(self.acn_remove_locator_attributes)
 
 
     #Threads
@@ -2176,6 +2263,9 @@ class AssetManager(form_class, base_class):
         #metadata_mode
         metadata_mode = self.get_metadata_mode()
 
+        #Shot
+        #------------------------------------------------------------------
+
         #shot
         if (metadata_mode == 'shot'):
 
@@ -2211,12 +2301,20 @@ class AssetManager(form_class, base_class):
                 self.threads_functionality.add_to_queue(export_function)
 
 
+        
+        #Prop
+        #------------------------------------------------------------------
+
         #prop
         elif (metadata_mode == 'prop'):
 
             #log
             self.logger.debug('Metadata Mode: {0}'.format(metadata_mode))
 
+        
+
+        #Char
+        #------------------------------------------------------------------
         
         #char
         elif (metadata_mode == 'char'):

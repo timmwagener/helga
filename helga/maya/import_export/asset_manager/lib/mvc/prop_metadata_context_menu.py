@@ -180,6 +180,15 @@ class PropMetadataContextMenu(QtGui.QMenu):
 
         #actn_create_node
         self.actn_create_node.triggered.connect(self.create_node)
+
+        #actn_select_proxy
+        self.actn_select_proxy.triggered.connect(functools.partial(self.select_nodes_with_namespace_and_attr, 'helga_proxy'))
+
+        #actn_select_rendergeo
+        self.actn_select_rendergeo.triggered.connect(functools.partial(self.select_nodes_with_namespace_and_attr, 'helga_rendergeo'))
+
+        #actn_select_locator
+        self.actn_select_locator.triggered.connect(functools.partial(self.select_nodes_with_namespace_and_attr, 'helga_locator'))
         
 
     def style_ui(self):
@@ -216,10 +225,23 @@ class PropMetadataContextMenu(QtGui.QMenu):
         self.addAction(self.actn_delete_nodes)
 
         #actn_create_node
-        self.actn_create_node = QtGui.QAction('Create shot metadata node', self)
+        self.actn_create_node = QtGui.QAction('Create prop metadata node', self)
         self.addAction(self.actn_create_node)
 
+        #separator
+        self.addSeparator()
 
+        #actn_select_proxy
+        self.actn_select_proxy = QtGui.QAction('Select proxy', self)
+        self.addAction(self.actn_select_proxy)
+
+        #actn_select_rendergeo
+        self.actn_select_rendergeo = QtGui.QAction('Select rendergeo', self)
+        self.addAction(self.actn_select_rendergeo)
+
+        #actn_select_locator
+        self.actn_select_locator = QtGui.QAction('Select locator', self)
+        self.addAction(self.actn_select_locator)
 
     
 
@@ -368,6 +390,20 @@ class PropMetadataContextMenu(QtGui.QMenu):
         return pynode_list
 
 
+    def get_pynode_list_from_selected_indices(self):
+        """
+        Return duplicate free pynode list from selected indices.
+        """
+
+        #selected_indices_list
+        selected_indices_list = self.get_selected_indices()
+        #pynode_list
+        pynode_list = self.indices_list_to_pynode_list(selected_indices_list)
+        #clean_pynode_list
+        clean_pynode_list = self.asset_manager_functionality.remove_duplicate_pynodes(pynode_list)
+
+        #return
+        return clean_pynode_list
 
     
     @QtCore.Slot()
@@ -376,15 +412,25 @@ class PropMetadataContextMenu(QtGui.QMenu):
         Select nodes.
         """
 
-        #selected_indices_list
-        selected_indices_list = self.get_selected_indices()
         #pynode_list
-        pynode_list = self.indices_list_to_pynode_list(selected_indices_list)
-        #clean_pynode_list
-        clean_pynode_list = self.asset_manager_functionality.remove_duplicate_pynodes(pynode_list)
+        pynode_list = self.get_pynode_list_from_selected_indices()
 
         #select
-        self.asset_manager_functionality.select_nodes(clean_pynode_list)
+        self.asset_manager_functionality.select_nodes(pynode_list)
+
+
+    @QtCore.Slot()
+    def select_nodes_with_namespace_and_attr(self, attr_name):
+        """
+        Select nodes that have the same namespace and have an
+        attribute that matches attr_name.
+        """
+
+        #pynode_list
+        pynode_list = self.get_pynode_list_from_selected_indices()
+
+        #select
+        self.asset_manager_functionality.select_nodes_with_namespace_and_attr(pynode_list, attr_name)
 
 
     @QtCore.Slot()
@@ -393,15 +439,11 @@ class PropMetadataContextMenu(QtGui.QMenu):
         Delete nodes.
         """
 
-        #selected_indices_list
-        selected_indices_list = self.get_selected_indices()
         #pynode_list
-        pynode_list = self.indices_list_to_pynode_list(selected_indices_list)
-        #clean_pynode_list
-        clean_pynode_list = self.asset_manager_functionality.remove_duplicate_pynodes(pynode_list)
+        pynode_list = self.get_pynode_list_from_selected_indices()
 
-        #select
-        self.asset_manager_functionality.delete_nodes(clean_pynode_list)
+        #delete
+        self.asset_manager_functionality.delete_nodes(pynode_list)
 
 
     @QtCore.Slot()

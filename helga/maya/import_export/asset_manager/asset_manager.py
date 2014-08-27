@@ -57,6 +57,8 @@ import shutil
 import webbrowser
 import yaml
 import hashlib
+import string
+import random
 #PySide
 from PySide import QtGui
 from PySide import QtCore
@@ -1317,21 +1319,40 @@ class AssetManager(form_class, base_class):
         Convert a list to a hashable string.
         """
 
+        #hashable_string
+        hashable_string = self.maya_functionality.get_maya_file()
+        
+        #If no file given (for example when a new file is opened)
+        #create a random string to avoid matching with the empty string
+        #given by the empty list concatenation from the scene metadata node check
+        if not(hashable_string):
+            hashable_string = 'new_file'
+
         #if list_to_convert empty
         if not (list_to_convert):
-            return ''
+            return hashable_string
+
+        #check if all nodes still exist
+        if not(all([pynode.exists() for pynode in list_to_convert])):
+            hashable_string += 'missing_pynodes'
+            return hashable_string
         
+        try:
+            
+            #sorted_list
+            sorted_list = sorted([pynode.name() for pynode in list_to_convert])
 
-        #sorted_list
-        sorted_list = sorted([pynode.name() for pynode in list_to_convert if(pynode.exists())])
+            #iterate and concatenate
+            for name in sorted_list:
+                hashable_string += name
 
-        #hashable_string
-        hashable_string = ''
+            
+            return hashable_string
 
-        #iterate and concatenate
-        for name in sorted_list:
-            hashable_string += name
-
+        except:
+            pass
+        
+        #return
         return hashable_string
 
 
@@ -1846,7 +1867,7 @@ class AssetManager(form_class, base_class):
         self.acn_add_locator_attributes.triggered.connect(functools.partial(self.maya_functionality.add_attribute_to_selected_nodes, 
                                                                             'helga_locator',
                                                                             'transform',
-                                                                            'Mesh'))
+                                                                            'Locator'))
         self.mnu_attributes.addAction(self.acn_add_locator_attributes)
 
 
@@ -1878,7 +1899,7 @@ class AssetManager(form_class, base_class):
         self.acn_remove_locator_attributes.triggered.connect(functools.partial(self.maya_functionality.remove_attribute_from_selected_nodes, 
                                                                             'helga_locator',
                                                                             'transform',
-                                                                            'Mesh'))
+                                                                            'Locator'))
         self.mnu_attributes.addAction(self.acn_remove_locator_attributes)
 
 
@@ -1997,6 +2018,16 @@ class AssetManager(form_class, base_class):
         """
 
         self.metadata_mode = value
+
+
+    def get_random_string(self, 
+                            size = 12, 
+                            chars = string.ascii_uppercase + string.digits):
+        """
+        Create and return a random string.
+        """
+
+        return ''.join(random.choice(chars) for _ in range(size))
 
 
 
@@ -2308,8 +2339,118 @@ class AssetManager(form_class, base_class):
         #prop
         elif (metadata_mode == 'prop'):
 
-            #log
-            self.logger.debug('Metadata Mode: {0}'.format(metadata_mode))
+            #prop_metadata_node_list
+            prop_metadata_node_list = self.prop_metadata_model.get_data_list_flat()
+            #check prop_metadata_node_list len
+            if not(prop_metadata_node_list):
+                #log
+                self.logger.debug('Prop metadata node list empty. Not exporting.')
+                return
+
+            
+            #iterate
+            for prop_metadata_node in prop_metadata_node_list:
+
+                #asset_name
+                asset_name = prop_metadata_node.asset_name.get()
+                #check
+                if not (asset_name):
+                    #log
+                    self.logger.debug('Prop metadata node {0} has no asset_name. Continuing.'.format(prop_metadata_node.name()))
+                    continue
+
+                #namespace
+                namespace = prop_metadata_node.namespace()
+                #check
+                if not (namespace):
+                    #log
+                    self.logger.debug('Prop metadata node {0} has no namespace. Continuing.'.format(prop_metadata_node.name()))
+                    continue
+
+                
+                #proxy
+                if(prop_metadata_node.proxy_export.get()):
+
+                    #node_export_list
+                    node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(prop_metadata_node, 'helga_proxy')
+
+                    #abc_command
+                    abc_command = self.alembic_functionality.build_export_command(node_export_list, 
+                                                                                    [shot_start, shot_end], 
+                                                                                    alembic_path +'/' +asset_name +'_proxy' +'.abc')
+
+                    #dry_run
+                    if(dry_run):
+
+                        #log
+                        self.logger.debug('{0}'.format(abc_command))
+                        
+                    #no dry_run
+                    else:
+                        
+                        #export_function
+                        export_function = self.alembic_functionality.get_export_closure(abc_command, maya_file)
+
+                        #add to queue
+                        self.threads_functionality.add_to_queue(export_function)
+
+
+
+                #rendergeo
+                if(prop_metadata_node.rendergeo_export.get()):
+
+                    #node_export_list
+                    node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(prop_metadata_node, 'helga_rendergeo')
+
+                    #abc_command
+                    abc_command = self.alembic_functionality.build_export_command(node_export_list, 
+                                                                                    [shot_start, shot_end], 
+                                                                                    alembic_path +'/' +asset_name +'.abc')
+
+                    #dry_run
+                    if(dry_run):
+
+                        #log
+                        self.logger.debug('{0}'.format(abc_command))
+                        
+
+                    #no dry_run
+                    else:
+                        
+                        #export_function
+                        export_function = self.alembic_functionality.get_export_closure(abc_command, maya_file)
+
+                        #add to queue
+                        self.threads_functionality.add_to_queue(export_function)
+
+
+
+                #locator
+                if(prop_metadata_node.locator_export.get()):
+
+                    #node_export_list
+                    node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(prop_metadata_node, 'helga_locator')
+
+                    #abc_command
+                    abc_command = self.alembic_functionality.build_export_command(node_export_list, 
+                                                                                    [shot_start, shot_end], 
+                                                                                    alembic_path +'/' +asset_name +'_locator' +'.abc')
+
+                    #dry_run
+                    if(dry_run):
+
+                        #log
+                        self.logger.debug('{0}'.format(abc_command))
+                        
+
+                    #no dry_run
+                    else:
+                        
+                        #export_function
+                        export_function = self.alembic_functionality.get_export_closure(abc_command, maya_file)
+
+                        #add to queue
+                        self.threads_functionality.add_to_queue(export_function)
 
         
 

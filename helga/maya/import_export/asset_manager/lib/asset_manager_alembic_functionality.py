@@ -784,6 +784,25 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
 
 if (__name__ == '__main__'):
 
+
+    #initialize standalone maya
+    #------------------------------------------------------------------
+    import maya.standalone as standalone
+    standalone.initialize(name='python')
+    
+    
+    #scripting
+    import maya.cmds as cmds
+    import pymel.core as pm
+    #api 1
+    import maya.OpenMaya as open_maya
+    import maya.OpenMayaAnim as open_maya_anim
+    import maya.OpenMayaFX as open_maya_fx
+    import maya.OpenMayaRender as open_maya_render
+    import maya.OpenMayaUI as open_maya_ui
+    #api 2
+    import maya.api.OpenMaya as open_maya_2
+
     
 
 
@@ -807,15 +826,6 @@ if (__name__ == '__main__'):
     #global_functions
     from helga.general.setup.global_functions import global_functions
     if(do_reload):reload(global_functions)
-
-
-
-
-
-    #initialize standalone maya
-    #------------------------------------------------------------------
-    
-    global_functions.initialize_maya_standalone()
 
 
 

@@ -77,13 +77,28 @@ class AssetManagerFunctionality(QtCore.QObject):
         pass
 
 
+    def object_exists(self, pynode):
+        """
+        Check if the mobject that a pynode refers to
+        still exists in the scene.
+        """
+
+        try:
+            pm.PyNode(pynode.name())
+            return True
+        except:
+            pass
+
+        return False
+
+
     def get_maya_file(self):
         """
         Return path + name + extension of current maya file.
         """
 
         #maya_file
-        maya_file = pm.system.sceneName()
+        maya_file = str(pm.system.sceneName())
 
         return maya_file
 
@@ -111,6 +126,65 @@ class AssetManagerFunctionality(QtCore.QObject):
         pm.select(pynode_list, r = True)
 
 
+    def get_nodes_with_namespace_and_attr(self, pynode_list, attr_name):
+        """
+        Select nodes with a certain namespace
+        that have given attribute.
+        """
+
+        #convert to list if not
+        if not (type(pynode_list) is list):
+            pynode_list = [pynode_list]
+
+        #node_selection_list
+        node_selection_list = []
+
+        #iterate
+        for pynode in pynode_list:
+
+            #namespace
+            namespace = pynode.namespace()
+            #check
+            if not (namespace):
+                #log
+                self.logger.debug('Node {0} does not have a namespace. Continuing'.format(pynode.name()))
+                continue
+
+            #namespace_node_list
+            namespace_node_list = pm.namespaceInfo(namespace, lod = True)
+            #check
+            if not (namespace_node_list):
+                #log
+                self.logger.debug('Namespace node list for namespace: {0} and node {1} empty. Continuing'.format(namespace, pynode.name()))
+                continue
+
+
+            #append to node_selection_list
+            node_selection_list += [namespace_node for
+                                    namespace_node in 
+                                    namespace_node_list if
+                                    namespace_node.hasAttr(attr_name)]
+
+        #return
+        return node_selection_list
+
+
+    def select_nodes_with_namespace_and_attr(self, pynode_list, attr_name):
+        """
+        Select nodes with a certain namespace
+        that have given attribute.
+        """
+
+        #clear
+        pm.select(cl = True)
+
+        #node_selection_list
+        node_selection_list = self.get_nodes_with_namespace_and_attr(pynode_list, attr_name)
+
+        #select
+        pm.select(node_selection_list, r = True)
+
+    
     def delete_nodes(self, pynode_list):
         """
         Delete all pynodes from pynode_list.

@@ -1,9 +1,9 @@
 
 """
-shot_metadata_model
+prop_metadata_model
 ==========================================
 
-Subclass of QAbstractTableModel to display and edit shot_metadata.
+Subclass of QAbstractTableModel to display and edit prop_metadata.
 """
 
 
@@ -12,10 +12,14 @@ Subclass of QAbstractTableModel to display and edit shot_metadata.
 #Import
 #------------------------------------------------------------------
 #python
+import os
 import logging
+import re
 #PySide
 from PySide import QtGui
 from PySide import QtCore
+#maya
+import pymel.core as pm
 
 
 
@@ -23,22 +27,28 @@ from PySide import QtCore
 
 
 
-#ShotMetadataModel class
+#PropMetadataModel class
 #------------------------------------------------------------------
-class ShotMetadataModel(QtCore.QAbstractTableModel):
+class PropMetadataModel(QtCore.QAbstractTableModel):
     """
-    Class customized to display shot metadata.
+    Class customized to display prop metadata.
+    -----------------------------
+
+    **Expects the following format:**
+    .. info::
+
+        data_list = [[pynode], [pynode], [pynode], [pynode], ......]
     """
 
     def __new__(cls, *args, **kwargs):
         """
-        ShotMetadataModel instance factory.
+        PropMetadataModel instance factory.
         """
 
-        #shot_metadata_model_instance
-        shot_metadata_model_instance = super(ShotMetadataModel, cls).__new__(cls, args, kwargs)
+        #prop_metadata_model_instance
+        prop_metadata_model_instance = super(PropMetadataModel, cls).__new__(cls, args, kwargs)
 
-        return shot_metadata_model_instance
+        return prop_metadata_model_instance
     
     
     def __init__(self, 
@@ -49,14 +59,14 @@ class ShotMetadataModel(QtCore.QAbstractTableModel):
         """
         
         #super class init
-        super(ShotMetadataModel, self).__init__(parent)
+        super(PropMetadataModel, self).__init__(parent)
 
 
         #instance variables
         #------------------------------------------------------------------
 
         #header_name_list
-        self.header_name_list = ['Shotname', 'Alembic Path', 'Shotcam']
+        self.header_name_list = ['Assetname', 'Namespace', 'ExportProxy', 'ExportRendergeo', 'ExportLocator', 'VisProxy', 'VisRendergeo', 'VisLocator']
 
         #data_list
         self.data_list = [[]]
@@ -93,7 +103,13 @@ class ShotMetadataModel(QtCore.QAbstractTableModel):
 
     
     def rowCount(self, parent):
-        return len(self.data_list) 
+
+        #if any item in list return len
+        if (any(self.data_list)):
+            return len(self.data_list) 
+
+        #else 0
+        return 0
 
     
     def columnCount(self, parent):
@@ -109,25 +125,264 @@ class ShotMetadataModel(QtCore.QAbstractTableModel):
         #index invalid
         if not(index.isValid()):
             #log
-            self.logger.debug('index {0} not valid.'.format(index))
+            self.logger.debug('Index {0} not valid.'.format(index))
             #evaluate in superclass
-            return super(ShotMetadataModel, self).data(self, index, role)
+            return super(PropMetadataModel, self).data(self, index, role)
+        
         
         #row & col
         row = index.row()
         col = index.column()
+
+        #current_header
+        current_header = self.header_name_list[col]
+
+        #pynode
+        pynode = self.data_list[row][0]
+
+        #pynode mobject exists
+        if not(pm.objExists(pynode.name())):
+            return None
         
-        #DisplayRole
-        if (role == QtCore.Qt.DisplayRole):
+        #DisplayRole and EditRole (return identical in most cases,
+        #if not then do recheck later in this function)
+        if (role == QtCore.Qt.DisplayRole or
+            role == QtCore.Qt.ToolTipRole or
+            role == QtCore.Qt.EditRole):
+
             
-            return self.data_list[row][col]
+            #column Assetname
+            if (current_header == self.header_name_list[0]):
+                
+                #asset_name
+                asset_name = pynode.asset_name.get()
+                
+                return asset_name
+
+            
+            #column Namespace
+            elif (current_header == self.header_name_list[1]):
+                
+                #namespace
+                namespace = pynode.namespace()
+                
+                return namespace
+
+            
+            #column ExportProxy
+            elif (current_header == self.header_name_list[2]):
+                
+                #proxy_export
+                proxy_export = pynode.proxy_export.get()
+                
+                return proxy_export
+
+
+            #column ExportRendergeo
+            elif (current_header == self.header_name_list[3]):
+                
+                #rendergeo_export
+                rendergeo_export = pynode.rendergeo_export.get()
+                
+                return rendergeo_export
+
+
+            #column ExportLocator
+            elif (current_header == self.header_name_list[4]):
+                
+                #locator_export
+                locator_export = pynode.locator_export.get()
+                
+                return locator_export
+
+
+            #column VisProxy
+            elif (current_header == self.header_name_list[5]):
+                
+                #proxy_visible
+                proxy_visible = pynode.proxy_visible.get()
+                
+                return proxy_visible
+
+
+            #column VisRendergeo
+            elif (current_header == self.header_name_list[6]):
+                
+                #rendergeo_visible
+                rendergeo_visible = pynode.rendergeo_visible.get()
+                
+                return rendergeo_visible
+
+
+            #column VisLocator
+            elif (current_header == self.header_name_list[7]):
+                
+                #locator_visible
+                locator_visible = pynode.locator_visible.get()
+                
+                return locator_visible
+
+            else:
+                return None
         
         else:
-            return QtCore.QVariant()
+            return None
+
+
+    def setData(self, index, value, role = QtCore.Qt.EditRole):
+        """
+        Set data method for model.
+        """
+
+        #index invalid
+        if not(index.isValid()):
+            #log
+            self.logger.debug('Index {0} not valid.'.format(index))
+            #evaluate in superclass
+            return False
+        
+        
+        #row & col
+        row = index.row()
+        col = index.column()
+
+        #current_header
+        current_header = self.header_name_list[col]
+
+        #pynode
+        pynode = self.data_list[row][0]
+
+        #pynode mobject exists
+        if not(pm.objExists(pynode.name())):
+            return False
+
+        #EditRole
+        if (role == QtCore.Qt.EditRole):
+
+            
+            #column Assetname
+            if (current_header == self.header_name_list[0]):
+                
+                #validate
+                if(self.validate_value_for_asset_name(value)):
+                    
+                    #set value
+                    pynode.asset_name.set(value)
+                    #data changed signal
+                    self.dataChanged.emit(index, index)
+                
+                    return True
+
+                return False
+
+            
+            #column ExportProxy
+            elif (current_header == self.header_name_list[2]):
+                
+                #set value
+                pynode.proxy_export.set(value)
+                #data changed signal
+                self.dataChanged.emit(index, index)
+                
+                return True
+
+
+            #column ExportRendergeo
+            elif (current_header == self.header_name_list[3]):
+                
+                #set value
+                pynode.rendergeo_export.set(value)
+                #data changed signal
+                self.dataChanged.emit(index, index)
+                
+                return True
+
+
+            #column ExportLocator
+            elif (current_header == self.header_name_list[4]):
+                
+                #set value
+                pynode.locator_export.set(value)
+                #data changed signal
+                self.dataChanged.emit(index, index)
+                
+                return True
+
+
+            #column VisProxy
+            elif (current_header == self.header_name_list[5]):
+                
+                #set value
+                pynode.proxy_visible.set(value)
+                #data changed signal
+                self.dataChanged.emit(index, index)
+                
+                return True
+
+
+            #column VisRendergeo
+            elif (current_header == self.header_name_list[6]):
+                
+                #set value
+                pynode.rendergeo_visible.set(value)
+                #data changed signal
+                self.dataChanged.emit(index, index)
+                
+                return True
+
+
+            #column VisLocator
+            elif (current_header == self.header_name_list[7]):
+                
+                #set value
+                pynode.locator_visible.set(value)
+                #data changed signal
+                self.dataChanged.emit(index, index)
+                
+                return True
+
+            
+            else:
+                return False
+        
+        else:
+            return False
+
+
 
     
     def flags(self, index):
-        return QtCore.Qt.ItemIsEnabled
+        """
+        Return flags for indices.
+        """
+
+        #index invalid
+        if not(index.isValid()):
+            #log
+            self.logger.debug('Index {0} not valid.'.format(index))
+            #evaluate in superclass
+            return super(PropMetadataModel, self).flags(self, index)
+        
+        
+        #row & col
+        row = index.row()
+        col = index.column()
+
+        #current_header
+        current_header = self.header_name_list[col]
+
+
+        #check cases
+
+        #column Namespace
+        if (current_header == self.header_name_list[1]):
+            
+            #not editable
+            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+        
+        #default case
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable
 
     
     def update(self, data_list):
@@ -135,3 +390,85 @@ class ShotMetadataModel(QtCore.QAbstractTableModel):
         self.data_list = data_list
         #reset
         self.reset()
+
+    
+    def clear(self):
+        #set data_list
+        self.data_list = [[]]
+        #reset
+        self.reset()
+
+
+
+
+
+
+
+
+    #Custom data methods
+    #------------------------------------------------------------------
+
+    def get_data_list(self):
+        """
+        Return self.data_list
+        """
+
+        return self.data_list
+
+
+    def get_data_list_flat(self):
+        """
+        Return self.data_list pynodes as flat list.
+        [[pynode], [pynode]] >> [pynode, pynode, pynode]
+        """
+
+        #data_list_flat
+        data_list_flat = []
+
+        #iterate
+        for pynode_list in self.data_list:
+            
+            #check if index exists
+            try:
+                pynode = pynode_list[0]
+            except:
+                continue
+
+            #append
+            data_list_flat.append(pynode)
+
+
+        #return
+        return data_list_flat
+
+
+
+
+    #Custom setData methods
+    #------------------------------------------------------------------
+
+    def validate_value_for_asset_name(self, value):
+        """
+        Validate the value that should be set on the asset_name attr. of the pynode.
+        Return True or False.
+        """
+
+        try:
+            
+            #pattern_object
+            pattern_object = re.compile(r'^[a-z]{1}[0-9a-z_]+')
+            #match_string
+            match_string = pattern_object.match(value).group()
+
+            #compare
+            if(len(value) == len(match_string)):
+                return True
+
+            else:
+                pass
+        
+        except:
+            pass
+        
+        return False
+

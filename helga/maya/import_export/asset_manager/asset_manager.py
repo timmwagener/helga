@@ -161,6 +161,22 @@ if(do_reload):reload(shot_metadata_item_delegate)
 from lib.mvc import shot_metadata_context_menu
 if(do_reload):reload(shot_metadata_context_menu)
 
+#prop_metadata_model
+from lib.mvc import prop_metadata_model
+if(do_reload):reload(prop_metadata_model)
+
+#prop_metadata_view
+from lib.mvc import prop_metadata_view
+if(do_reload):reload(prop_metadata_view)
+
+#prop_metadata_item_delegate
+from lib.mvc import prop_metadata_item_delegate
+if(do_reload):reload(prop_metadata_item_delegate)
+
+#prop_metadata_context_menu
+from lib.mvc import prop_metadata_context_menu
+if(do_reload):reload(prop_metadata_context_menu)
+
 
 
 
@@ -638,6 +654,8 @@ class AssetManager(form_class, base_class):
 
         #shot_metadata_view
         self.shot_metadata_view.customContextMenuRequested.connect(self.display_shot_metadata_context_menu)
+        #prop_metadata_view
+        self.prop_metadata_view.customContextMenuRequested.connect(self.display_prop_metadata_context_menu)
 
     
     def connect_dev(self):
@@ -1133,6 +1151,9 @@ class AssetManager(form_class, base_class):
         #setup_mvc_shot_metadata
         self.setup_mvc_shot_metadata()
 
+        #setup_mvc_prop_metadata
+        self.setup_mvc_prop_metadata()
+
 
     def setup_mvc_shot_metadata(self):
         """
@@ -1184,6 +1205,59 @@ class AssetManager(form_class, base_class):
         context_menu = shot_metadata_context_menu.ShotMetadataContextMenu(parent = self)
         context_menu.set_view(self.shot_metadata_view)
         context_menu.popup(self.shot_metadata_view.mapToGlobal(pos))
+
+
+    def setup_mvc_prop_metadata(self):
+        """
+        Setup model-view controller for prop metadata.
+        """
+    
+        #prop_metadata_view
+        self.prop_metadata_view = prop_metadata_view.PropMetadataView(self.logging_level)
+        self.prop_metadata_view.setWordWrap(True)
+        #set resize mode for horizontal header
+        self.prop_metadata_view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.prop_metadata_view.horizontalHeader().setStretchLastSection(False)
+        self.prop_metadata_view.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.prop_metadata_view.setAlternatingRowColors(True)
+        #objectNames
+        self.prop_metadata_view.setObjectName('prop_metadata_view')
+        self.prop_metadata_view.horizontalHeader().setObjectName('prop_metadata_view_hor_header')
+        self.prop_metadata_view.verticalHeader().setObjectName('prop_metadata_view_ver_header')
+        #hide vertical header
+        self.prop_metadata_view.verticalHeader().hide()
+        #context menu
+        self.prop_metadata_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        #add to ui
+        self.lyt_prop_metadata.addWidget(self.prop_metadata_view)
+
+        
+        #prop_metadata_item_delegate
+        self.prop_metadata_item_delegate = prop_metadata_item_delegate.PropMetadataItemDelegate(self.logging_level)
+        #set in view
+        self.prop_metadata_view.setItemDelegate(self.prop_metadata_item_delegate)
+        
+
+        
+        #prop_metadata_model
+        self.prop_metadata_model = prop_metadata_model.PropMetadataModel(self.logging_level)
+        #set model in view
+        self.prop_metadata_view.setModel(self.prop_metadata_model)
+
+        #prop_metadata_selection_model
+        self.prop_metadata_selection_model = QtGui.QItemSelectionModel(self.prop_metadata_model)
+        self.prop_metadata_view.setSelectionModel(self.prop_metadata_selection_model)
+
+
+    def display_prop_metadata_context_menu(self, pos):
+        """
+        Create and display prop metadata context menu.
+        """
+        
+        #context_menu
+        context_menu = prop_metadata_context_menu.PropMetadataContextMenu(parent = self)
+        context_menu.set_view(self.prop_metadata_view)
+        context_menu.popup(self.prop_metadata_view.mapToGlobal(pos))
 
 
 
@@ -1343,13 +1417,13 @@ class AssetManager(form_class, base_class):
         #set_prop_metadata_list from scene
         self.set_prop_metadata_list()
 
-        '''
+        
         #list_for_tablemodel
-        table_model_list = self.convert_list_for_tablemodel(self.shot_metadata_list)
+        table_model_list = self.convert_list_for_tablemodel(self.prop_metadata_list)
 
         #set in model
-        self.shot_metadata_model.update(table_model_list)
-        '''
+        self.prop_metadata_model.update(table_model_list)
+        
 
 
     def update_charmetadata_model(self):

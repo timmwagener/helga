@@ -1,9 +1,9 @@
 
 """
-shot_metadata_view
+prop_metadata_view
 ==========================================
 
-Subclass of QTableView to display shot metadata
+Subclass of QTableView to display prop metadata
 """
 
 
@@ -23,22 +23,22 @@ from PySide import QtCore
 
 
 
-#ShotMetadataView class
+#PropMetadataView class
 #------------------------------------------------------------------
-class ShotMetadataView(QtGui.QTableView):
+class PropMetadataView(QtGui.QTableView):
     """
     Subclass of QTableView.
     """
 
     def __new__(cls, *args, **kwargs):
         """
-        ShotMetadataView instance factory.
+        PropMetadataView instance factory.
         """
 
-        #shot_metadata_view_instance
-        shot_metadata_view_instance = super(ShotMetadataView, cls).__new__(cls, args, kwargs)
+        #prop_metadata_view_instance
+        prop_metadata_view_instance = super(PropMetadataView, cls).__new__(cls, args, kwargs)
 
-        return shot_metadata_view_instance
+        return prop_metadata_view_instance
     
     
     def __init__(self, 
@@ -49,5 +49,18 @@ class ShotMetadataView(QtGui.QTableView):
     	"""
         
         #super class constructor
-        super(ShotMetadataView, self).__init__(parent)
+        super(PropMetadataView, self).__init__(parent)
+
+
+        #instance variables
+        #------------------------------------------------------------------
+
+        
+        
+        #logger
+        #------------------------------------------------------------------
+        #logger
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logging_level = logging_level
+        self.logger.setLevel(self.logging_level)
 

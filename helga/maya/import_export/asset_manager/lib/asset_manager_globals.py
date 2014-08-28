@@ -45,6 +45,7 @@ if not (FUTURA_LT_LIGHT in QtGui.QFontDatabase().families()):
 	print('Installed tool relative font: {0} from {1}'.format(FUTURA_LT_LIGHT, current_font_path))
 
 
+
 #AssetManager Sizes
 STACKEDWIDGET_DIVIDER_HEIGHT = 3
 

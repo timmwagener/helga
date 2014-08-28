@@ -152,6 +152,12 @@
          </item>
          <item row="0" column="1">
           <widget class="QWidget" name="wdgt_explanation" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <layout class="QVBoxLayout" name="lyt_explanation">
             <item>
              <widget class="QLabel" name="lbl_explanation_header">
@@ -184,7 +190,7 @@
             <item>
              <widget class="QLabel" name="lbl_explanation_text">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>

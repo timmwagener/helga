@@ -103,7 +103,15 @@ class WorkerThread(QtCore.QThread):
         self.setup_timer.connect(self.on_setup_timer)
         
 
+    
 
+
+    
+
+
+    #Slots
+    #------------------------------------------------------------------
+    
     @QtCore.Slot()
     def on_restart(self):
         """
@@ -135,6 +143,25 @@ class WorkerThread(QtCore.QThread):
 
 
     
+
+    #Getter & Setter
+    #------------------------------------------------------------------
+
+    def set_queue(self, queue):
+        """
+        Set self.queue
+        """
+
+        #set
+        self.queue = queue
+
+        #log
+        self.logger.debug('Reset queue')
+    
+
+    #Run
+    #------------------------------------------------------------------
+    
     def run(self):
         """
         Run method. Only method that executes in its own thread.
@@ -158,7 +185,7 @@ class WorkerThread(QtCore.QThread):
         #Code
         #------------------------------------------------------------------
         else:
-                        
+
             try:
                 func, args, kwargs = self.queue.get(block=False)
             except Queue.Empty:
@@ -307,6 +334,34 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         """
 
         return self.max_threads
+
+
+    def reset_queue(self):
+        """
+        Create new queue and set it on self
+        and all threads.
+        """
+
+        #create and set self
+        self.queue = Queue.Queue()
+
+        #log
+        self.logger.debug('Reset queue')
+
+        #set on threads
+        self.set_queue_for_threads(self.queue)
+
+
+    def set_queue_for_threads(self, queue):
+        """
+        Set queue on threads
+        """
+
+        #iterate and set
+        for thread in self.thread_list:
+            
+            #set timer
+            thread.set_queue(queue)
 
 
 

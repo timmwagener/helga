@@ -611,6 +611,34 @@ QLCDNumber#AssetManagerSliderActionQLCDNumber { background: transparent; \
 } \
 \
 \
+\
+\
+\
+\
+/* AssetManagerPreExportDialog */\
+AssetManagerPreExportDialog { background-color: transparent; \
+                                font-size: 14pt; \
+                                color: red; \
+                                border-left: none; \
+                                border-top: 1px solid %(bright_orange)s; \
+                                border-bottom: none; \
+                                border-right: none; \
+} \
+\
+\
+/* QLabel - lbl_question */\
+QLabel#lbl_question { background-color: transparent; \
+                        color: %(bright_grey)s; \
+} \
+\
+\
+/* QCheckBox - chkbx_remember_choice */\
+QCheckBox#chkbx_remember_choice { background: transparent; \
+                                    font-size: 14pt; \
+                                    color: %(bright_grey)s; \
+} \
+\
+\
 "%ss_dict
 
     return str_stylesheet

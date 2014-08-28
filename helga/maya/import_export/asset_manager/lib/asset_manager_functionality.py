@@ -77,6 +77,18 @@ class AssetManagerFunctionality(QtCore.QObject):
         pass
 
 
+    def save_scene(self):
+        """
+        Save scene.
+        """
+
+        #save
+        pm.saveFile(force = True)
+
+        #log
+        self.logger.debug('Scene saved to: {0}'.format(self.get_maya_file()))
+
+
     def object_exists(self, pynode):
         """
         Check if the mobject that a pynode refers to

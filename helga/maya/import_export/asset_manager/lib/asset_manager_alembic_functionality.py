@@ -70,7 +70,7 @@ ALEMBIC_OPTIONS_ENABLED_DICT = {'help_enabled' : False,
 
 #ALEMBIC_JOB_ARG_FLAGS_DICT
 ALEMBIC_JOB_ARG_FLAGS_DICT = {'attr' : None,
-                                'attrPrefix' : None,
+                                'attrPrefix' : '"helga_"',
                                 'eulerFilter' : FLAG_ONLY_ATTR,
                                 'file' : None,
                                 'frameRange' : None,
@@ -96,7 +96,7 @@ ALEMBIC_JOB_ARG_FLAGS_DICT = {'attr' : None,
 
 #ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT
 ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT = {'attr_enabled' : False,
-                                        'attrPrefix_enabled' : False,
+                                        'attrPrefix_enabled' : True,
                                         'eulerFilter_enabled' : False,
                                         'file_enabled' : True,
                                         'frameRange_enabled' : True,
@@ -216,6 +216,7 @@ class TimedExportProcess(object):
                     abc_command,
                     maya_file,
                     timeout = 300,
+                    hide_export_shell = True,
                     logging_level = logging.DEBUG):
         """
         Customize TimedExportProcess instance.
@@ -231,6 +232,8 @@ class TimedExportProcess(object):
         self.maya_file = maya_file
         #timeout
         self.timeout = timeout
+        #hide_export_shell
+        self.hide_export_shell = hide_export_shell
         #process
         self.process = None
 
@@ -267,12 +270,20 @@ class TimedExportProcess(object):
             #add maya_file_path
             env_dict.setdefault('HELGA_ABC_MAYA_FILE', self.maya_file)
 
+
+            #subprocess_startup_info
+            subprocess_startup_info = subprocess.STARTUPINFO()
+
+            #hide_export_shell
+            if(self.hide_export_shell):
+                subprocess_startup_info.dwFlags |= subprocess._subprocess.STARTF_USESHOWWINDOW
             
             #process
             self.process = subprocess.Popen('{0} {1}'.format(MAYA_PY, __file__), 
                                         stdout = subprocess.PIPE,
                                         stderr = subprocess.PIPE,
-                                        env = env_dict)
+                                        env = env_dict,
+                                        startupinfo = subprocess_startup_info)
             #stdout_value, stderr_value
             stdout_value, stderr_value = self.process.communicate()
 
@@ -849,7 +860,7 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
         pm.mel.eval(abc_command)
 
 
-    def get_export_closure(self, abc_command, maya_file, timeout):
+    def get_export_closure(self, abc_command, maya_file, timeout, hide_export_shell):
         """
         Return a function object that does the following when called:
 
@@ -865,7 +876,7 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
             """
 
             #timed_process_instance
-            timed_process_instance = TimedExportProcess(abc_command, maya_file, timeout)
+            timed_process_instance = TimedExportProcess(abc_command, maya_file, timeout, hide_export_shell)
             timed_process_instance.run()
             
 

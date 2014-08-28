@@ -94,7 +94,8 @@ class AssetManagerLineEditCheckableAction(QtGui.QWidgetAction):
     
     def __init__(self, 
                     logging_level = logging.DEBUG,
-                    text = 'LineEdit',
+                    placeholder_text = 'LineEdit',
+                    text = '',
                     initial_state = True,
                     parent = None):
         """
@@ -115,6 +116,8 @@ class AssetManagerLineEditCheckableAction(QtGui.QWidgetAction):
         
         #text
         self.text = text
+        #placeholder_text
+        self.placeholder_text = placeholder_text
         #initial_state
         self.initial_state = initial_state
 
@@ -170,7 +173,8 @@ class AssetManagerLineEditCheckableAction(QtGui.QWidgetAction):
         self.line_edit.setObjectName(self.__class__.__name__ + 
                                         type(self.line_edit).__name__)
         
-        self.line_edit.setPlaceholderText(self.text)
+        self.line_edit.setPlaceholderText(self.placeholder_text)
+        self.line_edit.setText(self.text)
         self.line_edit.setEnabled(self.initial_state)
         self.lyt_line_edit_complete.addWidget(self.line_edit)
 

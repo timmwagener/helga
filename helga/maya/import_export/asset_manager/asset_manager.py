@@ -145,6 +145,10 @@ if(do_reload):reload(asset_manager_doublespinbox_checkable_action)
 from lib.gui import asset_manager_line_edit_checkable_action
 if(do_reload):reload(asset_manager_line_edit_checkable_action)
 
+#asset_manager_pre_export_dialog
+from lib.gui import asset_manager_pre_export_dialog
+if(do_reload):reload(asset_manager_pre_export_dialog)
+
 #lib.mvc
 
 #shot_metadata_model
@@ -193,6 +197,7 @@ if(do_reload):reload(prop_metadata_context_menu)
 TOOL_ROOT_PATH = asset_manager_globals.TOOL_ROOT_PATH
 MEDIA_PATH = asset_manager_globals.MEDIA_PATH
 ICONS_PATH = asset_manager_globals.ICONS_PATH
+
 
 #AssetManager Sizes
 STACKEDWIDGET_DIVIDER_HEIGHT = asset_manager_globals.STACKEDWIDGET_DIVIDER_HEIGHT
@@ -433,6 +438,8 @@ class AssetManager(form_class, base_class):
                 auto_update_models = True,
                 dock_it = True,
                 dev = True,
+                export_thread_timeout = 300,
+                hide_export_shell = True,
                 parent = global_functions.get_main_window()):
         """
         Customize instance.
@@ -483,6 +490,17 @@ class AssetManager(form_class, base_class):
 
         #metadata_mode
         self.metadata_mode = 'shot'
+
+        #export_thread_timeout
+        self.export_thread_timeout = export_thread_timeout
+
+        #hide_export_shell
+        self.hide_export_shell = hide_export_shell
+
+        #always_save_before_export
+        self.always_save_before_export = None
+        #never_save_before_export
+        self.never_save_before_export = None
 
         
 
@@ -666,22 +684,29 @@ class AssetManager(form_class, base_class):
         Connect everything exclusive to dev mode.
         """
 
-        #acn_add_tasks_to_queue
-        self.acn_add_tasks_to_queue.triggered.connect(self.threads_functionality.test_setup)
+        
         #acn_start_threads
         self.acn_start_threads.triggered.connect(self.threads_functionality.start_threads)
         #acn_stop_threads
         self.acn_stop_threads.triggered.connect(self.threads_functionality.stop_threads)
         #acn_print_queue_size
         self.acn_print_queue_size.triggered.connect(self.threads_functionality.print_queue_size)
+        #acn_reset_queue
+        self.acn_reset_queue.triggered.connect(self.threads_functionality.reset_queue)
+        #acn_add_tasks_to_queue
+        self.acn_add_tasks_to_queue.triggered.connect(self.threads_functionality.test_setup)
 
         #acn_set_thread_timer_interval
         self.acn_set_thread_timer_interval.value_changed.connect(self.threads_functionality.set_interval)
+        #acn_set_export_thread_timeout
+        self.acn_set_export_thread_timeout.value_changed.connect(self.set_export_thread_timeout)
         #acn_set_thread_count
         self.acn_set_thread_count.value_changed.connect(self.threads_functionality.set_thread_count)
 
         #acn_progressbar_test_run
         self.acn_progressbar_test_run.triggered.connect(functools.partial(self.progressbar_test_run, 0, 200))
+        #acn_hide_export_shell
+        self.acn_hide_export_shell.toggled.connect(self.set_hide_export_shell)
 
     
     def style_ui(self):
@@ -1521,11 +1546,6 @@ class AssetManager(form_class, base_class):
         menubar.addMenu(self.mnu_threads)
 
 
-        #acn_add_tasks_to_queue
-        self.acn_add_tasks_to_queue = QtGui.QAction('Add tasks to queue', self)
-        self.acn_add_tasks_to_queue.setObjectName('acn_add_tasks_to_queue')
-        self.mnu_threads.addAction(self.acn_add_tasks_to_queue)
-
         #acn_start_threads
         self.acn_start_threads = QtGui.QAction('Re/Start threads', self)
         self.acn_start_threads.setObjectName('acn_start_threads')
@@ -1536,10 +1556,25 @@ class AssetManager(form_class, base_class):
         self.acn_stop_threads.setObjectName('acn_stop_threads')
         self.mnu_threads.addAction(self.acn_stop_threads)
 
+
+        #separator
+        self.mnu_threads.addSeparator()
+
+
         #acn_print_queue_size
         self.acn_print_queue_size = QtGui.QAction('Queue size', self)
         self.acn_print_queue_size.setObjectName('acn_print_queue_size')
         self.mnu_threads.addAction(self.acn_print_queue_size)
+
+        #acn_reset_queue
+        self.acn_reset_queue = QtGui.QAction('Queue reset', self)
+        self.acn_reset_queue.setObjectName('acn_reset_queue')
+        self.mnu_threads.addAction(self.acn_reset_queue)
+
+        #acn_add_tasks_to_queue
+        self.acn_add_tasks_to_queue = QtGui.QAction('Add tasks to queue', self)
+        self.acn_add_tasks_to_queue.setObjectName('acn_add_tasks_to_queue')
+        self.mnu_threads.addAction(self.acn_add_tasks_to_queue)
 
         
         #separator
@@ -1560,6 +1595,20 @@ class AssetManager(form_class, base_class):
         self.mnu_threads.addSeparator()
         
         
+        #acn_set_export_thread_timeout
+        self.acn_set_export_thread_timeout = asset_manager_slider_action.AssetManagerSliderAction(minimum = 1, 
+                                                                                                    maximum = self.export_thread_timeout * 4,
+                                                                                                    initial_value = self.export_thread_timeout,
+                                                                                                    text = 'Set export thread timeout:',
+                                                                                                    parent = self)
+        self.acn_set_export_thread_timeout.setObjectName('acn_set_export_thread_timeout')
+        self.mnu_threads.addAction(self.acn_set_export_thread_timeout)
+
+
+        #separator
+        self.mnu_threads.addSeparator()
+
+
         #acn_set_thread_count
         max_threads = self.threads_functionality.get_max_threads()
         self.acn_set_thread_count = asset_manager_slider_action.AssetManagerSliderAction(maximum = max_threads,
@@ -1588,6 +1637,13 @@ class AssetManager(form_class, base_class):
         self.acn_progressbar_test_run = QtGui.QAction('Progressbar test run', self)
         self.acn_progressbar_test_run.setObjectName('acn_progressbar_test_run')
         self.mnu_gui.addAction(self.acn_progressbar_test_run)
+
+        #acn_hide_export_shell
+        self.acn_hide_export_shell = QtGui.QAction('Hide export shell', self)
+        self.acn_hide_export_shell.setObjectName('acn_hide_export_shell')
+        self.acn_hide_export_shell.setCheckable(True)
+        self.acn_hide_export_shell.setChecked(self.hide_export_shell)
+        self.mnu_gui.addAction(self.acn_hide_export_shell)
 
 
     def setup_dev_menu_alembic(self, menubar):
@@ -1770,7 +1826,7 @@ class AssetManager(form_class, base_class):
 
 
         #acn_set_attr
-        self.acn_set_attr = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(text = 'attr',
+        self.acn_set_attr = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(placeholder_text = 'attr',
                                                                                                             initial_state = self.alembic_functionality.get_attr_enabled(),
                                                                                                             parent = self)
         self.acn_set_attr.setObjectName('acn_set_attr')
@@ -1780,9 +1836,10 @@ class AssetManager(form_class, base_class):
 
 
         #acn_set_attrPrefix
-        self.acn_set_attrPrefix = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(text = 'attrPrefix',
-                                                                                                                        initial_state = self.alembic_functionality.get_attrPrefix_enabled(),
-                                                                                                                        parent = self)
+        self.acn_set_attrPrefix = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(placeholder_text = 'attrPrefix',
+                                                                                                                text = self.alembic_functionality.get_attrPrefix(),
+                                                                                                                initial_state = self.alembic_functionality.get_attrPrefix_enabled(),
+                                                                                                                parent = self)
         self.acn_set_attrPrefix.setObjectName('acn_set_attrPrefix')
         self.acn_set_attrPrefix.text_changed.connect(self.alembic_functionality.sgnl_set_attrPrefix)
         self.acn_set_attrPrefix.state_changed.connect(self.alembic_functionality.sgnl_set_attrPrefix_enabled)
@@ -1790,7 +1847,7 @@ class AssetManager(form_class, base_class):
 
 
         #acn_set_userAttr
-        self.acn_set_userAttr = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(text = 'userAttr',
+        self.acn_set_userAttr = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(placeholder_text = 'userAttr',
                                                                                                                 initial_state = self.alembic_functionality.get_userAttr_enabled(),
                                                                                                                 parent = self)
         self.acn_set_userAttr.setObjectName('acn_set_userAttr')
@@ -1800,7 +1857,7 @@ class AssetManager(form_class, base_class):
 
 
         #acn_set_userAttrPrefix
-        self.acn_set_userAttrPrefix = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(text = 'userAttrPrefix',
+        self.acn_set_userAttrPrefix = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(placeholder_text = 'userAttrPrefix',
                                                                                                                     initial_state = self.alembic_functionality.get_userAttrPrefix_enabled(),
                                                                                                                     parent = self)
         self.acn_set_userAttrPrefix.setObjectName('acn_set_userAttrPrefix')
@@ -2030,6 +2087,48 @@ class AssetManager(form_class, base_class):
         return ''.join(random.choice(chars) for _ in range(size))
 
 
+    @QtCore.Slot(int)
+    def set_export_thread_timeout(self, value):
+        """
+        Set self.export_thread_timeout to value
+        """
+
+        #set
+        self.export_thread_timeout = value
+
+        #log
+        self.logger.debug('Set export_thread_timeout to {0}'.format(self.export_thread_timeout))
+
+
+    def get_export_thread_timeout(self):
+        """
+        Get self.export_thread_timeout
+        """
+
+        return self.export_thread_timeout
+
+
+    @QtCore.Slot(bool)
+    def set_hide_export_shell(self, value):
+        """
+        Set self.hide_export_shell to value
+        """
+
+        #set
+        self.hide_export_shell = value
+
+        #log
+        self.logger.debug('Set hide_export_shell to {0}'.format(self.hide_export_shell))
+
+
+    def get_hide_export_shell(self):
+        """
+        Get self.hide_export_shell
+        """
+
+        return self.hide_export_shell
+
+
 
 
 
@@ -2244,6 +2343,73 @@ class AssetManager(form_class, base_class):
     #Export
     #------------------------------------------------------------------
 
+    def run_pre_export_dialog(self):
+        """
+        Run the pre export save dialog.
+        This dialog lets you pick if you want to save before export.
+        You can also choose to remember your pick. In this case the
+        dialog will still be run but not shown. (Thats why this method is
+        named run instead of display or show). 
+        """
+
+        #always save
+        if(self.always_save_before_export):
+
+            #log
+            self.logger.debug('Always save scene before export')
+            
+            #save
+            self.maya_functionality.save_scene()
+            return
+        
+        #never save
+        elif(self.never_save_before_export):
+
+            #log
+            self.logger.debug('Never save scene before export')
+            
+            return
+        
+        #display dialog
+        else:
+            
+            #pre_export_dialog
+            pre_export_dialog = asset_manager_pre_export_dialog.AssetManagerPreExportDialog(question = 'Save before export?',
+                                                                                            parent = self)
+
+            #do_save
+            do_save = pre_export_dialog.exec_()
+
+            #remember_choice
+            if(pre_export_dialog.get_remember_choice()):
+                
+                #always save
+                if (do_save):
+
+                    #save always
+                    self.always_save_before_export = True
+                    
+                    #save
+                    self.maya_functionality.save_scene()
+
+                #never save
+                else:
+
+                    #save never
+                    self.never_save_before_export = True
+                    
+
+
+            #dont remember
+            else:
+                
+                #save
+                if (do_save):
+
+                    #save
+                    self.maya_functionality.save_scene()
+
+
     def export(self, dry_run = False):
         """
         Export Alembic. This function is called when the export button is pressed.
@@ -2279,11 +2445,15 @@ class AssetManager(form_class, base_class):
             #log
             self.logger.debug('Base data check failed. Check Alembic path, shot start and end settings. Not exporting.')
             return
+
+
         
+        #run_pre_export_dialog
+        self.run_pre_export_dialog()
         
 
         
-
+        
         #metadata_mode
         metadata_mode = self.get_metadata_mode()
 
@@ -2474,7 +2644,7 @@ class AssetManager(form_class, base_class):
                 self.add_export_closure_to_queue(abc_command)
 
 
-    def add_export_closure_to_queue(self, abc_command, timeout = 5):
+    def add_export_closure_to_queue(self, abc_command):
         """
         Create export closure from given abc_command and current maya_file and
         add export closure to thread queue.
@@ -2490,8 +2660,17 @@ class AssetManager(form_class, base_class):
             self.logger.debug('Maya file {0} does not exist. Not adding closure to queue.'.format(maya_file))
             return
 
+        #export_thread_timeout
+        export_thread_timeout = self.get_export_thread_timeout()
+
+        #hide_export_shell
+        hide_export_shell = self.get_hide_export_shell()
+
         #export_closure
-        export_closure = self.alembic_functionality.get_export_closure(abc_command, maya_file, timeout)
+        export_closure = self.alembic_functionality.get_export_closure(abc_command, 
+                                                                        maya_file, 
+                                                                        export_thread_timeout,
+                                                                        hide_export_shell)
 
         #add to queue
         self.threads_functionality.add_to_queue(export_closure)

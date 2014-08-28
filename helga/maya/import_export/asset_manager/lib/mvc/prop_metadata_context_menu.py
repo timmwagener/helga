@@ -181,6 +181,7 @@ class PropMetadataContextMenu(QtGui.QMenu):
         #actn_create_node
         self.actn_create_node.triggered.connect(self.create_node)
 
+        
         #actn_select_proxy
         self.actn_select_proxy.triggered.connect(functools.partial(self.select_nodes_with_namespace_and_attr, 'helga_proxy'))
 
@@ -189,6 +190,33 @@ class PropMetadataContextMenu(QtGui.QMenu):
 
         #actn_select_locator
         self.actn_select_locator.triggered.connect(functools.partial(self.select_nodes_with_namespace_and_attr, 'helga_locator'))
+
+
+        #actn_show_all
+        self.actn_show_all.triggered.connect(functools.partial(self.set_visibility_on_nodes_with_namespace_and_attr, 
+                                                                ['helga_proxy', 'helga_rendergeo', 'helga_locator'], True))
+
+        #actn_hide_all
+        self.actn_hide_all.triggered.connect(functools.partial(self.set_visibility_on_nodes_with_namespace_and_attr, 
+                                                                ['helga_proxy', 'helga_rendergeo', 'helga_locator'], False))
+
+        #actn_show_proxy
+        self.actn_show_proxy.triggered.connect(functools.partial(self.set_visibility_on_nodes_with_namespace_and_attr, ['helga_proxy'], True))
+
+        #actn_hide_proxy
+        self.actn_hide_proxy.triggered.connect(functools.partial(self.set_visibility_on_nodes_with_namespace_and_attr, ['helga_proxy'], False))
+
+        #actn_show_rendergeo
+        self.actn_show_rendergeo.triggered.connect(functools.partial(self.set_visibility_on_nodes_with_namespace_and_attr, ['helga_rendergeo'], True))
+
+        #actn_hide_rendergeo
+        self.actn_hide_rendergeo.triggered.connect(functools.partial(self.set_visibility_on_nodes_with_namespace_and_attr, ['helga_rendergeo'], False))
+
+        #actn_show_locator
+        self.actn_show_locator.triggered.connect(functools.partial(self.set_visibility_on_nodes_with_namespace_and_attr, ['helga_locator'], True))
+
+        #actn_hide_locator
+        self.actn_hide_locator.triggered.connect(functools.partial(self.set_visibility_on_nodes_with_namespace_and_attr, ['helga_locator'], False))
         
 
     def style_ui(self):
@@ -215,33 +243,108 @@ class PropMetadataContextMenu(QtGui.QMenu):
         """
         Add actions to menu.
         """
+
+        #Metadata
+        #------------------------------------------------------------------
+
+        #mnu_metadata
+        self.mnu_metadata = QtGui.QMenu('Metadata', parent = self)
+        self.mnu_metadata.setObjectName('mnu_metadata')
+        self.addMenu(self.mnu_metadata)
         
         #actn_select_nodes
         self.actn_select_nodes = QtGui.QAction('Select nodes', self)
-        self.addAction(self.actn_select_nodes)
+        self.mnu_metadata.addAction(self.actn_select_nodes)
 
         #actn_delete_nodes
         self.actn_delete_nodes = QtGui.QAction('Delete nodes', self)
-        self.addAction(self.actn_delete_nodes)
+        self.mnu_metadata.addAction(self.actn_delete_nodes)
 
         #actn_create_node
         self.actn_create_node = QtGui.QAction('Create prop metadata node', self)
-        self.addAction(self.actn_create_node)
+        self.mnu_metadata.addAction(self.actn_create_node)
 
-        #separator
-        self.addSeparator()
+        
+
+        #Geometry
+        #------------------------------------------------------------------
+
+        #mnu_geometry
+        self.mnu_geometry = QtGui.QMenu('Geometry', parent = self)
+        self.mnu_geometry.setObjectName('mnu_geometry')
+        self.addMenu(self.mnu_geometry)
 
         #actn_select_proxy
         self.actn_select_proxy = QtGui.QAction('Select proxy', self)
-        self.addAction(self.actn_select_proxy)
+        self.mnu_geometry.addAction(self.actn_select_proxy)
 
         #actn_select_rendergeo
         self.actn_select_rendergeo = QtGui.QAction('Select rendergeo', self)
-        self.addAction(self.actn_select_rendergeo)
+        self.mnu_geometry.addAction(self.actn_select_rendergeo)
 
         #actn_select_locator
         self.actn_select_locator = QtGui.QAction('Select locator', self)
-        self.addAction(self.actn_select_locator)
+        self.mnu_geometry.addAction(self.actn_select_locator)
+
+
+
+        #Visibility
+        #------------------------------------------------------------------
+
+        #mnu_visibility
+        self.mnu_visibility = QtGui.QMenu('Visibility', parent = self)
+        self.mnu_visibility.setObjectName('mnu_visibility')
+        self.addMenu(self.mnu_visibility)
+
+
+        #actn_show_all
+        self.actn_show_all = QtGui.QAction('Show all', self)
+        self.mnu_visibility.addAction(self.actn_show_all)
+
+        #actn_hide_all
+        self.actn_hide_all = QtGui.QAction('Hide all', self)
+        self.mnu_visibility.addAction(self.actn_hide_all)
+
+        
+        #separator
+        self.mnu_visibility.addSeparator()
+
+        
+        #actn_show_proxy
+        self.actn_show_proxy = QtGui.QAction('Show proxy', self)
+        self.mnu_visibility.addAction(self.actn_show_proxy)
+
+        #actn_hide_proxy
+        self.actn_hide_proxy = QtGui.QAction('Hide proxy', self)
+        self.mnu_visibility.addAction(self.actn_hide_proxy)
+
+        
+        #separator
+        self.mnu_visibility.addSeparator()
+
+        
+        #actn_show_rendergeo
+        self.actn_show_rendergeo = QtGui.QAction('Show rendergeo', self)
+        self.mnu_visibility.addAction(self.actn_show_rendergeo)
+
+        #actn_hide_rendergeo
+        self.actn_hide_rendergeo = QtGui.QAction('Hide rendergeo', self)
+        self.mnu_visibility.addAction(self.actn_hide_rendergeo)
+
+        
+        #separator
+        self.mnu_visibility.addSeparator()
+
+        
+        #actn_show_locator
+        self.actn_show_locator = QtGui.QAction('Show locator', self)
+        self.mnu_visibility.addAction(self.actn_show_locator)
+
+        #actn_hide_locator
+        self.actn_hide_locator = QtGui.QAction('Hide locator', self)
+        self.mnu_visibility.addAction(self.actn_hide_locator)
+
+        
 
     
 
@@ -431,6 +534,24 @@ class PropMetadataContextMenu(QtGui.QMenu):
 
         #select
         self.asset_manager_functionality.select_nodes_with_namespace_and_attr(pynode_list, attr_name)
+
+
+    @QtCore.Slot()
+    def set_visibility_on_nodes_with_namespace_and_attr(self, attr_name_list, visibility):
+        """
+        Set visibility attr. on nodes with namespace and given
+        attr. name to passed visibility parm.
+        """
+
+        #pynode_list
+        pynode_list = self.get_pynode_list_from_selected_indices()
+
+
+        #iterate
+        for attr_name in attr_name_list:
+            
+            #set visibility
+            self.asset_manager_functionality.set_visibility_on_nodes_with_namespace_and_attr(pynode_list, attr_name, visibility = visibility)
 
 
     @QtCore.Slot()

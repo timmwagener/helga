@@ -66,7 +66,7 @@ class PropMetadataModel(QtCore.QAbstractTableModel):
         #------------------------------------------------------------------
 
         #header_name_list
-        self.header_name_list = ['Assetname', 'Namespace', 'ExportProxy', 'ExportRendergeo', 'ExportLocator', 'VisProxy', 'VisRendergeo', 'VisLocator']
+        self.header_name_list = ['Assetname', 'Namespace', 'ExportProxy', 'ExportRendergeo', 'ExportLocator']
 
         #data_list
         self.data_list = [[]]
@@ -195,33 +195,6 @@ class PropMetadataModel(QtCore.QAbstractTableModel):
                 
                 return locator_export
 
-
-            #column VisProxy
-            elif (current_header == self.header_name_list[5]):
-                
-                #proxy_visible
-                proxy_visible = pynode.proxy_visible.get()
-                
-                return proxy_visible
-
-
-            #column VisRendergeo
-            elif (current_header == self.header_name_list[6]):
-                
-                #rendergeo_visible
-                rendergeo_visible = pynode.rendergeo_visible.get()
-                
-                return rendergeo_visible
-
-
-            #column VisLocator
-            elif (current_header == self.header_name_list[7]):
-                
-                #locator_visible
-                locator_visible = pynode.locator_visible.get()
-                
-                return locator_visible
-
             else:
                 return None
         
@@ -303,39 +276,6 @@ class PropMetadataModel(QtCore.QAbstractTableModel):
                 
                 #set value
                 pynode.locator_export.set(value)
-                #data changed signal
-                self.dataChanged.emit(index, index)
-                
-                return True
-
-
-            #column VisProxy
-            elif (current_header == self.header_name_list[5]):
-                
-                #set value
-                pynode.proxy_visible.set(value)
-                #data changed signal
-                self.dataChanged.emit(index, index)
-                
-                return True
-
-
-            #column VisRendergeo
-            elif (current_header == self.header_name_list[6]):
-                
-                #set value
-                pynode.rendergeo_visible.set(value)
-                #data changed signal
-                self.dataChanged.emit(index, index)
-                
-                return True
-
-
-            #column VisLocator
-            elif (current_header == self.header_name_list[7]):
-                
-                #set value
-                pynode.locator_visible.set(value)
                 #data changed signal
                 self.dataChanged.emit(index, index)
                 

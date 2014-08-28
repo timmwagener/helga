@@ -96,24 +96,6 @@ class HelgaPropMetadata(open_maya_mpx.MPxNode):
         tAttr = open_maya.MFnTypedAttribute()
         nAttr = open_maya.MFnNumericAttribute()
         
-        #a_proxy_visible
-        class_to_manipulate.a_proxy_visible = nAttr.create('proxy_visible', 'proxy_visible', open_maya.MFnNumericData.kBoolean, False)
-        nAttr.setWritable(True)
-        nAttr.setStorable(True)
-        class_to_manipulate.addAttribute(class_to_manipulate.a_proxy_visible)
-
-        #a_rendergeo_visible
-        class_to_manipulate.a_rendergeo_visible = nAttr.create('rendergeo_visible', 'rendergeo_visible', open_maya.MFnNumericData.kBoolean, False)
-        nAttr.setWritable(True)
-        nAttr.setStorable(True)
-        class_to_manipulate.addAttribute(class_to_manipulate.a_rendergeo_visible)
-
-        #a_locator_visible
-        class_to_manipulate.a_locator_visible = nAttr.create('locator_visible', 'locator_visible', open_maya.MFnNumericData.kBoolean, False)
-        nAttr.setWritable(True)
-        nAttr.setStorable(True)
-        class_to_manipulate.addAttribute(class_to_manipulate.a_locator_visible)
-
         #a_proxy_export
         class_to_manipulate.a_proxy_export = nAttr.create('proxy_export', 'proxy_export', open_maya.MFnNumericData.kBoolean, False)
         nAttr.setWritable(True)
@@ -158,15 +140,7 @@ class HelgaCharacterMetadata(open_maya_mpx.MPxNode):
     @staticmethod
     def initialize(class_to_manipulate):
 
-        #functionsets
-        tAttr = open_maya.MFnTypedAttribute()
-        nAttr = open_maya.MFnNumericAttribute()
-
-        #a_rendergeo_export
-        class_to_manipulate.a_rendergeo_export = nAttr.create('rendergeo_export', 'rendergeo_export', open_maya.MFnNumericData.kBoolean, False)
-        nAttr.setWritable(True)
-        nAttr.setStorable(True)
-        class_to_manipulate.addAttribute(class_to_manipulate.a_rendergeo_export)
+        pass
 
 
 
@@ -199,7 +173,7 @@ def fake_inheritance_initialize(cls):
         #Base
         HelgaAssetMetadata.initialize(HelgaCharacterMetadata)
         #Own
-        HelgaCharacterMetadata.initialize(HelgaCharacterMetadata)
+        HelgaPropMetadata.initialize(HelgaCharacterMetadata)
 
 
  

@@ -56,9 +56,15 @@ global proc AEHelgaCharacterMetadataTemplate( string $nodeName ) {
     //-----------------------------------------
     //-----------------------------------------
     editorTemplate -beginLayout "Helga Character Metadata" -collapse 0;
+
+    //proxy_export
+    editorTemplate -addControl "proxy_export";
     
     //rendergeo_export
     editorTemplate -addControl "rendergeo_export";
+    
+    //locator_export
+    editorTemplate -addControl "locator_export";
 
     //End Layout Input Color
     editorTemplate -endLayout;

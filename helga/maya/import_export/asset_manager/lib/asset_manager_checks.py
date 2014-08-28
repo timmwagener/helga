@@ -173,6 +173,49 @@ class AssetManagerChecks(object):
         return shot_cam
 
 
+    def check_prop_data(self, pynode_prop_metadata):
+        """
+        Check metadata and data needed for prop export.
+        Return False or the needed data (asset_name, namespace) when True.
+        """
+
+        try:
+
+            #check object existence (pynode_prop_metadata)
+            if not(self.check_object_existence(pynode_prop_metadata)):
+                
+                #log
+                self.logger.debug('Prop Metadata object is not existent anymore.')
+                return False
+            
+            
+            #asset_name
+            asset_name = pynode_prop_metadata.asset_name.get()
+            #check
+            if not (asset_name):
+                
+                #log
+                self.logger.debug('Prop metadata node {0} has no asset_name.'.format(pynode_prop_metadata.name()))
+                return False
+
+            
+            #namespace
+            namespace = pynode_prop_metadata.namespace()
+            #check
+            if not (namespace):
+                
+                #log
+                self.logger.debug('Prop metadata node {0} has no namespace.'.format(pynode_prop_metadata.name()))
+                return False
+
+        except:
+
+            return False
+
+
+        return [asset_name, namespace]
+
+
     #Atomic Checks
     #------------------------------------------------------------------
 

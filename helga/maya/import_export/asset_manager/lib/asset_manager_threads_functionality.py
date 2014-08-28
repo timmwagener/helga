@@ -115,7 +115,6 @@ class WorkerThread(QtCore.QThread):
             
             #start
             self.start()
-            
 
 
     @QtCore.Slot()
@@ -159,7 +158,7 @@ class WorkerThread(QtCore.QThread):
         #Code
         #------------------------------------------------------------------
         else:
-            
+                        
             try:
                 func, args, kwargs = self.queue.get(block=False)
             except Queue.Empty:
@@ -354,7 +353,7 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
             
             #if index < thread_count
             if (index < self.thread_count):
-                
+
                 #set timer
                 thread.thread_timer.start()
 

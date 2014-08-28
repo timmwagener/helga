@@ -130,6 +130,8 @@ class AssetManagerFunctionality(QtCore.QObject):
         """
         Select nodes with a certain namespace
         that have given attribute.
+        A namespace is mandatory. Operation will fail if
+        namespace of node in pynode_list is empty.
         """
 
         #convert to list if not
@@ -178,11 +180,56 @@ class AssetManagerFunctionality(QtCore.QObject):
         #clear
         pm.select(cl = True)
 
-        #node_selection_list
-        node_selection_list = self.get_nodes_with_namespace_and_attr(pynode_list, attr_name)
+        #node_list
+        node_list = self.get_nodes_with_namespace_and_attr(pynode_list, attr_name)
+        #check
+        if not (node_list):
+            #log
+            self.logger.debug('Node list empty. No nodes to select.')
+            return
 
         #select
-        pm.select(node_selection_list, r = True)
+        pm.select(node_list, r = True)
+
+
+    def set_visibility_on_nodes_with_namespace_and_attr(self, pynode_list, attr_name, visibility = True):
+        """
+        Set visibility attr. on nodes with namespace and given
+        attr. name to passed visibility parm.
+        """
+
+        #node_list
+        node_list = self.get_nodes_with_namespace_and_attr(pynode_list, attr_name)
+        #check
+        if not (node_list):
+            #log
+            self.logger.debug('Node list empty. No nodes to set visibility on.')
+            return
+
+        
+        #iterate
+        for pynode in node_list:
+
+            try:
+                
+                #check for visibility attr.
+                if (pynode.hasAttr('visibility')):
+
+                    #set
+                    pynode.visibility.set(visibility)
+
+                else:
+
+                    #log
+                    self.logger.debug('Node {0} doesnt have visibility attribute'.format(pynode.name()))
+
+            except:
+
+                #log
+                self.logger.debug('Error setting visibility attribute on node {0}'.format(pynode.name()))
+
+
+        
 
     
     def delete_nodes(self, pynode_list):

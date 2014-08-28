@@ -57,19 +57,6 @@ global proc AEHelgaPropMetadataTemplate( string $nodeName ) {
     //-----------------------------------------
     editorTemplate -beginLayout "Helga Prop Metadata" -collapse 0;
 
-    //proxy_visible
-    editorTemplate -addControl "proxy_visible";
-
-    //rendergeo_visible
-    editorTemplate -addControl "rendergeo_visible";
-
-    //locator_visible
-    editorTemplate -addControl "locator_visible";
-
-    
-    //Separator
-    //editorTemplate -addSeparator;
-
     //proxy_export
     editorTemplate -addControl "proxy_export";
     

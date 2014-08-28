@@ -192,6 +192,126 @@ def print_function_factory(attr_name):
 
 
 
+
+
+#TimedExportProcess class
+#------------------------------------------------------------------
+class TimedExportProcess(object):
+    """
+    Helper class to run a timed process.
+    """
+
+    def __new__(cls, *args, **kwargs):
+        """
+        TimedExportProcess instance factory.
+        """
+
+        #timed_export_process_instance
+        timed_export_process_instance = super(TimedExportProcess, cls).__new__(cls, args, kwargs)
+
+        return timed_export_process_instance
+
+    
+    def __init__(self,
+                    abc_command,
+                    maya_file,
+                    timeout = 300,
+                    logging_level = logging.DEBUG):
+        """
+        Customize TimedExportProcess instance.
+        Parameter timeout is in seconds NOT in ms.
+        """
+
+        #instance variables
+        #------------------------------------------------------------------
+
+        #abc_command
+        self.abc_command = abc_command
+        #maya_file
+        self.maya_file = maya_file
+        #timeout
+        self.timeout = timeout
+        #process
+        self.process = None
+
+
+        #logger
+        #------------------------------------------------------------------
+        
+        #logger
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logging_level = logging_level
+        self.logger.setLevel(self.logging_level)
+
+
+    def run(self):
+        """
+        Method to start timed process.
+        """
+
+        import os
+        import subprocess
+        import logging
+        import threading
+        
+        def target():
+            """
+            Target method to do the actual work.
+            Wrapped by thread that terminates on timeout.
+            """
+
+            #env_dict
+            env_dict = os.environ.copy()
+            #add abc_command
+            env_dict.setdefault('HELGA_ABC_COMMAND', self.abc_command)
+            #add maya_file_path
+            env_dict.setdefault('HELGA_ABC_MAYA_FILE', self.maya_file)
+
+            
+            #process
+            self.process = subprocess.Popen('{0} {1}'.format(MAYA_PY, __file__), 
+                                        stdout = subprocess.PIPE,
+                                        stderr = subprocess.PIPE,
+                                        env = env_dict)
+            #stdout_value, stderr_value
+            stdout_value, stderr_value = self.process.communicate()
+
+            #log
+            self.logger.debug(stdout_value)
+            self.logger.debug(stderr_value)
+
+
+        #thread
+        thread = threading.Thread(target = target)
+        #start
+        thread.start()
+        #wait for timeout
+        thread.join(self.timeout)
+        
+        #on timeout
+        if(thread.is_alive()):
+
+            #terminate process
+            self.logger.debug('Terminating process')
+            self.process.terminate()
+            
+            #finish thread
+            thread.join()
+        
+        #exitcode
+        exitcode = self.process.returncode
+        self.logger.debug('Process returned with exitcode: {0}'.format(exitcode))
+
+        return exitcode
+
+
+
+
+
+
+
+
+
 #MetaAssetManagerAlembicFunctionality class
 #------------------------------------------------------------------
 class MetaAssetManagerAlembicFunctionality(type(QtCore.QObject)):
@@ -729,7 +849,7 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
         pm.mel.eval(abc_command)
 
 
-    def get_export_closure(self, abc_command, maya_file):
+    def get_export_closure(self, abc_command, maya_file, timeout):
         """
         Return a function object that does the following when called:
 
@@ -744,32 +864,9 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
             put to queue to be called by threads run().
             """
 
-            import os
-            import subprocess
-            import logging
-
-            #env_dict
-            env_dict = os.environ.copy()
-            #add abc_command
-            env_dict.setdefault('HELGA_ABC_COMMAND', abc_command)
-            #add maya_file_path
-            env_dict.setdefault('HELGA_ABC_MAYA_FILE', str(maya_file))
-
-            
-            #process
-            process = subprocess.Popen('{0} {1}'.format(MAYA_PY, __file__), 
-                                        stdout = subprocess.PIPE,
-                                        stderr = subprocess.PIPE,
-                                        env = env_dict)
-            #stdout_value, stderr_value
-            stdout_value, stderr_value = process.communicate()
-
-            #temp
-            print(stdout_value)
-            print(stderr_value)
-
-            #exitcode
-            exitcode = process.returncode
+            #timed_process_instance
+            timed_process_instance = TimedExportProcess(abc_command, maya_file, timeout)
+            timed_process_instance.run()
             
 
         return export_function

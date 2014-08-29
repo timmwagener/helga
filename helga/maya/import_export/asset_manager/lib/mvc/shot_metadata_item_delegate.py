@@ -29,6 +29,19 @@ from PySide import QtCore
 #Import variable
 do_reload = True
 
+#helga
+
+#global_variables
+from helga.general.setup.global_variables import global_variables
+if(do_reload):reload(global_variables)
+
+#global_functions
+from helga.general.setup.global_functions import global_functions
+if(do_reload):reload(global_functions)
+
+
+#asset_manager
+
 #table_view_editor_framerange
 from lib.mvc import table_view_editor_framerange
 if(do_reload):reload(table_view_editor_framerange)
@@ -37,6 +50,19 @@ if(do_reload):reload(table_view_editor_framerange)
 from lib.mvc import table_view_editor_nodepicker
 if(do_reload):reload(table_view_editor_nodepicker)
 
+#table_view_editor_pathpicker
+from lib.mvc import table_view_editor_pathpicker
+if(do_reload):reload(table_view_editor_pathpicker)
+
+
+
+
+
+
+#Globals
+#------------------------------------------------------------------
+
+PIPELINE_ALEMBIC_PATH = global_variables.PIPELINE_ALEMBIC_PATH
 
 
 
@@ -224,8 +250,18 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
         row = index.row()
         col = index.column()
 
+        #column shot_name
+        if(col == 0):
+
+            #pathpicker_editor
+            pathpicker_editor = table_view_editor_pathpicker.TableViewEditorPathpicker(base_path = PIPELINE_ALEMBIC_PATH,
+                                                                                        parent = parent)
+            
+            return pathpicker_editor
+
+        
         #column alembic path
-        if(col == 1):
+        elif(col == 1):
 
             #file_dialog
             file_dialog = QtGui.QFileDialog(parent)
@@ -287,10 +323,15 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
 
         #mouse_pos
         mouse_pos = QtGui.QCursor.pos()
+
+        #column shot_name
+        if(col == 0):
+
+            editor.move(mouse_pos)
         
 
         #column alembic path
-        if(col == 1):
+        elif(col == 1):
 
             editor.move(mouse_pos)
 
@@ -336,8 +377,18 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
         row = index.row()
         col = index.column()
 
+        #column shot_name
+        if(col == 0):
+
+            try:
+                editor.set_selection_from_path(str(index.model().data(index)))
+                
+            except:
+                pass
+
+        
         #column Alembic Path
-        if(col == 1):
+        elif(col == 1):
 
             try:
                 editor.setDirectory(str(index.model().data(index)))
@@ -400,8 +451,13 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
         row = index.row()
         col = index.column()
 
+        #column shot_name
+        if(col == 0):
+
+            model.setData(index, editor.get_selected_path())
+
         #column alembic path
-        if(col == 1):
+        elif(col == 1):
 
             model.setData(index, editor.directory().absolutePath())
 

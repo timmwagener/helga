@@ -85,6 +85,8 @@ if (PIPELINE_BASE_PATH):
     PIPELINE_ASSETS_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/scenes/assets'
     """Pipeline Assets path. Below this directory you find all assets for the show."""
 
+    PIPELINE_ALEMBIC_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/cache/alembic'
+    """Pipeline Alembic path. Below this directory you find all alembic caches for the show."""
 
     PIPELINE_SHOTS_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/scenes/shots'
     """Pipeline Shots path. Below this directory you find all shots for the show."""

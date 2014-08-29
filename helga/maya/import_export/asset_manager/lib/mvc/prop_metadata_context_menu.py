@@ -219,6 +219,13 @@ class PropMetadataContextMenu(QtGui.QMenu):
         self.actn_hide_locator.triggered.connect(functools.partial(self.set_visibility_on_nodes_with_namespace_and_attr, ['helga_locator'], False))
         
 
+        #actn_set_selection_true
+        self.actn_set_selection_true.triggered.connect(functools.partial(self.set_selected_indices, True))
+
+        #actn_set_selection_false
+        self.actn_set_selection_false.triggered.connect(functools.partial(self.set_selected_indices, False))
+
+    
     def style_ui(self):
         """
         Setup tool palette, tool stylesheet and specific widget stylesheets.
@@ -344,6 +351,24 @@ class PropMetadataContextMenu(QtGui.QMenu):
         self.actn_hide_locator = QtGui.QAction('Hide locator', self)
         self.mnu_visibility.addAction(self.actn_hide_locator)
 
+
+
+        #Selection
+        #------------------------------------------------------------------
+
+        #mnu_selection
+        self.mnu_selection = QtGui.QMenu('Selection', parent = self)
+        self.mnu_selection.setObjectName('mnu_selection')
+        self.addMenu(self.mnu_selection)
+        
+        #actn_set_selection_true
+        self.actn_set_selection_true = QtGui.QAction('Set selection true', self)
+        self.mnu_selection.addAction(self.actn_set_selection_true)
+
+        #actn_set_selection_false
+        self.actn_set_selection_false = QtGui.QAction('Set selection false', self)
+        self.mnu_selection.addAction(self.actn_set_selection_false)
+
         
 
     
@@ -436,6 +461,70 @@ class PropMetadataContextMenu(QtGui.QMenu):
             selected_indices_list = []
 
         return selected_indices_list
+
+
+    def set_selected_indices(self, value):
+        """
+        Sets selected indices in list to value.
+        This only applies to the export columns,
+        since those are all boolean.
+        It will have no effect on other columns.
+        """
+
+        #selected_indices_list
+        selected_indices_list = self.get_selected_indices()
+        #check
+        if not(selected_indices_list):
+            #log
+            self.logger.debug('No indices selected or no view set in context menu. Not setting values')
+            return
+
+        #model
+        model = self.view.model()
+        #check
+        if not (model):
+            #log
+            self.logger.debug('Context menu view has no model. Not setting values')
+            return
+
+        #valid_column_list
+        valid_column_list = [2,3,4]
+        #valid_row_list
+        valid_row_list = range(9999)
+
+        #iterate
+        for index in selected_indices_list:
+
+            #index invalid
+            if not(index.isValid()):
+                #log
+                self.logger.debug('Index {0} not valid. Continue'.format(index))
+                continue
+            
+            
+            #row & col
+            row = index.row()
+            col = index.column()
+
+            #check if column valid
+            if col in valid_column_list:
+
+                #check if row valid
+                if row in valid_row_list:
+
+                    #set value
+                    model.setData(index, value)
+
+                else:
+
+                    #log
+                    self.logger.debug('Index at ({0}, {1}) not in valid row list'.format(row, col))
+
+            else:
+
+                #log
+                self.logger.debug('Index at ({0}, {1}) not in valid column list'.format(row, col))
+
 
 
     def indices_list_to_data_list(self, model_index_list):

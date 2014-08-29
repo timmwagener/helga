@@ -22,6 +22,32 @@ import pymel.core as pm
 
 
 
+#Import variable
+do_reload = True
+
+#helga
+
+#global_variables
+from helga.general.setup.global_variables import global_variables
+if(do_reload):reload(global_variables)
+
+#global_functions
+from helga.general.setup.global_functions import global_functions
+if(do_reload):reload(global_functions)
+
+
+
+
+
+
+
+#Globals
+#------------------------------------------------------------------
+
+PIPELINE_ALEMBIC_PATH = global_variables.PIPELINE_ALEMBIC_PATH
+
+
+
 
 
 
@@ -82,9 +108,19 @@ class AssetManagerChecks(object):
                 self.logger.debug('Shot Metadata object is not existent anymore.')
                 return False
             
-            
+            #shotname
+            shotname = pynode_shot_metadata.shot_name.get()
+            #no shotname
+            if not(shotname):
+
+                #log
+                self.logger.debug('Shot Metadata object has no shotname.')
+                return False
+
+
+
             #alembic_path
-            alembic_path = pynode_shot_metadata.alembic_path.get()
+            alembic_path = self.get_alembic_path(pynode_shot_metadata)
 
             #shot_start
             shot_start = pynode_shot_metadata.shot_start.get()
@@ -97,8 +133,26 @@ class AssetManagerChecks(object):
             if not(os.path.isdir(alembic_path)):
 
                 #log
-                self.logger.debug('Alembic path {0} does not exist.')
+                self.logger.debug('Alembic path {0} does not exist.'.format(alembic_path))
                 return False
+
+
+            #check alembic_path subdirs existence
+            alembic_subdir_name_list = ['cameras', 'props', 'chars']
+            #iterate
+            for alembic_subdir_name in alembic_subdir_name_list:
+
+                #alembic_path_with_subdir
+                alembic_path_with_subdir = os.path.join(alembic_path, alembic_subdir_name).replace('\\', '/')
+
+                #check
+                if not(os.path.isdir(alembic_path_with_subdir)):
+
+                    #log
+                    self.logger.debug('Alembic path subdirectory {0} does not exist.'.format(alembic_subdir_name))
+                    self.logger.debug('Please make sure an alembic shot directory has the following subdirectories:\n\
+{0}.'.format(alembic_subdir_name_list))
+                    return False
 
 
             #check framerange
@@ -256,6 +310,36 @@ class AssetManagerChecks(object):
         """
 
         return pm.objExists(object_name)
+
+
+    #Methods
+    #------------------------------------------------------------------
+
+    def get_alembic_path(self, pynode_shot_metadata):
+        """
+        Return alembic path either from alembic_path attribute
+        on pynode_shot_metadata if set, or build it from shot_name
+        and globals (default).
+        """
+
+        #alembic_path_from_attribute
+        alembic_path_from_attribute = pynode_shot_metadata.alembic_path.get()
+
+        #if true return
+        if(alembic_path_from_attribute):
+            return alembic_path_from_attribute
+
+
+        #build path from shot_name and globals (THIS IS THE DEFAULT)
+
+        #shotname
+        shotname = pynode_shot_metadata.shot_name.get()
+
+        #alembic_path
+        alembic_path = os.path.join(PIPELINE_ALEMBIC_PATH, shotname).replace('\\', '/')
+
+        #return
+        return alembic_path
 
 
     

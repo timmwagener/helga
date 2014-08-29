@@ -707,6 +707,8 @@ class AssetManager(form_class, base_class):
         self.acn_progressbar_test_run.triggered.connect(functools.partial(self.progressbar_test_run, 0, 200))
         #acn_hide_export_shell
         self.acn_hide_export_shell.toggled.connect(self.set_hide_export_shell)
+        #acn_toggle_column_alembic_path
+        self.acn_toggle_column_alembic_path.triggered.connect(functools.partial(self.shot_metadata_view.toggle_column_with_header_name, 'Alembic Path'))
 
     
     def style_ui(self):
@@ -1200,8 +1202,6 @@ class AssetManager(form_class, base_class):
         self.shot_metadata_view.setObjectName('shot_metadata_view')
         self.shot_metadata_view.horizontalHeader().setObjectName('shot_metadata_view_hor_header')
         self.shot_metadata_view.verticalHeader().setObjectName('shot_metadata_view_ver_header')
-        #hide vertical header
-        self.shot_metadata_view.verticalHeader().hide()
         #context menu
         self.shot_metadata_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         #add to ui
@@ -1224,6 +1224,14 @@ class AssetManager(form_class, base_class):
         self.shot_metadata_view.setSelectionModel(self.shot_metadata_selection_model)
 
 
+        #After everything is set, hide items
+        
+        #hide vertical header
+        self.shot_metadata_view.verticalHeader().hide()
+        #hide alembic_path column
+        self.shot_metadata_view.hide_column_with_header_name('Alembic Path', True)
+        
+    
     def display_shot_metadata_context_menu(self, pos):
         """
         Create and display shot metadata context menu.
@@ -1644,6 +1652,11 @@ class AssetManager(form_class, base_class):
         self.acn_hide_export_shell.setCheckable(True)
         self.acn_hide_export_shell.setChecked(self.hide_export_shell)
         self.mnu_gui.addAction(self.acn_hide_export_shell)
+
+        #acn_toggle_column_alembic_path
+        self.acn_toggle_column_alembic_path = QtGui.QAction('Toggle column Alembic Path', self)
+        self.acn_toggle_column_alembic_path.setObjectName('acn_toggle_column_alembic_path')
+        self.mnu_gui.addAction(self.acn_toggle_column_alembic_path)
 
 
     def setup_dev_menu_alembic(self, menubar):
@@ -2515,6 +2528,9 @@ class AssetManager(form_class, base_class):
 
         #alembic_path, shot_start, shot_end
         alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+        
+        #append cameras (existence for this dir. has been checked in check_base_data())
+        alembic_path = alembic_path +'/' +'cameras'
 
         #run checks shot data
         if not(self.checks_functionality.check_shot_data(shot_metadata_node)):
@@ -2557,6 +2573,9 @@ class AssetManager(form_class, base_class):
 
         #alembic_path, shot_start, shot_end
         alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+
+        #append props (existence for this dir. has been checked in check_base_data())
+        alembic_path = alembic_path +'/' +'props'
 
         
         #run checks on prop data

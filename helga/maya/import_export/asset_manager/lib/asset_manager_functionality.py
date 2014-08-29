@@ -165,7 +165,7 @@ class AssetManagerFunctionality(QtCore.QObject):
                 continue
 
             #namespace_node_list
-            namespace_node_list = pm.namespaceInfo(namespace, lod = True)
+            namespace_node_list = pm.namespaceInfo(namespace, lod = True, recurse = True)
             #check
             if not (namespace_node_list):
                 #log

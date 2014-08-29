@@ -132,9 +132,13 @@ QToolTip { background-color: %(dark_grey)s; \
 \
 \
 \
+/* QLabel */\
+QLabel { background-color: transparent; \
+} \
+\
+\
 /* QLabel - lbl_explanation_header */\
-QLabel#lbl_explanation_header { background-color: transparent; \
-                                font-weight: bold; \
+QLabel#lbl_explanation_header { font-weight: bold; \
                                 font-size: 20pt; \
                                 color: %(bright_grey)s; \
                                 margin-top: 10; \
@@ -145,8 +149,7 @@ QLabel#lbl_explanation_header { background-color: transparent; \
 \
 \
 /* QLabel - lbl_explanation_text */\
-QLabel#lbl_explanation_text { background-color: transparent; \
-                                color: %(bright_grey)s; \
+QLabel#lbl_explanation_text { color: %(bright_grey)s; \
                                 margin-top: 4; \
                                 margin-left: 10; \
                                 margin-bottom: 4; \
@@ -243,6 +246,8 @@ QMenu::separator { background: %(bright_orange)s;\
 \
 /* QMenu - mnu_threads */\
 QMenu#mnu_threads { background-color: %(dark_grey)s;\
+                    margin-left: 8; \
+                    margin-right: 8; \
                     border-left: none; \
                     border-right: none; \
                     border-bottom: none; \
@@ -252,20 +257,19 @@ QMenu#mnu_threads { background-color: %(dark_grey)s;\
 \
 /* QMenu - mnu_threads - item */\
 QMenu#mnu_threads::item { background: transparent;\
-                            margin-left: 8; \
-                            margin-right: 8; \
-                            border: none;\
 } \
 \
 \
 /* QMenu - mnu_threads - item - selected */\
-QMenu#mnu_threads::item:selected { color: %(dark_orange)s;\
-                                    border: none; \
+QMenu#mnu_threads::item:selected { background: transparent;\
+                                    color: %(dark_orange)s;\
 } \
 \
 \
 /* QMenu - mnu_gui */\
 QMenu#mnu_gui { background-color: %(dark_grey)s;\
+                margin-left: 8; \
+                margin-right: 8; \
                 border-left: none; \
                 border-right: none; \
                 border-bottom: none; \
@@ -275,15 +279,78 @@ QMenu#mnu_gui { background-color: %(dark_grey)s;\
 \
 /* QMenu - mnu_gui - item */\
 QMenu#mnu_gui::item { background: transparent;\
-                        margin-left: 8; \
-                        margin-right: 8; \
-                        border: none;\
 } \
 \
 \
 /* QMenu - mnu_gui - item - selected */\
-QMenu#mnu_gui::item:selected { color: %(dark_orange)s;\
-                                border: none; \
+QMenu#mnu_gui::item:selected { background: transparent;\
+                                color: %(dark_orange)s;\
+} \
+\
+\
+/* QMenu - mnu_alembic */\
+QMenu#mnu_alembic { background-color: %(dark_grey)s;\
+                    margin-left: 8; \
+                    margin-right: 8; \
+                    border-left: none; \
+                    border-right: none; \
+                    border-bottom: none; \
+                    border-top: none; \
+} \
+\
+\
+/* QMenu - mnu_alembic - item */\
+QMenu#mnu_alembic::item { background: transparent;\
+} \
+\
+\
+/* QMenu - mnu_alembic - item - selected */\
+QMenu#mnu_alembic::item:selected { background: transparent;\
+                                    color: %(dark_orange)s;\
+} \
+\
+\
+/* QMenu - mnu_assets */\
+QMenu#mnu_assets { background-color: %(dark_grey)s;\
+                    margin-left: 8; \
+                    margin-right: 8; \
+                    border-left: none; \
+                    border-right: none; \
+                    border-bottom: none; \
+                    border-top: none; \
+} \
+\
+\
+/* QMenu - mnu_assets - item */\
+QMenu#mnu_assets::item { background: transparent;\
+} \
+\
+\
+/* QMenu - mnu_assets - item - selected */\
+QMenu#mnu_assets::item:selected { background: transparent;\
+                                    color: %(dark_orange)s;\
+} \
+\
+\
+/* QMenu - mnu_attributes */\
+QMenu#mnu_attributes { background-color: %(dark_grey)s;\
+                        margin-left: 8; \
+                        margin-right: 8; \
+                        border-left: none; \
+                        border-right: none; \
+                        border-bottom: none; \
+                        border-top: none; \
+} \
+\
+\
+/* QMenu - mnu_attributes - item */\
+QMenu#mnu_attributes::item { background: transparent;\
+} \
+\
+\
+/* QMenu - mnu_attributes - item - selected */\
+QMenu#mnu_attributes::item:selected { background: transparent;\
+                                    color: %(dark_orange)s;\
 } \
 \
 \
@@ -321,9 +388,7 @@ QTableCornerButton::section { background-color: %(grey)s; \
 \
 /* ShotMetadataView */\
 ShotMetadataView { background-color: %(grey)s; \
-                    selection-background-color: qlineargradient(spread:pad, x1:0.7, y1:0.9, x2:1, y2:1, \
-                    stop:0 %(grey)s, \
-                    stop:1 %(bright_orange_transparent)s); \
+                    selection-background-color: %(bright_orange)s; \
                     border-left: none; \
                     border-top: none; \
                     border-bottom: none; \
@@ -390,6 +455,145 @@ ShotMetadataContextMenu { background-color: %(dark_grey_transparent)s; \
 \
 /* ShotMetadataContextMenu -item - selected */\
 ShotMetadataContextMenu::item:selected { background-color: %(bright_orange_transparent)s; \
+} \
+\
+\
+\
+\
+\
+\
+/* PropMetadataView */\
+PropMetadataView { background-color: %(grey)s; \
+                    selection-background-color: %(bright_blue)s;\
+                    border-left: none; \
+                    border-top: none; \
+                    border-bottom: none; \
+                    border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QHeaderView - prop_metadata_view_hor_header*/\
+QHeaderView#prop_metadata_view_hor_header{ background-color: %(grey)s; \
+                                                    border-left: none; \
+                                                    border-top: none; \
+                                                    border-bottom: none; \
+                                                    border-right: none; \
+} \
+\
+\
+/* QHeaderView - prop_metadata_view_hor_header - section */\
+QHeaderView#prop_metadata_view_hor_header::section { background-color: qlineargradient(spread:reflect, x1:0.06, y1:0.04, x2:0, y2:0, \
+                                                        stop:0.8 %(grey)s, \
+                                                        stop:1 %(bright_blue)s); \
+                                                        font-weight: bold; \
+                                                        border-left: none; \
+                                                        border-top: none; \
+                                                        border-bottom: none; \
+                                                        border-right: 1px solid %(bright_grey)s; \
+} \
+\
+\
+/* QHeaderView - prop_metadata_view_ver_header */\
+QHeaderView#prop_metadata_view_ver_header { background-color: %(grey)s; \
+                                                    border-left: none; \
+                                                    border-top: none; \
+                                                    border-bottom: none; \
+                                                    border-right: none; \
+} \
+\
+\
+/* QHeaderView - prop_metadata_view_ver_header - section */\
+QHeaderView#prop_metadata_view_ver_header::section { background-color: %(grey)s; \
+                                                    border-left: none; \
+                                                    border-top: none; \
+                                                    border-bottom: none; \
+                                                    border-right: none; \
+} \
+\
+\
+\
+\
+/* PropMetadataContextMenu */\
+/* Here is the above mentioned menu but also its sub menus. */\
+/* mnu_metadata, mnu_geometry, mnu_visibility, mnu_selection */\
+\
+\
+/* PropMetadataContextMenu */\
+PropMetadataContextMenu { background-color: %(dark_grey_transparent)s; \
+                            color: %(bright_grey)s; \
+                            border-left: none; \
+                            border-top: 1px solid %(bright_blue)s; \
+                            border-bottom: none; \
+                            border-right: none; \
+} \
+\
+\
+/* PropMetadataContextMenu -item - selected */\
+PropMetadataContextMenu::item:selected { background-color: %(bright_blue_transparent)s; \
+} \
+\
+\
+/* QMenu - mnu_metadata */\
+QMenu#mnu_metadata { background-color: %(dark_grey_transparent)s; \
+                            color: %(bright_grey)s; \
+                            border-left: none; \
+                            border-top: 1px solid %(bright_blue)s; \
+                            border-bottom: none; \
+                            border-right: none; \
+} \
+\
+\
+/* QMenu - mnu_metadata -item - selected */\
+QMenu#mnu_metadata::item:selected { background-color: %(bright_blue_transparent)s; \
+} \
+\
+\
+/* QMenu - mnu_geometry */\
+QMenu#mnu_geometry { background-color: %(dark_grey_transparent)s; \
+                            color: %(bright_grey)s; \
+                            border-left: none; \
+                            border-top: 1px solid %(bright_blue)s; \
+                            border-bottom: none; \
+                            border-right: none; \
+} \
+\
+\
+/* QMenu - mnu_geometry -item - selected */\
+QMenu#mnu_geometry::item:selected { background-color: %(bright_blue_transparent)s; \
+} \
+\
+\
+/* QMenu - mnu_visibility */\
+QMenu#mnu_visibility { background-color: %(dark_grey_transparent)s; \
+                            color: %(bright_grey)s; \
+                            border-left: none; \
+                            border-top: 1px solid %(bright_blue)s; \
+                            border-bottom: none; \
+                            border-right: none; \
+} \
+\
+\
+/* QMenu - mnu_visibility -item - selected */\
+QMenu#mnu_visibility::item:selected { background-color: %(bright_blue_transparent)s; \
+} \
+\
+\
+/* QMenu - mnu_selection */\
+QMenu#mnu_selection { background-color: %(dark_grey_transparent)s; \
+                            color: %(bright_grey)s; \
+                            border-left: none; \
+                            border-top: 1px solid %(bright_blue)s; \
+                            border-bottom: none; \
+                            border-right: none; \
+} \
+\
+\
+/* QMenu - mnu_selection -item - selected */\
+QMenu#mnu_selection::item:selected { background-color: %(bright_blue_transparent)s; \
 } \
 \
 \
@@ -570,6 +774,51 @@ QListView#node_view::item:selected { background-color: %(bright_orange)s; \
 \
 \
 \
+/* TableViewEditorPathpicker */\
+/* This widget has a transparent background. Below are the stylesheets for the */\
+/* children of this widget. */\
+\
+\
+/* QWidget - wdgt_table_view_editor_pathpicker_main */\
+QWidget#wdgt_table_view_editor_pathpicker_main { background-color: %(grey_transparent)s; \
+                                                    border: 1px solid %(bright_orange_transparent)s; \
+} \
+\
+\
+/* QLabel - lbl_base_path */\
+QLabel#lbl_base_path { background-color: %(grey_transparent)s; \
+} \
+\
+\
+/* QLineEdit - le_path_filter */\
+QLineEdit#le_path_filter { background-color: %(dark_grey_transparent)s; \
+                            border: 1px solid %(dark_orange_transparent)s; \
+} \
+\
+\
+/* QListView - path_view */\
+QListView#path_view { background-color: %(grey_transparent)s; \
+                        alternate-background-color: %(dark_grey_transparent)s; \
+                        border-left: none; \
+                        border-top: none; \
+                        border-bottom: none; \
+                        border-right: none; \
+} \
+\
+\
+/* QListView - path_view - item selected */\
+QListView#path_view::item:selected { background-color: %(bright_orange)s; \
+                                        border-left: none; \
+                                        border-top: none; \
+                                        border-bottom: none; \
+                                        border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
 /* AssetManagerSliderAction */\
 /* QWidgetAction that draws a slider and an LCD Display */\
 \
@@ -615,16 +864,93 @@ QLCDNumber#AssetManagerSliderActionQLCDNumber { background: transparent; \
 \
 \
 \
+/* QWidget - wdgt_asset_manager_pre_export_dialog_main */\
+QWidget#wdgt_asset_manager_pre_export_dialog_main { background-color: %(dark_grey_transparent)s; \
+                                                    color: %(bright_grey)s; \
+                                                    border-left: none; \
+                                                    border-top: 1px solid %(bright_orange)s; \
+                                                    border-bottom: none; \
+                                                    border-right: none; \
+} \
+\
+\
+/* QWidget - wdgt_wdgt_asset_manager_pre_export_dialog_main_options */\
+QWidget#wdgt_wdgt_asset_manager_pre_export_dialog_main_options { background-color: transparent; } \
+\
+\
 /* QLabel - lbl_question */\
 QLabel#lbl_question { background-color: transparent; \
                         color: %(bright_grey)s; \
 } \
 \
 \
+/* QPushButton - btn_accept */\
+QPushButton#btn_accept { background-color: transparent; \
+                            color: %(bright_grey)s; \
+} \
+\
+\
+/* QPushButton - btn_accept - pressed */\
+QPushButton#btn_accept:pressed { background-color: transparent; \
+                                        color: %(bright_orange)s; \
+} \
+\
+\
+/* QPushButton - btn_accept - hover */\
+QPushButton#btn_accept:hover { background-color: transparent; \
+                                        color: %(bright_orange)s; \
+} \
+\
+\
+/* QPushButton - btn_reject */\
+QPushButton#btn_reject { background-color: transparent; \
+                            color: %(bright_grey)s; \
+} \
+\
+\
+/* QPushButton - btn_reject - pressed */\
+QPushButton#btn_reject:pressed { background-color: transparent; \
+                                        color: %(bright_orange)s; \
+} \
+\
+\
+/* QPushButton - btn_reject - hover */\
+QPushButton#btn_reject:hover { background-color: transparent; \
+                                        color: %(bright_orange)s; \
+} \
+\
+\
 /* QCheckBox - chkbx_remember_choice */\
 QCheckBox#chkbx_remember_choice { background: transparent; \
-                                    font-size: 14pt; \
                                     color: %(bright_grey)s; \
+} \
+\
+\
+/* QCheckBox - chkbx_remember_choice - indicator */\
+QCheckBox#chkbx_remember_choice::indicator { background: transparent; \
+                                                color: %(bright_grey)s; \
+                                                border: 1px solid %(bright_orange)s; \
+} \
+\
+\
+/* QCheckBox - chkbx_remember_choice - indicator - hover */\
+QCheckBox#chkbx_remember_choice::indicator:hover { background: %(dark_grey)s; \
+                                                    color: %(bright_grey)s; \
+                                                    border: 1px solid %(bright_orange)s; \
+} \
+\
+\
+/* QCheckBox - chkbx_remember_choice - indicator - checked */\
+QCheckBox#chkbx_remember_choice::indicator:checked { background: %(bright_grey)s; \
+                                                        color: %(bright_grey)s; \
+                                                        border: 1px solid %(bright_orange)s; \
+} \
+\
+\
+/* QCheckBox - chkbx_remember_choice - indicator - pressed */\
+QCheckBox#chkbx_remember_choice::indicator:pressed { background: %(dark_orange)s; \
+                                                        color: %(bright_grey)s; \
+                                                        border: 1px solid %(bright_orange)s; \
 } \
 \
 \

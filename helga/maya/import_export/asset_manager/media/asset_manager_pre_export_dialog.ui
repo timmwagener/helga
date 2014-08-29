@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>214</width>
-    <height>131</height>
+    <height>122</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QWidget" name="wdgt_main" native="true">
+    <widget class="QWidget" name="wdgt_asset_manager_pre_export_dialog_main" native="true">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <widget class="QLabel" name="lbl_question">
@@ -25,7 +25,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="wdgt_options" native="true">
+       <widget class="QWidget" name="wdgt_wdgt_asset_manager_pre_export_dialog_main_options" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
           <widget class="QPushButton" name="btn_accept">
@@ -45,14 +45,10 @@
        </widget>
       </item>
       <item>
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QCheckBox" name="chkbx_remember_choice">
+        <property name="autoFillBackground">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Remember choice</string>
         </property>

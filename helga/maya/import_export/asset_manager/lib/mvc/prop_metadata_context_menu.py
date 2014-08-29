@@ -230,11 +230,9 @@ class PropMetadataContextMenu(QtGui.QMenu):
         """
         Setup tool palette, tool stylesheet and specific widget stylesheets.
         """
-
-        #styled_background
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Popup)
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
-
+        #set_styled_background_for_menus
+        self.set_styled_background_for_menus()
+        
         #correct_styled_background_attribute
         self.correct_styled_background_attribute()
 
@@ -391,6 +389,34 @@ class PropMetadataContextMenu(QtGui.QMenu):
 
     #Methods
     #------------------------------------------------------------------
+
+    def set_styled_background_for_menus(self):
+        """
+        Set window flags and transparent background for all menus.
+        """
+
+        #wdgt_list
+        wdgt_list = self.findChildren(QtGui.QWidget)
+
+        #mnu_list
+        mnu_list = [wdgt for wdgt in wdgt_list if (isinstance(wdgt, QtGui.QMenu))]
+
+        #append self
+        mnu_list.append(self)
+
+        #iterate and set
+        for menu in mnu_list:
+
+            try:
+                
+                #styled_background
+                menu.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Popup)
+                menu.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
+
+            except:
+
+                #log
+                self.logger.debug('Error setting styled background and transparent flag for menu: {0}'.format(menu.objectName()))
 
 
     def correct_styled_background_attribute(self):

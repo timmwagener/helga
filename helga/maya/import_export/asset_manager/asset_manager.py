@@ -2387,7 +2387,7 @@ class AssetManager(form_class, base_class):
         else:
             
             #pre_export_dialog
-            pre_export_dialog = asset_manager_pre_export_dialog.AssetManagerPreExportDialog(question = 'Save before export?',
+            pre_export_dialog = asset_manager_pre_export_dialog.AssetManagerPreExportDialog(question = 'Save before export?\n(Unsaved animation is not exported.)',
                                                                                             parent = self)
 
             #do_save
@@ -2462,7 +2462,8 @@ class AssetManager(form_class, base_class):
 
         
         #run_pre_export_dialog
-        self.run_pre_export_dialog()
+        if not(dry_run):
+            self.run_pre_export_dialog()
         
 
         

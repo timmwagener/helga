@@ -306,6 +306,10 @@ class AssetManagerPreExportDialog(form_class, base_class):
         #set_margins_and_spacing
         self.set_margins_and_spacing()
 
+        #set flat
+        self.btn_accept.setFlat(True)
+        self.btn_reject.setFlat(True)
+
         #set_stylesheet
         self.setStyleSheet(asset_manager_stylesheets.get_stylesheet())
 

@@ -2535,7 +2535,7 @@ class AssetManager(form_class, base_class):
         #run checks on base data
         if not(self.checks_functionality.check_base_data(shot_metadata_node)):
             #log
-            self.logger.debug('Base data check failed. Check Alembic path, shot start and end settings. Not exporting.')
+            self.logger.debug('Base data check failed. Check shot name, alembic path, shot start and end settings. Not exporting.')
             return
 
 
@@ -2615,12 +2615,6 @@ class AssetManager(form_class, base_class):
         retrieve the base data from the shot_metadata_node again.
         """
 
-        #alembic_path, shot_start, shot_end
-        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
-        
-        #append cameras (existence for this dir. has been checked in check_base_data())
-        alembic_path = alembic_path +'/' +'cameras'
-
         #run checks shot data
         if not(self.checks_functionality.check_shot_data(shot_metadata_node)):
             
@@ -2628,9 +2622,18 @@ class AssetManager(form_class, base_class):
             self.logger.debug('Shot data check failed. Check shot cam settings. Not exporting.')
             return
 
+
         #shot_cam
         shot_cam = self.checks_functionality.check_shot_data(shot_metadata_node)
 
+
+        #alembic_path, shot_start, shot_end
+        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+        
+        #append cameras (existence for this dir. has been checked in check_base_data())
+        alembic_path = alembic_path +'/' +'cameras'
+
+        
         #abc_command
         abc_command = self.alembic_functionality.build_export_command([shot_cam], 
                                                                         [shot_start, shot_end], 
@@ -2660,13 +2663,6 @@ class AssetManager(form_class, base_class):
         again.
         """
 
-        #alembic_path, shot_start, shot_end
-        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
-
-        #append props (existence for this dir. has been checked in check_base_data())
-        alembic_path = alembic_path +'/' +'props'
-
-        
         #run checks on prop data
         if not(self.checks_functionality.check_prop_data(prop_metadata_node)):
 
@@ -2675,81 +2671,25 @@ class AssetManager(form_class, base_class):
             return
         
 
-        #asset_name, namespace
-        asset_name, namespace = self.checks_functionality.check_prop_data(prop_metadata_node)
-
-        
         #proxy
         if(prop_metadata_node.proxy_export.get()):
 
-            #node_export_list
-            node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(prop_metadata_node, 'helga_proxy')
-
-            #abc_command
-            abc_command = self.alembic_functionality.build_export_command(node_export_list, 
-                                                                            [shot_start, shot_end], 
-                                                                            alembic_path +'/' +asset_name +'_proxy' +'.abc')
-
-            #dry_run
-            if(dry_run):
-
-                #log
-                self.logger.debug('{0}'.format(abc_command))
-                
-            #no dry_run
-            else:
-                
-                #get closure and add to thread queue
-                self.add_export_closure_to_queue(abc_command)
-
+            #export part
+            self.export_part(shot_metadata_node, prop_metadata_node, 'helga_proxy', dry_run)
 
 
         #rendergeo
         if(prop_metadata_node.rendergeo_export.get()):
 
-            #node_export_list
-            node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(prop_metadata_node, 'helga_rendergeo')
-
-            #abc_command
-            abc_command = self.alembic_functionality.build_export_command(node_export_list, 
-                                                                            [shot_start, shot_end], 
-                                                                            alembic_path +'/' +asset_name +'.abc')
-
-            #dry_run
-            if(dry_run):
-
-                #log
-                self.logger.debug('{0}'.format(abc_command))
-                
-            #no dry_run
-            else:
-                
-                #get closure and add to thread queue
-                self.add_export_closure_to_queue(abc_command)
+            #export part
+            self.export_part(shot_metadata_node, prop_metadata_node, 'helga_rendergeo', dry_run)
 
         
         #locator
         if(prop_metadata_node.locator_export.get()):
 
-            #node_export_list
-            node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(prop_metadata_node, 'helga_locator')
-
-            #abc_command
-            abc_command = self.alembic_functionality.build_export_command(node_export_list, 
-                                                                            [shot_start, shot_end], 
-                                                                            alembic_path +'/' +asset_name +'_locator' +'.abc')
-
-            #dry_run
-            if(dry_run):
-
-                #log
-                self.logger.debug('{0}'.format(abc_command))
-                
-            #no dry_run
-            else:
-                
-                #get closure and add to thread queue
-                self.add_export_closure_to_queue(abc_command)
+            #export part
+            self.export_part(shot_metadata_node, prop_metadata_node, 'helga_locator', dry_run)
 
 
     def export_char(self, 
@@ -2763,13 +2703,6 @@ class AssetManager(form_class, base_class):
         again.
         """
 
-        #alembic_path, shot_start, shot_end
-        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
-
-        #append chars (existence for this dir. has been checked in check_base_data())
-        alembic_path = alembic_path +'/' +'chars'
-
-        
         #run checks on char data
         if not(self.checks_functionality.check_char_data(char_metadata_node)):
 
@@ -2778,81 +2711,116 @@ class AssetManager(form_class, base_class):
             return
         
 
-        #asset_name, namespace
-        asset_name, namespace = self.checks_functionality.check_char_data(char_metadata_node)
-
-        
         #proxy
         if(char_metadata_node.proxy_export.get()):
 
-            #node_export_list
-            node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(char_metadata_node, 'helga_proxy')
-
-            #abc_command
-            abc_command = self.alembic_functionality.build_export_command(node_export_list, 
-                                                                            [shot_start, shot_end], 
-                                                                            alembic_path +'/' +asset_name +'_proxy' +'.abc')
-
-            #dry_run
-            if(dry_run):
-
-                #log
-                self.logger.debug('{0}'.format(abc_command))
-                
-            #no dry_run
-            else:
-                
-                #get closure and add to thread queue
-                self.add_export_closure_to_queue(abc_command)
-
+            #export part
+            self.export_part(shot_metadata_node, char_metadata_node, 'helga_proxy', dry_run)
 
 
         #rendergeo
         if(char_metadata_node.rendergeo_export.get()):
 
-            #node_export_list
-            node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(char_metadata_node, 'helga_rendergeo')
-
-            #abc_command
-            abc_command = self.alembic_functionality.build_export_command(node_export_list, 
-                                                                            [shot_start, shot_end], 
-                                                                            alembic_path +'/' +asset_name +'.abc')
-
-            #dry_run
-            if(dry_run):
-
-                #log
-                self.logger.debug('{0}'.format(abc_command))
-                
-            #no dry_run
-            else:
-                
-                #get closure and add to thread queue
-                self.add_export_closure_to_queue(abc_command)
+            #export part
+            self.export_part(shot_metadata_node, char_metadata_node, 'helga_rendergeo', dry_run)
 
         
         #locator
         if(char_metadata_node.locator_export.get()):
 
-            #node_export_list
-            node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(char_metadata_node, 'helga_locator')
+            #export part
+            self.export_part(shot_metadata_node, char_metadata_node, 'helga_locator', dry_run)
 
-            #abc_command
-            abc_command = self.alembic_functionality.build_export_command(node_export_list, 
-                                                                            [shot_start, shot_end], 
-                                                                            alembic_path +'/' +asset_name +'_locator' +'.abc')
 
-            #dry_run
-            if(dry_run):
+    def export_part(self, 
+                    shot_metadata_node,
+                    prop_or_char_metadata_node,
+                    attr_name,
+                    dry_run):
+        """
+        Export process for a certain pynode and its attribute configuration.
+        The attribute configuration consists of:
 
-                #log
-                self.logger.debug('{0}'.format(abc_command))
-                
-            #no dry_run
-            else:
-                
-                #get closure and add to thread queue
-                self.add_export_closure_to_queue(abc_command)
+        1. The namespace of the PyNode
+        2. The attr. which is searched for in the nodes belonging to the namespace.
+        These two factors are needed to create the node export list.
+        
+        The next step is to create the abc_command.
+
+        Then the abc command and some other things will be closured
+        and added to the queue.
+
+        When this function is called, all checks have been passed, so
+        it is save to just grab the values and use them.
+        """
+
+        #node_type_name
+        node_type_name = type(prop_or_char_metadata_node).__name__
+
+        #node type specific assignments
+        
+        #Chars
+        if (node_type_name == 'HelgaCharacterMetadata'):
+            #asset_name, namespace
+            asset_name, namespace = self.checks_functionality.check_char_data(prop_or_char_metadata_node)
+            #alembic_subdir
+            alembic_subdir = 'chars'
+        
+        #Props
+        elif (node_type_name == 'HelgaPropMetadata'):
+            #asset_name, namespace
+            asset_name, namespace = self.checks_functionality.check_prop_data(prop_or_char_metadata_node)
+            #alembic_subdir
+            alembic_subdir = 'props'
+
+
+        #part type specific assignments
+
+        #proxy
+        if (attr_name == 'helga_proxy'):
+            asset_name_suffix = '_proxy'
+        #rendergeo
+        elif (attr_name == 'helga_rendergeo'):
+            asset_name_suffix = ''
+        #locator
+        elif (attr_name == 'helga_locator'):
+            asset_name_suffix = '_locator'
+
+        
+        
+        #alembic_path, shot_start, shot_end
+        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+
+        #alembic_export_path
+        alembic_export_path = alembic_path +'/' +alembic_subdir +'/' +asset_name +asset_name_suffix +'.abc'
+
+
+        
+        #node_export_list
+        node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(prop_or_char_metadata_node, attr_name)
+        #check
+        if not (node_export_list):
+            #log
+            self.logger.debug('Node export list for asset: {0} and part {1} empty. Not exporting part.'.format(asset_name, attr_name))
+            return
+
+        
+        #abc_command
+        abc_command = self.alembic_functionality.build_export_command(node_export_list, 
+                                                                        [shot_start, shot_end], 
+                                                                        alembic_export_path)
+
+        #dry_run
+        if(dry_run):
+
+            #log
+            self.logger.debug('{0}'.format(abc_command))
+            
+        #no dry_run
+        else:
+            
+            #get closure and add to thread queue
+            self.add_export_closure_to_queue(abc_command)
 
 
     def add_export_closure_to_queue(self, abc_command):

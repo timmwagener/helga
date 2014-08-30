@@ -270,6 +270,49 @@ class AssetManagerChecks(object):
         return [asset_name, namespace]
 
 
+    def check_char_data(self, pynode_char_metadata):
+        """
+        Check metadata and data needed for char export.
+        Return False or the needed data (asset_name, namespace) when True.
+        """
+
+        try:
+
+            #check object existence (pynode_char_metadata)
+            if not(self.check_object_existence(pynode_char_metadata)):
+                
+                #log
+                self.logger.debug('Char Metadata object is not existent anymore.')
+                return False
+            
+            
+            #asset_name
+            asset_name = pynode_char_metadata.asset_name.get()
+            #check
+            if not (asset_name):
+                
+                #log
+                self.logger.debug('Char metadata node {0} has no asset_name.'.format(pynode_char_metadata.name()))
+                return False
+
+            
+            #namespace
+            namespace = pynode_char_metadata.namespace()
+            #check
+            if not (namespace):
+                
+                #log
+                self.logger.debug('Char metadata node {0} has no namespace.'.format(pynode_char_metadata.name()))
+                return False
+
+        except:
+
+            return False
+
+
+        return [asset_name, namespace]
+
+
     #Atomic Checks
     #------------------------------------------------------------------
 

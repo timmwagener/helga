@@ -1,10 +1,10 @@
 
 
 """
-prop_metadata_context_menu
+char_metadata_context_menu
 ==========================================
 
-Menu created on right-click at PropMetadataView instance.
+Menu created on right-click at CharMetadataView instance.
 
 -----------------------
 
@@ -74,20 +74,20 @@ if(do_reload):reload(asset_manager_functionality)
 
 
 
-#PropMetadataContextMenu class
+#CharMetadataContextMenu class
 #------------------------------------------------------------------
-class PropMetadataContextMenu(QtGui.QMenu):
+class CharMetadataContextMenu(QtGui.QMenu):
 
     
     def __new__(cls, *args, **kwargs):
         """
-        PropMetadataContextMenu instance factory.
+        CharMetadataContextMenu instance factory.
         """
 
-        #prop_metadata_context_menu_instance
-        prop_metadata_context_menu_instance = super(PropMetadataContextMenu, cls).__new__(cls, args, kwargs)
+        #char_metadata_context_menu_instance
+        char_metadata_context_menu_instance = super(CharMetadataContextMenu, cls).__new__(cls, args, kwargs)
 
-        return prop_metadata_context_menu_instance
+        return char_metadata_context_menu_instance
 
     
     def __init__(self, 
@@ -98,7 +98,7 @@ class PropMetadataContextMenu(QtGui.QMenu):
         """
 
         #super
-        self.parent_class = super(PropMetadataContextMenu, self)
+        self.parent_class = super(CharMetadataContextMenu, self)
         self.parent_class.__init__(parent)
 
         #setObjectName
@@ -689,7 +689,7 @@ class PropMetadataContextMenu(QtGui.QMenu):
         """
     
         #create
-        self.maya_functionality.create_node('HelgaPropMetadata')
+        self.maya_functionality.create_node('HelgaCharMetadata')
 
     
 

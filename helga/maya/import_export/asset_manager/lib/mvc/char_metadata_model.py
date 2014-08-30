@@ -1,9 +1,9 @@
 
 """
-prop_metadata_model
+char_metadata_model
 ==========================================
 
-Subclass of QAbstractTableModel to display and edit prop_metadata.
+Subclass of QAbstractTableModel to display and edit char metadata.
 """
 
 
@@ -18,6 +18,7 @@ import re
 #PySide
 from PySide import QtGui
 from PySide import QtCore
+
 
 
 
@@ -37,11 +38,14 @@ if(do_reload):reload(asset_manager_functionality)
 
 
 
-#PropMetadataModel class
+
+
+
+#CharMetadataModel class
 #------------------------------------------------------------------
-class PropMetadataModel(QtCore.QAbstractTableModel):
+class CharMetadataModel(QtCore.QAbstractTableModel):
     """
-    Class customized to display prop metadata.
+    Class customized to display char metadata.
     -----------------------------
 
     **Expects the following format:**
@@ -52,13 +56,13 @@ class PropMetadataModel(QtCore.QAbstractTableModel):
 
     def __new__(cls, *args, **kwargs):
         """
-        PropMetadataModel instance factory.
+        CharMetadataModel instance factory.
         """
 
-        #prop_metadata_model_instance
-        prop_metadata_model_instance = super(PropMetadataModel, cls).__new__(cls, args, kwargs)
+        #char_metadata_model_instance
+        char_metadata_model_instance = super(CharMetadataModel, cls).__new__(cls, args, kwargs)
 
-        return prop_metadata_model_instance
+        return char_metadata_model_instance
     
     
     def __init__(self, 
@@ -69,7 +73,7 @@ class PropMetadataModel(QtCore.QAbstractTableModel):
         """
         
         #super class init
-        super(PropMetadataModel, self).__init__(parent)
+        super(CharMetadataModel, self).__init__(parent)
 
 
         #instance variables
@@ -116,6 +120,9 @@ class PropMetadataModel(QtCore.QAbstractTableModel):
 
     
     def rowCount(self, parent):
+        """
+        Return row count.
+        """
 
         #if any item in list return len
         if (any(self.data_list)):
@@ -126,6 +133,10 @@ class PropMetadataModel(QtCore.QAbstractTableModel):
 
     
     def columnCount(self, parent):
+        """
+        Return column count.
+        """
+
         return len(self.header_name_list) 
 
     
@@ -140,7 +151,7 @@ class PropMetadataModel(QtCore.QAbstractTableModel):
             #log
             self.logger.debug('Index {0} not valid.'.format(index))
             #evaluate in superclass
-            return super(PropMetadataModel, self).data(self, index, role)
+            return super(CharMetadataModel, self).data(self, index, role)
         
         
         #row & col
@@ -314,7 +325,7 @@ class PropMetadataModel(QtCore.QAbstractTableModel):
             #log
             self.logger.debug('Index {0} not valid.'.format(index))
             #evaluate in superclass
-            return super(PropMetadataModel, self).flags(self, index)
+            return super(CharMetadataModel, self).flags(self, index)
         
         
         #row & col

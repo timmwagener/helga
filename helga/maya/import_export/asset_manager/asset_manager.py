@@ -167,6 +167,7 @@ if(do_reload):reload(shot_metadata_item_delegate)
 from lib.mvc import shot_metadata_context_menu
 if(do_reload):reload(shot_metadata_context_menu)
 
+
 #prop_metadata_model
 from lib.mvc import prop_metadata_model
 if(do_reload):reload(prop_metadata_model)
@@ -182,6 +183,23 @@ if(do_reload):reload(prop_metadata_item_delegate)
 #prop_metadata_context_menu
 from lib.mvc import prop_metadata_context_menu
 if(do_reload):reload(prop_metadata_context_menu)
+
+
+#char_metadata_model
+from lib.mvc import char_metadata_model
+if(do_reload):reload(char_metadata_model)
+
+#char_metadata_view
+from lib.mvc import char_metadata_view
+if(do_reload):reload(char_metadata_view)
+
+#char_metadata_item_delegate
+from lib.mvc import char_metadata_item_delegate
+if(do_reload):reload(char_metadata_item_delegate)
+
+#char_metadata_context_menu
+from lib.mvc import char_metadata_context_menu
+if(do_reload):reload(char_metadata_context_menu)
 
 
 
@@ -677,6 +695,8 @@ class AssetManager(form_class, base_class):
         self.shot_metadata_view.customContextMenuRequested.connect(self.display_shot_metadata_context_menu)
         #prop_metadata_view
         self.prop_metadata_view.customContextMenuRequested.connect(self.display_prop_metadata_context_menu)
+        #char_metadata_view
+        self.char_metadata_view.customContextMenuRequested.connect(self.display_char_metadata_context_menu)
 
     
     def connect_dev(self):
@@ -1184,6 +1204,9 @@ class AssetManager(form_class, base_class):
         #setup_mvc_prop_metadata
         self.setup_mvc_prop_metadata()
 
+        #setup_mvc_char_metadata
+        self.setup_mvc_char_metadata()
+
 
     def setup_mvc_shot_metadata(self):
         """
@@ -1210,6 +1233,7 @@ class AssetManager(form_class, base_class):
 
         #shot_metadata_item_delegate
         self.shot_metadata_item_delegate = shot_metadata_item_delegate.ShotMetadataItemDelegate(self.logging_level)
+        self.shot_metadata_item_delegate.setObjectName('shot_metadata_item_delegate')
         #set in view
         self.shot_metadata_view.setItemDelegate(self.shot_metadata_item_delegate)
 
@@ -1270,6 +1294,7 @@ class AssetManager(form_class, base_class):
         
         #prop_metadata_item_delegate
         self.prop_metadata_item_delegate = prop_metadata_item_delegate.PropMetadataItemDelegate(self.logging_level)
+        self.prop_metadata_item_delegate.setObjectName('prop_metadata_item_delegate')
         #set in view
         self.prop_metadata_view.setItemDelegate(self.prop_metadata_item_delegate)
         
@@ -1294,6 +1319,60 @@ class AssetManager(form_class, base_class):
         context_menu = prop_metadata_context_menu.PropMetadataContextMenu(parent = self)
         context_menu.set_view(self.prop_metadata_view)
         context_menu.popup(self.prop_metadata_view.mapToGlobal(pos))
+
+
+    def setup_mvc_char_metadata(self):
+        """
+        Setup model-view controller for char metadata.
+        """
+    
+        #char_metadata_view
+        self.char_metadata_view = char_metadata_view.CharMetadataView(self.logging_level)
+        self.char_metadata_view.setWordWrap(True)
+        #set resize mode for horizontal header
+        self.char_metadata_view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.char_metadata_view.horizontalHeader().setStretchLastSection(False)
+        self.char_metadata_view.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.char_metadata_view.setAlternatingRowColors(True)
+        #objectNames
+        self.char_metadata_view.setObjectName('char_metadata_view')
+        self.char_metadata_view.horizontalHeader().setObjectName('char_metadata_view_hor_header')
+        self.char_metadata_view.verticalHeader().setObjectName('char_metadata_view_ver_header')
+        #hide vertical header
+        self.char_metadata_view.verticalHeader().hide()
+        #context menu
+        self.char_metadata_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        #add to ui
+        self.lyt_char_metadata.addWidget(self.char_metadata_view)
+
+        
+        #char_metadata_item_delegate
+        self.char_metadata_item_delegate = char_metadata_item_delegate.CharMetadataItemDelegate(self.logging_level)
+        self.char_metadata_item_delegate.setObjectName('char_metadata_item_delegate')
+        #set in view
+        self.char_metadata_view.setItemDelegate(self.char_metadata_item_delegate)
+        
+
+        
+        #char_metadata_model
+        self.char_metadata_model = char_metadata_model.CharMetadataModel(self.logging_level)
+        #set model in view
+        self.char_metadata_view.setModel(self.char_metadata_model)
+
+        #char_metadata_selection_model
+        self.char_metadata_selection_model = QtGui.QItemSelectionModel(self.char_metadata_model)
+        self.char_metadata_view.setSelectionModel(self.char_metadata_selection_model)
+
+
+    def display_char_metadata_context_menu(self, pos):
+        """
+        Create and display char metadata context menu.
+        """
+        
+        #context_menu
+        context_menu = char_metadata_context_menu.CharMetadataContextMenu(parent = self)
+        context_menu.set_view(self.char_metadata_view)
+        context_menu.popup(self.char_metadata_view.mapToGlobal(pos))
 
 
 
@@ -1489,13 +1568,13 @@ class AssetManager(form_class, base_class):
         #set_char_metadata_list from scene
         self.set_char_metadata_list()
 
-        '''
+        
         #list_for_tablemodel
-        table_model_list = self.convert_list_for_tablemodel(self.shot_metadata_list)
+        table_model_list = self.convert_list_for_tablemodel(self.char_metadata_list)
 
         #set in model
-        self.shot_metadata_model.update(table_model_list)
-        '''
+        self.char_metadata_model.update(table_model_list)
+        
 
 
 

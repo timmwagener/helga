@@ -61,6 +61,8 @@ BRIGHT_ORANGE = asset_manager_globals.BRIGHT_ORANGE
 DARK_ORANGE = asset_manager_globals.DARK_ORANGE
 BRIGHT_BLUE = asset_manager_globals.BRIGHT_BLUE
 DARK_BLUE = asset_manager_globals.DARK_BLUE
+BRIGHT_GREEN = asset_manager_globals.BRIGHT_GREEN
+DARK_GREEN = asset_manager_globals.DARK_GREEN
 BRIGHT_GREY = asset_manager_globals.BRIGHT_GREY
 GREY = asset_manager_globals.GREY
 DARK_GREY = asset_manager_globals.DARK_GREY
@@ -89,6 +91,10 @@ def get_stylesheet():
                 'bright_blue_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_BLUE.red(), BRIGHT_BLUE.green(), BRIGHT_BLUE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
                 'dark_blue' : DARK_BLUE.name(),
                 'dark_blue_transparent' : 'rgba({0},{1},{2},{3})'.format(DARK_BLUE.red(), DARK_BLUE.green(), DARK_BLUE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
+                'bright_green' : BRIGHT_GREEN.name(),
+                'bright_green_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_GREEN.red(), BRIGHT_GREEN.green(), BRIGHT_GREEN.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
+                'dark_green' : DARK_GREEN.name(),
+                'dark_green_transparent' : 'rgba({0},{1},{2},{3})'.format(DARK_GREEN.red(), DARK_GREEN.green(), DARK_GREEN.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
 			    'bright_grey' : BRIGHT_GREY.name(),
                 'bright_grey_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_GREY.red(), BRIGHT_GREY.green(), BRIGHT_GREY.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
 			    'grey' : GREY.name(),
@@ -538,62 +544,201 @@ PropMetadataContextMenu::item:selected { background-color: %(bright_blue_transpa
 \
 \
 /* QMenu - mnu_metadata */\
-QMenu#mnu_metadata { background-color: %(dark_grey_transparent)s; \
-                            color: %(bright_grey)s; \
-                            border-left: none; \
-                            border-top: 1px solid %(bright_blue)s; \
-                            border-bottom: none; \
-                            border-right: none; \
+QMenu#PropMetadataContextMenu_mnu_metadata { background-color: %(dark_grey_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border-left: none; \
+                                                border-top: 1px solid %(bright_blue)s; \
+                                                border-bottom: none; \
+                                                border-right: none; \
 } \
 \
 \
 /* QMenu - mnu_metadata -item - selected */\
-QMenu#mnu_metadata::item:selected { background-color: %(bright_blue_transparent)s; \
+QMenu#PropMetadataContextMenu_mnu_metadata::item:selected { background-color: %(bright_blue_transparent)s; \
 } \
 \
 \
 /* QMenu - mnu_geometry */\
-QMenu#mnu_geometry { background-color: %(dark_grey_transparent)s; \
-                            color: %(bright_grey)s; \
-                            border-left: none; \
-                            border-top: 1px solid %(bright_blue)s; \
-                            border-bottom: none; \
-                            border-right: none; \
+QMenu#PropMetadataContextMenu_mnu_geometry { background-color: %(dark_grey_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border-left: none; \
+                                                border-top: 1px solid %(bright_blue)s; \
+                                                border-bottom: none; \
+                                                border-right: none; \
 } \
 \
 \
 /* QMenu - mnu_geometry -item - selected */\
-QMenu#mnu_geometry::item:selected { background-color: %(bright_blue_transparent)s; \
+QMenu#PropMetadataContextMenu_mnu_geometry::item:selected { background-color: %(bright_blue_transparent)s; \
 } \
 \
 \
 /* QMenu - mnu_visibility */\
-QMenu#mnu_visibility { background-color: %(dark_grey_transparent)s; \
-                            color: %(bright_grey)s; \
-                            border-left: none; \
-                            border-top: 1px solid %(bright_blue)s; \
-                            border-bottom: none; \
-                            border-right: none; \
+QMenu#PropMetadataContextMenu_mnu_visibility { background-color: %(dark_grey_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border-left: none; \
+                                                border-top: 1px solid %(bright_blue)s; \
+                                                border-bottom: none; \
+                                                border-right: none; \
 } \
 \
 \
 /* QMenu - mnu_visibility -item - selected */\
-QMenu#mnu_visibility::item:selected { background-color: %(bright_blue_transparent)s; \
+QMenu#PropMetadataContextMenu_mnu_visibility::item:selected { background-color: %(bright_blue_transparent)s; \
 } \
 \
 \
 /* QMenu - mnu_selection */\
-QMenu#mnu_selection { background-color: %(dark_grey_transparent)s; \
+QMenu#PropMetadataContextMenu_mnu_selection { background-color: %(dark_grey_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border-left: none; \
+                                                border-top: 1px solid %(bright_blue)s; \
+                                                border-bottom: none; \
+                                                border-right: none; \
+} \
+\
+\
+/* QMenu - mnu_selection -item - selected */\
+QMenu#PropMetadataContextMenu_mnu_selection::item:selected { background-color: %(bright_blue_transparent)s; \
+} \
+\
+\
+\
+\
+\
+\
+/* CharMetadataView */\
+CharMetadataView { background-color: %(grey)s; \
+                    selection-background-color: %(bright_green)s;\
+                    border-left: none; \
+                    border-top: none; \
+                    border-bottom: none; \
+                    border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QHeaderView - char_metadata_view_hor_header*/\
+QHeaderView#char_metadata_view_hor_header{ background-color: %(grey)s; \
+                                            border-left: none; \
+                                            border-top: none; \
+                                            border-bottom: none; \
+                                            border-right: none; \
+} \
+\
+\
+/* QHeaderView - char_metadata_view_hor_header - section */\
+QHeaderView#char_metadata_view_hor_header::section { background-color: qlineargradient(spread:reflect, x1:0.06, y1:0.04, x2:0, y2:0, \
+                                                        stop:0.8 %(grey)s, \
+                                                        stop:1 %(bright_green)s); \
+                                                        font-weight: bold; \
+                                                        border-left: none; \
+                                                        border-top: none; \
+                                                        border-bottom: none; \
+                                                        border-right: 1px solid %(bright_grey)s; \
+} \
+\
+\
+/* QHeaderView - char_metadata_view_ver_header */\
+QHeaderView#char_metadata_view_ver_header { background-color: %(grey)s; \
+                                            border-left: none; \
+                                            border-top: none; \
+                                            border-bottom: none; \
+                                            border-right: none; \
+} \
+\
+\
+/* QHeaderView - char_metadata_view_ver_header - section */\
+QHeaderView#char_metadata_view_ver_header::section { background-color: %(grey)s; \
+                                                        border-left: none; \
+                                                        border-top: none; \
+                                                        border-bottom: none; \
+                                                        border-right: none; \
+} \
+\
+\
+\
+\
+/* CharMetadataContextMenu */\
+/* Here is the above mentioned menu but also its sub menus. */\
+/* mnu_metadata, mnu_geometry, mnu_visibility, mnu_selection */\
+\
+\
+/* CharMetadataContextMenu */\
+CharMetadataContextMenu { background-color: %(dark_grey_transparent)s; \
                             color: %(bright_grey)s; \
                             border-left: none; \
-                            border-top: 1px solid %(bright_blue)s; \
+                            border-top: 1px solid %(bright_green)s; \
                             border-bottom: none; \
                             border-right: none; \
 } \
 \
 \
+/* CharMetadataContextMenu -item - selected */\
+CharMetadataContextMenu::item:selected { background-color: %(bright_green_transparent)s; \
+} \
+\
+\
+/* QMenu - mnu_metadata */\
+QMenu#CharMetadataContextMenu_mnu_metadata { background-color: %(dark_grey_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border-left: none; \
+                                                border-top: 1px solid %(bright_green)s; \
+                                                border-bottom: none; \
+                                                border-right: none; \
+} \
+\
+\
+/* QMenu - mnu_metadata -item - selected */\
+QMenu#CharMetadataContextMenu_mnu_metadata::item:selected { background-color: %(bright_green_transparent)s; \
+} \
+\
+\
+/* QMenu - mnu_geometry */\
+QMenu#CharMetadataContextMenu_mnu_geometry { background-color: %(dark_grey_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border-left: none; \
+                                                border-top: 1px solid %(bright_green)s; \
+                                                border-bottom: none; \
+                                                border-right: none; \
+} \
+\
+\
+/* QMenu - mnu_geometry -item - selected */\
+QMenu#CharMetadataContextMenu_mnu_geometry::item:selected { background-color: %(bright_green_transparent)s; \
+} \
+\
+\
+/* QMenu - mnu_visibility */\
+QMenu#CharMetadataContextMenu_mnu_visibility { background-color: %(dark_grey_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border-left: none; \
+                                                border-top: 1px solid %(bright_green)s; \
+                                                border-bottom: none; \
+                                                border-right: none; \
+} \
+\
+\
+/* QMenu - mnu_visibility -item - selected */\
+QMenu#CharMetadataContextMenu_mnu_visibility::item:selected { background-color: %(bright_green_transparent)s; \
+} \
+\
+\
+/* QMenu - mnu_selection */\
+QMenu#CharMetadataContextMenu_mnu_selection { background-color: %(dark_grey_transparent)s; \
+                                                color: %(bright_grey)s; \
+                                                border-left: none; \
+                                                border-top: 1px solid %(bright_green)s; \
+                                                border-bottom: none; \
+                                                border-right: none; \
+} \
+\
+\
 /* QMenu - mnu_selection -item - selected */\
-QMenu#mnu_selection::item:selected { background-color: %(bright_blue_transparent)s; \
+QMenu#CharMetadataContextMenu_mnu_selection::item:selected { background-color: %(bright_green_transparent)s; \
 } \
 \
 \

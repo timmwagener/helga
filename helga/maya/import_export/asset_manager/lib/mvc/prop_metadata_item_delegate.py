@@ -26,7 +26,29 @@ from PySide import QtCore
 
 
 
+#Import variable
+do_reload = True
 
+
+#asset_manager
+
+#asset_manager_globals
+from lib import asset_manager_globals
+if(do_reload):reload(asset_manager_globals)
+
+
+
+
+
+
+
+
+#Globals
+#------------------------------------------------------------------
+
+#AssetManager Icons
+ICON_TRUE = asset_manager_globals.ICON_TRUE
+ICON_FALSE = asset_manager_globals.ICON_FALSE
 
 
 
@@ -66,16 +88,13 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
         self.superclass.__init__(parent)
 
 
-
-        #slots
-        #------------------------------------------------------------------
-
-        
-        
-
         #instance variables
         #------------------------------------------------------------------
 
+        #pxm_bool_true
+        self.pxm_bool_true = QtGui.QPixmap(ICON_TRUE)
+        #pxm_bool_false
+        self.pxm_bool_false = QtGui.QPixmap(ICON_FALSE)
         
         
         #logger
@@ -148,6 +167,7 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
 
         Types handled:
         #. Lists
+        #. bool
         """
 
         #check type
@@ -160,11 +180,13 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
             row = index.row()
             col = index.column()
 
-            #save painter
-            painter.save()
+            
 
             #list
             if(type(data) is list):
+
+                #save painter
+                painter.save()
                 
                 #value_string
                 value_string = ''
@@ -182,15 +204,49 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
                 #draw
                 painter.drawText(option.rect, QtCore.Qt.AlignLeft, value_string)
 
+                #restore painter
+                painter.restore()
+
+
+            #bool
+            elif(type(data) is bool):
+
+                #save painter
+                painter.save()
+
+                #width, height, center
+                option_rect = option.rect
+                width = option_rect.width()
+                height = option_rect.height()
+                center = option_rect.center()
+
+                #margin
+                margin = 5
+
+                #pxm_bool
+                if (data):
+                    pxm_bool = self.pxm_bool_true.scaledToHeight(height - (margin * 2))
+                else:
+                    pxm_bool = self.pxm_bool_false.scaledToHeight(height - (margin * 2))
+
+                #correct center to accomodate image in the center
+                center.setX(center.x() - (pxm_bool.width() / 2))
+                center.setY(center.y() - (pxm_bool.height() / 2))
+
+                #draw pixmap
+                painter.drawPixmap(center, pxm_bool)
+
+                #restore painter
+                painter.restore()
+
+            
             #other type
             else:
                 
                 #superclass paint
                 self.superclass.paint(painter, option, index)
 
-            #restore painter
-            painter.restore()
-
+            
         #not valid invoke super class
         else:
             #superclass paint

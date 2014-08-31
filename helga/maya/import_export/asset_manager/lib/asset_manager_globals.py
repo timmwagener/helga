@@ -82,6 +82,9 @@ ICON_PROP = os.path.join(ICONS_PATH, 'icn_prop.png').replace('\\', '/')
 ICON_SHOT = os.path.join(ICONS_PATH, 'icn_shot.png').replace('\\', '/')
 ICON_UPDATE = os.path.join(ICONS_PATH, 'icn_update.png').replace('\\', '/')
 ICON_DOCS = os.path.join(ICONS_PATH, 'icn_docs.png').replace('\\', '/')
+ICON_TRUE = os.path.join(ICONS_PATH, 'icn_true.png').replace('\\', '/')
+ICON_FALSE = os.path.join(ICONS_PATH, 'icn_false.png').replace('\\', '/')
+
 
 #Text
 SHOT_METADATA_EXPLANATION_HEADER = 'Shot Metadata'

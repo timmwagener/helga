@@ -470,7 +470,7 @@ ShotMetadataContextMenu::item:selected { background-color: %(bright_orange_trans
 \
 /* PropMetadataView */\
 PropMetadataView { background-color: %(grey)s; \
-                    selection-background-color: %(bright_blue)s;\
+                    selection-background-color: %(bright_blue)s; \
                     border-left: none; \
                     border-top: none; \
                     border-bottom: none; \
@@ -609,7 +609,7 @@ QMenu#PropMetadataContextMenu_mnu_selection::item:selected { background-color: %
 \
 /* CharMetadataView */\
 CharMetadataView { background-color: %(grey)s; \
-                    selection-background-color: %(bright_green)s;\
+                    selection-background-color: %(dark_green)s; \
                     border-left: none; \
                     border-top: none; \
                     border-bottom: none; \
@@ -1096,6 +1096,59 @@ QCheckBox#chkbx_remember_choice::indicator:checked { background: %(bright_grey)s
 QCheckBox#chkbx_remember_choice::indicator:pressed { background: %(dark_orange)s; \
                                                         color: %(bright_grey)s; \
                                                         border: 1px solid %(bright_orange)s; \
+} \
+\
+\
+\
+\
+\
+\
+/* TableViewEditorBool */\
+/* Below are the stylesheets for the children of this widget. */\
+\
+\
+/* TableViewEditorBool */\
+TableViewEditorBool { background-color: %(dark_grey)s; \
+                        border-left: none; \
+                        border-top: none; \
+                        border-bottom: none; \
+                        border-right: none; \
+} \
+\
+\
+/* QPushButton - btn_true */\
+QPushButton#TableViewEditorBool_btn_true { background-color: transparent; \
+                                            border: none; \
+} \
+\
+\
+/* QPushButton - btn_true - hover */\
+QPushButton#TableViewEditorBool_btn_true:hover { background-color: %(grey)s; \
+                                                    border: none; \
+} \
+\
+\
+/* QPushButton - btn_true - pressed */\
+QPushButton#TableViewEditorBool_btn_true:pressed { background-color: %(grey)s; \
+                                                    border: none; \
+} \
+\
+\
+/* QPushButton - btn_false */\
+QPushButton#TableViewEditorBool_btn_false { background-color: transparent; \
+                                            border: none; \
+} \
+\
+\
+/* QPushButton - btn_false - hover */\
+QPushButton#TableViewEditorBool_btn_false:hover { background-color: %(grey)s; \
+                                                    border: none; \
+} \
+\
+\
+/* QPushButton - btn_false - pressed */\
+QPushButton#TableViewEditorBool_btn_false:pressed { background-color: %(grey)s; \
+                                                    border: none; \
 } \
 \
 \

@@ -360,11 +360,11 @@ class CharMetadataContextMenu(QtGui.QMenu):
         self.addMenu(self.mnu_selection)
         
         #actn_set_selection_true
-        self.actn_set_selection_true = QtGui.QAction('Set selection true', self)
+        self.actn_set_selection_true = QtGui.QAction('Set true', self)
         self.mnu_selection.addAction(self.actn_set_selection_true)
 
         #actn_set_selection_false
-        self.actn_set_selection_false = QtGui.QAction('Set selection false', self)
+        self.actn_set_selection_false = QtGui.QAction('Set false', self)
         self.mnu_selection.addAction(self.actn_set_selection_false)
 
         

@@ -728,7 +728,14 @@ class AssetManager(form_class, base_class):
         #acn_hide_export_shell
         self.acn_hide_export_shell.toggled.connect(self.set_hide_export_shell)
         #acn_toggle_column_alembic_path
-        self.acn_toggle_column_alembic_path.triggered.connect(functools.partial(self.shot_metadata_view.toggle_column_with_header_name, 'Alembic Path'))
+        self.acn_toggle_column_alembic_path.triggered.connect(functools.partial(self.shot_metadata_view.view_functionality.toggle_column_with_header_name, 
+                                                                                'Alembic Path'))
+        #acn_toggle_column_export_proxy_for_char_view
+        self.acn_toggle_column_export_proxy_for_char_view.triggered.connect(functools.partial(self.char_metadata_view.view_functionality.toggle_column_with_header_name, 
+                                                                                                'ExportProxy'))
+        #acn_toggle_column_export_locator_for_char_view
+        self.acn_toggle_column_export_locator_for_char_view.triggered.connect(functools.partial(self.char_metadata_view.view_functionality.toggle_column_with_header_name, 
+                                                                                                'ExportLocator'))
 
     
     def style_ui(self):
@@ -1253,7 +1260,7 @@ class AssetManager(form_class, base_class):
         #hide vertical header
         self.shot_metadata_view.verticalHeader().hide()
         #hide alembic_path column
-        self.shot_metadata_view.hide_column_with_header_name('Alembic Path', True)
+        self.shot_metadata_view.view_functionality.hide_column_with_header_name('Alembic Path', True)
         
     
     def display_shot_metadata_context_menu(self, pos):
@@ -1284,8 +1291,6 @@ class AssetManager(form_class, base_class):
         self.prop_metadata_view.setObjectName('prop_metadata_view')
         self.prop_metadata_view.horizontalHeader().setObjectName('prop_metadata_view_hor_header')
         self.prop_metadata_view.verticalHeader().setObjectName('prop_metadata_view_ver_header')
-        #hide vertical header
-        self.prop_metadata_view.verticalHeader().hide()
         #context menu
         self.prop_metadata_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         #add to ui
@@ -1308,6 +1313,12 @@ class AssetManager(form_class, base_class):
         #prop_metadata_selection_model
         self.prop_metadata_selection_model = QtGui.QItemSelectionModel(self.prop_metadata_model)
         self.prop_metadata_view.setSelectionModel(self.prop_metadata_selection_model)
+
+
+        #After everything is set, hide items
+        
+        #hide vertical header
+        self.prop_metadata_view.verticalHeader().hide()
 
 
     def display_prop_metadata_context_menu(self, pos):
@@ -1338,8 +1349,6 @@ class AssetManager(form_class, base_class):
         self.char_metadata_view.setObjectName('char_metadata_view')
         self.char_metadata_view.horizontalHeader().setObjectName('char_metadata_view_hor_header')
         self.char_metadata_view.verticalHeader().setObjectName('char_metadata_view_ver_header')
-        #hide vertical header
-        self.char_metadata_view.verticalHeader().hide()
         #context menu
         self.char_metadata_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         #add to ui
@@ -1362,6 +1371,16 @@ class AssetManager(form_class, base_class):
         #char_metadata_selection_model
         self.char_metadata_selection_model = QtGui.QItemSelectionModel(self.char_metadata_model)
         self.char_metadata_view.setSelectionModel(self.char_metadata_selection_model)
+
+
+        #After everything is set, hide items
+        
+        #hide vertical header
+        self.char_metadata_view.verticalHeader().hide()
+        #hide ExportProxy column
+        self.char_metadata_view.view_functionality.hide_column_with_header_name('ExportProxy', True)
+        #hide ExportLocator column
+        self.char_metadata_view.view_functionality.hide_column_with_header_name('ExportLocator', True)
 
 
     def display_char_metadata_context_menu(self, pos):
@@ -1720,6 +1739,43 @@ class AssetManager(form_class, base_class):
         menubar.addMenu(self.mnu_gui)
 
 
+        #shot_metatada_view
+        #------------------------------------------------------------------
+        
+        #mnu_shot_metatada_view
+        self.mnu_shot_metatada_view = QtGui.QMenu('Shot metadata view', parent = self)
+        self.mnu_shot_metatada_view.setObjectName('mnu_shot_metatada_view')
+        self.mnu_gui.addMenu(self.mnu_shot_metatada_view)
+
+        #acn_toggle_column_alembic_path
+        self.acn_toggle_column_alembic_path = QtGui.QAction('Toggle column Alembic Path', self)
+        self.acn_toggle_column_alembic_path.setObjectName('acn_toggle_column_alembic_path')
+        self.mnu_shot_metatada_view.addAction(self.acn_toggle_column_alembic_path)
+
+
+        #char_metatada_view
+        #------------------------------------------------------------------
+        
+        #mnu_char_metatada_view
+        self.mnu_char_metatada_view = QtGui.QMenu('Char metadata view', parent = self)
+        self.mnu_char_metatada_view.setObjectName('mnu_char_metatada_view')
+        self.mnu_gui.addMenu(self.mnu_char_metatada_view)
+
+        #acn_toggle_column_export_proxy_for_char_view
+        self.acn_toggle_column_export_proxy_for_char_view = QtGui.QAction('Toggle column export proxy', self)
+        self.acn_toggle_column_export_proxy_for_char_view.setObjectName('acn_toggle_column_export_proxy_for_char_view')
+        self.mnu_char_metatada_view.addAction(self.acn_toggle_column_export_proxy_for_char_view)
+
+        #acn_toggle_column_export_locator_for_char_view
+        self.acn_toggle_column_export_locator_for_char_view = QtGui.QAction('Toggle column export locator', self)
+        self.acn_toggle_column_export_locator_for_char_view.setObjectName('acn_toggle_column_export_locator_for_char_view')
+        self.mnu_char_metatada_view.addAction(self.acn_toggle_column_export_locator_for_char_view)
+
+
+        #separator
+        self.mnu_gui.addSeparator()
+
+
         #acn_progressbar_test_run
         self.acn_progressbar_test_run = QtGui.QAction('Progressbar test run', self)
         self.acn_progressbar_test_run.setObjectName('acn_progressbar_test_run')
@@ -1732,10 +1788,7 @@ class AssetManager(form_class, base_class):
         self.acn_hide_export_shell.setChecked(self.hide_export_shell)
         self.mnu_gui.addAction(self.acn_hide_export_shell)
 
-        #acn_toggle_column_alembic_path
-        self.acn_toggle_column_alembic_path = QtGui.QAction('Toggle column Alembic Path', self)
-        self.acn_toggle_column_alembic_path.setObjectName('acn_toggle_column_alembic_path')
-        self.mnu_gui.addAction(self.acn_toggle_column_alembic_path)
+        
 
 
     def setup_dev_menu_alembic(self, menubar):

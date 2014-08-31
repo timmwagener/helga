@@ -22,6 +22,22 @@ from PySide import QtCore
 
 
 
+#Import variable
+do_reload = True
+
+
+#asset_manager
+
+#lib.mvc
+
+#asset_manager_view_functionality
+from lib.mvc import asset_manager_view_functionality
+if(do_reload):reload(asset_manager_view_functionality)
+
+
+
+
+
 
 #PropMetadataView class
 #------------------------------------------------------------------
@@ -55,6 +71,8 @@ class PropMetadataView(QtGui.QTableView):
         #instance variables
         #------------------------------------------------------------------
 
+        #view_functionality
+        self.view_functionality = asset_manager_view_functionality.AssetManagerViewFunctionality(view = self)
         
         
         #logger

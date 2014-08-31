@@ -294,6 +294,50 @@ QMenu#mnu_gui::item:selected { background: transparent;\
 } \
 \
 \
+/* QMenu - mnu_shot_metatada_view */\
+QMenu#mnu_shot_metatada_view { background-color: %(dark_grey)s;\
+                                margin-left: 8; \
+                                margin-right: 8; \
+                                border-left: none; \
+                                border-right: none; \
+                                border-bottom: none; \
+                                border-top: none; \
+} \
+\
+\
+/* QMenu - mnu_shot_metatada_view - item */\
+QMenu#mnu_shot_metatada_view::item { background: transparent;\
+} \
+\
+\
+/* QMenu - mnu_shot_metatada_view - item - selected */\
+QMenu#mnu_shot_metatada_view::item:selected { background: transparent;\
+                                                color: %(dark_orange)s;\
+} \
+\
+\
+/* QMenu - mnu_char_metatada_view */\
+QMenu#mnu_char_metatada_view { background-color: %(dark_grey)s;\
+                                margin-left: 8; \
+                                margin-right: 8; \
+                                border-left: none; \
+                                border-right: none; \
+                                border-bottom: none; \
+                                border-top: none; \
+} \
+\
+\
+/* QMenu - mnu_char_metatada_view - item */\
+QMenu#mnu_char_metatada_view::item { background: transparent;\
+} \
+\
+\
+/* QMenu - mnu_char_metatada_view - item - selected */\
+QMenu#mnu_char_metatada_view::item:selected { background: transparent;\
+                                                color: %(dark_orange)s;\
+} \
+\
+\
 /* QMenu - mnu_alembic */\
 QMenu#mnu_alembic { background-color: %(dark_grey)s;\
                     margin-left: 8; \

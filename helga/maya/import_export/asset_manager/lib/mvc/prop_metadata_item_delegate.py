@@ -36,7 +36,9 @@ do_reload = True
 from lib import asset_manager_globals
 if(do_reload):reload(asset_manager_globals)
 
-
+#table_view_editor_bool
+from lib.mvc import table_view_editor_bool
+if(do_reload):reload(table_view_editor_bool)
 
 
 
@@ -271,11 +273,31 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
         row = index.row()
         col = index.column()
 
-        #column asset_name
-        if(col == 1):
+        #column export proxy
+        if(col == 2):
 
-            #evaluate in superclass
-            return self.superclass.createEditor(parent, option, index)
+            #bool_editor
+            bool_editor = table_view_editor_bool.TableViewEditorBool(parent = parent)
+            
+            return bool_editor
+
+
+        #column export rendergeo
+        elif(col == 3):
+
+            #bool_editor
+            bool_editor = table_view_editor_bool.TableViewEditorBool(parent = parent)
+            
+            return bool_editor
+
+
+        #column export locator
+        elif(col == 4):
+
+            #bool_editor
+            bool_editor = table_view_editor_bool.TableViewEditorBool(parent = parent)
+            
+            return bool_editor
 
 
         #other columns
@@ -306,11 +328,46 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
         mouse_pos = QtGui.QCursor.pos()
         
 
-        #column asset_name
-        if(col == 1):
+        #column export proxy
+        if(col == 2):
 
-            #evaluate in superclass
-            return self.superclass.updateEditorGeometry(editor, option, index)
+            #height
+            height = option.rect.height()
+            #set height
+            option.rect.setHeight(height * 2)
+
+            #editor geometry
+            editor.setGeometry(option.rect)
+            #move
+            editor.move(mouse_pos)
+
+
+        #column export rendergeo
+        elif(col == 3):
+
+            #height
+            height = option.rect.height()
+            #set height
+            option.rect.setHeight(height * 2)
+
+            #editor geometry
+            editor.setGeometry(option.rect)
+            #move
+            editor.move(mouse_pos)
+
+
+        #column export locator
+        elif(col == 4):
+
+            #height
+            height = option.rect.height()
+            #set height
+            option.rect.setHeight(height * 2)
+
+            #editor geometry
+            editor.setGeometry(option.rect)
+            #move
+            editor.move(mouse_pos)
 
 
         #other columns
@@ -337,12 +394,32 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
         row = index.row()
         col = index.column()
 
-        #column asset_name
-        if(col == 1):
+        
+        #column export proxy
+        if(col == 2):
 
             try:
-                #evaluate in superclass
-                self.superclass.setEditorData(editor, index)
+                editor.set_value(index.model().data(index))
+                
+            except:
+                pass
+
+
+        #column export rendergeo
+        elif(col == 3):
+
+            try:
+                editor.set_value(index.model().data(index))
+                
+            except:
+                pass
+
+
+        #column export locator
+        elif(col == 4):
+
+            try:
+                editor.set_value(index.model().data(index))
                 
             except:
                 pass
@@ -374,11 +451,23 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
         row = index.row()
         col = index.column()
 
-        #column asset_name
-        if(col == 1):
+        
+        #column export proxy
+        if(col == 2):
 
-            #evaluate in superclass
-            self.superclass.setModelData(editor, model, index)
+            model.setData(index, editor.get_value())
+
+
+        #column export rendergeo
+        elif(col == 3):
+
+            model.setData(index, editor.get_value())
+
+
+        #column export locator
+        elif(col == 4):
+
+            model.setData(index, editor.get_value())
 
 
         #other columns
@@ -386,4 +475,3 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
             #evaluate in superclass
             self.superclass.setModelData(editor, model, index)
 
-        

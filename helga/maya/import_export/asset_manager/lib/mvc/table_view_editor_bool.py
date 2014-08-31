@@ -233,7 +233,16 @@ class TableViewEditorBool(QtGui.QWidget):
         Set self.value
         """
 
+        #set value
         self.value = value
+
+        #set buttons
+        if (self.value):
+            self.btn_true.setDown(True)
+            self.btn_false.setDown(False)
+        else:
+            self.btn_true.setDown(False)
+            self.btn_false.setDown(True)
 
 
     def get_value(self):

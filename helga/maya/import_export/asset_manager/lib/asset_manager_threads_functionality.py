@@ -54,7 +54,7 @@ class WorkerThread(QtCore.QThread):
                     queue, 
                     logging_level = logging.DEBUG,
                     thread_id = 0,
-                    interval = 2000):
+                    thread_interval = 2000):
         """
         WorkerThread thread that watches the queue from within infinite
         run method call. run() is the only method thats actually
@@ -74,8 +74,8 @@ class WorkerThread(QtCore.QThread):
         #queue
         self.queue = queue
 
-        #interval
-        self.interval = interval
+        #thread_interval
+        self.thread_interval = thread_interval #ONLY IMPORTANT FOR INITIAL STARTUP INTERVAL. NOT USED AGAIN
 
         #thread_id
         self.thread_id = thread_id
@@ -83,8 +83,9 @@ class WorkerThread(QtCore.QThread):
         #first_execution
         self.first_execution = True
 
-        #quit_threads
-        self.quit_threads = False
+        #timer_created
+        self.timer_created = False
+
 
 
         #logger
@@ -135,10 +136,13 @@ class WorkerThread(QtCore.QThread):
         self.thread_timer = QtCore.QTimer()
         self.thread_timer.setObjectName('thread_timer')
         self.thread_timer.timeout.connect(self.restart)
-        self.thread_timer.start(self.interval)
+        self.thread_timer.start(self.thread_interval)
 
         #log
         self.logger.debug('thread_timer created')
+
+        #set timer_created
+        self.timer_created = True
 
 
 
@@ -238,9 +242,8 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
 
     
     def __init__(self,
-                    max_threads = 32,
                     logging_level = logging.DEBUG,
-                    max_thread_protection = True,
+                    set_thread_count_to_half_of_max = True,
                     queue = None):
         """
         Customize instance.
@@ -265,13 +268,16 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         #------------------------------------------------------------------
 
         #max_threads
-        self.max_threads = max_threads
-        if (max_thread_protection):
-            if(self.max_threads > multiprocessing.cpu_count()):
-                self.max_threads = multiprocessing.cpu_count()
+        self.max_threads = multiprocessing.cpu_count()
         
         #thread_count
         self.thread_count = self.max_threads
+        #set_thread_count_to_half_of_max
+        if (set_thread_count_to_half_of_max and 
+            self.max_threads > 1):
+            
+            #set thread count to half of max
+            self.thread_count = int(self.max_threads / 2)
 
         #thread_list
         self.thread_list = []
@@ -368,7 +374,7 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
     #Methods
     #------------------------------------------------------------------
 
-    def setup_threads(self):
+    def setup_threads(self, thread_interval = 2000):
         """
         Start daemon threads.
         """
@@ -377,7 +383,9 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         for index in range(self.max_threads):
             
             #worker_thread
-            worker_thread = WorkerThread(self.queue, thread_id = index)
+            worker_thread = WorkerThread(self.queue, 
+                                            thread_id = index,
+                                            thread_interval = thread_interval)
             #append worker_thread
             self.thread_list.append(worker_thread)
             #start worker_thread
@@ -385,6 +393,21 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
 
             #log
             self.logger.debug('Started thread {0}'.format(index))
+
+
+        #wait till all finished first time
+        while (True):
+            
+            #check if all timer created
+            if (all([thread.timer_created for thread in self.thread_list])):
+
+                break
+
+            #process events
+            QtCore.QCoreApplication.processEvents()
+
+        #update threads to set active threads to thread_count
+        self.do_update_threads.emit()
 
         
     @QtCore.Slot()

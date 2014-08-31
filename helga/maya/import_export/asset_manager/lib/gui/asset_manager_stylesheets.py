@@ -192,8 +192,8 @@ QLineEdit { border: none;\
 \
 \
 \
-/* QMenuBar - mnubar_dev */\
-QMenuBar#mnubar_dev { background-color: transparent;\
+/* QMenuBar - mnubar_menu */\
+QMenuBar#mnubar_menu { background-color: transparent;\
                         border-left: none; \
                         border-right: none; \
                         border-bottom: none; \
@@ -201,8 +201,8 @@ QMenuBar#mnubar_dev { background-color: transparent;\
 } \
 \
 \
-/* QMenuBar - mnubar_dev - item */\
-QMenuBar#mnubar_dev::item { background: transparent;\
+/* QMenuBar - mnubar_menu - item */\
+QMenuBar#mnubar_menu::item { background: transparent;\
                             margin-left: 8; \
                             margin-right: 8; \
                             border-left: none; \
@@ -212,8 +212,8 @@ QMenuBar#mnubar_dev::item { background: transparent;\
 } \
 \
 \
-/* QMenuBar - mnubar_dev - item - selected */\
-QMenuBar#mnubar_dev::item:selected { background: transparent;\
+/* QMenuBar - mnubar_menu - item - selected */\
+QMenuBar#mnubar_menu::item:selected { background: transparent;\
                                         color: %(bright_orange)s; \
                                         border-left: none; \
                                         border-right: none; \
@@ -222,8 +222,8 @@ QMenuBar#mnubar_dev::item:selected { background: transparent;\
 } \
 \
 \
-/* QMenuBar - mnubar_dev - item - pressed */\
-QMenuBar#mnubar_dev::item:pressed { background: transparent;\
+/* QMenuBar - mnubar_menu - item - pressed */\
+QMenuBar#mnubar_menu::item:pressed { background: transparent;\
                                         color: %(dark_orange)s; \
                                         border-left: none; \
                                         border-right: none; \

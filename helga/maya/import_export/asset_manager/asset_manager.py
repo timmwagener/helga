@@ -115,6 +115,10 @@ if(do_reload):reload(asset_manager_alembic_functionality)
 from lib import asset_manager_checks
 if(do_reload):reload(asset_manager_checks)
 
+#asset_manager_menu
+from lib import asset_manager_menu
+if(do_reload):reload(asset_manager_menu)
+
 #lib.gui
 
 #asset_manager_button
@@ -455,7 +459,8 @@ class AssetManager(form_class, base_class):
                 logging_level = logging.DEBUG,
                 auto_update_models = True,
                 dock_it = True,
-                dev = True,
+                show_menu = True,
+                thread_interval = 2000,
                 export_thread_timeout = 300,
                 hide_export_shell = True,
                 parent = global_functions.get_main_window()):
@@ -479,6 +484,7 @@ class AssetManager(form_class, base_class):
         self.title = self.title_name +' ' + str(self.version)
         self.icon_path = os.path.join(ICONS_PATH, 'icon_asset_manager.png')
 
+        
         #maya_functionality
         self.maya_functionality = asset_manager_functionality.AssetManagerFunctionality()
         #threads_functionality
@@ -488,6 +494,7 @@ class AssetManager(form_class, base_class):
         #checks_functionality
         self.checks_functionality = asset_manager_checks.AssetManagerChecks()
 
+        
         #auto_update_models
         self.auto_update_models = auto_update_models
         #auto_update_timer
@@ -496,8 +503,8 @@ class AssetManager(form_class, base_class):
         #dock_it
         self.dock_it = dock_it
 
-        #dev
-        self.dev = dev
+        #show_menu
+        self.show_menu = show_menu
 
         #shot_metadata_list
         self.shot_metadata_list = []
@@ -508,6 +515,9 @@ class AssetManager(form_class, base_class):
 
         #metadata_mode
         self.metadata_mode = 'shot'
+
+        #thread_interval
+        self.thread_interval = thread_interval
 
         #export_thread_timeout
         self.export_thread_timeout = export_thread_timeout
@@ -605,9 +615,9 @@ class AssetManager(form_class, base_class):
         #setup_mvc
         self.setup_mvc()
 
-        #setup_dev_mode
-        if(self.dev):
-            self.setup_dev_mode()
+        #show_menu
+        if(self.show_menu):
+            asset_manager_menu.setup_menu(self, parent = self.wdgt_menu)
 
         #auto_update_models
         if(self.auto_update_models):
@@ -631,11 +641,9 @@ class AssetManager(form_class, base_class):
         #connect_widgets
         self.connect_widgets()
 
-        #dev
-        if (self.dev):
-
-            #connect_dev
-            self.connect_dev()
+        #show_menu
+        if (self.show_menu):
+            asset_manager_menu.connect_menu(self)
 
     
     def connect_signals(self):
@@ -697,45 +705,6 @@ class AssetManager(form_class, base_class):
         self.prop_metadata_view.customContextMenuRequested.connect(self.display_prop_metadata_context_menu)
         #char_metadata_view
         self.char_metadata_view.customContextMenuRequested.connect(self.display_char_metadata_context_menu)
-
-    
-    def connect_dev(self):
-        """
-        Connect everything exclusive to dev mode.
-        """
-
-        
-        #acn_start_threads
-        self.acn_start_threads.triggered.connect(self.threads_functionality.start_threads)
-        #acn_stop_threads
-        self.acn_stop_threads.triggered.connect(self.threads_functionality.stop_threads)
-        #acn_print_queue_size
-        self.acn_print_queue_size.triggered.connect(self.threads_functionality.print_queue_size)
-        #acn_reset_queue
-        self.acn_reset_queue.triggered.connect(self.threads_functionality.reset_queue)
-        #acn_add_tasks_to_queue
-        self.acn_add_tasks_to_queue.triggered.connect(self.threads_functionality.test_setup)
-
-        #acn_set_thread_timer_interval
-        self.acn_set_thread_timer_interval.value_changed.connect(self.threads_functionality.set_interval)
-        #acn_set_export_thread_timeout
-        self.acn_set_export_thread_timeout.value_changed.connect(self.set_export_thread_timeout)
-        #acn_set_thread_count
-        self.acn_set_thread_count.value_changed.connect(self.threads_functionality.set_thread_count)
-
-        #acn_progressbar_test_run
-        self.acn_progressbar_test_run.triggered.connect(functools.partial(self.progressbar_test_run, 0, 200))
-        #acn_hide_export_shell
-        self.acn_hide_export_shell.toggled.connect(self.set_hide_export_shell)
-        #acn_toggle_column_alembic_path
-        self.acn_toggle_column_alembic_path.triggered.connect(functools.partial(self.shot_metadata_view.view_functionality.toggle_column_with_header_name, 
-                                                                                'Alembic Path'))
-        #acn_toggle_column_export_proxy_for_char_view
-        self.acn_toggle_column_export_proxy_for_char_view.triggered.connect(functools.partial(self.char_metadata_view.view_functionality.toggle_column_with_header_name, 
-                                                                                                'ExportProxy'))
-        #acn_toggle_column_export_locator_for_char_view
-        self.acn_toggle_column_export_locator_for_char_view.triggered.connect(functools.partial(self.char_metadata_view.view_functionality.toggle_column_with_header_name, 
-                                                                                                'ExportLocator'))
 
     
     def style_ui(self):
@@ -1602,507 +1571,7 @@ class AssetManager(form_class, base_class):
 
     
 
-    #Dev mode
-    #------------------------------------------------------------------
     
-    def setup_dev_mode(self):
-        """
-        Setup dev mode to expose test functionality for devs.
-        """
-
-        #setup_dev_menu
-        self.setup_dev_menu()
-
-    
-    def setup_dev_menu(self):
-        """
-        Setup dev menu.
-        """
-
-        #mnubar_dev
-        self.mnubar_dev = QtGui.QMenuBar(parent = self)
-        self.mnubar_dev.setObjectName('mnubar_dev')
-        self.lyt_dev.addWidget(self.mnubar_dev)
-
-        
-        #setup_dev_menu_threads
-        self.setup_dev_menu_threads(self.mnubar_dev)
-
-        #setup_dev_menu_gui
-        self.setup_dev_menu_gui(self.mnubar_dev)
-
-        #setup_dev_menu_alembic
-        self.setup_dev_menu_alembic(self.mnubar_dev)
-
-        #setup_dev_menu_assets
-        self.setup_dev_menu_assets(self.mnubar_dev)
-
-    
-    def setup_dev_menu_threads(self, menubar):
-        """
-        Setup dev menu threads.
-        """
-
-        #Threads
-        #------------------------------------------------------------------
-
-        #mnu_threads
-        self.mnu_threads = QtGui.QMenu('Threads', parent = self)
-        self.mnu_threads.setObjectName('mnu_threads')
-        menubar.addMenu(self.mnu_threads)
-
-
-        #acn_start_threads
-        self.acn_start_threads = QtGui.QAction('Re/Start threads', self)
-        self.acn_start_threads.setObjectName('acn_start_threads')
-        self.mnu_threads.addAction(self.acn_start_threads)
-
-        #acn_stop_threads
-        self.acn_stop_threads = QtGui.QAction('Stop threads', self)
-        self.acn_stop_threads.setObjectName('acn_stop_threads')
-        self.mnu_threads.addAction(self.acn_stop_threads)
-
-
-        #separator
-        self.mnu_threads.addSeparator()
-
-
-        #acn_print_queue_size
-        self.acn_print_queue_size = QtGui.QAction('Queue size', self)
-        self.acn_print_queue_size.setObjectName('acn_print_queue_size')
-        self.mnu_threads.addAction(self.acn_print_queue_size)
-
-        #acn_reset_queue
-        self.acn_reset_queue = QtGui.QAction('Queue reset', self)
-        self.acn_reset_queue.setObjectName('acn_reset_queue')
-        self.mnu_threads.addAction(self.acn_reset_queue)
-
-        #acn_add_tasks_to_queue
-        self.acn_add_tasks_to_queue = QtGui.QAction('Add tasks to queue', self)
-        self.acn_add_tasks_to_queue.setObjectName('acn_add_tasks_to_queue')
-        self.mnu_threads.addAction(self.acn_add_tasks_to_queue)
-
-        
-        #separator
-        self.mnu_threads.addSeparator()
-        
-        
-        #acn_set_thread_timer_interval
-        self.acn_set_thread_timer_interval = asset_manager_slider_action.AssetManagerSliderAction(minimum = 1, 
-                                                                                                    maximum = 10000,
-                                                                                                    initial_value = 2000,
-                                                                                                    text = 'Set thread interval:',
-                                                                                                    parent = self)
-        self.acn_set_thread_timer_interval.setObjectName('acn_set_thread_timer_interval')
-        self.mnu_threads.addAction(self.acn_set_thread_timer_interval)
-
-
-        #separator
-        self.mnu_threads.addSeparator()
-        
-        
-        #acn_set_export_thread_timeout
-        self.acn_set_export_thread_timeout = asset_manager_slider_action.AssetManagerSliderAction(minimum = 1, 
-                                                                                                    maximum = self.export_thread_timeout * 4,
-                                                                                                    initial_value = self.export_thread_timeout,
-                                                                                                    text = 'Set export thread timeout:',
-                                                                                                    parent = self)
-        self.acn_set_export_thread_timeout.setObjectName('acn_set_export_thread_timeout')
-        self.mnu_threads.addAction(self.acn_set_export_thread_timeout)
-
-
-        #separator
-        self.mnu_threads.addSeparator()
-
-
-        #acn_set_thread_count
-        max_threads = self.threads_functionality.get_max_threads()
-        self.acn_set_thread_count = asset_manager_slider_action.AssetManagerSliderAction(maximum = max_threads,
-                                                                                            initial_value = max_threads,
-                                                                                            text = 'Set active thread count:',
-                                                                                            parent = self)
-        self.acn_set_thread_count.setObjectName('acn_set_thread_count')
-        self.mnu_threads.addAction(self.acn_set_thread_count)
-
-
-    def setup_dev_menu_gui(self, menubar):
-        """
-        Setup dev menu gui.
-        """
-
-        #GUI
-        #------------------------------------------------------------------
-
-        #mnu_gui
-        self.mnu_gui = QtGui.QMenu('GUI', parent = self)
-        self.mnu_gui.setObjectName('mnu_gui')
-        menubar.addMenu(self.mnu_gui)
-
-
-        #shot_metatada_view
-        #------------------------------------------------------------------
-        
-        #mnu_shot_metatada_view
-        self.mnu_shot_metatada_view = QtGui.QMenu('Shot metadata view', parent = self)
-        self.mnu_shot_metatada_view.setObjectName('mnu_shot_metatada_view')
-        self.mnu_gui.addMenu(self.mnu_shot_metatada_view)
-
-        #acn_toggle_column_alembic_path
-        self.acn_toggle_column_alembic_path = QtGui.QAction('Toggle column Alembic Path', self)
-        self.acn_toggle_column_alembic_path.setObjectName('acn_toggle_column_alembic_path')
-        self.mnu_shot_metatada_view.addAction(self.acn_toggle_column_alembic_path)
-
-
-        #char_metatada_view
-        #------------------------------------------------------------------
-        
-        #mnu_char_metatada_view
-        self.mnu_char_metatada_view = QtGui.QMenu('Char metadata view', parent = self)
-        self.mnu_char_metatada_view.setObjectName('mnu_char_metatada_view')
-        self.mnu_gui.addMenu(self.mnu_char_metatada_view)
-
-        #acn_toggle_column_export_proxy_for_char_view
-        self.acn_toggle_column_export_proxy_for_char_view = QtGui.QAction('Toggle column export proxy', self)
-        self.acn_toggle_column_export_proxy_for_char_view.setObjectName('acn_toggle_column_export_proxy_for_char_view')
-        self.mnu_char_metatada_view.addAction(self.acn_toggle_column_export_proxy_for_char_view)
-
-        #acn_toggle_column_export_locator_for_char_view
-        self.acn_toggle_column_export_locator_for_char_view = QtGui.QAction('Toggle column export locator', self)
-        self.acn_toggle_column_export_locator_for_char_view.setObjectName('acn_toggle_column_export_locator_for_char_view')
-        self.mnu_char_metatada_view.addAction(self.acn_toggle_column_export_locator_for_char_view)
-
-
-        #separator
-        self.mnu_gui.addSeparator()
-
-
-        #acn_progressbar_test_run
-        self.acn_progressbar_test_run = QtGui.QAction('Progressbar test run', self)
-        self.acn_progressbar_test_run.setObjectName('acn_progressbar_test_run')
-        self.mnu_gui.addAction(self.acn_progressbar_test_run)
-
-        #acn_hide_export_shell
-        self.acn_hide_export_shell = QtGui.QAction('Hide export shell', self)
-        self.acn_hide_export_shell.setObjectName('acn_hide_export_shell')
-        self.acn_hide_export_shell.setCheckable(True)
-        self.acn_hide_export_shell.setChecked(self.hide_export_shell)
-        self.mnu_gui.addAction(self.acn_hide_export_shell)
-
-        
-
-
-    def setup_dev_menu_alembic(self, menubar):
-        """
-        Setup dev menu alembic.
-        """
-
-        #Alembic
-        #------------------------------------------------------------------
-
-        #mnu_alembic
-        self.mnu_alembic = QtGui.QMenu('Alembic', parent = self)
-        self.mnu_alembic.setObjectName('mnu_alembic')
-        menubar.addMenu(self.mnu_alembic)
-
-        
-        #acn_set_help_enabled
-        self.acn_set_help_enabled = QtGui.QAction('help', self)
-        self.acn_set_help_enabled.setObjectName('acn_set_help_enabled')
-        self.acn_set_help_enabled.setCheckable(True)
-        self.acn_set_help_enabled.setChecked(self.alembic_functionality.get_help_enabled())
-        self.acn_set_help_enabled.toggled.connect(self.alembic_functionality.sgnl_set_help_enabled)
-        self.mnu_alembic.addAction(self.acn_set_help_enabled)
-
-        
-        #acn_set_dontSkipUnwrittenFrames_enabled
-        self.acn_set_dontSkipUnwrittenFrames_enabled = QtGui.QAction('dontSkipUnwrittenFrames', self)
-        self.acn_set_dontSkipUnwrittenFrames_enabled.setObjectName('acn_set_dontSkipUnwrittenFrames_enabled')
-        self.acn_set_dontSkipUnwrittenFrames_enabled.setCheckable(True)
-        self.acn_set_dontSkipUnwrittenFrames_enabled.setChecked(self.alembic_functionality.get_dontSkipUnwrittenFrames_enabled())
-        self.acn_set_dontSkipUnwrittenFrames_enabled.toggled.connect(self.alembic_functionality.sgnl_set_dontSkipUnwrittenFrames_enabled)
-        self.mnu_alembic.addAction(self.acn_set_dontSkipUnwrittenFrames_enabled)
-
-        
-        #acn_set_verbose_enabled
-        self.acn_set_verbose_enabled = QtGui.QAction('verbose', self)
-        self.acn_set_verbose_enabled.setObjectName('acn_set_verbose_enabled')
-        self.acn_set_verbose_enabled.setCheckable(True)
-        self.acn_set_verbose_enabled.setChecked(self.alembic_functionality.get_verbose_enabled())
-        self.acn_set_verbose_enabled.toggled.connect(self.alembic_functionality.sgnl_set_verbose_enabled)
-        self.mnu_alembic.addAction(self.acn_set_verbose_enabled)
-
-
-        #acn_set_eulerFilter_enabled
-        self.acn_set_eulerFilter_enabled = QtGui.QAction('eulerFilter', self)
-        self.acn_set_eulerFilter_enabled.setObjectName('acn_set_eulerFilter_enabled')
-        self.acn_set_eulerFilter_enabled.setCheckable(True)
-        self.acn_set_eulerFilter_enabled.setChecked(self.alembic_functionality.get_eulerFilter_enabled())
-        self.acn_set_eulerFilter_enabled.toggled.connect(self.alembic_functionality.sgnl_set_eulerFilter_enabled)
-        self.mnu_alembic.addAction(self.acn_set_eulerFilter_enabled)
-
-
-        #acn_set_noNormals_enabled
-        self.acn_set_noNormals_enabled = QtGui.QAction('noNormals', self)
-        self.acn_set_noNormals_enabled.setObjectName('acn_set_noNormals_enabled')
-        self.acn_set_noNormals_enabled.setCheckable(True)
-        self.acn_set_noNormals_enabled.setChecked(self.alembic_functionality.get_noNormals_enabled())
-        self.acn_set_noNormals_enabled.toggled.connect(self.alembic_functionality.sgnl_set_noNormals_enabled)
-        self.mnu_alembic.addAction(self.acn_set_noNormals_enabled)
-
-
-        #acn_set_renderableOnly_enabled
-        self.acn_set_renderableOnly_enabled = QtGui.QAction('renderableOnly', self)
-        self.acn_set_renderableOnly_enabled.setObjectName('acn_set_renderableOnly_enabled')
-        self.acn_set_renderableOnly_enabled.setCheckable(True)
-        self.acn_set_renderableOnly_enabled.setChecked(self.alembic_functionality.get_renderableOnly_enabled())
-        self.acn_set_renderableOnly_enabled.toggled.connect(self.alembic_functionality.sgnl_set_renderableOnly_enabled)
-        self.mnu_alembic.addAction(self.acn_set_renderableOnly_enabled)
-
-
-        #acn_set_selection_enabled
-        self.acn_set_selection_enabled = QtGui.QAction('selection', self)
-        self.acn_set_selection_enabled.setObjectName('acn_set_selection_enabled')
-        self.acn_set_selection_enabled.setCheckable(True)
-        self.acn_set_selection_enabled.setChecked(self.alembic_functionality.get_selection_enabled())
-        self.acn_set_selection_enabled.toggled.connect(self.alembic_functionality.sgnl_set_selection_enabled)
-        self.mnu_alembic.addAction(self.acn_set_selection_enabled)
-
-
-        #acn_set_stripNamespaces_enabled
-        self.acn_set_stripNamespaces_enabled = QtGui.QAction('stripNamespaces', self)
-        self.acn_set_stripNamespaces_enabled.setObjectName('acn_set_stripNamespaces_enabled')
-        self.acn_set_stripNamespaces_enabled.setCheckable(True)
-        self.acn_set_stripNamespaces_enabled.setChecked(self.alembic_functionality.get_stripNamespaces_enabled())
-        self.acn_set_stripNamespaces_enabled.toggled.connect(self.alembic_functionality.sgnl_set_stripNamespaces_enabled)
-        self.mnu_alembic.addAction(self.acn_set_stripNamespaces_enabled)
-
-
-        #acn_set_uvWrite_enabled
-        self.acn_set_uvWrite_enabled = QtGui.QAction('uvWrite', self)
-        self.acn_set_uvWrite_enabled.setObjectName('acn_set_uvWrite_enabled')
-        self.acn_set_uvWrite_enabled.setCheckable(True)
-        self.acn_set_uvWrite_enabled.setChecked(self.alembic_functionality.get_uvWrite_enabled())
-        self.acn_set_uvWrite_enabled.toggled.connect(self.alembic_functionality.sgnl_set_uvWrite_enabled)
-        self.mnu_alembic.addAction(self.acn_set_uvWrite_enabled)
-
-
-        #acn_set_writeColorSets_enabled
-        self.acn_set_writeColorSets_enabled = QtGui.QAction('writeColorSets', self)
-        self.acn_set_writeColorSets_enabled.setObjectName('acn_set_writeColorSets_enabled')
-        self.acn_set_writeColorSets_enabled.setCheckable(True)
-        self.acn_set_writeColorSets_enabled.setChecked(self.alembic_functionality.get_writeColorSets_enabled())
-        self.acn_set_writeColorSets_enabled.toggled.connect(self.alembic_functionality.sgnl_set_writeColorSets_enabled)
-        self.mnu_alembic.addAction(self.acn_set_writeColorSets_enabled)
-
-
-        #acn_set_writeFaceSets_enabled
-        self.acn_set_writeFaceSets_enabled = QtGui.QAction('writeFaceSets', self)
-        self.acn_set_writeFaceSets_enabled.setObjectName('acn_set_writeFaceSets_enabled')
-        self.acn_set_writeFaceSets_enabled.setCheckable(True)
-        self.acn_set_writeFaceSets_enabled.setChecked(self.alembic_functionality.get_writeFaceSets_enabled())
-        self.acn_set_writeFaceSets_enabled.toggled.connect(self.alembic_functionality.sgnl_set_writeFaceSets_enabled)
-        self.mnu_alembic.addAction(self.acn_set_writeFaceSets_enabled)
-
-
-        #acn_set_wholeFrameGeo_enabled
-        self.acn_set_wholeFrameGeo_enabled = QtGui.QAction('wholeFrameGeo', self)
-        self.acn_set_wholeFrameGeo_enabled.setObjectName('acn_set_wholeFrameGeo_enabled')
-        self.acn_set_wholeFrameGeo_enabled.setCheckable(True)
-        self.acn_set_wholeFrameGeo_enabled.setChecked(self.alembic_functionality.get_wholeFrameGeo_enabled())
-        self.acn_set_wholeFrameGeo_enabled.toggled.connect(self.alembic_functionality.sgnl_set_wholeFrameGeo_enabled)
-        self.mnu_alembic.addAction(self.acn_set_wholeFrameGeo_enabled)
-
-
-        #acn_set_worldSpace_enabled
-        self.acn_set_worldSpace_enabled = QtGui.QAction('worldSpace', self)
-        self.acn_set_worldSpace_enabled.setObjectName('acn_set_worldSpace_enabled')
-        self.acn_set_worldSpace_enabled.setCheckable(True)
-        self.acn_set_worldSpace_enabled.setChecked(self.alembic_functionality.get_worldSpace_enabled())
-        self.acn_set_worldSpace_enabled.toggled.connect(self.alembic_functionality.sgnl_set_worldSpace_enabled)
-        self.mnu_alembic.addAction(self.acn_set_worldSpace_enabled)
-
-
-        #acn_set_writeVisibility_enabled
-        self.acn_set_writeVisibility_enabled = QtGui.QAction('writeVisibility', self)
-        self.acn_set_writeVisibility_enabled.setObjectName('acn_set_writeVisibility_enabled')
-        self.acn_set_writeVisibility_enabled.setCheckable(True)
-        self.acn_set_writeVisibility_enabled.setChecked(self.alembic_functionality.get_writeVisibility_enabled())
-        self.acn_set_writeVisibility_enabled.toggled.connect(self.alembic_functionality.sgnl_set_writeVisibility_enabled)
-        self.mnu_alembic.addAction(self.acn_set_writeVisibility_enabled)
-
-
-        #separator
-        self.mnu_alembic.addSeparator()
-
-
-        #acn_set_step
-        self.acn_set_step = asset_manager_doublespinbox_checkable_action.AssetManagerDoubleSpinBoxCheckableAction(text = 'step',
-                                                                                                                    initial_state = self.alembic_functionality.get_step_enabled(),
-                                                                                                                    parent = self)
-        self.acn_set_step.setObjectName('acn_set_step')
-        self.acn_set_step.value_changed.connect(self.alembic_functionality.sgnl_set_step)
-        self.acn_set_step.state_changed.connect(self.alembic_functionality.sgnl_set_step_enabled)
-        self.mnu_alembic.addAction(self.acn_set_step)
-
-
-        #acn_set_frameRelativeSample
-        self.acn_set_frameRelativeSample = asset_manager_doublespinbox_checkable_action.AssetManagerDoubleSpinBoxCheckableAction(text = 'frameRelativeSample',
-                                                                                                                                initial_state = self.alembic_functionality.get_frameRelativeSample_enabled(),
-                                                                                                                                parent = self)
-        self.acn_set_frameRelativeSample.setObjectName('acn_set_frameRelativeSample')
-        self.acn_set_frameRelativeSample.value_changed.connect(self.alembic_functionality.sgnl_set_frameRelativeSample)
-        self.acn_set_frameRelativeSample.state_changed.connect(self.alembic_functionality.sgnl_set_frameRelativeSample_enabled)
-        self.mnu_alembic.addAction(self.acn_set_frameRelativeSample)
-
-
-        #acn_set_preRollStartFrame
-        self.acn_set_preRollStartFrame = asset_manager_doublespinbox_checkable_action.AssetManagerDoubleSpinBoxCheckableAction(text = 'preRollStartFrame',
-                                                                                                                                initial_state = self.alembic_functionality.get_preRollStartFrame_enabled(),
-                                                                                                                                initial_value = self.alembic_functionality.get_preRollStartFrame(),
-                                                                                                                                parent = self)
-        self.acn_set_preRollStartFrame.setObjectName('acn_set_preRollStartFrame')
-        self.acn_set_preRollStartFrame.value_changed.connect(self.alembic_functionality.sgnl_set_preRollStartFrame)
-        self.acn_set_preRollStartFrame.state_changed.connect(self.alembic_functionality.sgnl_set_preRollStartFrame_enabled)
-        self.mnu_alembic.addAction(self.acn_set_preRollStartFrame)
-
-
-        #separator
-        self.mnu_alembic.addSeparator()
-
-
-        #acn_set_attr
-        self.acn_set_attr = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(placeholder_text = 'attr',
-                                                                                                            initial_state = self.alembic_functionality.get_attr_enabled(),
-                                                                                                            parent = self)
-        self.acn_set_attr.setObjectName('acn_set_attr')
-        self.acn_set_attr.text_changed.connect(self.alembic_functionality.sgnl_set_attr)
-        self.acn_set_attr.state_changed.connect(self.alembic_functionality.sgnl_set_attr_enabled)
-        self.mnu_alembic.addAction(self.acn_set_attr)
-
-
-        #acn_set_attrPrefix
-        self.acn_set_attrPrefix = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(placeholder_text = 'attrPrefix',
-                                                                                                                text = self.alembic_functionality.get_attrPrefix(),
-                                                                                                                initial_state = self.alembic_functionality.get_attrPrefix_enabled(),
-                                                                                                                parent = self)
-        self.acn_set_attrPrefix.setObjectName('acn_set_attrPrefix')
-        self.acn_set_attrPrefix.text_changed.connect(self.alembic_functionality.sgnl_set_attrPrefix)
-        self.acn_set_attrPrefix.state_changed.connect(self.alembic_functionality.sgnl_set_attrPrefix_enabled)
-        self.mnu_alembic.addAction(self.acn_set_attrPrefix)
-
-
-        #acn_set_userAttr
-        self.acn_set_userAttr = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(placeholder_text = 'userAttr',
-                                                                                                                initial_state = self.alembic_functionality.get_userAttr_enabled(),
-                                                                                                                parent = self)
-        self.acn_set_userAttr.setObjectName('acn_set_userAttr')
-        self.acn_set_userAttr.text_changed.connect(self.alembic_functionality.sgnl_set_userAttr)
-        self.acn_set_userAttr.state_changed.connect(self.alembic_functionality.sgnl_set_userAttr_enabled)
-        self.mnu_alembic.addAction(self.acn_set_userAttr)
-
-
-        #acn_set_userAttrPrefix
-        self.acn_set_userAttrPrefix = asset_manager_line_edit_checkable_action.AssetManagerLineEditCheckableAction(placeholder_text = 'userAttrPrefix',
-                                                                                                                    initial_state = self.alembic_functionality.get_userAttrPrefix_enabled(),
-                                                                                                                    parent = self)
-        self.acn_set_userAttrPrefix.setObjectName('acn_set_userAttrPrefix')
-        self.acn_set_userAttrPrefix.text_changed.connect(self.alembic_functionality.sgnl_set_userAttrPrefix)
-        self.acn_set_userAttrPrefix.state_changed.connect(self.alembic_functionality.sgnl_set_userAttrPrefix_enabled)
-        self.mnu_alembic.addAction(self.acn_set_userAttrPrefix)
-
-
-        #separator
-        self.mnu_alembic.addSeparator()
-
-
-        #acn_print_export_command
-        self.acn_print_export_command = QtGui.QAction('Print .abc export command', self)
-        self.acn_print_export_command.setObjectName('acn_print_export_command')
-        self.acn_print_export_command.triggered.connect(functools.partial(self.export, dry_run = True))
-        self.mnu_alembic.addAction(self.acn_print_export_command)
-
-
-    def setup_dev_menu_assets(self, menubar):
-        """
-        Setup dev menu assets.
-        """
-
-        #Assets
-        #------------------------------------------------------------------
-
-        #mnu_assets
-        self.mnu_assets = QtGui.QMenu('Assets', parent = self)
-        self.mnu_assets.setObjectName('mnu_assets')
-        menubar.addMenu(self.mnu_assets)
-
-
-        #Attributes
-        #------------------------------------------------------------------
-
-        #mnu_attributes
-        self.mnu_attributes = QtGui.QMenu('Attributes', parent = self)
-        self.mnu_attributes.setObjectName('mnu_attributes')
-        self.mnu_assets.addMenu(self.mnu_attributes)
-
-
-        #acn_add_proxy_attributes
-        self.acn_add_proxy_attributes = QtGui.QAction('Add proxy attributes to selected geo', self)
-        self.acn_add_proxy_attributes.setObjectName('acn_add_proxy_attributes')
-        self.acn_add_proxy_attributes.triggered.connect(functools.partial(self.maya_functionality.add_attribute_to_selected_nodes, 
-                                                                            'helga_proxy',
-                                                                            'transform',
-                                                                            'Mesh'))
-        self.mnu_attributes.addAction(self.acn_add_proxy_attributes)
-
-        #acn_add_rendergeo_attributes
-        self.acn_add_rendergeo_attributes = QtGui.QAction('Add rendergeo attributes to selected geo', self)
-        self.acn_add_rendergeo_attributes.setObjectName('acn_add_rendergeo_attributes')
-        self.acn_add_rendergeo_attributes.triggered.connect(functools.partial(self.maya_functionality.add_attribute_to_selected_nodes, 
-                                                                            'helga_rendergeo',
-                                                                            'transform',
-                                                                            'Mesh'))
-        self.mnu_attributes.addAction(self.acn_add_rendergeo_attributes)
-
-        #acn_add_locator_attributes
-        self.acn_add_locator_attributes = QtGui.QAction('Add locator attributes to selected locator', self)
-        self.acn_add_locator_attributes.setObjectName('acn_add_locator_attributes')
-        self.acn_add_locator_attributes.triggered.connect(functools.partial(self.maya_functionality.add_attribute_to_selected_nodes, 
-                                                                            'helga_locator',
-                                                                            'transform',
-                                                                            'Locator'))
-        self.mnu_attributes.addAction(self.acn_add_locator_attributes)
-
-
-        #separator
-        self.mnu_attributes.addSeparator()
-
-
-        #acn_remove_proxy_attributes
-        self.acn_remove_proxy_attributes = QtGui.QAction('Remove proxy attributes from selected geo', self)
-        self.acn_remove_proxy_attributes.setObjectName('acn_remove_proxy_attributes')
-        self.acn_remove_proxy_attributes.triggered.connect(functools.partial(self.maya_functionality.remove_attribute_from_selected_nodes, 
-                                                                            'helga_proxy',
-                                                                            'transform',
-                                                                            'Mesh'))
-        self.mnu_attributes.addAction(self.acn_remove_proxy_attributes)
-
-        #acn_remove_rendergeo_attributes
-        self.acn_remove_rendergeo_attributes = QtGui.QAction('Remove rendergeo attributes from selected geo', self)
-        self.acn_remove_rendergeo_attributes.setObjectName('acn_remove_rendergeo_attributes')
-        self.acn_remove_rendergeo_attributes.triggered.connect(functools.partial(self.maya_functionality.remove_attribute_from_selected_nodes, 
-                                                                            'helga_rendergeo',
-                                                                            'transform',
-                                                                            'Mesh'))
-        self.mnu_attributes.addAction(self.acn_remove_rendergeo_attributes)
-
-        #acn_remove_locator_attributes
-        self.acn_remove_locator_attributes = QtGui.QAction('Remove locator attributes from selected locator', self)
-        self.acn_remove_locator_attributes.setObjectName('acn_remove_locator_attributes')
-        self.acn_remove_locator_attributes.triggered.connect(functools.partial(self.maya_functionality.remove_attribute_from_selected_nodes, 
-                                                                            'helga_locator',
-                                                                            'transform',
-                                                                            'Locator'))
-        self.mnu_attributes.addAction(self.acn_remove_locator_attributes)
 
 
     #Threads
@@ -2114,7 +1583,7 @@ class AssetManager(form_class, base_class):
         """
 
         #start threads
-        self.threads_functionality.setup_threads()
+        self.threads_functionality.setup_threads(thread_interval = self.thread_interval)
 
         
 
@@ -2230,6 +1699,14 @@ class AssetManager(form_class, base_class):
         """
 
         return ''.join(random.choice(chars) for _ in range(size))
+
+
+    def get_thread_interval(self):
+        """
+        Get self.thread_interval
+        """
+
+        return self.thread_interval
 
 
     @QtCore.Slot(int)

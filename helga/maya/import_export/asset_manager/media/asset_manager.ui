@@ -89,8 +89,8 @@
     </widget>
    </item>
    <item>
-    <widget class="QWidget" name="wdgt_dev" native="true">
-     <layout class="QVBoxLayout" name="lyt_dev"/>
+    <widget class="QWidget" name="wdgt_dev_menu" native="true">
+     <layout class="QVBoxLayout" name="lyt_dev_menu"/>
     </widget>
    </item>
    <item>

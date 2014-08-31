@@ -153,6 +153,10 @@ if(do_reload):reload(asset_manager_line_edit_checkable_action)
 from lib.gui import asset_manager_pre_export_dialog
 if(do_reload):reload(asset_manager_pre_export_dialog)
 
+#asset_manager_dock_widget
+from lib.gui import asset_manager_dock_widget
+if(do_reload):reload(asset_manager_dock_widget)
+
 #lib.mvc
 
 #shot_metadata_model
@@ -351,7 +355,7 @@ def check_and_delete_wdgt_instances_with_class_name(wdgt_class_name):
         #try to stop threads (wdgt == AssetManager)
         try:
             print('Stop threads for wdgt {0}'.format(wdgt.objectName()))
-            wdgt.threads_functionality.stop_threads()
+            wdgt.stop_all_threads_and_timer()
         except:
             pass
 
@@ -447,7 +451,7 @@ class AssetManager(form_class, base_class):
 
         #delete and cleanup old instances
         check_and_delete_wdgt_instances_with_class_name(cls.__name__)
-        check_and_delete_wdgt_instances_with_name('dockwdgt_' + cls.__name__)
+        check_and_delete_wdgt_instances_with_class_name(asset_manager_dock_widget.AssetManagerDockWidget.__name__)
 
         #asset_manager_instance
         asset_manager_instance = super(AssetManager, cls).__new__(cls, args, kwargs)
@@ -1898,17 +1902,47 @@ class AssetManager(form_class, base_class):
     #Events
     #------------------------------------------------------------------
 
+    def stop_all_threads_and_timer(self):
+        """
+        Try to stop all threads and timers that AssetManager started.
+        This method is ment to be used in a closeEvent.
+        """
+        
+        try:
+            
+            #stop timer
+            if(self.auto_update_timer):
+                self.auto_update_timer.stop()
+
+        except:
+
+            #log
+            self.logger.debug('Error stopping auto update timer.')
+
+
+        try:
+            
+            #stop threads
+            self.threads_functionality.stop_threads()
+
+        except:
+
+            #log
+            self.logger.debug('Error stopping threads for queue.')
+
+        
+
+
     def closeEvent(self, event):
         """
         Customized closeEvent
         """
 
-        #stop timer
-        if(self.auto_update_timer):
-            self.auto_update_timer.stop()
+        #log
+        self.logger.debug('Close Event')
 
-        #stop threads
-        self.threads_functionality.stop_threads()
+        #stop_all_threads_and_timer
+        self.stop_all_threads_and_timer()
 
         #parent close event
         self.parent_class.closeEvent(event)
@@ -1934,19 +1968,22 @@ class AssetManager(form_class, base_class):
         maya_main_window = global_functions.get_main_window()
 
         #wdgt_dock
-        self.wdgt_dock = QtGui.QDockWidget(parent = maya_main_window)
-        self.wdgt_dock.setObjectName('dockwdgt_' + self.__class__.__name__)
+        self.wdgt_dock = asset_manager_dock_widget.AssetManagerDockWidget(parent = maya_main_window)
         self.wdgt_dock.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
 
         #set title
-        self.wdgt_dock.setWindowTitle(self.title)
-
+        #self.wdgt_dock.setWindowTitle(self.title)
 
         #set wdgt
         self.wdgt_dock.setWidget(self)
         
         #add to maya main window
         maya_main_window.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.wdgt_dock)
+
+        
+        
+
+        
 
 
 

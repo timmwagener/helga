@@ -47,6 +47,10 @@ TOOL_ROOT_PATH = asset_manager_globals.TOOL_ROOT_PATH
 MEDIA_PATH = asset_manager_globals.MEDIA_PATH
 ICONS_PATH = asset_manager_globals.ICONS_PATH
 
+#AssetManager Icons
+ICON_TRUE = asset_manager_globals.ICON_TRUE
+ICON_FALSE = asset_manager_globals.ICON_FALSE
+
 #Fonts
 FUTURA_LT_LIGHT = asset_manager_globals.FUTURA_LT_LIGHT
 
@@ -81,7 +85,9 @@ def get_stylesheet():
     """
 
     #ss_dict
-    ss_dict = {'icon_path' : HEADER_IMAGE,
+    ss_dict = {'header_image' : HEADER_IMAGE,
+                'icon_true' : ICON_TRUE,
+                'icon_false' : ICON_FALSE,
                 'futura_lt_light' : FUTURA_LT_LIGHT,
                 'bright_orange' : BRIGHT_ORANGE.name(),
                 'bright_orange_transparent' : 'rgba({0},{1},{2},{3})'.format(BRIGHT_ORANGE.red(), BRIGHT_ORANGE.green(), BRIGHT_ORANGE.blue(), TABLEVIEW_EDITOR_TRANSPARENCY),
@@ -116,7 +122,7 @@ QWidget { background-color: %(dark_grey)s; \
 \
 \
 /* QWidget - wdgt_header_icon */\
-QWidget#wdgt_header_icon { border-image: url(%(icon_path)s); } \
+QWidget#wdgt_header_icon { border-image: url(%(header_image)s); } \
 \
 \
 \
@@ -1193,6 +1199,42 @@ QPushButton#TableViewEditorBool_btn_false:hover { background-color: %(grey)s; \
 /* QPushButton - btn_false - pressed */\
 QPushButton#TableViewEditorBool_btn_false:pressed { background-color: %(grey)s; \
                                                     border: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* AssetManagerDockWidget */\
+AssetManagerDockWidget { background: %(dark_grey)s; \
+                            font-size: 14pt; \
+                            color: %(bright_grey)s; \
+} \
+\
+\
+/* AssetManagerDockWidget - title */\
+AssetManagerDockWidget::title { background: %(dark_grey)s; \
+                                text-align: left; \
+                                font-size: 14pt; \
+                                color: %(bright_grey)s; \
+                                border-left: none; \
+                                border-top: 1px solid %(bright_orange)s; \
+                                border-bottom: none; \
+                                border-right: none; \
+} \
+\
+\
+AssetManagerDockWidget::close-button, AssetManagerDockWidget::float-button {background: %(bright_orange)s; \
+                                                                            border: none; \
+} \
+\
+\
+AssetManagerDockWidget::close-button:hover, AssetManagerDockWidget::float-button:hover { background: %(dark_orange)s; \
+} \
+\
+\
+AssetManagerDockWidget::close-button:pressed, AssetManagerDockWidget::float-button:pressed { background: %(dark_orange)s; \
 } \
 \
 \

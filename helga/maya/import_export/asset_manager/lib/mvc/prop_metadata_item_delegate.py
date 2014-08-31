@@ -40,6 +40,9 @@ if(do_reload):reload(asset_manager_globals)
 from lib.mvc import table_view_editor_bool
 if(do_reload):reload(table_view_editor_bool)
 
+#asset_manager_item_delegate_functionality
+from lib.mvc import asset_manager_item_delegate_functionality
+if(do_reload):reload(asset_manager_item_delegate_functionality)
 
 
 
@@ -48,9 +51,7 @@ if(do_reload):reload(table_view_editor_bool)
 #Globals
 #------------------------------------------------------------------
 
-#AssetManager Icons
-ICON_TRUE = asset_manager_globals.ICON_TRUE
-ICON_FALSE = asset_manager_globals.ICON_FALSE
+
 
 
 
@@ -93,10 +94,8 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
         #instance variables
         #------------------------------------------------------------------
 
-        #pxm_bool_true
-        self.pxm_bool_true = QtGui.QPixmap(ICON_TRUE)
-        #pxm_bool_false
-        self.pxm_bool_false = QtGui.QPixmap(ICON_FALSE)
+        #item_delegate_functionality
+        self.item_delegate_functionality = asset_manager_item_delegate_functionality.AssetManagerItemDelegateFunctionality(item_delegate = self)
         
         
         #logger
@@ -116,48 +115,47 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
         #. Lists
         """
         
-        #valid
-        if(index.isValid()):
+        #index invalid
+        if not(index.isValid()):
+
+            #superclass sizeHint
+            return self.superclass.sizeHint(option, index)
             
-            #data
-            data = index.data(QtCore.Qt.DisplayRole)
+        
+        #data
+        data = index.data(QtCore.Qt.DisplayRole)
 
-            #row & col
-            row = index.row()
-            col = index.column()
+        #row & col
+        row = index.row()
+        col = index.column()
 
 
-            #check types
+        #check types
 
-            #list
-            if(type(data) is list):
+        #list
+        if(type(data) is list):
+            
+            #value_string
+            value_string = ''
+            for index, value in enumerate(data):
                 
-                #value_string
-                value_string = ''
-                for index, value in enumerate(data):
-                    
-                    #last value
-                    if(index == len(data) - 1):
-                        value_string += str(value)
-                        continue
-                    
-                    #append
-                    value_string += str(value + ';\n')
-
-
-                #text_size
-                q_font_metrics = QtGui.QFontMetrics(QtGui.QApplication.font())
-                text_size = q_font_metrics.size(0, value_string)
-                return text_size
-
-            #other type
-            else:
+                #last value
+                if(index == len(data) - 1):
+                    value_string += str(value)
+                    continue
                 
-                #superclass sizeHint
-                return self.superclass.sizeHint(option, index)
+                #append
+                value_string += str(value + ';\n')
 
-        #not valid invoke super class
+
+            #text_size
+            q_font_metrics = QtGui.QFontMetrics(QtGui.QApplication.font())
+            text_size = q_font_metrics.size(0, value_string)
+            return text_size
+
+        #other type
         else:
+            
             #superclass sizeHint
             return self.superclass.sizeHint(option, index)
 
@@ -170,87 +168,64 @@ class PropMetadataItemDelegate(QtGui.QStyledItemDelegate):
         Types handled:
         #. Lists
         #. bool
+        #. str and unicode
         """
 
-        #check type
-        if(index.isValid()):
-
-            #data
-            data = index.data(QtCore.Qt.DisplayRole)
-
-            #row & col
-            row = index.row()
-            col = index.column()
-
+        #index invalid
+        if not(index.isValid()):
             
+            #superclass paint
+            self.superclass.paint(painter, option, index)
+            return
 
-            #list
-            if(type(data) is list):
+        
+        #data
+        data = index.data(QtCore.Qt.DisplayRole)
 
-                #save painter
-                painter.save()
-                
-                #value_string
-                value_string = ''
-                for index, value in enumerate(data):
-                    
-                    #last value
-                    if(index == len(data) - 1):
-                        value_string += str(value)
-                        continue
-                    
-                    #append
-                    value_string += str(value + ';\n')
+        #row & col
+        row = index.row()
+        col = index.column()
 
+        
 
-                #draw
-                painter.drawText(option.rect, QtCore.Qt.AlignLeft, value_string)
+        #list
+        if(type(data) is list):
 
-                #restore painter
-                painter.restore()
+            #paint_list_as_string_with_lines
+            self.item_delegate_functionality.paint_list_as_string_with_lines(painter, option, data)
 
 
-            #bool
-            elif(type(data) is bool):
+        #bool
+        elif(type(data) is bool):
 
-                #save painter
-                painter.save()
+            #paint_bool_as_icon
+            self.item_delegate_functionality.paint_bool_as_icon(painter, option, data)
 
-                #width, height, center
-                option_rect = option.rect
-                width = option_rect.width()
-                height = option_rect.height()
-                center = option_rect.center()
 
-                #margin
-                margin = 5
+        #str and unicode
+        elif(type(data) is str or
+            type(data) is unicode):
 
-                #pxm_bool
-                if (data):
-                    pxm_bool = self.pxm_bool_true.scaledToHeight(height - (margin * 2))
-                else:
-                    pxm_bool = self.pxm_bool_false.scaledToHeight(height - (margin * 2))
+            #duplicats in column
+            if (self.item_delegate_functionality.duplicates_in_column(index)):
 
-                #correct center to accomodate image in the center
-                center.setX(center.x() - (pxm_bool.width() / 2))
-                center.setY(center.y() - (pxm_bool.height() / 2))
+                #paint background with error color
+                self.item_delegate_functionality.paint_background_with_color(painter, option, index)
 
-                #draw pixmap
-                painter.drawPixmap(center, pxm_bool)
+            #empty string
+            if not (data):
 
-                #restore painter
-                painter.restore()
+                #paint background with error color
+                self.item_delegate_functionality.paint_background_with_color(painter, option, index)
 
-            
-            #other type
-            else:
-                
-                #superclass paint
-                self.superclass.paint(painter, option, index)
 
-            
-        #not valid invoke super class
+            #superclass paint
+            self.superclass.paint(painter, option, index)
+
+        
+        #other type
         else:
+            
             #superclass paint
             self.superclass.paint(painter, option, index)
 

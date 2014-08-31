@@ -54,6 +54,9 @@ if(do_reload):reload(table_view_editor_nodepicker)
 from lib.mvc import table_view_editor_pathpicker
 if(do_reload):reload(table_view_editor_pathpicker)
 
+#asset_manager_item_delegate_functionality
+from lib.mvc import asset_manager_item_delegate_functionality
+if(do_reload):reload(asset_manager_item_delegate_functionality)
 
 
 
@@ -102,15 +105,11 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
 
 
 
-        #slots
-        #------------------------------------------------------------------
-
-        
-        
-
         #instance variables
         #------------------------------------------------------------------
 
+        #item_delegate_functionality
+        self.item_delegate_functionality = asset_manager_item_delegate_functionality.AssetManagerItemDelegateFunctionality(item_delegate = self)
         
         
         #logger
@@ -130,48 +129,47 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
         #. Lists
         """
         
-        #valid
-        if(index.isValid()):
+        #index invalid
+        if not(index.isValid()):
+
+            #superclass sizeHint
+            return self.superclass.sizeHint(option, index)
             
-            #data
-            data = index.data(QtCore.Qt.DisplayRole)
+        #data
+        data = index.data(QtCore.Qt.DisplayRole)
 
-            #row & col
-            row = index.row()
-            col = index.column()
+        #row & col
+        row = index.row()
+        col = index.column()
 
 
-            #check types
+        #check types
 
-            #list
-            if(type(data) is list):
+        #list
+        if(type(data) is list):
+            
+            #value_string
+            value_string = ''
+            for index, value in enumerate(data):
                 
-                #value_string
-                value_string = ''
-                for index, value in enumerate(data):
-                    
-                    #last value
-                    if(index == len(data) - 1):
-                        value_string += str(value)
-                        continue
-                    
-                    #append
-                    value_string += str(value + ';\n')
-
-
-                #text_size
-                q_font_metrics = QtGui.QFontMetrics(QtGui.QApplication.font())
-                text_size = q_font_metrics.size(0, value_string)
-                return text_size
-
-            #other type
-            else:
+                #last value
+                if(index == len(data) - 1):
+                    value_string += str(value)
+                    continue
                 
-                #superclass sizeHint
-                return self.superclass.sizeHint(option, index)
+                #append
+                value_string += str(value + ';\n')
 
-        #not valid invoke super class
+
+            #text_size
+            q_font_metrics = QtGui.QFontMetrics(QtGui.QApplication.font())
+            text_size = q_font_metrics.size(0, value_string)
+            return text_size
+
+        
+        #other type
         else:
+            
             #superclass sizeHint
             return self.superclass.sizeHint(option, index)
 
@@ -185,51 +183,57 @@ class ShotMetadataItemDelegate(QtGui.QStyledItemDelegate):
         #. Lists
         """
 
-        #check type
-        if(index.isValid()):
-
-            #data
-            data = index.data(QtCore.Qt.DisplayRole)
-
-            #row & col
-            row = index.row()
-            col = index.column()
-
-            #save painter
-            painter.save()
-
-            #list
-            if(type(data) is list):
-                
-                #value_string
-                value_string = ''
-                for index, value in enumerate(data):
-                    
-                    #last value
-                    if(index == len(data) - 1):
-                        value_string += str(value)
-                        continue
-                    
-                    #append
-                    value_string += str(value + ';\n')
-
-
-                #draw
-                painter.drawText(option.rect, QtCore.Qt.AlignLeft, value_string)
-
-            #other type
-            else:
-                
-                #superclass paint
-                self.superclass.paint(painter, option, index)
-
-            #restore painter
-            painter.restore()
-
-        #not valid invoke super class
-        else:
+        #index invalid
+        if not(index.isValid()):
+            
             #superclass paint
             self.superclass.paint(painter, option, index)
+            return
+
+        #data
+        data = index.data(QtCore.Qt.DisplayRole)
+
+        #row & col
+        row = index.row()
+        col = index.column()
+
+        
+
+        #list
+        if(type(data) is list):
+
+            #paint_list_as_string_with_lines
+            self.item_delegate_functionality.paint_list_as_string_with_lines(painter, option, data)
+
+
+        #str and unicode
+        elif(type(data) is str or
+            type(data) is unicode):
+
+            #duplicats in column
+            if (self.item_delegate_functionality.duplicates_in_column(index)):
+
+                #paint background with error color
+                self.item_delegate_functionality.paint_background_with_color(painter, option, index)
+
+            #empty string
+            if not (data):
+
+                #paint background with error color
+                self.item_delegate_functionality.paint_background_with_color(painter, option, index)
+
+
+            #superclass paint
+            self.superclass.paint(painter, option, index)
+
+        
+        #other type
+        else:
+            
+            #superclass paint
+            self.superclass.paint(painter, option, index)
+
+        
 
 
     def createEditor(self, parent, option, index):

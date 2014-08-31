@@ -71,6 +71,7 @@ DARK_GREY = QtGui.QColor('#131313')
 DARK_BLUE = QtGui.QColor('#006cbf')
 BRIGHT_BLUE = QtGui.QColor('#008df9')
 WHITE = QtGui.QColor('#ffffff')
+RED = QtGui.QColor('#ff0000')
 
 #Header
 HEADER_IMAGE = os.path.join(ICONS_PATH, 'icn_asset_manager_header_one.png').replace('\\', '/')

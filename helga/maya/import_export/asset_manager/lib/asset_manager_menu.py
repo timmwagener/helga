@@ -226,6 +226,25 @@ def setup_menu_gui(wdgt, menubar):
     wdgt.mnu_shot_metatada_view.addAction(wdgt.acn_toggle_column_alembic_path)
 
 
+    #prop_metatada_view
+    #------------------------------------------------------------------
+    
+    #mnu_prop_metatada_view
+    wdgt.mnu_prop_metatada_view = QtGui.QMenu('Prop metadata view', parent = wdgt)
+    wdgt.mnu_prop_metatada_view.setObjectName('mnu_prop_metatada_view')
+    wdgt.mnu_gui.addMenu(wdgt.mnu_prop_metatada_view)
+
+    #acn_toggle_column_export_proxy_for_prop_view
+    wdgt.acn_toggle_column_export_proxy_for_prop_view = QtGui.QAction('Toggle column export proxy', wdgt)
+    wdgt.acn_toggle_column_export_proxy_for_prop_view.setObjectName('acn_toggle_column_export_proxy_for_prop_view')
+    wdgt.mnu_prop_metatada_view.addAction(wdgt.acn_toggle_column_export_proxy_for_prop_view)
+
+    #acn_toggle_column_export_locator_for_prop_view
+    wdgt.acn_toggle_column_export_locator_for_prop_view = QtGui.QAction('Toggle column export locator', wdgt)
+    wdgt.acn_toggle_column_export_locator_for_prop_view.setObjectName('acn_toggle_column_export_locator_for_prop_view')
+    wdgt.mnu_prop_metatada_view.addAction(wdgt.acn_toggle_column_export_locator_for_prop_view)
+
+
     #char_metatada_view
     #------------------------------------------------------------------
     
@@ -581,6 +600,15 @@ def connect_menu_gui(wdgt):
     #acn_toggle_column_alembic_path
     wdgt.acn_toggle_column_alembic_path.triggered.connect(functools.partial(wdgt.shot_metadata_view.view_functionality.toggle_column_with_header_name, 
                                                                             'Alembic Path'))
+
+    #acn_toggle_column_export_proxy_for_prop_view
+    wdgt.acn_toggle_column_export_proxy_for_prop_view.triggered.connect(functools.partial(wdgt.prop_metadata_view.view_functionality.toggle_column_with_header_name, 
+                                                                                            'ExportProxy'))
+    
+    #acn_toggle_column_export_locator_for_prop_view
+    wdgt.acn_toggle_column_export_locator_for_prop_view.triggered.connect(functools.partial(wdgt.prop_metadata_view.view_functionality.toggle_column_with_header_name, 
+                                                                                            'ExportLocator'))
+
     #acn_toggle_column_export_proxy_for_char_view
     wdgt.acn_toggle_column_export_proxy_for_char_view.triggered.connect(functools.partial(wdgt.char_metadata_view.view_functionality.toggle_column_with_header_name, 
                                                                                             'ExportProxy'))

@@ -1293,6 +1293,11 @@ class AssetManager(form_class, base_class):
         #hide vertical header
         self.prop_metadata_view.verticalHeader().hide()
 
+        #hide ExportProxy column
+        self.prop_metadata_view.view_functionality.hide_column_with_header_name('ExportProxy', True)
+        #hide ExportLocator column
+        self.prop_metadata_view.view_functionality.hide_column_with_header_name('ExportLocator', True)
+
 
     def display_prop_metadata_context_menu(self, pos):
         """

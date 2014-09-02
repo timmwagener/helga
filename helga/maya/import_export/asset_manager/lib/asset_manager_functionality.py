@@ -25,6 +25,21 @@ import pymel.core as pm
 
 
 
+#Import variable
+do_reload = True
+
+
+#asset_manager
+
+#lib
+
+#asset_manager_checks
+from lib import asset_manager_checks
+if(do_reload):reload(asset_manager_checks)
+
+
+
+
 
 
 #AssetManagerFunctionality class
@@ -54,6 +69,9 @@ class AssetManagerFunctionality(QtCore.QObject):
 
         #instance variables
         #------------------------------------------------------------------
+
+        #checks_functionality
+        self.checks_functionality = asset_manager_checks.AssetManagerChecks()
 
         
         #logger
@@ -358,15 +376,73 @@ class AssetManagerFunctionality(QtCore.QObject):
     #Attributes
     #------------------------------------------------------------------
 
+    def add_attribute_to_node(self, node, attribute_name, attribute_type):
+        """
+        Add attribute to pynode and log success.
+        """
+
+        #check if attr already exists
+        if (node.hasAttr(attribute_name)):
+            
+            #log
+            self.logger.debug('Node {0} already has attr. {1}. Not adding attribute.'.format(node.name(), attribute_name))
+            return
+
+        try:
+            
+            #assign
+            node.addAttr(attribute_name, 
+                            attributeType = attribute_type)
+
+            #log
+            self.logger.debug('Added attr: {0} to node {1}'.format(attribute_name,
+                                                                    node.name()))
+
+        except:
+
+            #log
+            self.logger.debug('Addition of attr: {0} to node {1} failed'.format(attribute_name,
+                                                                                node.name()))
+
+
+    def remove_attribute_from_node(self, node, attribute_name):
+        """
+        Add attribute to pynode and log success.
+        """
+
+        #check if attr exists on node
+        if not(node.hasAttr(attribute_name)):
+            
+            #log
+            self.logger.debug('Node {0} does not have attr. {1}. Not removing attribute.'.format(node.name(), attribute_name))
+            return
+
+        try:
+            
+            #remove
+            pm.deleteAttr(node, attribute = attribute_name)
+
+            #log
+            self.logger.debug('Removed attr: {0} from node {1}'.format(attribute_name,
+                                                                    node.name()))
+
+        except:
+
+            #log
+            self.logger.debug('Removing of attr: {0} from node {1} failed'.format(attribute_name,
+                                                                                node.name()))
+
+
     def add_attribute_to_selected_nodes(self, 
                                         attribute_name, 
                                         node_type_name, 
-                                        shape_node_type_name,
+                                        shape_node_type_name = None,
                                         attribute_type = 'message'):
         """
-        Check if attribute_name on nodes of selection and if not, add it.
-        Only consider nodes of type node_type_name that have
-        a shape of type shape_node_type_name.
+        Check if attribute_name not on nodes of selection and if so, add it.
+        Only consider selected nodes of type node_type_name that have
+        a shape of type shape_node_type_name. If shape_node_type_name is None
+        dont perform shape check, directly use selected nodes of type node_type_name.
         The shape_node_type_name attribute here is what you get when you do type(object).__name__.
         It is NOT the type asked for by the et flag from the pm.sl() cmd.
 
@@ -380,81 +456,35 @@ class AssetManagerFunctionality(QtCore.QObject):
         #node_list empty
         if not(node_list):
             #log
-            self.logger.debug('Node list empty. Not adding attributes to nodes.')
-            return []
+            self.logger.debug('Node list empty.')
+            return
 
-        
-        #node_shape_list
-        node_shape_list = [node.getShape() for node in node_list if (node.getShape())]
-        #node_shape_list empty
-        if not(node_shape_list):
+        #check node list
+        if not(self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)):
             #log
-            self.logger.debug('Node shape list empty. Not adding attributes to nodes.')
-            return []
+            self.logger.debug('Not adding attributes.')
+            return
+
+        #checked_node_list
+        checked_node_list = self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)
 
         
-        #node_target_list
-        node_target_list = [node.getParent() for 
-                            node in 
-                            node_shape_list if 
-                            (type(node).__name__ == shape_node_type_name and
-                            node.getParent())]
-        #node_target_list empty
-        if not(node_target_list):
-            #log
-            self.logger.debug('Node target list empty. Not adding attributes to nodes.')
-            return []
+        #iterate
+        for node in checked_node_list:
 
-        
+            #add
+            self.add_attribute_to_node(node, attribute_name, attribute_type)
 
-        #add attr
-        for node in node_target_list:
-
-            #reference check
-            if (pm.referenceQuery(node, isNodeReferenced = True)):
-
-                #log
-                self.logger.debug('Node {0} is referenced. Continuing'.format(node.name()))
-                continue
-
-
-            #check if attr exists, if so continue
-            if (node.hasAttr(attribute_name)):
-                
-                #log
-                self.logger.debug('Node {1} already has attr. {0}. Continuing'.format(attribute_name,
-                                                                                        node.name()))
-                continue
-
-            try:
-                
-                #assign
-                node.addAttr(attribute_name, 
-                                attributeType = attribute_type)
-
-                #log
-                self.logger.debug('Added attr: {0} to node {1}'.format(attribute_name,
-                                                                        node.name()))
-
-            except:
-
-                #log
-                self.logger.debug('Addition of attr: {0} to node {1} failed'.format(attribute_name,
-                                                                                    node.name()))
-
-        
-        #return
-        return node_target_list
-
-
+            
     def remove_attribute_from_selected_nodes(self, 
                                                 attribute_name, 
                                                 node_type_name, 
-                                                shape_node_type_name):
+                                                shape_node_type_name = None):
         """
         Check if attribute_name on nodes of selection and if so, remove it.
-        Only consider nodes of type node_type_name that have
-        a shape of type shape_node_type_name.
+        Only consider selected nodes of type node_type_name that have
+        a shape of type shape_node_type_name. If shape_node_type_name is None
+        dont perform shape check, directly use selected nodes of type node_type_name.
         The shape_node_type_name attribute here is what you get when you do type(object).__name__.
         It is NOT the type asked for by the et flag from the pm.sl() cmd.
 
@@ -468,63 +498,23 @@ class AssetManagerFunctionality(QtCore.QObject):
         #node_list empty
         if not(node_list):
             #log
-            self.logger.debug('Node list empty. Not adding attributes to nodes.')
-            return []
+            self.logger.debug('Node list empty.')
+            return
 
-        
-        #node_shape_list
-        node_shape_list = [node.getShape() for node in node_list if (node.getShape())]
-        #node_shape_list empty
-        if not(node_shape_list):
+        #check node list
+        if not(self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)):
             #log
-            self.logger.debug('Node shape list empty. Not adding attributes to nodes.')
-            return []
+            self.logger.debug('Not removing attributes.')
+            return
+
+        #checked_node_list
+        checked_node_list = self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)
 
         
-        #node_target_list
-        node_target_list = [node.getParent() for 
-                            node in 
-                            node_shape_list if 
-                            (type(node).__name__ == shape_node_type_name and
-                            node.getParent())]
-        #node_target_list empty
-        if not(node_target_list):
-            #log
-            self.logger.debug('Node target list empty. Not adding attributes to nodes.')
-            return []
+        #iterate
+        for node in checked_node_list:
 
-        
-
-        #remove attr
-        for node in node_target_list:
-
-            #reference check
-            if (pm.referenceQuery(node, isNodeReferenced = True)):
-
-                #log
-                self.logger.debug('Node {0} is referenced. Continuing'.format(node.name()))
-                continue
-
-            #check if attr exists, if so continue
-            if (node.hasAttr(attribute_name)):
-
-                try:
-                    #delete
-                    node.deleteAttr(attribute_name)
-                    
-                    #log
-                    self.logger.debug('Deleted attr: {0} on node {1}'.format(attribute_name,
-                                                                                node.name()))
-
-                except:
-
-                    #log
-                    self.logger.debug('Deletion of attr: {0} on node {1} failed'.format(attribute_name,
-                                                                                        node.name()))
-
-
-        
-        #return
-        return node_target_list
+            #remove
+            self.remove_attribute_from_node(node, attribute_name)
 
 

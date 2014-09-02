@@ -688,40 +688,34 @@ def connect_menu_assets(wdgt):
     #acn_add_proxy_attributes
     wdgt.acn_add_proxy_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_attribute_to_selected_nodes, 
                                                                         'helga_proxy',
-                                                                        'transform',
-                                                                        'Mesh'))
+                                                                        'transform'))
 
     #acn_add_rendergeo_attributes
     wdgt.acn_add_rendergeo_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_attribute_to_selected_nodes, 
                                                                         'helga_rendergeo',
-                                                                        'transform',
-                                                                        'Mesh'))
+                                                                        'transform'))
 
     #acn_add_locator_attributes
     wdgt.acn_add_locator_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_attribute_to_selected_nodes, 
                                                                         'helga_locator',
-                                                                        'transform',
-                                                                        'Locator'))
+                                                                        'transform'))
 
 
 
     #acn_remove_proxy_attributes
     wdgt.acn_remove_proxy_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_attribute_from_selected_nodes, 
                                                                         'helga_proxy',
-                                                                        'transform',
-                                                                        'Mesh'))
+                                                                        'transform'))
 
     #acn_remove_rendergeo_attributes
     wdgt.acn_remove_rendergeo_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_attribute_from_selected_nodes, 
                                                                         'helga_rendergeo',
-                                                                        'transform',
-                                                                        'Mesh'))
+                                                                        'transform'))
 
     #acn_remove_locator_attributes
     wdgt.acn_remove_locator_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_attribute_from_selected_nodes, 
                                                                         'helga_locator',
-                                                                        'transform',
-                                                                        'Locator'))
+                                                                        'transform'))
 
 
 

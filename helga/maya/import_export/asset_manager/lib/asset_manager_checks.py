@@ -80,6 +80,7 @@ class AssetManagerChecks(object):
         #------------------------------------------------------------------
 
         
+        
         #logger
         #------------------------------------------------------------------
         #logger
@@ -90,7 +91,64 @@ class AssetManagerChecks(object):
 
 
 
-    #Big Checks
+    #Attribute Checks
+    #------------------------------------------------------------------
+
+    def check_node_list_for_attribute_addition_or_removal(self, node_list, shape_node_type_name):
+        """
+        Check node list for attribute addition/removal.
+        Return False or the needed data as list when True.
+        """
+
+        #node_no_reference_list
+        node_no_reference_list = [node for node in node_list if not(self.is_reference(node))]
+        #node_no_reference_list empty
+        if not(node_no_reference_list):
+            #log
+            self.logger.debug('Node no reference list empty.')
+            return False
+        
+        
+        #shape node type check ?
+        if (shape_node_type_name):
+            
+            #node_shape_list
+            node_shape_list = [node.getShape() for node in node_no_reference_list if (node.getShape())]
+            #node_shape_list empty
+            if not(node_shape_list):
+                #log
+                self.logger.debug('Node shape list empty.')
+                return False
+
+        
+            #node_target_list
+            node_target_list = [node.getParent() for 
+                                node in 
+                                node_shape_list if 
+                                (type(node).__name__ == shape_node_type_name and
+                                node.getParent())]
+            #node_target_list empty
+            if not(node_target_list):
+                #log
+                self.logger.debug('Node target list empty.')
+                return False
+
+            #return
+            return node_target_list
+
+
+        #return
+        return node_no_reference_list
+
+
+    
+    
+
+
+
+
+
+    #Export Data Checks
     #------------------------------------------------------------------
 
     def check_base_data(self, pynode_shot_metadata):
@@ -353,6 +411,23 @@ class AssetManagerChecks(object):
         """
 
         return pm.objExists(object_name)
+
+
+    def is_reference(self, node):
+        """
+        Check if mobject that the pynode refers to is referenced.
+        Return False or True.
+        """
+
+        #reference check
+        if (pm.referenceQuery(node, isNodeReferenced = True)):
+
+            #log
+            self.logger.debug('Node {0} is referenced.'.format(node.name()))
+            return True
+
+        #return
+        return False
 
 
     #Methods

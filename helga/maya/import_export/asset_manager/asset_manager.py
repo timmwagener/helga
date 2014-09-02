@@ -2574,7 +2574,7 @@ def run():
 #Test setup home
 #------------------------------------------------------------------
 
-def asset_manager_run_home():
+def run_home():
     """
     Copy and run @ home.
     Not to be used by anyone ever.
@@ -2604,8 +2604,8 @@ def asset_manager_run_home():
             shutil.rmtree(TARGET_DIR)
 
     except:
-        print('Delete Dir doesnt exist. Returning. - {0}'.format(TARGET_DIR))
-        return
+        print('Error deleting Target Dir, maybe it doesnt exist. Not copying. - {0}'.format(TARGET_DIR))
+        
 
 
     #Copy
@@ -2638,7 +2638,7 @@ def asset_manager_run_home():
 
 
 
-#asset_manager_run_home()
+#run_home()
 
 
 

@@ -467,6 +467,7 @@ class AssetManager(form_class, base_class):
                 thread_interval = 2000,
                 export_thread_timeout = 300,
                 hide_export_shell = True,
+                threads_initial_logging_level = logging.CRITICAL,
                 parent = global_functions.get_main_window()):
         """
         Customize instance.
@@ -528,6 +529,9 @@ class AssetManager(form_class, base_class):
 
         #hide_export_shell
         self.hide_export_shell = hide_export_shell
+
+        #threads_initial_logging_level
+        self.threads_initial_logging_level = threads_initial_logging_level
 
         #always_save_before_export
         self.always_save_before_export = None
@@ -1592,7 +1596,8 @@ class AssetManager(form_class, base_class):
         """
 
         #start threads
-        self.threads_functionality.setup_threads(thread_interval = self.thread_interval)
+        self.threads_functionality.setup_threads(thread_interval = self.thread_interval, 
+                                                    logging_level = self.threads_initial_logging_level)
 
         
 

@@ -370,11 +370,39 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
             thread.set_queue(queue)
 
 
+    @QtCore.Slot(int)
+    def set_logging_level_for_threads(self, logging_level):
+        """
+        Set logging level on logger for threads.
+        The default logging level for threads is logging.WARNING,
+        so they are mostly silent initially.
+        """
+
+        #iterate and set
+        for thread in self.thread_list:
+            
+            try:
+                
+                #set logger
+                thread.logger.setLevel(logging_level)
+
+                #log
+                self.logger.debug('Setting logging level for thread {0} to {1}'.format(thread.thread_id, 
+                                                                                        logging_level))
+
+            except:
+                
+                #log
+                self.logger.debug('Error setting logging level for thread {0}'.format(thread.thread_id))
+
+
 
     #Methods
     #------------------------------------------------------------------
 
-    def setup_threads(self, thread_interval = 2000):
+    def setup_threads(self, 
+                        thread_interval = 2000, 
+                        logging_level = logging.DEBUG):
         """
         Start daemon threads.
         """
@@ -385,7 +413,8 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
             #worker_thread
             worker_thread = WorkerThread(self.queue, 
                                             thread_id = index,
-                                            thread_interval = thread_interval)
+                                            thread_interval = thread_interval,
+                                            logging_level = logging_level)
             #append worker_thread
             self.thread_list.append(worker_thread)
             #start worker_thread

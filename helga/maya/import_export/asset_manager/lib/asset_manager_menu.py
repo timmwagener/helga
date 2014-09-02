@@ -124,6 +124,78 @@ def setup_menu_threads(wdgt, menubar):
     menubar.addMenu(wdgt.mnu_threads)
 
 
+    #Threads logging
+    #------------------------------------------------------------------
+
+    #mnu_threads_logging
+    wdgt.mnu_threads_logging = QtGui.QMenu('Threads Logging', parent = wdgt)
+    wdgt.mnu_threads_logging.setObjectName('mnu_threads_logging')
+    wdgt.mnu_threads.addMenu(wdgt.mnu_threads_logging)
+
+    #acn_grp_threads_logging
+    wdgt.acn_grp_threads_logging = QtGui.QActionGroup(wdgt)
+
+
+    #acn_set_threads_logging_level_debug
+    wdgt.acn_set_threads_logging_level_debug = QtGui.QAction('Debug', wdgt)
+    wdgt.acn_set_threads_logging_level_debug.setObjectName('acn_set_threads_logging_level_debug')
+    wdgt.acn_set_threads_logging_level_debug.setCheckable(True)
+    #eventually set checked
+    if (wdgt.threads_initial_logging_level == logging.DEBUG):
+        wdgt.acn_set_threads_logging_level_debug.setChecked(True)
+    #add to menu and actiongroup
+    wdgt.mnu_threads_logging.addAction(wdgt.acn_set_threads_logging_level_debug)
+    wdgt.acn_grp_threads_logging.addAction(wdgt.acn_set_threads_logging_level_debug)
+
+    #acn_set_threads_logging_level_info
+    wdgt.acn_set_threads_logging_level_info = QtGui.QAction('Info', wdgt)
+    wdgt.acn_set_threads_logging_level_info.setObjectName('acn_set_threads_logging_level_info')
+    wdgt.acn_set_threads_logging_level_info.setCheckable(True)
+    #eventually set checked
+    if (wdgt.threads_initial_logging_level == logging.INFO):
+        wdgt.acn_set_threads_logging_level_info.setChecked(True)
+    #add to menu and actiongroup
+    wdgt.mnu_threads_logging.addAction(wdgt.acn_set_threads_logging_level_info)
+    wdgt.acn_grp_threads_logging.addAction(wdgt.acn_set_threads_logging_level_info)
+
+    #acn_set_threads_logging_level_warning
+    wdgt.acn_set_threads_logging_level_warning = QtGui.QAction('Warning', wdgt)
+    wdgt.acn_set_threads_logging_level_warning.setObjectName('acn_set_threads_logging_level_warning')
+    wdgt.acn_set_threads_logging_level_warning.setCheckable(True)
+    #eventually set checked
+    if (wdgt.threads_initial_logging_level == logging.WARNING):
+        wdgt.acn_set_threads_logging_level_warning.setChecked(True)
+    #add to menu and actiongroup
+    wdgt.mnu_threads_logging.addAction(wdgt.acn_set_threads_logging_level_warning)
+    wdgt.acn_grp_threads_logging.addAction(wdgt.acn_set_threads_logging_level_warning)
+
+    #acn_set_threads_logging_level_error
+    wdgt.acn_set_threads_logging_level_error = QtGui.QAction('Error', wdgt)
+    wdgt.acn_set_threads_logging_level_error.setObjectName('acn_set_threads_logging_level_error')
+    wdgt.acn_set_threads_logging_level_error.setCheckable(True)
+    #eventually set checked
+    if (wdgt.threads_initial_logging_level == logging.ERROR):
+        wdgt.acn_set_threads_logging_level_error.setChecked(True)
+    #add to menu and actiongroup
+    wdgt.mnu_threads_logging.addAction(wdgt.acn_set_threads_logging_level_error)
+    wdgt.acn_grp_threads_logging.addAction(wdgt.acn_set_threads_logging_level_error)
+
+    #acn_set_threads_logging_level_critical
+    wdgt.acn_set_threads_logging_level_critical = QtGui.QAction('Critical', wdgt)
+    wdgt.acn_set_threads_logging_level_critical.setObjectName('acn_set_threads_logging_level_critical')
+    wdgt.acn_set_threads_logging_level_critical.setCheckable(True)
+    #eventually set checked
+    if (wdgt.threads_initial_logging_level == logging.CRITICAL):
+        wdgt.acn_set_threads_logging_level_critical.setChecked(True)
+    #add to menu and actiongroup
+    wdgt.mnu_threads_logging.addAction(wdgt.acn_set_threads_logging_level_critical)
+    wdgt.acn_grp_threads_logging.addAction(wdgt.acn_set_threads_logging_level_critical)
+
+
+
+
+    
+
     #acn_start_threads
     wdgt.acn_start_threads = QtGui.QAction('Re/Start threads', wdgt)
     wdgt.acn_start_threads.setObjectName('acn_start_threads')
@@ -572,6 +644,23 @@ def connect_menu_threads(wdgt):
     """
     Connect menu threads actions with wdgt.
     """
+
+    #acn_set_threads_logging_level_debug
+    wdgt.acn_set_threads_logging_level_debug.triggered.connect(functools.partial(wdgt.threads_functionality.set_logging_level_for_threads, 
+                                                                                    logging.DEBUG))
+    #acn_set_threads_logging_level_info
+    wdgt.acn_set_threads_logging_level_info.triggered.connect(functools.partial(wdgt.threads_functionality.set_logging_level_for_threads, 
+                                                                                logging.INFO))
+    #acn_set_threads_logging_level_warning
+    wdgt.acn_set_threads_logging_level_warning.triggered.connect(functools.partial(wdgt.threads_functionality.set_logging_level_for_threads, 
+                                                                                    logging.WARNING))
+    #acn_set_threads_logging_level_error
+    wdgt.acn_set_threads_logging_level_error.triggered.connect(functools.partial(wdgt.threads_functionality.set_logging_level_for_threads, 
+                                                                                    logging.ERROR))
+    #acn_set_threads_logging_level_critical
+    wdgt.acn_set_threads_logging_level_critical.triggered.connect(functools.partial(wdgt.threads_functionality.set_logging_level_for_threads, 
+                                                                                    logging.CRITICAL))
+
 
     #acn_start_threads
     wdgt.acn_start_threads.triggered.connect(wdgt.threads_functionality.start_threads)

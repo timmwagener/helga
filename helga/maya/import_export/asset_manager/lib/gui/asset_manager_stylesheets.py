@@ -278,6 +278,28 @@ QMenu#mnu_threads::item:selected { background: transparent;\
 } \
 \
 \
+/* QMenu - mnu_threads_logging */\
+QMenu#mnu_threads_logging { background-color: %(dark_grey)s;\
+                            margin-left: 8; \
+                            margin-right: 8; \
+                            border-left: none; \
+                            border-right: none; \
+                            border-bottom: none; \
+                            border-top: none; \
+} \
+\
+\
+/* QMenu - mnu_threads_logging - item */\
+QMenu#mnu_threads_logging::item { background: transparent;\
+} \
+\
+\
+/* QMenu - mnu_threads_logging - item - selected */\
+QMenu#mnu_threads_logging::item:selected { background: transparent;\
+                                            color: %(dark_orange)s;\
+} \
+\
+\
 /* QMenu - mnu_gui */\
 QMenu#mnu_gui { background-color: %(dark_grey)s;\
                 margin-left: 8; \

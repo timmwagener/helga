@@ -213,8 +213,7 @@ class TimedExportProcess(object):
 
     
     def __init__(self,
-                    abc_command,
-                    maya_file,
+                    env_dict,
                     timeout = 300,
                     hide_export_shell = True,
                     logging_level = logging.DEBUG):
@@ -226,10 +225,8 @@ class TimedExportProcess(object):
         #instance variables
         #------------------------------------------------------------------
 
-        #abc_command
-        self.abc_command = abc_command
-        #maya_file
-        self.maya_file = maya_file
+        #env_dict
+        self.env_dict = env_dict
         #timeout
         self.timeout = timeout
         #hide_export_shell
@@ -263,14 +260,6 @@ class TimedExportProcess(object):
             Wrapped by thread that terminates on timeout.
             """
 
-            #env_dict
-            env_dict = os.environ.copy()
-            #add abc_command
-            env_dict.setdefault('HELGA_ABC_COMMAND', self.abc_command)
-            #add maya_file_path
-            env_dict.setdefault('HELGA_ABC_MAYA_FILE', self.maya_file)
-
-
             #subprocess_startup_info
             subprocess_startup_info = subprocess.STARTUPINFO()
 
@@ -281,15 +270,14 @@ class TimedExportProcess(object):
             #process
             self.process = subprocess.Popen('{0} {1}'.format(MAYA_PY, __file__), 
                                         stdout = subprocess.PIPE,
-                                        stderr = subprocess.PIPE,
-                                        env = env_dict,
+                                        stderr = subprocess.STDOUT,
+                                        env = self.env_dict,
                                         startupinfo = subprocess_startup_info)
             #stdout_value, stderr_value
             stdout_value, stderr_value = self.process.communicate()
 
             #log
             self.logger.debug(stdout_value)
-            self.logger.debug(stderr_value)
 
 
         #thread
@@ -860,13 +848,13 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
         pm.mel.eval(abc_command)
 
 
-    def get_export_closure(self, abc_command, maya_file, timeout, hide_export_shell):
+    def get_export_closure(self, env_dict, timeout, hide_export_shell):
         """
         Return a function object that does the following when called:
 
-        1. Get a dict. of modified env. variables. Add ABC_COMMAND and MAYA_FILE.
-        2. Start subprocess that runs Mayapy with __file__. (__file__ being this module)
-        3. Wait till process is finished.
+        1. Start subprocess with env_dict as environment, that runs 
+        Mayapy with __file__. (__file__ being this module)
+        2. Wait till process is finished.
         """
 
         def export_function():
@@ -876,7 +864,7 @@ class AssetManagerAlembicFunctionality(QtCore.QObject):
             """
 
             #timed_process_instance
-            timed_process_instance = TimedExportProcess(abc_command, maya_file, timeout, hide_export_shell)
+            timed_process_instance = TimedExportProcess(env_dict, timeout, hide_export_shell)
             timed_process_instance.run()
             
 

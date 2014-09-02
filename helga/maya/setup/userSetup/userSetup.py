@@ -313,16 +313,25 @@ try:
     #adjust_gui
     def adjust_gui():
         
-        #set global stylesheet
-        QtGui.qApp.setStyleSheet(global_variables.MAYA_STYLESHEET)
+        try:
 
-        #style shelf background
-        global_functions.style_maya_shelves()
-        
-        #Print to console instead of script editor
-        sys.__stdout__.write('Successfully adjusted GUI\n')
-        #Dividerline
-        sys.__stdout__.write(DIVIDERLINE)
+            #set global stylesheet
+            QtGui.qApp.setStyleSheet(global_variables.MAYA_STYLESHEET)
+
+            #style shelf background
+            global_functions.style_maya_shelves()
+            
+            #Print to console instead of script editor
+            sys.__stdout__.write('Successfully adjusted GUI\n')
+            #Dividerline
+            sys.__stdout__.write(DIVIDERLINE)
+
+        except:
+
+            #Print to console instead of script editor
+            sys.__stdout__.write('Error adjusting GUI\n')
+            #Dividerline
+            sys.__stdout__.write(DIVIDERLINE)
     
     #eval deferred
     cmds.evalDeferred(adjust_gui)

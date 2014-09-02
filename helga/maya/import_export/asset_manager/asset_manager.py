@@ -2199,6 +2199,7 @@ class AssetManager(form_class, base_class):
             self.logger.debug('Shot data check failed. Check shot cam settings. Not exporting.')
             return
 
+        
 
         #shot_cam
         shot_cam = self.checks_functionality.check_shot_data(shot_metadata_node)
@@ -2207,15 +2208,24 @@ class AssetManager(form_class, base_class):
         #alembic_path, shot_start, shot_end
         alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
         
-        #append cameras (existence for this dir. has been checked in check_base_data())
-        alembic_path = alembic_path +'/' +'cameras'
+        
+        #alembic_export_path
+        alembic_subdir = 'cameras'
+        asset_name = 'shot_cam'
+        alembic_export_path = alembic_path +'/' +alembic_subdir +'/' +asset_name +'.abc'
 
         
         #abc_command
         abc_command = self.alembic_functionality.build_export_command([shot_cam], 
                                                                         [shot_start, shot_end], 
-                                                                        alembic_path + '/shot_cam.abc')
+                                                                        alembic_export_path)
+        
+        #env_dict
+        env_dict = self.get_env_dict(shot_metadata_node)
+        #add abc_command
+        env_dict.setdefault('HELGA_ABC_COMMAND', abc_command)
 
+        
         #dry_run
         if(dry_run):
 
@@ -2226,7 +2236,7 @@ class AssetManager(form_class, base_class):
         else:
             
             #get closure and add to thread queue
-            self.add_export_closure_to_queue(abc_command)
+            self.add_export_closure_to_queue(env_dict)
 
 
     def export_prop(self, 
@@ -2367,12 +2377,13 @@ class AssetManager(form_class, base_class):
         
         #alembic_path, shot_start, shot_end
         alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+        
 
         #alembic_export_path
         alembic_export_path = alembic_path +'/' +alembic_subdir +'/' +asset_name +asset_name_suffix +'.abc'
-
-
         
+
+
         #node_export_list
         node_export_list = self.maya_functionality.get_nodes_with_namespace_and_attr(prop_or_char_metadata_node, attr_name)
         #check
@@ -2387,6 +2398,13 @@ class AssetManager(form_class, base_class):
                                                                         [shot_start, shot_end], 
                                                                         alembic_export_path)
 
+        
+        #env_dict
+        env_dict = self.get_env_dict(shot_metadata_node, prop_or_char_metadata_node, attr_name)
+        #add abc_command
+        env_dict.setdefault('HELGA_ABC_COMMAND', abc_command)
+
+        
         #dry_run
         if(dry_run):
 
@@ -2397,24 +2415,16 @@ class AssetManager(form_class, base_class):
         else:
             
             #get closure and add to thread queue
-            self.add_export_closure_to_queue(abc_command)
+            self.add_export_closure_to_queue(env_dict)
 
-
-    def add_export_closure_to_queue(self, abc_command):
+    
+    def add_export_closure_to_queue(self, env_dict):
         """
         Create export closure from given abc_command and current maya_file and
         add export closure to thread queue.
         If the current maya file could not be retrieved (new file for example), 
         no closure will be added.
         """
-
-        #maya_file
-        maya_file = self.maya_functionality.get_maya_file()
-        #file exists
-        if not(os.path.isfile(maya_file)):
-            #log
-            self.logger.debug('Maya file {0} does not exist. Not adding closure to queue.'.format(maya_file))
-            return
 
         #export_thread_timeout
         export_thread_timeout = self.get_export_thread_timeout()
@@ -2423,8 +2433,7 @@ class AssetManager(form_class, base_class):
         hide_export_shell = self.get_hide_export_shell()
 
         #export_closure
-        export_closure = self.alembic_functionality.get_export_closure(abc_command, 
-                                                                        maya_file, 
+        export_closure = self.alembic_functionality.get_export_closure(env_dict,
                                                                         export_thread_timeout,
                                                                         hide_export_shell)
 
@@ -2433,13 +2442,215 @@ class AssetManager(form_class, base_class):
 
         
 
+    
+
+
+
+
+    #Env. dict. methods
+    #------------------------------------------------------------------ 
+
+    def get_env_dict(self, 
+                    shot_metadata_node,
+                    prop_or_char_metadata_node = None,
+                    attr_name = None):
+        """
+        Extend base_env_dict with custom attrs.
+        At this point, all checks for the data have passed, so it is save to
+        just retrieve the data without checking again.
+        """
+
+        #env_dict
+        env_dict = os.environ.copy()
+
+        #base_metadata_dict
+        base_metadata_dict = self.get_base_metadata_dict(shot_metadata_node)
+        env_dict.update(base_metadata_dict)
+
+        
+        #metadata_mode
+        metadata_mode = self.get_metadata_mode()
+
+        #Shot
+        if (metadata_mode == 'shot'):
+
+            #shot_metadata_dict
+            shot_metadata_dict = self.get_shot_metadata_dict(shot_metadata_node)
+            env_dict.update(shot_metadata_dict)
+
+
+        #Prop
+        elif (metadata_mode == 'prop'):
+
+            #prop_metadata_dict
+            prop_metadata_dict = self.get_prop_metadata_dict(shot_metadata_node, 
+                                                                prop_or_char_metadata_node, 
+                                                                attr_name)
+            env_dict.update(prop_metadata_dict)
+
+        
+        #Char
+        elif (metadata_mode == 'char'):
+
+            #char_metadata_dict
+            char_metadata_dict = self.get_char_metadata_dict(shot_metadata_node,
+                                                                prop_or_char_metadata_node, 
+                                                                attr_name)
+            env_dict.update(char_metadata_dict)
+
+
+        #return
+        return env_dict
+
+        
+    def get_base_metadata_dict(self, shot_metadata_node):
+        """
+        Get dict with base data for export.
+        """
+
+        #base_metadata_dict
+        base_metadata_dict = {}
+
+        #metadata mode
+        base_metadata_dict.setdefault('HELGA_ABC_METADATA_MODE', self.get_metadata_mode())
+
+        #add maya_file_path
+        base_metadata_dict.setdefault('HELGA_ABC_MAYA_FILE', str(self.maya_functionality.get_maya_file()))
+
+        #alembic_path, shot_start, shot_end
+        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+        
+        #add to base_metadata_dict
+        base_metadata_dict.setdefault('HELGA_ABC_SHOT_START', str(shot_start))
+        base_metadata_dict.setdefault('HELGA_ABC_SHOT_END', str(shot_end))
+        base_metadata_dict.setdefault('HELGA_ABC_ALEMBIC_PATH', str(alembic_path))
+
+        #return
+        return base_metadata_dict
+
+
+    def get_shot_metadata_dict(self, shot_metadata_node):
+        """
+        Get dict with shot data for export.
+        """
+
+        #shot_metadata_dict
+        shot_metadata_dict = {}
+
+
+        #shot_cam
+        shot_cam = self.checks_functionality.check_shot_data(shot_metadata_node)
+        shot_metadata_dict.setdefault('HELGA_ABC_SHOT_CAM', str(shot_cam))
+
+
+        #alembic_path, shot_start, shot_end
+        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+        
+        
+        #alembic_export_path
+        alembic_subdir = 'cameras'
+        asset_name = 'shot_cam'
+        alembic_export_path = alembic_path +'/' +alembic_subdir +'/' +asset_name +'.abc'
+        shot_metadata_dict.setdefault('HELGA_ABC_ALEMBIC_SUBDIR', alembic_subdir)
+        shot_metadata_dict.setdefault('HELGA_ABC_ASSET_NAME', asset_name)
+        shot_metadata_dict.setdefault('HELGA_ABC_ALEMBIC_EXPORT_PATH', str(alembic_export_path))
+
+        
+        #return
+        return shot_metadata_dict
+
+
+    def get_prop_metadata_dict(self, shot_metadata_node, prop_metadata_node, attr_name):
+        """
+        Get dict with prop data for export.
+        """
+
+        #alembic_path, shot_start, shot_end
+        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+
+
+        
+        #prop_metadata_dict
+        prop_metadata_dict = {}
+
+        #asset_name, namespace
+        asset_name, namespace = self.checks_functionality.check_prop_data(prop_metadata_node)
+        prop_metadata_dict.setdefault('HELGA_ABC_NAMESPACE', str(namespace))
         
 
+        #part type specific assignments
+
+        #proxy
+        if (attr_name == 'helga_proxy'):
+            asset_name_suffix = '_proxy'
+        #rendergeo
+        elif (attr_name == 'helga_rendergeo'):
+            asset_name_suffix = ''
+        #locator
+        elif (attr_name == 'helga_locator'):
+            asset_name_suffix = '_locator'
+
+        
+        #alembic_subdir
+        alembic_subdir = 'props'
+
+        #alembic_export_path
+        alembic_export_path = alembic_path +'/' +alembic_subdir +'/' +asset_name +asset_name_suffix +'.abc'
+        prop_metadata_dict.setdefault('HELGA_ABC_ALEMBIC_SUBDIR', alembic_subdir)
+        prop_metadata_dict.setdefault('HELGA_ABC_ASSET_NAME', str(asset_name))
+        prop_metadata_dict.setdefault('HELGA_ABC_ASSET_NAME_SUFFIX', asset_name_suffix)
+        prop_metadata_dict.setdefault('HELGA_ABC_ALEMBIC_EXPORT_PATH', str(alembic_export_path))
+
+        
+        #return
+        return prop_metadata_dict
 
 
+    def get_char_metadata_dict(self, shot_metadata_node, char_metadata_node, attr_name):
+        """
+        Get dict with char data for export.
+        """
 
+        #alembic_path, shot_start, shot_end
+        alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
 
+        
 
+        #char_metadata_dict
+        char_metadata_dict = {}
+
+        #asset_name, namespace
+        asset_name, namespace = self.checks_functionality.check_char_data(char_metadata_node)
+        char_metadata_dict.setdefault('HELGA_ABC_NAMESPACE', str(namespace))
+        
+
+        #part type specific assignments
+
+        #proxy
+        if (attr_name == 'helga_proxy'):
+            asset_name_suffix = '_proxy'
+        #rendergeo
+        elif (attr_name == 'helga_rendergeo'):
+            asset_name_suffix = ''
+        #locator
+        elif (attr_name == 'helga_locator'):
+            asset_name_suffix = '_locator'
+
+        
+        
+        #alembic_subdir
+        alembic_subdir = 'chars'
+        
+        #alembic_export_path
+        alembic_export_path = alembic_path +'/' +alembic_subdir +'/' +asset_name +asset_name_suffix +'.abc'
+        char_metadata_dict.setdefault('HELGA_ABC_ALEMBIC_SUBDIR', alembic_subdir)
+        char_metadata_dict.setdefault('HELGA_ABC_ASSET_NAME', str(asset_name))
+        char_metadata_dict.setdefault('HELGA_ABC_ASSET_NAME_SUFFIX', asset_name_suffix)
+        char_metadata_dict.setdefault('HELGA_ABC_ALEMBIC_EXPORT_PATH', str(alembic_export_path))
+
+        
+        #return
+        return char_metadata_dict
 
     
 

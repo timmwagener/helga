@@ -64,7 +64,7 @@ ALEMBIC_OPTIONS_DICT = {'help' : FLAG_ONLY_ATTR,
 
 #ALEMBIC_OPTIONS_ENABLED_DICT
 ALEMBIC_OPTIONS_ENABLED_DICT = {'help_enabled' : False,
-                                'preRollStartFrame_enabled' : True,
+                                'preRollStartFrame_enabled' : False,
                                 'dontSkipUnwrittenFrames_enabled' : True,
                                 'verbose_enabled' : True}
 
@@ -100,7 +100,7 @@ ALEMBIC_JOB_ARG_FLAGS_ENABLED_DICT = {'attr_enabled' : False,
                                         'eulerFilter_enabled' : False,
                                         'file_enabled' : True,
                                         'frameRange_enabled' : True,
-                                        'frameRelativeSample_enabled' : True,
+                                        'frameRelativeSample_enabled' : False,
                                         'noNormals_enabled' : False,
                                         'renderableOnly_enabled' : False,
                                         'root_enabled' : True,
@@ -886,7 +886,7 @@ if (__name__ == '__main__'):
     #Import variable
     do_reload = True
 
-    #asset_manager_mayapy
+    #asset_manager_mayapy (file is in the same folder as __file__)
     import asset_manager_mayapy
     if(do_reload):reload(asset_manager_mayapy)
 

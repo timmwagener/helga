@@ -511,6 +511,17 @@ def setup_menu_alembic(wdgt, menubar):
     wdgt.mnu_alembic.addAction(wdgt.acn_set_preRollStartFrame)
 
 
+    #acn_set_abc_start_frame_offset - THIS IS AN OWN PARAM. AND NO OFFICIAL ABC PLUGIN PARAM.
+    wdgt.acn_set_abc_start_frame_offset = asset_manager_doublespinbox_checkable_action.AssetManagerDoubleSpinBoxCheckableAction(text = 'Startframe offset',
+                                                                                                                            minimum = -10000.0,
+                                                                                                                            maximum = 0.0,
+                                                                                                                            initial_state = wdgt.get_abc_start_frame_offset_enabled(),
+                                                                                                                            initial_value = wdgt.get_abc_start_frame_offset(),
+                                                                                                                            parent = wdgt)
+    wdgt.acn_set_abc_start_frame_offset.setObjectName('acn_set_abc_start_frame_offset')
+    wdgt.mnu_alembic.addAction(wdgt.acn_set_abc_start_frame_offset)
+
+
     #separator
     wdgt.mnu_alembic.addSeparator()
 
@@ -772,6 +783,10 @@ def connect_menu_alembic(wdgt):
     #acn_set_preRollStartFrame
     wdgt.acn_set_preRollStartFrame.value_changed.connect(wdgt.alembic_functionality.sgnl_set_preRollStartFrame)
     wdgt.acn_set_preRollStartFrame.state_changed.connect(wdgt.alembic_functionality.sgnl_set_preRollStartFrame_enabled)
+
+    #acn_set_abc_start_frame_offset
+    wdgt.acn_set_abc_start_frame_offset.value_changed.connect(wdgt.set_abc_start_frame_offset)
+    wdgt.acn_set_abc_start_frame_offset.state_changed.connect(wdgt.set_abc_start_frame_offset_enabled)
 
 
 

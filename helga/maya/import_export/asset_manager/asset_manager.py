@@ -224,6 +224,10 @@ TOOL_ROOT_PATH = asset_manager_globals.TOOL_ROOT_PATH
 MEDIA_PATH = asset_manager_globals.MEDIA_PATH
 ICONS_PATH = asset_manager_globals.ICONS_PATH
 
+#ABC_START_FRAME_OFFSET_ENABLED
+ABC_START_FRAME_OFFSET_ENABLED = asset_manager_globals.ABC_START_FRAME_OFFSET_ENABLED
+#ABC_START_FRAME_OFFSET
+ABC_START_FRAME_OFFSET = asset_manager_globals.ABC_START_FRAME_OFFSET
 
 #AssetManager Sizes
 STACKEDWIDGET_DIVIDER_HEIGHT = asset_manager_globals.STACKEDWIDGET_DIVIDER_HEIGHT
@@ -440,6 +444,7 @@ class AssetManager(form_class, base_class):
     set_progressbar_range = QtCore.Signal(int, int)
     progressbar_reset = QtCore.Signal()
     
+    
 
 
 
@@ -537,6 +542,12 @@ class AssetManager(form_class, base_class):
         self.always_save_before_export = None
         #never_save_before_export
         self.never_save_before_export = None
+
+        #abc_start_frame_offset_enabled
+        self.abc_start_frame_offset_enabled = ABC_START_FRAME_OFFSET_ENABLED
+
+        #abc_start_frame_offset
+        self.abc_start_frame_offset = ABC_START_FRAME_OFFSET
 
         
 
@@ -1765,6 +1776,46 @@ class AssetManager(form_class, base_class):
         return self.hide_export_shell
 
 
+    @QtCore.Slot(float)
+    def set_abc_start_frame_offset(self, value):
+        """
+        Set self.abc_start_frame_offset
+        """
+        
+        self.abc_start_frame_offset = value
+
+        #log
+        self.logger.debug('Set abc_start_frame_offset to {0}'.format(self.get_abc_start_frame_offset()))
+
+
+    def get_abc_start_frame_offset(self):
+        """
+        Get self.abc_start_frame_offset
+        """
+        
+        return self.abc_start_frame_offset
+
+
+    @QtCore.Slot(bool)
+    def set_abc_start_frame_offset_enabled(self, value):
+        """
+        Set self.abc_start_frame_offset_enabled
+        """
+        
+        self.abc_start_frame_offset_enabled = value
+
+        #log
+        self.logger.debug('Set abc_start_frame_offset_enabled to {0}'.format(self.get_abc_start_frame_offset_enabled()))
+
+
+    def get_abc_start_frame_offset_enabled(self):
+        """
+        Get self.abc_start_frame_offset_enabled
+        """
+        
+        return self.abc_start_frame_offset_enabled
+
+
 
 
 
@@ -2207,6 +2258,12 @@ class AssetManager(form_class, base_class):
 
         #alembic_path, shot_start, shot_end
         alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+
+        #start frame offset enabled
+        if (self.get_abc_start_frame_offset_enabled()):
+            
+            #shot_start + offset (Offset is negative by default)
+            shot_start = shot_start + self.get_abc_start_frame_offset()
         
         
         #alembic_export_path
@@ -2377,6 +2434,12 @@ class AssetManager(form_class, base_class):
         
         #alembic_path, shot_start, shot_end
         alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
+
+        #start frame offset enabled
+        if (self.get_abc_start_frame_offset_enabled()):
+            
+            #shot_start + offset (Offset is negative by default)
+            shot_start = shot_start + self.get_abc_start_frame_offset()
         
 
         #alembic_export_path
@@ -2517,13 +2580,27 @@ class AssetManager(form_class, base_class):
         #add maya_file_path
         base_metadata_dict.setdefault('HELGA_ABC_MAYA_FILE', str(self.maya_functionality.get_maya_file()))
 
+        
         #alembic_path, shot_start, shot_end
         alembic_path, shot_start, shot_end = self.checks_functionality.check_base_data(shot_metadata_node)
-        
+
         #add to base_metadata_dict
         base_metadata_dict.setdefault('HELGA_ABC_SHOT_START', str(shot_start))
         base_metadata_dict.setdefault('HELGA_ABC_SHOT_END', str(shot_end))
         base_metadata_dict.setdefault('HELGA_ABC_ALEMBIC_PATH', str(alembic_path))
+
+        
+        #abc_start_frame_offset_enabled
+        abc_start_frame_offset_enabled = self.get_abc_start_frame_offset_enabled()
+        #abc_start_frame_offset
+        abc_start_frame_offset = self.get_abc_start_frame_offset()
+        
+        #add to base_metadata_dict
+        base_metadata_dict.setdefault('HELGA_ABC_START_FRAME_OFFSET_ENABLED', str(abc_start_frame_offset_enabled))
+        base_metadata_dict.setdefault('HELGA_ABC_START_FRAME_OFFSET', str(abc_start_frame_offset))
+        
+        
+        
 
         #return
         return base_metadata_dict

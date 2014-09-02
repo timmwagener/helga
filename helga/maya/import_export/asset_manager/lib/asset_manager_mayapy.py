@@ -59,86 +59,147 @@ if(do_reload):reload(global_functions)
 
 
 
-#logger
+#MayapyExportProcess class
 #------------------------------------------------------------------
-
-#logger
-logger = logging.getLogger('mayapy')
-logging_level = logging.DEBUG
-logger.setLevel(logging_level)
-
-
-
-
-
-
-
-
-
-#Functions
-#------------------------------------------------------------------
-
-def get_export_dict():
+class MayapyExportProcess(object):
     """
-    Get dict of the env. vars. that start with HELGA_ABC
+    Helper class to run the whole alembic export process in Mayapy in headless mode.
     """
 
-    #env_dict
-    env_dict = os.environ.copy()
+    def __new__(cls, *args, **kwargs):
+        """
+        MayapyExportProcess instance factory.
+        """
 
-    #export_dict
-    export_dict = {}
-    #iterate
-    for key, value in env_dict.iteritems():
+        #mayapy_export_process_instance
+        mayapy_export_process_instance = super(MayapyExportProcess, cls).__new__(cls, args, kwargs)
 
-        #start with HELGA_ABC
-        if (key.startswith('HELGA_ABC')):
+        return mayapy_export_process_instance
 
-            #set
-            export_dict.setdefault(key, value)
+    
+    def __init__(self, logging_level = logging.DEBUG):
+        """
+        Customize MayapyExportProcess instance.
+        """
 
-    #return
-    return export_dict
-
-
-def print_export_dict():
-    """
-    Get dict of the env. vars. that start with HELGA_ABC
-    """
-
-    #get_export_dict
-    export_dict = get_export_dict()
-
-    #iterate
-    for key, value in export_dict.iteritems():
-
-        logger.debug('{0} - {1}'.format(key, value))
-
-
-def open_file_and_export():
-    """
-    Get the env. vars., open the file and export.
-    """
-
-    #abc_command
-    abc_command = os.environ.get('HELGA_ABC_COMMAND', None)
-
-    #maya_file
-    maya_file = os.environ.get('HELGA_ABC_MAYA_FILE', None)
+        #logger
+        #------------------------------------------------------------------
+        
+        #logger
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logging_level = logging_level
+        self.logger.setLevel(self.logging_level)
 
 
 
-    #open file
-    try:
-        pm.openFile(maya_file)
-    except:
-        print('Error opening {0}'.format(maya_file))
 
-    #export abc
-    try:
-        pm.mel.eval(abc_command)
-    except:
-        print('Error exporting Alembic.\nAbc cmd: {0}'.format(abc_command))
+        #instance variables
+        #------------------------------------------------------------------
+
+        #export_dict
+        self.export_dict = self.get_export_dict()
+
+
+
+
+
+
+    #Run
+    #------------------------------------------------------------------
+
+    def run(self):
+        """
+        Method to start export process.
+        """
+
+        #print_export_dict
+        self.print_export_dict()
+
+        #open_file_and_export
+        self.open_file_and_export()
+
+
+
+    #Methods
+    #------------------------------------------------------------------
+
+    def get_export_dict(self):
+        """
+        Get dict of the env. vars. that start with HELGA_ABC
+        """
+
+        #env_dict
+        env_dict = os.environ.copy()
+
+        #export_dict
+        export_dict = {}
+        #iterate
+        for key, value in env_dict.iteritems():
+
+            #start with HELGA_ABC
+            if (key.startswith('HELGA_ABC')):
+
+                #set
+                export_dict.setdefault(key, value)
+
+        #return
+        return export_dict
+
+
+    def print_export_dict(self):
+        """
+        Get dict of the env. vars. that start with HELGA_ABC
+        """
+
+        #get_export_dict
+        export_dict = self.get_export_dict()
+
+        #iterate
+        for key, value in export_dict.iteritems():
+
+            self.logger.debug('{0} - {1}'.format(key, value))
+
+
+    def open_file_and_export(self):
+        """
+        Get the env. vars., open the file and export.
+        """
+
+        #abc_command
+        abc_command = self.export_dict.get('HELGA_ABC_COMMAND', None)
+        #check
+        if not (abc_command):
+            #log
+            self.logger.debug('HELGA_ABC_COMMAND is None. Not exporting.')
+            return
+
+        #maya_file
+        maya_file = self.export_dict.get('HELGA_ABC_MAYA_FILE', None)
+        #check
+        if not (maya_file):
+            #log
+            self.logger.debug('HELGA_ABC_MAYA_FILE is None. Not exporting.')
+            return
+
+
+
+        #open file
+        try:
+            pm.openFile(maya_file)
+        except:
+            print('Error opening {0}'.format(maya_file))
+
+        #export abc
+        try:
+            pm.mel.eval(abc_command)
+        except:
+            print('Error exporting Alembic.\nAbc cmd: {0}'.format(abc_command))
+
+
+
+
+
+
 
 
 
@@ -156,15 +217,10 @@ def run():
     Execute the export.
     """
 
-    #get_export_dict
-    export_dict = get_export_dict()
-
-    #print_export_dict
-    print_export_dict()
-
-    #open_file_and_export
-    open_file_and_export()
-
+    #mayapy_export_process_instance
+    mayapy_export_process_instance = MayapyExportProcess()
+    #run
+    mayapy_export_process_instance.run()
 
 
 

@@ -45,6 +45,7 @@ class WorkerThread(QtCore.QThread):
 
     restart = QtCore.Signal()
     setup_timer = QtCore.Signal()
+    sgnl_task_done = QtCore.Signal()
 
     
 
@@ -201,7 +202,10 @@ class WorkerThread(QtCore.QThread):
             except Exception, e:
                 self.logger.debug('{0}'.format(e))
             finally:
+                #notify queue
                 self.queue.task_done()
+                #notify gui
+                self.sgnl_task_done.emit()
                     
 
 
@@ -306,6 +310,14 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
     #Getter & Setter
     #------------------------------------------------------------------
 
+    def get_thread_list(self):
+        """
+        Return self.thread_list
+        """
+
+        return self.thread_list
+
+    
     @QtCore.Slot(int)
     def set_thread_count(self, value):
         """

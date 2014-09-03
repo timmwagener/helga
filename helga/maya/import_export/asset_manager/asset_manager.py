@@ -441,8 +441,7 @@ class AssetManager(form_class, base_class):
     explanation_header_set_text = QtCore.Signal(str)
     explanation_text_set_text = QtCore.Signal(str)
     change_metadata_color = QtCore.Signal(QtGui.QColor)
-    set_progressbar_range = QtCore.Signal(int, int)
-    progressbar_reset = QtCore.Signal()
+    
     
     
 
@@ -660,6 +659,9 @@ class AssetManager(form_class, base_class):
         #connect_widgets
         self.connect_widgets()
 
+        #connect_threads
+        self.connect_threads()
+
         #show_menu
         if (self.show_menu):
             asset_manager_menu.connect_menu(self)
@@ -675,8 +677,7 @@ class AssetManager(form_class, base_class):
         self.explanation_header_set_text.connect(self.lbl_explanation_header.setText)
         self.explanation_text_set_text.connect(self.lbl_explanation_text.setText)
         self.change_metadata_color.connect(self.on_change_metadata_color)
-        self.set_progressbar_range.connect(self.progressbar.setRange)
-        self.progressbar_reset.connect(self.progressbar.reset)
+        
 
 
     def connect_buttons(self):
@@ -724,6 +725,18 @@ class AssetManager(form_class, base_class):
         self.prop_metadata_view.customContextMenuRequested.connect(self.display_prop_metadata_context_menu)
         #char_metadata_view
         self.char_metadata_view.customContextMenuRequested.connect(self.display_char_metadata_context_menu)
+
+
+    def connect_threads(self):
+        """
+        Connect threads.
+        """
+
+        #iterate threads
+        for thread in self.threads_functionality.get_thread_list():
+
+            #connect
+            thread.sgnl_task_done.connect(self.increment_progressbar)
 
     
     def style_ui(self):
@@ -1176,16 +1189,20 @@ class AssetManager(form_class, base_class):
         self.progressbar = QtGui.QProgressBar()
         self.progressbar.setObjectName('progressbar')
         #customize
-        self.progressbar.setTextVisible(False)
+        self.progressbar.setTextVisible(True)
         self.progressbar.setOrientation(QtCore.Qt.Vertical)
         self.progressbar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
 
         #set min, max and reset
-        self.set_progressbar_range.emit(0, 100)
-        self.progressbar_reset.emit()
+        self.progressbar.setRange(0, 1)
+        self.progressbar.setValue(0)
 
         #add to lyt
         self.lyt_metadata_progress.addWidget(self.progressbar)
+
+        #log
+        self.logger.debug('Progressbar range: {0} - {1}'.format(self.progressbar.minimum(), 
+                                                                self.progressbar.maximum()))
         
     
     def setup_mvc(self):
@@ -1938,21 +1955,63 @@ class AssetManager(form_class, base_class):
         self.progressbar.setStyleSheet(str_stylesheet)
 
 
-    @QtCore.Slot(int)
+    @QtCore.Slot()
     def increment_progressbar(self, step_size = 1):
         """
-        Increment self.progressbar by step_size
+        Increment self.progressbar by step_size.
         """
 
         #current_value
         current_value = self.progressbar.value()
+        #if zero set to 1 for more readable maximum checking
+        if not (current_value):
+            current_value = 1
 
         #incremented_value
         incremented_value = current_value + step_size
-        print(incremented_value)
+
+        
+        #progressbar full (This should be true on the last job_done signal)
+        if (incremented_value == self.progressbar.maximum()):
+
+            #set range
+            self.progressbar.setRange(0, 1)
+            #reset
+            self.progressbar.setValue(0)
+
+            #log
+            self.logger.debug('Progressbar reset.')
+
+            #return
+            return
+
 
         #set
         self.progressbar.setValue(incremented_value)
+
+        #log
+        self.logger.debug('Progressbar value: {0}'.format(self.progressbar.value()))
+
+
+    @QtCore.Slot()
+    def increment_progressbar_range(self, step_size = 1):
+        """
+        Increment progressbar maximum by one.
+        Keep minimum unaffected.
+        """
+
+        #current_maximum
+        current_maximum = self.progressbar.maximum()
+
+        #incremented_maximum
+        incremented_maximum = current_maximum + step_size
+
+        #set range
+        self.progressbar.setRange(0, incremented_maximum)
+
+        #log
+        self.logger.debug('Progressbar range: {0} - {1}'.format(self.progressbar.minimum(), 
+                                                                self.progressbar.maximum()))
 
 
     
@@ -2500,8 +2559,14 @@ class AssetManager(form_class, base_class):
                                                                         export_thread_timeout,
                                                                         hide_export_shell)
 
+        
+        #progressbar range signal
+        self.increment_progressbar_range()
+
         #add to queue
         self.threads_functionality.add_to_queue(export_closure)
+
+        
 
         
 
@@ -2772,6 +2837,7 @@ class AssetManager(form_class, base_class):
         Test the progressbar in action.
         """
 
+        '''
         try:
             
             try:
@@ -2781,9 +2847,9 @@ class AssetManager(form_class, base_class):
                 pass
 
             #set range
-            self.set_progressbar_range.emit(minimum, maximum)
+            self.progressbar.setRange(minimum, maximum)
             #reset
-            self.progressbar_reset.emit()
+            self.progressbar.setValue(minimum)
 
             #progress_bar_test_timer
             self.progress_bar_test_timer = QtCore.QTimer(self)
@@ -2792,19 +2858,24 @@ class AssetManager(form_class, base_class):
             self.progress_bar_test_timer.start(interval)
 
             #while
-            while (self.progressbar.value() < maximum):
+            while (True):
+
+                if (self.progressbar.value() < maximum)
+                
                 QtGui.qApp.processEvents()
 
             #stop timer
             self.progress_bar_test_timer.stop()
-            
-            #reset
-            self.progressbar_reset.emit()
         
         except:
             
             #log
             self.logger.debug('Error in progressbar test run. Maybe the object has been destroyed.')
+
+        '''
+
+        #log
+        self.logger.debug('Currently disfunctional.')
 
         
         

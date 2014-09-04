@@ -518,3 +518,163 @@ class AssetManagerFunctionality(QtCore.QObject):
             self.remove_attribute_from_node(node, attribute_name)
 
 
+
+
+
+
+
+    #Asset preparation
+    #------------------------------------------------------------------
+
+    @QtCore.Slot(str)
+    def create_prop_base_setup(self, asset_name = 'example_asset'):
+        """
+        This is a convenience function to create the base setup for the prop assets
+        in a consistent way (Groups, manips, locator).
+        """
+
+        #Locator error check
+        #------------------------------------------------------------------
+
+        if (pm.objExists('loc_{0}'.format(asset_name))):
+
+            #log
+            self.logger.debug('Locator of name {0} already exists. PyMEL will throw an error if the locator has the same name.\
+\nPlease rename the prop. Not creating asset base setup.'.format('loc_{0}'.format(asset_name)))
+
+            return
+
+
+        #Create groups
+        #------------------------------------------------------------------
+        
+        #grp_geo
+        pm.select(cl = True)
+        grp_geo = pm.group(name = 'grp_geo', empty = True)
+        pm.select(cl = True)
+
+        
+        #grp_asset
+        pm.select(cl = True)
+        grp_asset = pm.group(name = 'grp_asset', empty = True)
+        pm.select(cl = True)
+        pm.parent(grp_asset, grp_geo)
+        pm.select(cl = True)
+
+        #grp_proxy
+        pm.select(cl = True)
+        grp_proxy = pm.group(name = 'grp_proxy', empty = True)
+        pm.select(cl = True)
+        pm.parent(grp_proxy, grp_geo)
+        pm.select(cl = True)
+
+
+        
+        #grp_rig
+        pm.select(cl = True)
+        grp_rig = pm.group(name = 'grp_rig', empty = True)
+        pm.select(cl = True)
+
+        #grp_manips
+        pm.select(cl = True)
+        grp_manips = pm.group(name = 'grp_manips', empty = True)
+        pm.select(cl = True)
+        pm.parent(grp_manips, grp_rig)
+        pm.select(cl = True)
+
+        #grp_joints
+        pm.select(cl = True)
+        grp_joints = pm.group(name = 'grp_joints', empty = True)
+        pm.select(cl = True)
+        pm.parent(grp_joints, grp_rig)
+        pm.select(cl = True)
+
+        #grp_nodes
+        pm.select(cl = True)
+        grp_nodes = pm.group(name = 'grp_nodes', empty = True)
+        pm.select(cl = True)
+        pm.parent(grp_nodes, grp_rig)
+        pm.select(cl = True)
+
+
+
+        #Create manipulator
+        #------------------------------------------------------------------
+
+        #grp_manip_asset
+        pm.select(cl = True)
+        grp_manip_asset = pm.group(name = 'grp_manip_{0}'.format(asset_name), empty = True)
+        pm.select(cl = True)
+        pm.parent(grp_manip_asset, grp_manips)
+        pm.select(cl = True)
+
+        #manip_asset
+        manip_asset = pm.circle(name = 'manip_{0}'.format(asset_name) , nr = (0,1,0), s = 16, ch = False)[0]
+        pm.select(cl = True)
+        pm.parent(manip_asset, grp_manip_asset)
+        pm.select(cl = True)
+
+
+
+        #Create joint
+        #------------------------------------------------------------------
+
+        #grp_joint_asset
+        pm.select(cl = True)
+        grp_joint_asset = pm.group(name = 'grp_joint_{0}'.format(asset_name), empty = True)
+        pm.select(cl = True)
+        pm.parent(grp_joint_asset, grp_joints)
+        pm.select(cl = True)
+
+        #joint_asset
+        joint_asset = pm.joint(name = 'jnt_{0}'.format(asset_name))
+        pm.select(cl = True)
+        pm.parent(joint_asset, grp_joint_asset)
+        pm.select(cl = True)
+
+
+
+        #Create locator
+        #------------------------------------------------------------------
+
+        #grp_locator_asset
+        pm.select(cl = True)
+        grp_locator_asset = pm.group(name = 'grp_loc_{0}'.format(asset_name), empty = True)
+        pm.select(cl = True)
+        pm.parent(grp_locator_asset, grp_nodes)
+        pm.select(cl = True)
+
+        #locator_asset
+        locator_asset = pm.spaceLocator(name = 'loc_{0}'.format(asset_name))
+        pm.select(cl = True)
+        pm.parent(locator_asset, grp_locator_asset)
+        pm.select(cl = True)
+
+
+
+
+        #Create constraints
+        #------------------------------------------------------------------
+
+        #pc_manip_to_grp_jnt
+        pm.select(cl = True)
+        pc_manip_to_grp_jnt = pm.parentConstraint(manip_asset, grp_joint_asset, mo = True)
+        pm.select(cl = True)
+
+        #sc_manip_to_grp_jnt
+        pm.select(cl = True)
+        sc_manip_to_grp_jnt = pm.scaleConstraint(manip_asset, grp_joint_asset, mo = True)
+        pm.select(cl = True)
+
+
+        #pc_manip_to_grp_loc
+        pm.select(cl = True)
+        pc_manip_to_grp_loc = pm.parentConstraint(manip_asset, grp_locator_asset, mo = True)
+        pm.select(cl = True)
+
+        #sc_manip_to_grp_loc
+        pm.select(cl = True)
+        sc_manip_to_grp_loc = pm.scaleConstraint(manip_asset, grp_locator_asset, mo = True)
+        pm.select(cl = True)
+
+

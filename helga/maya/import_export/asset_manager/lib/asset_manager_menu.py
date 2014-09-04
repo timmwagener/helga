@@ -63,6 +63,10 @@ if(do_reload):reload(asset_manager_doublespinbox_checkable_action)
 from lib.gui import asset_manager_line_edit_checkable_action
 if(do_reload):reload(asset_manager_line_edit_checkable_action)
 
+#asset_manager_line_edit_and_button_action
+from lib.gui import asset_manager_line_edit_and_button_action
+if(do_reload):reload(asset_manager_line_edit_and_button_action)
+
 #asset_manager_pre_export_dialog
 from lib.gui import asset_manager_pre_export_dialog
 if(do_reload):reload(asset_manager_pre_export_dialog)
@@ -631,6 +635,22 @@ def setup_menu_assets(wdgt, menubar):
     wdgt.mnu_attributes.addAction(wdgt.acn_remove_locator_attributes)
 
 
+
+
+    #separator
+    wdgt.mnu_assets.addSeparator()
+
+    #acn_create_prop_base_setup
+    wdgt.acn_create_prop_base_setup = asset_manager_line_edit_and_button_action.AssetManagerLineEditAndButtonAction(placeholder_text = 'Prop Name',
+                                                                                                                    button_text = 'Create prop base',
+                                                                                                                    parent = wdgt)
+    wdgt.acn_create_prop_base_setup.setObjectName('acn_create_prop_base_setup')
+    wdgt.mnu_assets.addAction(wdgt.acn_create_prop_base_setup)
+
+
+
+
+
 def connect_menu(wdgt):
     """
     Connect this menu.
@@ -848,6 +868,10 @@ def connect_menu_assets(wdgt):
     wdgt.acn_remove_locator_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_attribute_from_selected_nodes, 
                                                                         'helga_locator',
                                                                         'transform'))
+
+
+    #acn_create_prop_base_setup
+    wdgt.acn_create_prop_base_setup.sgnl_button_pressed.connect(wdgt.maya_functionality.create_prop_base_setup)
 
 
 

@@ -149,21 +149,25 @@ try:
     def load_plugins_deferred():
         
         #plugin_list
-        plugin_list = ['vrayformaya.mll', 'rrSubmit_Maya_8.5+.py', 'helga_asset_metadata.py', 'helga_shots_metadata.py']
+        plugin_list = ['vrayformaya.mll', 'rrSubmit_Maya_8.5+.py', 'helga_asset_metadata.py', 'helga_shots_metadata.py', 'AnimSchoolPicker.mll']
         
-        #Add custom test path if user is twagener
-        if(global_functions.get_user() == 'twagener'):
-            plugin_list.append('ocio_maya.mll')
 
         #iterate plugin_list and load
         for plugin_name in plugin_list:
             try:
+                
                 if not(cmds.pluginInfo(plugin_name , query = True, loaded = True)):
-                    cmds.loadPlugin(plugin_name)
-                    #Print to console instead of script editor
-                    sys.__stdout__.write('->Successfully loaded ' +plugin_name +' deferred\n')
+
+                    try:
+                        cmds.loadPlugin(plugin_name)
+                        #Print to console instead of script editor
+                        sys.__stdout__.write('->Successfully loaded ' +plugin_name +' deferred\n')
+                    except:
+                        sys.__stdout__.write('->Error loading ' +plugin_name +' deferred\n')
+                
                 else:
                     sys.__stdout__.write('->Skipped loading ' +plugin_name +' deferred. Plugin was already loaded\n')
+            
             except:
                 sys.__stdout__.write('->Error loading ' +plugin_name +' deferred\n')
 

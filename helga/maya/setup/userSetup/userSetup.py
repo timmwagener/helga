@@ -122,7 +122,8 @@ try:
     'cvShapeInverter.py', 
     'poseDeformer.mll',
     'poseReader.mll',
-    'resetSkinJoint.mll']
+    'resetSkinJoint.mll',
+    'matrixNodes.mll']
         
     #iterate plugin_list and load plugin shouldnt it be already loaded
     for plugin in plugin_list:
@@ -149,7 +150,11 @@ try:
     def load_plugins_deferred():
         
         #plugin_list
-        plugin_list = ['vrayformaya.mll', 'rrSubmit_Maya_8.5+.py', 'helga_asset_metadata.py', 'helga_shots_metadata.py', 'AnimSchoolPicker.mll']
+        plugin_list = ['vrayformaya.mll', 
+                        'rrSubmit_Maya_8.5+.py', 
+                        'helga_asset_metadata.py', 
+                        'helga_shots_metadata.py', 
+                        'AnimSchoolPicker.mll']
         
 
         #iterate plugin_list and load

@@ -230,6 +230,9 @@ if (PIPELINE_BASE_PATH):
     HOUDINI_DIGITAL_ASSETS_PATH = MAYA_PROJECT_PATH + r'/scenes/assets'
     """Helga pipeline HOUDINI digital assets path"""
 
+    HOUDINI_OTL_PATH = HOUDINI_DIGITAL_ASSETS_PATH + r'/otls'
+    """Helga pipeline HOUDINI otl path"""
+
     HOUDINI_PATH = [HOUDINI_SETUP_PATH,
                     HOUDINI_DIGITAL_ASSETS_PATH,
                     PIPELINE_LIBRARIES_PATH_GENERAL_FOR_HOUDINI,

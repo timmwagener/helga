@@ -39,6 +39,7 @@ if(do_reload):reload(global_functions)
 PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH
 PIPELINE_HDRI_PATH = global_variables.PIPELINE_HDRI_PATH
 OCIO_LIN_TO_SRGB_SPI_LUT_HOUDINI = global_variables.OCIO_LIN_TO_SRGB_SPI_LUT_HOUDINI
+HOUDINI_OTL_PATH = global_variables.HOUDINI_OTL_PATH
 
 
 
@@ -85,6 +86,7 @@ try:
     #set variables
     os.environ['HELGA_SCRIPTS_BASE_PATH'] = PIPELINE_SCRIPTS_BASE_PATH
     os.environ['HELGA_HDRI_PATH'] = PIPELINE_HDRI_PATH
+    os.environ['HELGA_OTL_PATH'] = HOUDINI_OTL_PATH
 
 
     #SuccessMsg

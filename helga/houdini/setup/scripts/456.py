@@ -110,6 +110,10 @@ except:
 #Helga colorsettings
 #------------------------------------------------------------------
 
+#Disabled since we are doing normal linear light workflow again with sRGB
+#But we are still using OCIO in Nuke
+
+'''
 try:
 
     #default houdini startup when opened without hip file
@@ -122,6 +126,8 @@ except:
     
     #FailMsg
     print('Failed setting colorsettings')
+
+'''
 
 
 

@@ -5,15 +5,15 @@ strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
 
 roles:
-  color_picking: sRGB_SPI
+  color_picking: sRGB
   color_timing: Cineon
   compositing_log: Cineon
   data: raw
   default: raw
-  matte_paint: sRGB_SPI
+  matte_paint: sRGB
   reference: linear
   scene_linear: linear
-  texture_paint: sRGB_SPI
+  texture_paint: sRGB
 
 displays:
   default:
@@ -23,7 +23,7 @@ displays:
     - !<View> {name: rec709, colorspace: rec709}
 
 active_displays: [default]
-active_views: [sRGB_SPI]
+active_views: [sRGB]
 
 colorspaces:
   - !<ColorSpace>

@@ -43,6 +43,7 @@ Manual
 	manual/mesh_checklist
 	manual/animation_checklist
 	manual/photogrammetry_checklist
+	manual/fur_hda_setup
 	manual/i_am_a/i_am_a
 
 

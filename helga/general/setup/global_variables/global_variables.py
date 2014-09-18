@@ -88,6 +88,12 @@ if (PIPELINE_BASE_PATH):
     PIPELINE_ALEMBIC_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/cache/alembic'
     """Pipeline Alembic path. Below this directory you find all alembic caches for the show."""
 
+    PIPELINE_FUR_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/cache/fur'
+    """Pipeline fur path. Below this directory you find all fur caches for the show."""
+
+    PIPELINE_TEXTURES_PATH = PIPELINE_ASSETS_PATH + r'/textures'
+    """Pipeline textures path. Below this directory you find all published textures for the show."""
+
     PIPELINE_SHOTS_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/scenes/shots'
     """Pipeline Shots path. Below this directory you find all shots for the show."""
 

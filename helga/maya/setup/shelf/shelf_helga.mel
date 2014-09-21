@@ -64,6 +64,33 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
+        -annotation "asset_manager" 
+        -enableBackground 0
+        -align "center" 
+        -label "asset_manager" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_asset_manager.png" 
+        -image1 "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_asset_manager.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "from helga.maya.import_export.asset_manager import asset_manager\nreload(asset_manager)\n\n\nasset_manager.run(show_menu = False)" 
+        -sourceType "python" 
+        -doubleClickCommand "from helga.maya.import_export.asset_manager import asset_manager\nreload(asset_manager)\n\n\nasset_manager.run()" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
         -annotation "User Script" 
         -enableBackground 0
         -align "center" 

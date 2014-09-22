@@ -2922,13 +2922,13 @@ class AssetManager(form_class, base_class):
 #Run
 #------------------------------------------------------------------
 
-def run():
+def run(show_menu = True):
     """
     Standardized run() method
     """
     
     #asset_manager_instance
-    asset_manager_instance = AssetManager()
+    asset_manager_instance = AssetManager(show_menu = show_menu)
     asset_manager_instance.show()
 
 

@@ -40,7 +40,7 @@ class RatConverter(base_class, form_class):
 
             dst_full_path = str(img_full_path.rsplit('.', 1)[0] + '.rat')
 
-            commandline = ICONVERT_PATH + ' -d ' + str(self.get_image_bit_depth(img_full_path)) + ' ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"'
+            commandline = ICONVERT_PATH + ' -d ' + str(self.get_image_bit_depth(img_full_path)) + ' ' + '-g off ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"'
 
             self.progressbar.setFormat('Converting ' + img_full_path.rstrip('/')[0])
 

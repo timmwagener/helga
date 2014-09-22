@@ -3,11 +3,14 @@
 import sys
 import os
 import subprocess
-from PIL import Image, ImageFile
+
+from PIL import Image
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
+
+from thread import start_new_thread
 
 form_class, base_class = uic.loadUiType("media/rat_converter.ui")
 

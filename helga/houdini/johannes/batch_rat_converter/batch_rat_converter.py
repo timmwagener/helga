@@ -4,13 +4,14 @@ import sys
 import os
 import subprocess
 
-from PIL import Image
-
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
-from thread import start_new_thread
+from PIL import Image
+from multiprocessing import Pool
+from multiprocessing import Process
+import threading
 
 form_class, base_class = uic.loadUiType("media/rat_converter.ui")
 
@@ -24,14 +25,30 @@ class RatConverter(base_class, form_class):
         
         QtGui.QMainWindow.__init__(self, parent)
         self.setupUi(self)
-        self.button_batch_convert.clicked.connect(self.batch_convert)
+        self.button_batch_convert.clicked.connect(self.batch_convert_threaded)
         self.button_remove_source.clicked.connect(self.remove_source)
         self.button_remove_target.clicked.connect(self.remove_target)
 
         self.setAcceptDrops(True)
 
 
-    def batch_convert(self):
+    def batch_convert_threaded(self):
+
+        print "before pool"
+
+        pool_size = 4
+
+        p = Pool(processes=pool_size, initializer=self.initializer, initargs=(self,), maxtasksperchild=1)
+
+        p.map(self.convert_file, (self,) *len([0, 1, 2]))
+
+        print "after map"
+
+
+    def initializer(self, inst):
+        inst.start_process()
+
+    def batch_convert(self, id):
 
         current_img_number = 1
         for item_row in range(self.target_list.count()):
@@ -40,11 +57,11 @@ class RatConverter(base_class, form_class):
 
             dst_full_path = str(img_full_path.rsplit('.', 1)[0] + '.rat')
 
-            commandline = ICONVERT_PATH + ' -d ' + str(self.get_image_bit_depth(img_full_path)) + ' ' + '-g off ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"'
+            commandline = ICONVERT_PATH + ' -d ' + str(self.get_image_bit_depth(img_full_path)) + ' ' + '-g off ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"' + '\n'
 
             self.progressbar.setFormat('Converting ' + img_full_path.rstrip('/')[0])
 
-            print('commandline: ' + commandline)
+            print(commandline)
 
             subprocess.call(commandline, shell =True)
 
@@ -54,7 +71,26 @@ class RatConverter(base_class, form_class):
             pass
 
         self.progressbar.setFormat('Done.')
-        
+
+
+    def convert_file(self, row):
+
+        print "convert_file"
+
+        img_full_path = str(self.target_list.item(item_row).text().replace('\\', '/'))
+
+        dst_full_path = str(img_full_path.rsplit('.', 1)[0] + '.rat')
+
+        commandline = ICONVERT_PATH + ' -d ' + str(self.get_image_bit_depth(img_full_path)) + ' ' + '-g off ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"' + '\n'
+
+        self.progressbar.setFormat('Converting ' + img_full_path.rstrip('/')[0])
+
+        print(commandline)
+
+        subprocess.call(commandline, shell =True)
+
+        self.progressbar.setValue((current_img_number*100)/self.target_list.count())
+
 
     def remove_source(self):
 
@@ -162,7 +198,6 @@ class RatConverter(base_class, form_class):
 
         return MODE_TO_BPP[data.mode]/3
         '''
-
 
 if(__name__ == '__main__'):
 

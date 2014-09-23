@@ -151,13 +151,13 @@ class MantraFunctionality(object):
             print('\n\n\n----------------------------------\n{0}\n----------------------------------'.format(mantra_node.path()))
 
             #set_ifd_path
-            self.set_ifd_path(mantra_node)
+            self.set_ifd_path(mantra_node, testing = testing)
 
             #set_picture_path
             self.set_picture_path(mantra_node, testing = testing)
 
 
-    def set_ifd_path(self, node):
+    def set_ifd_path(self, node, testing = False):
         """
         Set path for ifd rendering. Ifd files are like .rib files and are consumed by
         Mantra.
@@ -182,8 +182,20 @@ class MantraFunctionality(object):
 
 
         #ifd_path
-        ifd_path = '{0}/ifd/{1}/{2}/{1}_{2}.{3}.ifd'.format(HIP, HIPNAME, take, FRAME_PADDING)
 
+        #testing
+        if (testing):
+            
+            #ifd_path
+            ifd_path = '{0}/ifd/{1}/{2}/{3}/{2}_{3}.{4}.ifd'.format(HIP, 'testing', HIPNAME, take, FRAME_PADDING)
+
+        #comp
+        else:
+
+            #ifd_path
+            ifd_path = '{0}/ifd/{1}/{2}/{3}/{2}_{3}.{4}.ifd'.format(HIP, 'comp', HIPNAME, take, FRAME_PADDING)
+
+        
         #set ifd path
         parm_soho_diskfile.set(ifd_path)
 
@@ -251,9 +263,110 @@ class MantraFunctionality(object):
         print('{0} --> picture path'.format(node.path()))
         
 
-        
+    def apply_base_setup(self):
+        """
+        Apply rendering base setup for the selected Mantra nodes.
+        """
+
+        #mantra_nodes_list
+        mantra_nodes_list = self.get_selected_nodes_of_type(node_type = 'ifd')
+        #check
+        if not (mantra_nodes_list):
+            #log
+            print('No Mantra nodes selected. Please select a Mantra node and try again.')
+            return
+
+
+        #iterate mantra nodes and set pathes
+        for mantra_node in mantra_nodes_list:
+
+            #log
+            print('\n\n\n----------------------------------\n{0}\n----------------------------------'.format(mantra_node.path()))
+
+            #set_mantra_base_parameters
+            self.set_mantra_base_parameters(mantra_node)
+
+
+    def set_mantra_base_parameters(self, node):
+        """
+        Set mantra base parameters. This is the technically correct base setup.
+        It is ment as a starting ground that gets things like exr compression etc. right.
+        From this foundation you are ment to try and tweak the look.
+        """
+
+
+        #Objects
+        #------------------------------------------------------------------
+
+        #soho_autoheadlight
+        self.set_parm_value(node, 'soho_autoheadlight', False)
+        #log
+        print('{0} to {1}'.format('soho_autoheadlight', self.get_parm_value(node, 'soho_autoheadlight')))
         
 
+        
+        #Properties/Output Options
+        #------------------------------------------------------------------
+
+        #vm_image_exr_compression
+        self.set_parm_value(node, 'vm_image_exr_compression', 'zips')
+        #log
+        print('{0} to {1}'.format('vm_image_exr_compression', self.get_parm_value(node, 'vm_image_exr_compression')))
+
+
+
+        #Properties/Render
+        #------------------------------------------------------------------
+
+        #vm_renderengine
+        self.set_parm_value(node, 'vm_renderengine', 'pbrraytrace')
+        #log
+        print('{0} to {1}'.format('vm_renderengine', self.get_parm_value(node, 'vm_renderengine')))
+
+
+
+        #Properties/Render
+        #------------------------------------------------------------------
+
+        #vm_samplelock
+        self.set_parm_value(node, 'vm_samplelock', False)
+        #log
+        print('{0} to {1}'.format('vm_samplelock', self.get_parm_value(node, 'vm_samplelock')))
+
+
+
+        #Properties/Shading
+        #------------------------------------------------------------------
+
+        #vm_reflectlimit
+        self.set_parm_value(node, 'vm_reflectlimit', 5)
+        #log
+        print('{0} to {1}'.format('vm_reflectlimit', self.get_parm_value(node, 'vm_reflectlimit')))
+
+        #vm_refractlimit
+        self.set_parm_value(node, 'vm_refractlimit', 5)
+        #log
+        print('{0} to {1}'.format('vm_refractlimit', self.get_parm_value(node, 'vm_refractlimit')))
+
+        #vm_diffuselimit
+        self.set_parm_value(node, 'vm_diffuselimit', 1)
+        #log
+        print('{0} to {1}'.format('vm_diffuselimit', self.get_parm_value(node, 'vm_diffuselimit')))
+
+        #vm_pbrreflectratio
+        self.set_parm_value(node, 'vm_pbrreflectratio', 1)
+        #log
+        print('{0} to {1}'.format('vm_pbrreflectratio', self.get_parm_value(node, 'vm_pbrreflectratio')))
+
+
+
+        #Properties/Statistics
+        #------------------------------------------------------------------
+
+        #vm_alfprogress
+        self.set_parm_value(node, 'vm_alfprogress', True)
+        #log
+        print('{0} to {1}'.format('vm_alfprogress', self.get_parm_value(node, 'vm_alfprogress')))
 
 
 
@@ -313,6 +426,23 @@ class MantraFunctionality(object):
 
         #return
         return parm.eval()
+
+
+    def set_parm_value(self, node, parm_name, value):
+        """
+        Set value for parm with parm_name on node.
+        """
+
+        #parm
+        parm = node.parm(parm_name)
+        #check
+        if not (parm):
+            #log
+            print('Node {0} does not have a parm with name {1}. Not setting value'.format(node.name(), parm_name))
+            return
+
+        #set
+        parm.set(value)
 
 
     def get_shot_name(self):

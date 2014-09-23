@@ -8,9 +8,14 @@
   <toolshelf name="helga" label="helga">
     <memberTool name="set_renderpathes_testing"/>
     <memberTool name="set_renderpathes"/>
+    <memberTool name="apply_base_setup"/>
   </toolshelf>
 
   <tool name="set_renderpathes" label="Set renderpathes" icon="PLASMA_App">
+    <toolMenuContext name="network">
+      <contextNetType>ROP</contextNetType>
+    </toolMenuContext>
+    <toolSubmenu>helga/rendering</toolSubmenu>
     <script scriptType="python"><![CDATA[#import
 from helga.houdini.rendering.mantra_functionality import mantra_functionality
 reload(mantra_functionality)
@@ -19,10 +24,14 @@ reload(mantra_functionality)
 mantra_functionality_instance = mantra_functionality.MantraFunctionality()
 
 #run
-mantra_functionality_instance.set_renderpathes()]]></script>
+mantra_functionality_instance.set_renderpathes(testing = False)]]></script>
   </tool>
 
   <tool name="set_renderpathes_testing" label="Set renderpathes for testing" icon="PLASMA_App">
+    <toolMenuContext name="network">
+      <contextNetType>ROP</contextNetType>
+    </toolMenuContext>
+    <toolSubmenu>helga/rendering</toolSubmenu>
     <script scriptType="python"><![CDATA[#import
 from helga.houdini.rendering.mantra_functionality import mantra_functionality
 reload(mantra_functionality)
@@ -31,6 +40,22 @@ reload(mantra_functionality)
 mantra_functionality_instance = mantra_functionality.MantraFunctionality()
 
 #run
-mantra_functionality_instance.set_renderpathes_testing()]]></script>
+mantra_functionality_instance.set_renderpathes(testing = True)]]></script>
+  </tool>
+
+  <tool name="apply_base_setup" label="Apply base setup for selected mantra nodes" icon="PLASMA_App">
+    <toolMenuContext name="network">
+      <contextNetType>ROP</contextNetType>
+    </toolMenuContext>
+    <toolSubmenu>helga/rendering</toolSubmenu>
+    <script scriptType="python"><![CDATA[#import
+from helga.houdini.rendering.mantra_functionality import mantra_functionality
+reload(mantra_functionality)
+
+#mantra_functionality_instance
+mantra_functionality_instance = mantra_functionality.MantraFunctionality()
+
+#run
+mantra_functionality_instance.apply_base_setup()]]></script>
   </tool>
 </shelfDocument>

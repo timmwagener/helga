@@ -40,10 +40,10 @@ the solved chunks and disable those that dont work before aligning and merging c
 		- chunks count < 10: *High*
 		- chunks count > 10: *Medium*
 	#. **Mesh**: 
-		- Face count: Custom (30000000 polies).
+		- Face count: Custom (**2.000.000** polies).
 	#. **Texture**:
 		- Size: 8192²
-		- Format: .png
+		- Format: **.jpg**
 
 
 
@@ -68,12 +68,11 @@ How folders in the **prop_x/photoscan/photos** dir. map to chunks in photoscan.
 Machine list
 ------------
 
-The following machines have a Photoscan license and we
-are allowed to use them:
+The following machines have a Photoscan license:
 
 - **Pegasus** (Manuel)
 - **Gnocchi** (Timm)
-- **Macheroni** (Timm)
+- **Maccheroni** (Timm)
 - **Adonis** (Johannes)
 - **Fusilli** (Silke)
 - **Gemelli** (Nicole)

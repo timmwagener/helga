@@ -30,36 +30,60 @@ Welcome to the Helga pipeline documentation. Here you can find almost all answer
 	All scripting and automatization comes **after** that and just builds on top of that!
 
 
-Manual
-------
+Organization
+------------
 
 .. toctree::
 	:maxdepth: 1
 	
-	manual/quick_guide
-	manual/naming_convention
-	manual/work_and_publish
-	manual/pipeline
-	manual/mesh_checklist
-	manual/animation_checklist
-	manual/photogrammetry_checklist
-	manual/fur_hda_setup
-	manual/i_am_a/i_am_a
+	organization/quick_guide
+	organization/naming_convention
+	organization/work_and_publish
+	organization/pipeline
+	organization/fur_hda_setup
 
 
+Standards
+---------
 
-API Documentation
------------------
+.. toctree::
+	:maxdepth: 1
+
+	standards/formats_and_standards
+
+
+Checklists
+----------
+
+.. toctree::
+	:maxdepth: 1
+	
+	checklists/mesh_checklist
+	checklists/animation_checklist
+	checklists/photogrammetry_checklist
+
+
+I am a
+------------
+
+.. toctree::
+	:maxdepth: 1
+
+	i_am_a/i_am_a
+
+
+Pipeline
+--------
 
 .. toctree::
    :maxdepth: 2
 
-   manual/apidoc/apidoc_overview
-   manual/apidoc/apidoc_coding_convention
+   pipeline/apidoc_overview
+   pipeline/apidoc_coding_convention
 
 
------------------------
-
+API Documentation
+-----------------
 
 .. autosummary::
 	:toctree: apidoc/

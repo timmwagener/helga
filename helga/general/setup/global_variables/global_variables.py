@@ -97,6 +97,9 @@ if (PIPELINE_BASE_PATH):
     PIPELINE_SHOTS_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/scenes/shots'
     """Pipeline Shots path. Below this directory you find all shots for the show."""
 
+    PIPELINE_RENDER_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/images'
+    """Pipeline render path. Below this directory you find all renders for the show that come from 3d."""
+
 
     PIPELINE_WORK_PROPS_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya/scenes/assets/work/props'
     """Pipeline work/props path. Below this directory you find all workfiles of props for the show."""

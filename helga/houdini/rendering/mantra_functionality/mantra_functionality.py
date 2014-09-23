@@ -63,6 +63,12 @@ if(do_reload):reload(global_functions)
 #Globals
 #------------------------------------------------------------------
 
+RENDER_IMAGE_FORMAT = 'exr'
+HELGA_RENDER_PATH = '$HELGA_RENDER_PATH'
+HIP = '$HIP'
+HIPNAME = '$HIPNAME:r'
+FRAME_PADDING = '$F4'
+
 
 
 
@@ -124,26 +130,134 @@ class MantraFunctionality(object):
     #Methods
     #------------------------------------------------------------------
 
-    def set_renderpathes_testing(self):
+    def set_renderpathes(self, testing = True):
         """
         Set the renderpathes for testing for the selected Mantra nodes.
         """
 
-        print('set_renderpathes_testing')
-
         #mantra_nodes_list
         mantra_nodes_list = self.get_selected_nodes_of_type(node_type = 'ifd')
+        #check
+        if not (mantra_nodes_list):
+            #log
+            print('No Mantra nodes selected. Please select a Mantra node and try again.')
+            return
 
 
+        #iterate mantra nodes and set pathes
+        for mantra_node in mantra_nodes_list:
+
+            #log
+            print('\n\n\n----------------------------------\n{0}\n----------------------------------'.format(mantra_node.path()))
+
+            #set_ifd_path
+            self.set_ifd_path(mantra_node)
+
+            #set_picture_path
+            self.set_picture_path(mantra_node, testing = testing)
 
 
-    def set_renderpathes(self):
+    def set_ifd_path(self, node):
         """
-        Set the renderpathes for the selected Mantra nodes.
-        This output is ment to be used in comp.
+        Set path for ifd rendering. Ifd files are like .rib files and are consumed by
+        Mantra.
         """
 
-        print('set_renderpathes')
+        #username
+        username = global_functions.get_user()
+        #check
+        if not (username):
+            #set unknown
+            username = 'unknown'
+
+
+        #take
+        take = self.get_parm_value(node, 'take')
+
+
+        #parm_soho_outputmode
+        parm_soho_outputmode = node.parm('soho_outputmode')
+        #parm_soho_diskfile
+        parm_soho_diskfile = node.parm('soho_diskfile')
+
+
+        #ifd_path
+        ifd_path = '{0}/ifd/{1}/{2}/{1}_{2}.{3}.ifd'.format(HIP, HIPNAME, take, FRAME_PADDING)
+
+        #set ifd path
+        parm_soho_diskfile.set(ifd_path)
+
+        #enable ifd rendering if not take __current__
+        if not (take == '_current_'):
+
+            #set outputmode
+            parm_soho_outputmode.set(True)
+
+        #else
+        else:
+
+            #log
+            print('{0} --> Take is _current_. Not enabling outputmode'.format(node.path()))
+
+
+
+        #log
+        print('{0} --> ifd path'.format(node.path()))
+
+
+    def set_picture_path(self, node, testing = False):
+        """
+        Set path for image rendering.
+        """
+
+        #username
+        username = global_functions.get_user()
+        #check
+        if not (username):
+            #set unknown
+            username = 'unknown'
+
+
+        #take
+        take = self.get_parm_value(node, 'take')
+
+
+        #parm_vm_picture
+        parm_vm_picture = node.parm('vm_picture')
+
+
+        #picture_path
+        
+        #testing
+        if (testing):
+
+            #picture_path
+            picture_path = '{0}/{1}/{2}/{3}/{4}/{3}_{4}.{5}.{6}'.format(HELGA_RENDER_PATH, 'testing', username, HIPNAME, take, FRAME_PADDING, RENDER_IMAGE_FORMAT)
+        
+        #comp
+        else:
+
+            #shot_name
+            shot_name = self.get_shot_name()
+
+            #picture_path
+            picture_path = '{0}/{1}/{2}/{3}/{4}/{3}_{4}.{5}.{6}'.format(HELGA_RENDER_PATH, 'comp', shot_name, HIPNAME, take, FRAME_PADDING, RENDER_IMAGE_FORMAT)
+
+        #set ifd path
+        parm_vm_picture.set(picture_path)
+
+
+        #log
+        print('{0} --> picture path'.format(node.path()))
+        
+
+        
+        
+
+
+
+
+
 
 
 
@@ -182,6 +296,59 @@ class MantraFunctionality(object):
         
         #return
         return matching_nodes_list
+
+
+    def get_parm_value(self, node, parm_name):
+        """
+        Return parm value for parm with parm_name on node.
+        """
+
+        #parm
+        parm = node.parm(parm_name)
+        #check
+        if not (parm):
+            #log
+            print('Node {0} does not have a parm with name {1}. Returning None'.format(node.name(), parm_name))
+            return None
+
+        #return
+        return parm.eval()
+
+
+    def get_shot_name(self):
+        """
+        Return parm value for parm with parm_name on node.
+        """
+
+        #hipfile_path
+        hipfile_path = hou.hipFile.path()
+
+        #check if path correct
+        if not ('lighting' in hipfile_path):
+
+            #log
+            print('Hipfile path {0} does not match pipeline shots path because it is not under a folder called lighting. Returning unknown as shot name'.format(hipfile_path))
+            return 'unknown'
+
+        #hipfile_path_list
+        hipfile_path_list = hipfile_path.split('/')
+
+        #lighting_index
+        lighting_index = hipfile_path_list.index('lighting')
+
+        #check if lighting_index correct
+        if not (lighting_index):
+
+            #log
+            print('lighting_index {0} for Hipfile path seems wrong. Returning unknown as shot name'.format(lighting_index))
+            return 'unknown'
+
+
+        #shot_name
+        shot_name = hipfile_path_list[lighting_index - 1]
+
+
+        return shot_name
 
 
 

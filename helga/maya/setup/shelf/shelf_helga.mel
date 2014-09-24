@@ -554,6 +554,32 @@ global proc shelf_helga () {
     shelfButton
         -enableCommandRepeat 1
         -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "TweenMachine" 
+        -enableBackground 0
+        -align "center" 
+        -label "tween_machine" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "Y:/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_tween_machine.png" 
+        -image1 "Y:/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_tween_machine.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source tweenMachine.mel; tweenMachine;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
         -width 35
         -height 35
         -manage 1

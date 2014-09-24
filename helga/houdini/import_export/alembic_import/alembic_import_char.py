@@ -1,18 +1,10 @@
 
 
 """
-alembic_import
+alembic_import_char
 ==========================================
 
-GUI to import Alembics according to our pipeline standards.
-
-It takes care of:
-
-#. Characters
-
-In the future it will also import props and directories of props.
-Cameras (for our shotcam setup) dont need a special import.
-They work out of the box.
+GUI to import Character Alembics according to our pipeline standards.
 
 This module is mainly needed because of the weird Alembic
 import in Houdini, that generates all these Alembic xform nodes
@@ -103,23 +95,23 @@ TOOL_ROOT_PATH = alembic_import_globals.TOOL_ROOT_PATH
 
 
 
-#AlembicImport class
+#AlembicImportChar class
 #------------------------------------------------------------------
-class AlembicImport(object):
+class AlembicImportChar(object):
     """
-    AlembicImport
+    AlembicImportChar
     """
 
 
     def __new__(cls, *args, **kwargs):
         """
-        AlembicImport instance factory.
+        AlembicImportChar instance factory.
         """
 
-        #alembic_import_instance
-        alembic_import_instance = super(AlembicImport, cls).__new__(cls, args, kwargs)
+        #alembic_import_char_instance
+        alembic_import_char_instance = super(AlembicImportChar, cls).__new__(cls, args, kwargs)
 
-        return alembic_import_instance
+        return alembic_import_char_instance
 
     
     def __init__(self,
@@ -130,7 +122,7 @@ class AlembicImport(object):
         """
 
         #super
-        self.parent_class = super(AlembicImport, self)
+        self.parent_class = super(AlembicImportChar, self)
         self.parent_class.__init__()
 
 
@@ -174,7 +166,7 @@ class AlembicImport(object):
     #Methods
     #------------------------------------------------------------------
 
-    def base_data_check(self):
+    def base_data_check_char(self):
         """
         Check base data from the node and return either False
         or the needed data. (Equivalent to True).
@@ -201,44 +193,19 @@ class AlembicImport(object):
         return [alembic_path]
 
 
-
-    def create_hierarchy(self, hierarchy_type = None):
+    def create_char(self):
         """
         Create hierarchy.
         """
 
-        #base_data_check
-        if not (self.base_data_check()):
+        #base_data_check_char
+        if not (self.base_data_check_char()):
             #log
-            self.logger.debug('Base data check failed, not creating Hierarchy.')
+            self.logger.debug('Base data check failed, not creating char.')
             return
 
-        
-
-        #char
-        if(hierarchy_type == 'char'):
-            self.create_character_hierarchy()
-        
-        #prop
-        elif(hierarchy_type == 'prop'):
-            self.create_prop_hierarchy()
-
-
-    def create_character_hierarchy(self):
-        """
-        Create character hierarchy.
-        """
-
-        #create_character_hierarchy
-        self.alembic_functionality.create_character_hierarchy(self.node)
-
-
-    def create_prop_hierarchy(self):
-        """
-        Create prop hierarchy.
-        """
-
-        pass
+        #create_char
+        self.alembic_functionality.create_char(self.node)
 
 
     def print_alembic_object_path_list(self):
@@ -246,15 +213,15 @@ class AlembicImport(object):
         Create hierarchy.
         """
 
-        #base_data_check
-        if not (self.base_data_check()):
+        #base_data_check_char
+        if not (self.base_data_check_char()):
             #log
             self.logger.debug('Base data check failed, not printing object path list.')
             return
 
 
         #alembic_path
-        alembic_path = self.base_data_check()[0]
+        alembic_path = self.base_data_check_char()[0]
 
         #print_alembic_object_path_list
         self.alembic_functionality.print_alembic_object_path_list(alembic_path)
@@ -341,5 +308,4 @@ class AlembicImport(object):
 
 if (__name__ == '__main__'):
 
-    #run
-    run()
+    pass

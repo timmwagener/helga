@@ -848,9 +848,7 @@ def connect_menu_assets(wdgt):
                                                                         'transform'))
 
     #acn_add_locator_attributes
-    wdgt.acn_add_locator_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_attribute_to_selected_nodes, 
-                                                                        'helga_locator',
-                                                                        'transform'))
+    wdgt.acn_add_locator_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_locator_attributes_to_selected_nodes, 'transform'))
 
 
 

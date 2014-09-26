@@ -554,8 +554,8 @@ global proc shelf_helga () {
     shelfButton
         -enableCommandRepeat 1
         -enable 1
-        -width 34
-        -height 34
+        -width 35
+        -height 35
         -manage 1
         -visible 1
         -preventOverride 0
@@ -573,6 +573,32 @@ global proc shelf_helga () {
         -marginWidth 1
         -marginHeight 1
         -command "source tweenMachine.mel; tweenMachine;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "bhGHost" 
+        -enableBackground 0
+        -align "center" 
+        -label "bh_ghost" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_bh_ghost.png" 
+        -image1 "C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_bh_ghost.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source \"bhGhost/bhGhost109/bhGhost.mel\"; bhGhost;" 
         -sourceType "mel" 
         -commandRepeatable 1
         -flat 1

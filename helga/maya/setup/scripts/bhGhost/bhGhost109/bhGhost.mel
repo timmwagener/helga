@@ -1,0 +1,682 @@
+/*
+==================================================================================================================================
+==================================================================================================================================
+
+     bhGhost 1.09 260713- Added 'Replace' Mode - each time a ghost is created it deletes all the others (I find this very useful for polishing animation)
+                                The GUI will resize to working mode too, if no objects are selected then the mesh list is displayed 
+								This makes it easy to script a button to ghost a specific character in the scene
+                               
+								Added 'create shelf button for current character' option
+==================================================================================================================================
+==================================================================================================================================
+ 
+     Concept and coding by Brian Horgan. Email - info@graphite9.com
+    
+     If you find this script useful please visit my site graphite9.com to see examples of my Animation and Rigging work.
+    
+     I work as a freelance animator/rigger and am available for hire.
+
+==================================================================================================================================
+
+     This script is provided 'as is' and no responsibility will be taken for any losses incurred while using it.
+     I don't have time to provide full support for this tool as it's provided for free but I do welcome comments and suggestions.
+
+==================================================================================================================================
+
+
+        To use : 
+    
+      * Type "bhGhost;" (without quotes) into the command line or script editor, or use the supplied shelf button to launch the GUI
+    
+      *  Select some meshes and press the 'Add Meshes' button. - NB these MUST be poly objects ONLY
+      *  Now click on the arrow beside the 'Meshes' tab to close the list and switch to working mode
+      *  Press the Ghost button to create a ghost/onion skin on the current frame
+    
+        If you don't see the ghosts make sure 'Strokes' are enabled in the viewport filter and make sure you are in standard
+         or High Quality viewport as Viewport 2.0 doesn't support toon lines (as of Maya 2013)
+        
+      *  The Slider control adjusts the line thickness to suit your scene  
+      *  The Colour dropdown allows you to change the colour of the lines to suit your characters 
+      *  The Vis button is for quickly showing/hiding the ghosts while working without deleting them
+      *  The Bust1 button will delete the ghost on the current frame (you can also overwrite a ghost by simply pressing the Ghost button again)
+      *  The BustAll button will delete all ghosts and clean up the scene file 
+      NB Be sure to use the BustAll button when finishing up your animation as otherwise the scene will have a bunch of duplicate meshes in it (inside the bhGhosts group)
+           
+    
+       If you'd like to set up Hotkeys for the Ghost button and BustAll button the commands to add are 
+       'bhGhostIt' and 'bhBustIt'. NB the GUI must still be used so that the tool knows which meshes to ghost.
+
+==============================================================================================================
+*/
+
+
+global proc bhGhost()
+{
+// build the UI
+    if (`window -exists bhGhost`)
+        deleteUI bhGhost;
+          global string $theLayout;
+        window -toolbox 1 -rtf true -menuBar 1 bhGhost ; 
+          
+        menu -l "Colour" -to 1 optionsMenu;		
+        menuItem -divider true;
+        $colorSel =`radioMenuItemCollection`;               
+        menuItem -label "Black"  -c bhBlackLine -radioButton off blk;
+        menuItem -label "White"  -c bhWhiteLine -radioButton off wht;
+        menuItem -label "Grey"  -c bhGreyLine -radioButton off gry;
+        menuItem -label "Red"  -c bhRedLine -radioButton off red;
+        menuItem -label "Green"  -c bhGreenLine -radioButton on grn;
+        menuItem -label "Blue"  -c bhBlueLine -radioButton off blu;
+        menuItem -label "Yellow"  -c bhYellowLine -radioButton off yel;
+      
+        menu -l "Mode" -to 1 aboutMenu;
+        menuItem -l "Replace Mode" -cb 0  repMode;
+		
+    	menu -l "Shelf" -to 1 shelfMenu;
+        menuItem -l "+Shelf Button"   -c bhGhostShelf aboutlabel6;
+    	menu -l "Help" -to 1 helpMenu;
+        menuItem -l "Show Help"   -c bhHelpWin aboutlabel5;
+    	menuItem -l "bhGhost 1.09"   -c goToG9Site aboutlabel3;
+    	menuItem -l "By Brian Horgan" -c goToG9Site aboutlabel;
+    	menuItem -l "www.graphite9.com " -c goToG9Site aboutlabel2;
+		    
+            
+        columnLayout -adj 1 mainCol;
+        string $theLayout =`frameLayout -borderStyle "in" -cc bhResizeWin -ec bhResizeWinTall -bv 1 -marginWidth 0 -collapsable 1 - collapse 1 -l "Meshes"`;
+        button -w 20 -label "Add Meshes" -command bhGetMeshes but; 
+        button -w 50 -label "Remove Highlighted" -command bhRemoveMeshes but2;
+        button -w 50 -label "Clear All" -command bhClearTSL but9;
+        rowColumnLayout -numberOfColumns 1;
+   
+        textScrollList -h 120 -w 160 -allowMultiSelection 1 meshTSL;
+        iconTextStaticLabel -st "textOnly"  -l " ";
+        setParent mainCol;
+        rowColumnLayout -numberOfColumns 3;
+        button -w 54 -label "Vis" -command bhToggleGhosts but6; 
+        button -w 54 -label "Bust1" -command bhBust1 but12;    
+        button -w 54 -label "BustAll" -command bhBustIt but5;
+        setParent mainCol;
+        floatSliderGrp  -field false
+              -minValue 0.01 -maxValue 1.0
+            	-fieldMinValue 0.001 -fieldMaxValue 1.0
+            	-value .1
+        		-step 0.001    		
+            	-dc "bh_LineThickness"
+            	-cc "bh_LineThickness"
+            	"line"
+            	;
+				 setParent mainCol;
+				 
+				rowColumnLayout -numberOfColumns 2;
+				//rowColumnLayout -numberOfColumns 1;
+		
+			
+        button -w 160	-label "Ghost" -command bhGhostFrame but3;
+    
+    showWindow bhGhost;
+     window -edit -widthHeight 168 263 bhGhost;
+	 
+	 string $testSel[] =`ls -sl`;// if some objects are selected add them to the mesh list
+	 if (`size $testSel` >0)
+	  {bhGetMeshes; bhResizeWin;window -edit -widthHeight 168 110 bhGhost;}
+	  else {frameLayout -e -collapse 0 $theLayout;}
+}	 
+//--------------------------------------------
+// visit my website proc
+ global proc goToG9Site ()
+	    {
+	        launch -web "http://www.graphite9.com/";
+	    };
+
+
+//----------------------------------------------------
+
+
+
+
+// window resizing procs
+
+global proc bhResizeWin()
+{
+    
+   window -edit -widthHeight 168 110 bhGhost;
+}
+global proc bhResizeWinTall()
+{
+    window -edit -widthHeight 168 263 bhGhost;
+}
+global proc bhClearTSL ()
+    {// clear the list
+    textScrollList -e -removeAll meshTSL;
+    }
+
+global proc bhGetMeshes ()
+    {
+        
+    string $allMeshes[] =`ls -sl`;
+    for ($each in $allMeshes)
+    {
+     int $flag=0;
+     string $listMeshes[] =`textScrollList -q -ai meshTSL`;
+            for ($item in $listMeshes)
+            {
+              if ($each==$item)
+              $flag=1;
+            
+            }
+    
+    if ($flag==0){
+    textScrollList -e -a $each meshTSL;
+    }   
+    }
+    }
+global proc bhRemoveMeshes()
+     {
+     
+      string $highlighted[] =`textScrollList -q -selectItem meshTSL`;
+            for ($selMesh in $highlighted)
+            textScrollList -e -removeItem  $selMesh meshTSL;
+     }   
+ 
+ 
+ 
+ global proc bhBustIt()
+    { string $origSelection[]=`ls -sl`; 
+    // delete all toon lines from scene
+    if (`objExists ("bhGhostNode")`){
+    select -r "bhGhostNode";
+    select -add "bhGhosts";  
+    delete;
+    print "All Ghosts Busted From Scene";
+	select -r $origSelection;
+	}
+    }
+    
+    global proc bhBust1()
+    { string $origSelection[]=`ls -sl`; 
+    int $curTime = `currentTime -q`;
+    string $ghostName= ("GGhost_"+$curTime);
+    // delete all toon lines from scene
+    if (`objExists ($ghostName)`){
+    // little bit of a hack here to keep things simple -
+    // the ghost gets scaled to 0 instead of being deleted to avoid issues with other ghosts
+    // to be improved..
+    
+   
+    setAttr ($ghostName+".scaleZ") 0;
+    setAttr ($ghostName+".scaleX") 0;
+    setAttr ($ghostName+".scaleY") 0;
+    //select -r $ghostName;
+    
+    //delete;
+    print ("Deleted Ghost on Frame "+$curTime);
+	select -r $origSelection;
+	}
+	else {print "No Ghost found on this frame";}
+    }
+
+
+
+
+
+global proc bhGhostFrame()
+{
+
+int $replaceMode = `menuItem -query -cb  repMode`;// returns 0 or 1 for off/on
+if ($replaceMode==1)
+{bhBustIt;
+}
+
+global  string $gPlayBackSlider;
+float $selFrameRange[] =`timeControl -q -rangeArray $gPlayBackSlider`;
+float $selStartFrame= $selFrameRange[0];
+float $selEndFrame= $selFrameRange[1];
+float $selFrameCnt= $selEndFrame-$selStartFrame;
+float $curFrame = `currentTime -query`;
+
+if ($selFrameCnt>1)
+	{
+	string $curSel[]=`ls -sl`;
+
+	if (`size $curSel`==0) // nothing selected so ghost all selected frames
+			{
+			for ($i=0; $i<$selFrameCnt; $i++)
+			{
+			currentTime -e ($selStartFrame+$i);
+			bhGhostIt;
+			}
+			}
+	else // some controllers are selected, so lets get their keys in the range and just ghost those
+	{
+	float $keyTimes[];
+	string $source =$curSel[0];
+    string $nodes[] = `keyframe -q -name $source`;
+    $keyTimes =  ` keyframe -time ($selStartFrame+":"+$selEndFrame) -q -tc $source`;//stores the selected key times within the range in an array 
+   
+  // need to figure out how many unique times there are for the keys - 
+   float $keyList[] = `floatArrayRemoveDuplicates($keyTimes)`; // remove any duplicates from the array of keyframes  
+ 
+	for ($each in $keyList)
+	{
+	currentTime -e $each;
+	bhGhostIt;
+	}
+	
+	
+	
+	
+	
+	
+	
+	}	
+			
+	   currentTime -e $curFrame; 
+	}
+else {
+   bhGhostIt;
+}
+}
+
+
+
+// main ghosting proc
+global proc bhGhostIt()
+{    
+    int $existFlag=0; // keep track of existing ghosts
+    int $conValue=0;  // keep track of existing ghosts connection to pfx node 
+    string $origSelection[]=`ls -sl`; // use this at end of the script to restore the selection to whatever controllers were selected before hitting the ghost button
+    int $curTime = `currentTime -q`; // what frame are we on?
+    
+    // is there a ghost on this frame already? Delete it if so, so that it can be updated by pressing ghost again
+    if (`objExists ("GGhost_"+$curTime)`)
+    { 
+    $existFlag =1;   
+    // need to find out which port of the pfx node the mesh is hooked up to so we can reattach the new mesh to the same one later
+    string $outObject = ("GGhost_"+$curTime+"Shape.outMesh");
+    $destinations = `connectionInfo -destinationFromSource $outObject`;    
+    string $destPort = $destinations[0]; 
+    $conValue =`match "[0-9]+" $destPort`;  
+    // remove the existing mesh
+    select -r ("GGhost_"+$curTime);
+        delete;
+        select -r $origSelection;
+    }
+     
+     string $sourceMeshes[] =`textScrollList -q -ai meshTSL`;
+     int $sourceSize =`size $sourceMeshes`;
+     if ($sourceSize ==0)
+     {
+         error "Nothing to Ghost...Please Load Some Meshes First..";
+     }
+        select -cl;
+        for ($each in $sourceMeshes)
+        {
+        // create a new name for the duplicate mesh
+        string $newName = ($each+"TempMesh");        
+        string $dupeMesh[] = `duplicate -rc -n $newName $each`;
+        // now unlock all transforms in case the mesh was constrained rather than skinned
+        setAttr -lock false ($dupeMesh[0]+".tx");
+        setAttr -lock false ($dupeMesh[0]+".ty");
+        setAttr -lock false ($dupeMesh[0]+".tz");
+        setAttr -lock false ($dupeMesh[0]+".rx");
+        setAttr -lock false ($dupeMesh[0]+".ry");
+        setAttr -lock false ($dupeMesh[0]+".rz");
+        setAttr -lock false ($dupeMesh[0]+".sx");
+        setAttr -lock false ($dupeMesh[0]+".sy");
+        setAttr -lock false ($dupeMesh[0]+".sz");
+      
+         select -add $dupeMesh[0] ;
+        }
+        // if there's only one mesh in the list we'll make an extra copy so that the poly unite function will still work
+        if ($sourceSize ==1)
+        {
+            
+        string $dupeMeshProx[] = `duplicate -rc -n "proxTempMesh" $sourceMeshes[0]`;
+        // now unlock all transforms in case the mesh was constrained rather than skinned
+        setAttr -lock false ($dupeMeshProx[0]+".tx");
+        setAttr -lock false ($dupeMeshProx[0]+".ty");
+        setAttr -lock false ($dupeMeshProx[0]+".tz");
+        setAttr -lock false ($dupeMeshProx[0]+".rx");
+        setAttr -lock false ($dupeMeshProx[0]+".ry");
+        setAttr -lock false ($dupeMeshProx[0]+".rz");
+        setAttr -lock false ($dupeMeshProx[0]+".sx");
+        setAttr -lock false ($dupeMeshProx[0]+".sy");
+        setAttr -lock false ($dupeMeshProx[0]+".sz");
+        select -add $dupeMeshProx;
+        }
+        
+        // make the combined mesh
+        string $ghostName= ("GGhost_"+$curTime);
+        string $comboMeshes[]=`polyUnite -n $ghostName`;
+        string $newMesh=$comboMeshes[0];
+             
+        // now need to delete the unneeded transform nodes created above     
+        select -r `ls -r 1 "*TempMesh*"`; // this will find the transform nodes even if they have namespaces
+        delete;
+                       
+        // delete history on new mesh
+        select -r $newMesh;
+        DeleteHistory;
+    
+    // create a group to store the ghost meshes under if it doesn't alread
+    if (!`objExists "bhGhosts"`){
+		group -em -n "bhGhosts";
+		setAttr "bhGhosts.visibility" 0;
+		}
+		
+	parent $newMesh "bhGhosts";	  // keep the scene tidy
+	
+	// check if the toon node exists, create it if not 
+
+    
+    if (!`objExists "bhGhostNode"`){
+    string $toonNode=`createNode("pfxToon")`;
+    string $toonParent[]= `listRelatives -parent $toonNode`;
+    rename $toonParent[0] "bhGhostNode";
+    setAttr -lock true -keyable false -channelBox false "bhGhostNode.tx";
+    setAttr -lock true -keyable false -channelBox false "bhGhostNode.ty";
+    setAttr -lock true -keyable false -channelBox false "bhGhostNode.tz";
+    setAttr -lock true -keyable false -channelBox false "bhGhostNode.rx";
+    setAttr -lock true -keyable false -channelBox false "bhGhostNode.ry";
+    setAttr -lock true -keyable false -channelBox false "bhGhostNode.rz";
+    setAttr -lock true -keyable false -channelBox false "bhGhostNode.sx";
+    setAttr -lock true -keyable false -channelBox false "bhGhostNode.sy";
+    setAttr -lock true -keyable false -channelBox false "bhGhostNode.sz";
+    setAttr "bhGhostNodeShape.overrideEnabled" 1;
+    setAttr "bhGhostNodeShape.overrideDisplayType" 2;
+    setAttr "bhGhostNodeShape.creaseLines" 0;
+    setAttr "bhGhostNodeShape.borderLines" 0;
+    setAttr "bhGhostNodeShape.displayPercent" 100;
+    float $lineVal = `floatSliderGrp -query -value "line"`;
+    setAttr "bhGhostNodeShape.lineWidth" $lineVal; 
+     }
+    
+    // was there a ghost on this frame already?
+    // if no then :
+    if ($existFlag==0){ 
+    // next we need to count how many ghosts already exist to figure out which ports of the toon node to connect to     
+    string $ghostsExists[] = `listRelatives "bhGhosts"`;
+    int $ghostCnt= `size $ghostsExists`;
+    $ghostCnt = $ghostCnt-1;
+   // connect the new ghost mesh to the existing pfxToon Node
+   string $ghostsShape[] = `listRelatives $newMesh`;
+   connectAttr -f ($ghostsShape[0]+".outMesh") bhGhostNodeShape.inputSurface[$ghostCnt].surface;
+   connectAttr -f ($ghostsShape[0]+".worldMatrix[0]") bhGhostNodeShape.inputSurface[$ghostCnt].inputWorldMatrix; 
+   } 
+   // if yes then connect the new one to the same pfx in port as the old one 
+   if ($existFlag==1){ 
+   string $ghostsShape[] = `listRelatives $newMesh`;
+   connectAttr -f ($ghostsShape[0]+".outMesh") bhGhostNodeShape.inputSurface[$conValue].surface;
+   connectAttr -f ($ghostsShape[0]+".worldMatrix[0]") bhGhostNodeShape.inputSurface[$conValue].inputWorldMatrix; 
+   }
+   // check what colour option is selected and run the appropriate process
+   
+   int $checkMenu= `menuItem -q -radioButton blk`;
+   if ($checkMenu==1) bhBlackLine;
+   int $checkMenu= `menuItem -q -radioButton wht`;
+   if ($checkMenu==1) bhWhiteLine;
+   int $checkMenu= `menuItem -q -radioButton gry`;
+   if ($checkMenu==1) bhGreyLine;
+    int $checkMenu= `menuItem -q -radioButton red`;
+   if ($checkMenu==1) bhRedLine; 
+   int $checkMenu= `menuItem -q -radioButton grn`;
+   if ($checkMenu==1) bhGreenLine;
+   int $checkMenu= `menuItem -q -radioButton blu`;
+   if ($checkMenu==1) bhBlueLine;
+   int $checkMenu= `menuItem -q -radioButton yel`;
+   if ($checkMenu==1) bhYellowLine;
+   
+    
+   
+   print ("Boo!..Created Ghost on Frame "+$curTime);
+   
+   select -r $origSelection; // select the controllers again
+}
+
+global proc bh_LineThickness()
+{
+    
+if (`objExists ("bhGhostNode")`){
+      float $lineVal = `floatSliderGrp -query -value "line"`;
+      string $toonNode = "pfxToon1";
+      setAttr "bhGhostNodeShape.lineWidth" $lineVal; 
+      }
+}
+
+
+global proc bhToggleGhosts()
+{ 
+if (`objExists ("bhGhostNode")`){
+$togVis= `getAttr "bhGhostNodeShape.visibility"`;
+      setAttr "bhGhostNodeShape.visibility" (1-$togVis); 
+      }
+}
+
+// change line colour procs
+global proc bhBlackLine()
+{
+    if (`objExists ("bhGhostNode")`){
+    setAttr "bhGhostNodeShape.profileColorB" 0;
+    setAttr "bhGhostNodeShape.profileColorR" 0;
+    setAttr "bhGhostNodeShape.profileColorG" 0;
+    setAttr "bhGhostNodeShape.drawAsMesh" 0;
+    setAttr "bhGhostNodeShape.drawAsMesh" 1;
+    
+    }
+}
+global proc bhWhiteLine()
+{
+    
+if (`objExists ("bhGhostNode")`){
+    setAttr "bhGhostNodeShape.profileColorB" 1;
+    setAttr "bhGhostNodeShape.profileColorR" 1;
+    setAttr "bhGhostNodeShape.profileColorG" 1;
+    // These two lines are just in there to force a redraw of the pfxNode
+    setAttr "bhGhostNodeShape.drawAsMesh" 0; 
+    setAttr "bhGhostNodeShape.drawAsMesh" 1;   
+    }
+}
+global proc bhGreyLine()
+{
+    
+if (`objExists ("bhGhostNode")`){
+    setAttr "bhGhostNodeShape.profileColorB" 0.5;
+    setAttr "bhGhostNodeShape.profileColorR" 0.5;
+    setAttr "bhGhostNodeShape.profileColorG" 0.5;
+    // These two lines are just in there to force a redraw of the pfxNode
+    setAttr "bhGhostNodeShape.drawAsMesh" 0; 
+    setAttr "bhGhostNodeShape.drawAsMesh" 1;   
+    }
+}
+
+
+
+global proc bhRedLine()
+{
+    
+if (`objExists ("bhGhostNode")`){
+    setAttr "bhGhostNodeShape.profileColorB" 0;
+    setAttr "bhGhostNodeShape.profileColorR" 1;
+    setAttr "bhGhostNodeShape.profileColorG" 0;
+    // These two lines are just in there to force a redraw of the pfxNode
+    setAttr "bhGhostNodeShape.drawAsMesh" 0; 
+    setAttr "bhGhostNodeShape.drawAsMesh" 1;   
+    }
+}
+global proc bhGreenLine()
+{
+    
+if (`objExists ("bhGhostNode")`){
+    setAttr "bhGhostNodeShape.profileColorB" 0;
+    setAttr "bhGhostNodeShape.profileColorR" 0;
+    setAttr "bhGhostNodeShape.profileColorG" 1;
+    // These two lines are just in there to force a redraw of the pfxNode
+    setAttr "bhGhostNodeShape.drawAsMesh" 0; 
+    setAttr "bhGhostNodeShape.drawAsMesh" 1;   
+    }
+}
+global proc bhBlueLine()
+{
+    
+if (`objExists ("bhGhostNode")`){
+    setAttr "bhGhostNodeShape.profileColorB" 1;
+    setAttr "bhGhostNodeShape.profileColorR" 0;
+    setAttr "bhGhostNodeShape.profileColorG" 1;
+    // These two lines are just in there to force a redraw of the pfxNode
+    setAttr "bhGhostNodeShape.drawAsMesh" 0; 
+    setAttr "bhGhostNodeShape.drawAsMesh" 1;   
+    }
+}
+
+global proc bhYellowLine()
+{
+    
+if (`objExists ("bhGhostNode")`){
+    setAttr "bhGhostNodeShape.profileColorB" 0;
+    setAttr "bhGhostNodeShape.profileColorR" 1;
+    setAttr "bhGhostNodeShape.profileColorG" 1;
+    // These two lines are just in there to force a redraw of the pfxNode
+    setAttr "bhGhostNodeShape.drawAsMesh" 0; 
+    setAttr "bhGhostNodeShape.drawAsMesh" 1;   
+    }
+}
+
+global proc bhCloseHelpWin()
+{
+   deleteUI bhGhostHelp; 
+}
+
+global proc bhHelpWin()
+{
+    if (`window -exists bhGhostHelp`)
+        deleteUI bhGhostHelp;
+          
+        window -toolbox 1 -rtf true -menuBar 1 bhGhostHelp ; 
+        columnLayout -adj 1 mainHelpCol;
+         
+         
+//--------------------------------------------------------------------------
+string $helpText =("==========================================================================================="
++"\n"
++"bhGhost by Brian Horgan. Web - graphite9.com / Email - info@graphite9.com"
++"\n"
++"==========================================================================================="
++"\n"
++"*  Select some meshes and press the 'Add Meshes' button"
++"\n"
++"*  NB these MUST be Poly objects ONLY"
++"\n"
++"*  The 'Remove Highlighted' and 'Clear All' buttons allow you to remove meshes from the list if needed"
++"\n"
++"*  Now click on the arrow beside the 'Meshes' tab to close the list and switch to working mode"
++"\n"
++"*  Press the 'Ghost' button to create a ghost/onion-skin on the current frame"
++"\n"
++"\n"
++"-  If you don't see the ghosts : "
++"\n"
++"* Make sure 'Strokes' are enabled in the viewport Show menu "
++"\n"
++"* Make sure you are using Default or High Quality viewport mode as Viewport 2.0 doesn't support toon lines (as of Maya 2013)"
+
++"\n"
++"___________________________________________________________________________________________"
++"\n"
++"\n"         
++"*  The Slider control adjusts the line thickness to suit your scene   "       
++"\n"
++"*  The Colours dropdown menu allows you to change the line colour to suit your characters"
++"\n"
++"*  The Vis button is for quickly showing/hiding the ghosts while working without deleting them"
++"\n"
++"*  The Bust1 button will delete the ghost on the current frame" 
++"\n"
++"*  You can overwrite a ghost by simply pressing the Ghost button again"
++"\n"
++"*  The BustAll button will delete all ghosts and related nodes from the file"
++"\n"
++"*  NB Best to use the 'BustAll' button before saving your scene as otherwise the file will have duplicate meshes in it which will increase the file size (these are stored inside the bhGhosts group)"
++"\n"
+
++"\n"
++"If you'd like to set up Hotkeys for the Ghost button and BustAll button the commands to add are "
++"'bhGhostIt' and 'bhBustIt'. NB the GUI must still be used so that the tool knows which meshes to ghost."
++"\n"
++"___________________________________________________________________________________________"
++"\n"
++"\n"
++"I work as a freelance animator and rigger and am available for hire. Please visit graphite9.com to see examples of my work."
++"\n"
++"\n"
++"This script is provided 'as is' and no responsibility will be taken for any losses incurred while using it. I don't have time to provide support for this tool as it's provided for free but I do welcome comments and suggestions."
++"\n"
++"\n"
++"I hope you find this useful. Happy Animating!"
+
+);
+     
+ //--------------------------------------------------------------------------
+         
+         
+        scrollField -wordWrap true -h 560 -text $helpText -ed false helpScroll;
+        separator -height 10 -style "singleDash";
+        button -w 54 -label "Close Help" -command bhCloseHelpWin b22; 
+        separator -height 10 -style "singleDash";
+        showWindow bhGhostHelp;
+        window -edit -widthHeight 771 606 bhGhostHelp;
+
+    
+}
+
+global proc bhGhostShelf()// create a shelf button for current character
+{
+ string $sourceMeshes[] =`textScrollList -q -ai meshTSL`;
+ if (`size $sourceMeshes` ==0)
+ {
+    error "No Meshes in Mesh List - please set up the ghost manually before a shelf button can be created";
+ }
+string $shelfCommand ="select -cl;\n" ;
+ 	for ($node in $sourceMeshes)
+	{
+		$shelfCommand = $shelfCommand +("catch (`select -add \""+$node+"\"`);\n");
+	}
+	
+	$shelfCommand= $shelfCommand +"bhGhost; select -cl;";
+	// create the shelf button
+	string $label ="ghost";
+	global string $gShelfTopLevel;
+shelfButton
+			-parent ($gShelfTopLevel + "|" + `tabLayout -q -st $gShelfTopLevel`)
+			-enableCommandRepeat 1
+			-enable 1
+			-width 34
+			-height 34
+			-manage 1
+			-visible 1
+			-annotation $label
+			-label $label 
+			-iol $label
+			-image1 "bhGhostIcon2.png" 
+			-style "iconOnly" 
+			-command $shelfCommand;
+			
+
+}
+
+			// proc that removes keyframes that have the same times	
+global proc float [] floatArrayRemoveDuplicates(float $list[])
+{
+    float $item, $results[];
+    int $index = 0, $found;
+
+    for ($item in $list)
+    {
+        $found = 0;
+        for ($result in $results)
+            if ($result == $item)
+                $found = 1;
+        if (!$found)
+            $results[$index++] = $item;
+    }
+    return $results;
+}	

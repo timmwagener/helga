@@ -448,6 +448,41 @@ class AlembicFunctionality(object):
     #Shot/Prop Highpoly Methods
     #------------------------------------------------------------------
 
+    def create_prop_highpoly_rendergeo_nodes(self,
+                                                parent_node,
+                                                object_path, 
+                                                alembic_path, 
+                                                highpoly_rendergeo_path):
+        """
+        Create prop highpoly rendergeo node network.
+        """
+
+        #alembic_file_name
+        alembic_file_name = os.path.splitext(os.path.basename(alembic_path))[0]
+
+        #locator_geo_node
+        locator_geo_node = self.create_locator_geo_node(parent_node, alembic_file_name)
+        locator_geo_node.moveToGoodPosition()
+
+        #locator_alembic_node
+        locator_alembic_node = self.create_locator_alembic_node(locator_geo_node, alembic_path, object_path)
+
+        #create_locator_geo_node_expressions
+        self.create_locator_geo_node_expressions(locator_geo_node, locator_alembic_node)
+
+
+        #geo_node
+        geo_node = self.create_geo_node(parent_node, alembic_file_name)
+        geo_node.moveToGoodPosition()
+
+        #alembic_node
+        alembic_node = self.create_prop_highpoly_rendergeo_alembic_node(geo_node, highpoly_rendergeo_path, node_name = alembic_file_name)
+
+
+        #connect
+        geo_node.setFirstInput(locator_geo_node)
+
+
     def create_locator_geo_node(self, parent_node, node_name):
         """
         Create locator geo node. This node is used to assign materials
@@ -573,13 +608,13 @@ class AlembicFunctionality(object):
         parm.setExpression(expression, language = hou.exprLanguage.Hscript)
 
 
-    def create_prop_highpoly_rendergeo_alembic_node(self, parent_node, alembic_path):
+    def create_prop_highpoly_rendergeo_alembic_node(self, parent_node, alembic_path, node_name = 'unknown'):
         """
         Return parm value for parm with parm_name on node.
         """
 
         #alembic_node
-        alembic_node = parent_node.createNode('alembic', 'test')
+        alembic_node = parent_node.createNode('alembic', node_name)
 
 
         #set viewportlod
@@ -593,88 +628,92 @@ class AlembicFunctionality(object):
         #return
         return alembic_node
 
-    
-    def create_prop_highpoly_rendergeo(self, parent_node):
+
+    def check_prop_highpoly_rendergeo(self, object_path, alembic_path, alembic_highpoly_rendergeo_dir):
+        """
+        Check the data needed for building a highpoly rendergeo alembic prop in Houdini.
+        Return false if the needed data is insufficient or the needed data if True.
+        The returned data is in the form of [highpoly_rendergeo_path].
+        This should be all the data needed to build a prop.
+        """
+        
+        #alembic_file_name
+        alembic_file_name = os.path.splitext(os.path.basename(alembic_path))[0]
+        #alembic_file_name empty
+        if not (alembic_file_name):
+            #log
+            self.logger.debug('Could not aquire Alembic file name for path {0}.'.format(alembic_path))
+            return False
+        
+
+        #helga_highpoly_rendergeo_attr
+        helga_highpoly_rendergeo_attr = self.get_alembic_attribute_value(alembic_path, object_path, 'helga_highpoly_rendergeo')
+        #check attribute
+        if not (helga_highpoly_rendergeo_attr):
+            #log
+            self.logger.debug('helga_highpoly_rendergeo attribute could not be aquired for {0}. Not creating prop'.format(object_path))
+            return False
+
+        
+        #helga_highpoly_rendergeo_value
+        helga_highpoly_rendergeo_value = helga_highpoly_rendergeo_attr[0]
+
+        #highpoly_rendergeo_path
+        highpoly_rendergeo_path = os.path.join(alembic_highpoly_rendergeo_dir, helga_highpoly_rendergeo_value + '.abc')
+        #check highpoly_rendergeo_path
+        if not (os.path.isfile(highpoly_rendergeo_path)):
+            #log
+            self.logger.debug('Highpoly rendergeo at path {0} does not exist. Not creating prop'.format(highpoly_rendergeo_path))
+            return False
+
+        
+
+        #return
+        return [highpoly_rendergeo_path]
+
+
+    def create_prop_highpoly_rendergeo(self, 
+                                        parent_node, 
+                                        alembic_path, 
+                                        alembic_highpoly_rendergeo_dir):
         """
         Create a prop hierarchy according to our pipeline standards.
         """
-
-        #alembic_path
-        alembic_path = self.get_parm_value(parent_node, 'alembic_path')
-
-        #alembic_file_name
-        alembic_file_name = os.path.splitext(os.path.basename(alembic_path))[0]
-
-        #alembic_highpoly_rendergeo_dir
-        alembic_highpoly_rendergeo_dir = self.get_parm_value(parent_node, 'alembic_highpoly_rendergeo_dir')
-
+        
         #object_path_list
         object_path_list = self.get_alembic_object_path_list(alembic_path)
-        
-        
-        #object_path_to_rendergeo_list
-        object_path_to_rendergeo_list = []
+        #object_path_list empty
+        if not (object_path_list):
+            #log
+            self.logger.debug('Object path list for alembic {0} empty. Not creating prop, returning None'.format(alembic_path))
+            return False
 
-        #iterate and get type
+
+        #iterate, check and create
         for object_path in object_path_list:
 
-            #helga_highpoly_rendergeo
-            helga_highpoly_rendergeo = self.get_alembic_attribute_value(alembic_path, object_path, 'helga_highpoly_rendergeo')
-            
-            #check attribute
-            if not (helga_highpoly_rendergeo):
+            #log
+            self.logger.debug('\n\n-------------------------\n{0}\n-------------------------\n\n'.format(object_path))
+
+            #check
+            if not (self.check_prop_highpoly_rendergeo(object_path, alembic_path, alembic_highpoly_rendergeo_dir)):
                 #log
-                self.logger.debug('helga_highpoly_rendergeo attribute could not be aquired for {0}. Not creating prop'.format(object_path))
+                self.logger.debug('Prop highpoly rendergeo check failed for {0}. Not building prop.'.format(object_path))
                 continue
 
             #highpoly_rendergeo_path
-            highpoly_rendergeo_path = os.path.join(alembic_highpoly_rendergeo_dir, helga_highpoly_rendergeo[0] + '.abc')
+            highpoly_rendergeo_path = self.check_prop_highpoly_rendergeo(object_path, 
+                                                                            alembic_path, 
+                                                                            alembic_highpoly_rendergeo_dir)[0]
+
+
+            #create_prop_highpoly_rendergeo_nodes
+            self.create_prop_highpoly_rendergeo_nodes(parent_node,
+                                                        object_path, 
+                                                        alembic_path, 
+                                                        highpoly_rendergeo_path)
+
             
-            #check highpoly_rendergeo_path
-            if not (os.path.isfile(highpoly_rendergeo_path)):
-                #log
-                self.logger.debug('Highpoly rendergeo at path {0} does not exist. Not creating prop'.format(highpoly_rendergeo_path))
-                continue
 
-            #create
-            object_path_to_rendergeo_list.append([object_path, highpoly_rendergeo_path])
-
-
-        #iterate and create props
-        for object_path, highpoly_rendergeo_path in object_path_to_rendergeo_list:
-
-            #locator_geo_node
-            locator_geo_node = self.create_locator_geo_node(parent_node, alembic_file_name)
-            locator_geo_node.moveToGoodPosition()
-
-            #locator_alembic_node
-            locator_alembic_node = self.create_locator_alembic_node(locator_geo_node, alembic_path, object_path)
-
-            #create_locator_geo_node_expressions
-            self.create_locator_geo_node_expressions(locator_geo_node, locator_alembic_node)
-
-
-            #geo_node
-            geo_node = self.create_geo_node(parent_node, alembic_file_name)
-            geo_node.moveToGoodPosition()
-
-            #alembic_node
-            alembic_node = self.create_prop_highpoly_rendergeo_alembic_node(geo_node, highpoly_rendergeo_path)
-
-
-            #connect
-            geo_node.setFirstInput(locator_geo_node)
-
-
-
-        
-
-
-    def create_shot_highpoly_rendergeo(self, parent_node):
-        """
-        Create a shot hierarchy according to our pipeline standards.
-        """
-
-        print (parent_node.path())
 
 

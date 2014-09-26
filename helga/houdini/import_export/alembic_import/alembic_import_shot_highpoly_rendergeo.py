@@ -172,6 +172,22 @@ class AlembicImportShotHighpolyRendergeo(object):
         The returned data is [alembic_path, alembic_highpoly_rendergeo_dir]
         """
 
+        #alembic_path
+        alembic_path = self.alembic_functionality.get_parm_value(self.node, 'alembic_path')
+        
+        #is False
+        if not (alembic_path):
+            #log
+            self.logger.debug('Alembic path empty.')
+            return False
+        
+        #path exists
+        if not (os.path.isfile(alembic_path)):
+            #log
+            self.logger.debug('Alembic path {0} does not exist.'.format(alembic_path))
+            return False
+
+        
         #alembic_highpoly_rendergeo_dir
         alembic_highpoly_rendergeo_dir = self.alembic_functionality.get_parm_value(self.node, 'alembic_highpoly_rendergeo_dir')
         
@@ -188,23 +204,6 @@ class AlembicImportShotHighpolyRendergeo(object):
             return False
 
 
-
-        #alembic_path
-        alembic_path = self.alembic_functionality.get_parm_value(self.node, 'alembic_path')
-        
-        #is False
-        if not (alembic_path):
-            #log
-            self.logger.debug('Alembic path empty.')
-            return False
-        
-        #path exists
-        if not (os.path.isfile(alembic_path)):
-            #log
-            self.logger.debug('Alembic path {0} does not exist.'.format(alembic_path))
-            return False
-
-
         #return
         return [alembic_path, alembic_highpoly_rendergeo_dir]
 
@@ -213,10 +212,89 @@ class AlembicImportShotHighpolyRendergeo(object):
         """
         Check base data from the node and return either False
         or the needed data. (Equivalent to True).
-        The returned data is [alembic_path] 
+        The returned data is [checked_alembic_path_list, alembic_highpoly_rendergeo_dir].
         """
 
-        pass
+        #alembic_dir
+        alembic_dir = self.alembic_functionality.get_parm_value(self.node, 'alembic_dir')
+        
+        #is False
+        if not (alembic_dir):
+            #log
+            self.logger.debug('Parameter alembic dir empty.')
+            return False
+
+        #dir exists
+        if not (os.path.isdir(alembic_dir)):
+            #log
+            self.logger.debug('Alembic dir {0} does not exist.'.format(alembic_dir))
+            return False
+
+
+        #alembic_path_list
+        alembic_path_list = [os.path.join(alembic_dir, file).replace('\\', '/') for 
+                            file in 
+                            os.listdir(alembic_dir) if 
+                            (os.path.isfile(os.path.join(alembic_dir, file)) and file.split('.')[-1] == 'abc')]
+        #alembic_path_list empty
+        if not (alembic_path_list):
+            #log
+            self.logger.debug('alembic_path_list empty. Alembic dir {0} does not seem to contain alembic files.'.format(alembic_dir))
+            return False
+
+
+        #checked_alembic_path_list
+        checked_alembic_path_list = []
+
+        #iterate
+        for alembic_path in alembic_path_list:
+
+            #object_path_list
+            object_path_list = self.alembic_functionality.get_alembic_object_path_list(alembic_path)
+            #object_path_list empty
+            if not (object_path_list):
+                #log
+                self.logger.debug('Object path list for alembic {0} empty. Continuing'.format(alembic_path))
+                continue
+
+            #iterate, check and create
+            for object_path in object_path_list:
+
+                #helga_highpoly_rendergeo_attr
+                helga_highpoly_rendergeo_attr = self.alembic_functionality.get_alembic_attribute_value(alembic_path, object_path, 'helga_highpoly_rendergeo')
+
+                #if attr exists append and break
+                if (helga_highpoly_rendergeo_attr):
+
+                    #append
+                    checked_alembic_path_list.append(alembic_path)
+                    break
+
+        #checked_alembic_path_list empty
+        if not (checked_alembic_path_list):
+            #log
+            self.logger.debug('checked_alembic_path_list empty. Alembic dir {0} does not seem to contain alembic files with helga_highpoly_rendergeo attribute.'.format(alembic_dir))
+            return False
+
+
+        #alembic_highpoly_rendergeo_dir
+        alembic_highpoly_rendergeo_dir = self.alembic_functionality.get_parm_value(self.node, 'alembic_highpoly_rendergeo_dir')
+        
+        #is False
+        if not (alembic_highpoly_rendergeo_dir):
+            #log
+            self.logger.debug('Parameter alembic highpoly rendergeo dir empty.')
+            return False
+
+        #dir exists
+        if not (os.path.isdir(alembic_highpoly_rendergeo_dir)):
+            #log
+            self.logger.debug('Alembic highpoly rendergeo dir {0} does not exist.'.format(alembic_highpoly_rendergeo_dir))
+            return False
+
+
+        #return
+        return [checked_alembic_path_list, alembic_highpoly_rendergeo_dir]
 
 
 
@@ -234,8 +312,16 @@ class AlembicImportShotHighpolyRendergeo(object):
             self.logger.debug('Base data check failed, not creating prop.')
             return
 
-        #create_character_hierarchy
-        self.alembic_functionality.create_prop_highpoly_rendergeo(self.node)
+        #alembic_path, alembic_highpoly_rendergeo_dir
+        alembic_path, alembic_highpoly_rendergeo_dir = self.base_data_check_prop()
+
+        #log
+        self.logger.debug('\n\n-------------------------\n{0}\n-------------------------\n\n'.format(alembic_path))
+
+        #create_prop_highpoly_rendergeo
+        self.alembic_functionality.create_prop_highpoly_rendergeo(self.node, 
+                                                                    alembic_path, 
+                                                                    alembic_highpoly_rendergeo_dir)
 
 
     def create_shot(self):
@@ -249,9 +335,25 @@ class AlembicImportShotHighpolyRendergeo(object):
             self.logger.debug('Base data check failed, not creating shot.')
             return
 
-        #create_character_hierarchy
-        self.alembic_functionality.create_shot_highpoly_rendergeo(self.node)
+        #alembic_path_list, alembic_highpoly_rendergeo_dir
+        alembic_path_list, alembic_highpoly_rendergeo_dir = self.base_data_check_shot()
 
+        #delete_content
+        self.alembic_functionality.delete_content(self.node)
+
+        #iterate
+        for alembic_path in alembic_path_list:
+
+            #log
+            self.logger.debug('\n\n-------------------------\n{0}\n-------------------------\n\n'.format(alembic_path))
+
+            #create_prop_highpoly_rendergeo
+            self.alembic_functionality.create_prop_highpoly_rendergeo(self.node, 
+                                                                        alembic_path, 
+                                                                        alembic_highpoly_rendergeo_dir)
+
+        #layout children
+        self.node.layoutChildren()
 
     
 

@@ -567,6 +567,45 @@ class AssetManagerFunctionality(QtCore.QObject):
             self.add_attribute_to_node(node, 'helga_highpoly_rendergeo', 'string')
 
 
+    def remove_locator_attributes_from_selected_nodes(self,
+                                                        node_type_name, 
+                                                        shape_node_type_name = None):
+        """
+        Remove helga locator attributes from selected nodes.
+        The attributes for helga locator nodes are:
+
+        #. helga_locator:bool
+        #. helga_highpoly_rendergeo:string
+        """
+
+        #node_list
+        node_list = self.get_nodes_of_type(node_type_name, selection = True)
+        #node_list empty
+        if not(node_list):
+            #log
+            self.logger.debug('Node list empty.')
+            return
+
+        #check node list
+        if not(self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)):
+            #log
+            self.logger.debug('Not adding attributes.')
+            return
+
+        #checked_node_list
+        checked_node_list = self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)
+
+        
+        #iterate
+        for node in checked_node_list:
+
+            #helga_locator
+            self.remove_attribute_from_node(node, 'helga_locator')
+
+            #helga_highpoly_rendergeo
+            self.remove_attribute_from_node(node, 'helga_highpoly_rendergeo')
+
+
 
 
 

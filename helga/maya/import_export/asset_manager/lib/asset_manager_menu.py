@@ -863,9 +863,7 @@ def connect_menu_assets(wdgt):
                                                                         'transform'))
 
     #acn_remove_locator_attributes
-    wdgt.acn_remove_locator_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_attribute_from_selected_nodes, 
-                                                                        'helga_locator',
-                                                                        'transform'))
+    wdgt.acn_remove_locator_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_locator_attributes_from_selected_nodes, 'transform'))
 
 
     #acn_create_prop_base_setup

@@ -1,0 +1,295 @@
+;_name	ggx_sample
+; ModuleID = 'ggx_sample'
+
+@refl = external global <3 x double>
+@v = external global <3 x double>
+@bouncetype = external global i32
+@pdf = external global double
+
+define private i32 @"SameHemisphere@IVV"(<3 x double>* %w, <3 x double>* %wp) nounwind alwaysinline {
+entry:
+  %w1 = load <3 x double>* %w
+  %return = call double @"getcomp@FVI"(<3 x double> %w1, i32 2)
+  %wp2 = load <3 x double>* %wp
+  %return3 = call double @"getcomp@FVI"(<3 x double> %wp2, i32 2)
+  %output = fmul double %return, %return3
+  %return4 = fcmp ogt double %output, 0.000000e+00
+  %return5 = zext i1 %return4 to i32
+  ret i32 %return5
+}
+
+declare double @"getcomp@FVI"(<3 x double>, i32) nounwind readnone
+
+define private double @"sqr@FF"(double* %v) nounwind alwaysinline {
+entry:
+  %v1 = load double* %v
+  %output = fmul double %v1, %v1
+  ret double %output
+}
+
+define private double @"schlick_f@FF"(double* %u) nounwind alwaysinline {
+entry:
+  %u1 = load double* %u
+  %output = fsub double 1.000000e+00, %u1
+  %return = call double @"clamp@FFFF"(double %output, double 0.000000e+00, double 1.000000e+00)
+  %output5 = fmul double %return, %return
+  %output8 = fmul double %output5, %output5
+  %output10 = fmul double %output8, %return
+  ret double %output10
+}
+
+declare double @"clamp@FFFF"(double, double, double) nounwind
+
+define private double @"smith_g@FFF"(double* %Ndotv, double* %alphaG) nounwind alwaysinline {
+entry:
+  %Ndotv1 = load double* %Ndotv
+  %return = fcmp ole double %Ndotv1, 0.000000e+00
+  %return2 = zext i1 %return to i32
+  br i1 %return, label %true, label %end
+
+true:                                             ; preds = %entry
+  br label %UnifiedReturnBlock
+
+end:                                              ; preds = %entry
+  %alphaG3 = load double* %alphaG
+  %output = fmul double %alphaG3, %alphaG3
+  %output7 = fmul double %Ndotv1, %Ndotv1
+  %output11 = fadd double %output, %output7
+  %output14 = fmul double %output, %output7
+  %output15 = fsub double %output11, %output14
+  %return16 = call double @"sqrt@FF"(double %output15)
+  %output17 = fadd double %Ndotv1, %return16
+  %output18 = call double @"div@FF"(double 1.000000e+00, double %output17)
+  br label %UnifiedReturnBlock
+
+UnifiedReturnBlock:                               ; preds = %end, %true
+  %UnifiedRetVal = phi double [ 0.000000e+00, %true ], [ %output18, %end ]
+  ret double %UnifiedRetVal
+}
+
+declare double @"sqrt@FF"(double) nounwind readnone
+
+declare double @"div@FF"(double, double) nounwind readnone
+
+define void @ggx_sample(<3 x double> %u, double %sx, double %sy, i32 %bounces, <3 x double> %refl, <3 x double> %v, i32 %bouncetype, double %pdf, i32 %mybounces, <3 x double> %ng, <3 x double> %xg, <3 x double> %yg, double %alphax, double %alphay, double %alphaG, <3 x double> %F0, i32 %model) nounwind {
+entry:
+  %0 = alloca <3 x double>
+  %1 = alloca <3 x double>
+  %2 = alloca double
+  %3 = alloca double
+  %4 = alloca double
+  %5 = alloca double
+  %6 = alloca double
+  %7 = alloca double
+  %8 = alloca double
+  %9 = alloca double
+  %output = fmul double %alphax, %alphax
+  %output5 = fmul double %alphay, %alphay
+  %output8 = fmul double %alphax, %alphay
+  %output9 = fmul double 5.000000e-01, %output8
+  %return = call <3 x double> @"set@VFFF"(double %output9, double %output9, double %output9)
+  %return15 = and i32 %bounces, %mybounces
+  %10 = icmp ne i32 %return15, 0
+  br i1 %10, label %true, label %end
+
+true:                                             ; preds = %entry
+  %return18 = call <3 x double> @"normalize@VV"(<3 x double> %ng)
+  %return20 = call <3 x double> @"normalize@VV"(<3 x double> %xg)
+  %return22 = call <3 x double> @"normalize@VV"(<3 x double> %yg)
+  %return26 = call <3 x double>* @"array@[V:VVV"(<3 x double> %return20, <3 x double> %return22, <3 x double> %return18)
+  %cast = call <9 x double> @"set@3[V"(<3 x double>* %return26)
+  %return29 = call <9 x double> @"transpose@33"(<9 x double> %cast)
+  %output32 = call <3 x double> @"mul@V3"(<3 x double> %return20, <9 x double> %return29)
+  %return33 = call <3 x double> @"normalize@VV"(<3 x double> %output32)
+  %output36 = call <3 x double> @"mul@V3"(<3 x double> %return22, <9 x double> %return29)
+  %return37 = call <3 x double> @"normalize@VV"(<3 x double> %output36)
+  %output40 = call <3 x double> @"mul@V3"(<3 x double> %u, <9 x double> %return29)
+  %return41 = call <3 x double> @"normalize@VV"(<3 x double> %output40)
+  %output44 = fsub double 1.000000e+00, %sy
+  %output45 = call double @"div@FF"(double %sy, double %output44)
+  %return46 = call double @"sqrt@FF"(double %output45)
+  %output49 = fmul double 0x401921FB54442D18, %sx
+  %return50 = call double @"cos@FF"(double %output49)
+  %output51 = fmul double %alphax, %return50
+  %cast53 = call <3 x double> @"set@VF"(double %output51)
+  %output54 = call <3 x double> @"mul@VV"(<3 x double> %cast53, <3 x double> %return33)
+  %return58 = call double @"sin@FF"(double %output49)
+  %output59 = fmul double %alphay, %return58
+  %cast61 = call <3 x double> @"set@VF"(double %output59)
+  %output62 = call <3 x double> @"mul@VV"(<3 x double> %cast61, <3 x double> %return37)
+  %output63 = call <3 x double> @"add@VV"(<3 x double> %output54, <3 x double> %output62)
+  %cast64 = call <3 x double> @"set@VF"(double %return46)
+  %output65 = call <3 x double> @"mul@VV"(<3 x double> %cast64, <3 x double> %output63)
+  %output66 = call <3 x double> @"add@VV"(<3 x double> %output65, <3 x double> <double 0.000000e+00, double 0.000000e+00, double 1.000000e+00>)
+  %return68 = call <3 x double> @"normalize@VV"(<3 x double> %output66)
+  store <3 x double> %return41, <3 x double>* %0
+  store <3 x double> %return68, <3 x double>* %1
+  %SameHemisphere = call i32 @"SameHemisphere@IVV"(<3 x double>* %0, <3 x double>* %1)
+  %return71 = call i32 @"not@II"(i32 %SameHemisphere)
+  %11 = icmp ne i32 %return71, 0
+  br i1 %11, label %true72, label %end73
+
+end:                                              ; preds = %end73, %end96, %entry
+  %refl182.0 = phi <3 x double> [ %refl182.1, %end96 ], [ %return, %end73 ], [ %return, %entry ]
+  %v183.0 = phi <3 x double> [ %return181, %end96 ], [ %v, %end73 ], [ %v, %entry ]
+  %pdf185.0 = phi double [ %pdf185.1, %end96 ], [ %pdf, %end73 ], [ %pdf, %entry ]
+  store <3 x double> %refl182.0, <3 x double>* @refl
+  store <3 x double> %v183.0, <3 x double>* @v
+  store i32 %return15, i32* @bouncetype
+  store double %pdf185.0, double* @pdf
+  ret void
+
+true72:                                           ; preds = %true
+  %return75 = call <3 x double> @"neg@VV"(<3 x double> %return68)
+  br label %end73
+
+end73:                                            ; preds = %true72, %true
+  %wh.0 = phi <3 x double> [ %return75, %true72 ], [ %return68, %true ]
+  %return77 = call double @"getcomp@FVI"(<3 x double> %wh.0, i32 2)
+  %return78 = fcmp ogt double %return77, 0.000000e+00
+  %return79 = zext i1 %return78 to i32
+  br i1 %return78, label %true80, label %end
+
+true80:                                           ; preds = %end73
+  %return84 = call double @"dot@FVV"(<3 x double> %return41, <3 x double> %wh.0)
+  %output85 = fmul double 2.000000e+00, %return84
+  %cast87 = call <3 x double> @"set@VF"(double %output85)
+  %output88 = call <3 x double> @"mul@VV"(<3 x double> %cast87, <3 x double> %wh.0)
+  %output90 = call <3 x double> @"sub@VV"(<3 x double> %output88, <3 x double> %return41)
+  %return92 = call double @"getcomp@FVI"(<3 x double> %output90, i32 2)
+  %return93 = fcmp ole double %return92, 0.000000e+00
+  %return94 = zext i1 %return93 to i32
+  br i1 %return93, label %true95, label %false
+
+true95:                                           ; preds = %true80
+  %cast97 = call <3 x double> @"set@VF"(double 0.000000e+00)
+  br label %end96
+
+false:                                            ; preds = %true80
+  %return104 = call double @"dot@FVV"(<3 x double> %return41, <3 x double> %wh.0)
+  %return106 = call double @"abs@FF"(double %return104)
+  %return108 = call double @"getcomp@FVI"(<3 x double> %return41, i32 2)
+  %return109 = call double @"abs@FF"(double %return108)
+  %output111 = fmul double 4.000000e+00, %return106
+  %output112 = call double @"div@FF"(double 1.000000e+00, double %output111)
+  %return116 = call double @"dot@FVV"(<3 x double> %wh.0, <3 x double> %return33)
+  store double %return116, double* %2
+  %sqr = call double @"sqr@FF"(double* %2)
+  %output118 = call double @"div@FF"(double %sqr, double %output)
+  %return121 = call double @"dot@FVV"(<3 x double> %wh.0, <3 x double> %return37)
+  store double %return121, double* %3
+  %sqr122 = call double @"sqr@FF"(double* %3)
+  %output124 = call double @"div@FF"(double %sqr122, double %output5)
+  %output125 = fadd double %output118, %output124
+  store double %return77, double* %4
+  %sqr128 = call double @"sqr@FF"(double* %4)
+  %output129 = fadd double %output125, %sqr128
+  %output132 = fmul double %output129, %output129
+  %output133 = call double @"div@FF"(double 1.000000e+00, double %output132)
+  %output137 = fmul double %output133, %return77
+  %output140 = call double @"div@FF"(double %output137, double %output9)
+  %output143 = fmul double %output140, %output112
+  %return145 = call i32 @"not@II"(i32 %model)
+  %12 = icmp ne i32 %return145, 0
+  br i1 %12, label %true146, label %end96
+
+end96:                                            ; preds = %false, %true146, %true95
+  %refl182.1 = phi <3 x double> [ %cast97, %true95 ], [ %output177, %true146 ], [ %return, %false ]
+  %pdf185.1 = phi double [ 0.000000e+00, %true95 ], [ %output143, %true146 ], [ %output143, %false ]
+  %output180 = call <3 x double> @"mul@V3"(<3 x double> %output90, <9 x double> %cast)
+  %return181 = call <3 x double> @"normalize@VV"(<3 x double> %output180)
+  br label %end
+
+true146:                                          ; preds = %false
+  %cast150 = call <3 x double> @"set@VF"(double 1.000000e+00)
+  %output151 = call <3 x double> @"sub@VV"(<3 x double> %cast150, <3 x double> %F0)
+  store double %return106, double* %5
+  %schlick_f = call double @"schlick_f@FF"(double* %5)
+  %cast153 = call <3 x double> @"set@VF"(double %schlick_f)
+  %output154 = call <3 x double> @"mul@VV"(<3 x double> %output151, <3 x double> %cast153)
+  %output155 = call <3 x double> @"add@VV"(<3 x double> %F0, <3 x double> %output154)
+  store double %return109, double* %6
+  store double %alphaG, double* %7
+  %smith_g = call double @"smith_g@FFF"(double* %6, double* %7)
+  store double %return92, double* %8
+  store double %alphaG, double* %9
+  %smith_g160 = call double @"smith_g@FFF"(double* %8, double* %9)
+  %output161 = fmul double %smith_g, %smith_g160
+  %cast165 = call <3 x double> @"set@VF"(double %output161)
+  %output166 = call <3 x double> @"mul@VV"(<3 x double> %output155, <3 x double> %cast165)
+  %cast168 = call <3 x double> @"set@VF"(double %return92)
+  %output169 = call <3 x double> @"mul@VV"(<3 x double> %output166, <3 x double> %cast168)
+  %output170 = call <3 x double> @"mul@VV"(<3 x double> %return, <3 x double> %output169)
+  %output175 = fmul double %output112, %return77
+  %cast176 = call <3 x double> @"set@VF"(double %output175)
+  %output177 = call <3 x double> @"div@VV"(<3 x double> %output170, <3 x double> %cast176)
+  br label %end96
+}
+
+declare <3 x double> @"set@VFFF"(double, double, double) nounwind readnone
+
+declare <3 x double> @"normalize@VV"(<3 x double>) nounwind
+
+declare <3 x double>* @"array@[V:VVV"(<3 x double>, <3 x double>, <3 x double>) nounwind readnone
+
+define private <9 x double> @"set@3[V"(<3 x double>* %rw11) alwaysinline {
+entry:
+  %t_0_ = call <3 x double> @"getcomp@V[VI"(<3 x double>* %rw11, i32 0)
+  %t_1_ = call <3 x double> @"getcomp@V[VI"(<3 x double>* %rw11, i32 1)
+  %t_2_ = call <3 x double> @"getcomp@V[VI"(<3 x double>* %rw11, i32 2)
+  %t_3_ = call double @"getcomp@FVI"(<3 x double> %t_0_, i32 0)
+  %t_4_ = call double @"getcomp@FVI"(<3 x double> %t_0_, i32 1)
+  %t_5_ = call double @"getcomp@FVI"(<3 x double> %t_0_, i32 2)
+  %t_6_ = call double @"getcomp@FVI"(<3 x double> %t_1_, i32 0)
+  %t_7_ = call double @"getcomp@FVI"(<3 x double> %t_1_, i32 1)
+  %t_8_ = call double @"getcomp@FVI"(<3 x double> %t_1_, i32 2)
+  %t_9_ = call double @"getcomp@FVI"(<3 x double> %t_2_, i32 0)
+  %t_a_ = call double @"getcomp@FVI"(<3 x double> %t_2_, i32 1)
+  %t_b_ = call double @"getcomp@FVI"(<3 x double> %t_2_, i32 2)
+  %rw034 = call <9 x double> @"set@3FFFFFFFFF"(double %t_3_, double %t_4_, double %t_5_, double %t_6_, double %t_7_, double %t_8_, double %t_9_, double %t_a_, double %t_b_)
+  ret <9 x double> %rw034
+}
+
+declare <3 x double> @"getcomp@V[VI"(<3 x double>*, i32) nounwind readnone
+
+declare <9 x double> @"set@3FFFFFFFFF"(double, double, double, double, double, double, double, double, double) nounwind readnone
+
+declare <9 x double> @"transpose@33"(<9 x double>) nounwind
+
+declare <3 x double> @"mul@V3"(<3 x double>, <9 x double>) nounwind
+
+declare double @"cos@FF"(double) nounwind readnone
+
+declare <3 x double> @"set@VF"(double) nounwind readnone
+
+declare <3 x double> @"mul@VV"(<3 x double>, <3 x double>) nounwind readnone
+
+declare double @"sin@FF"(double) nounwind readnone
+
+declare <3 x double> @"add@VV"(<3 x double>, <3 x double>) nounwind readnone
+
+declare i32 @"not@II"(i32) nounwind readnone
+
+declare <3 x double> @"neg@VV"(<3 x double>) nounwind readnone
+
+declare double @"dot@FVV"(<3 x double>, <3 x double>) nounwind
+
+declare <3 x double> @"sub@VV"(<3 x double>, <3 x double>) nounwind readnone
+
+declare double @"abs@FF"(double) nounwind
+
+declare <3 x double> @"div@VV"(<3 x double>, <3 x double>) nounwind readnone
+
+define void @__shader_default_arguments() {
+entry:
+  call void @ggx_sample(<3 x double> zeroinitializer, double 0.000000e+00, double 0.000000e+00, i32 0, <3 x double> <double 5.000000e-01, double 5.000000e-01, double 5.000000e-01>, <3 x double> zeroinitializer, i32 0, double 0.000000e+00, i32 0, <3 x double> zeroinitializer, <3 x double> zeroinitializer, <3 x double> zeroinitializer, double 1.000000e-01, double 1.000000e-01, double 1.000000e-01, <3 x double> <double 4.000000e-02, double 4.000000e-02, double 4.000000e-02>, i32 0)
+  ret void
+}
+
+!context = !{!0}
+!version = !{!1}
+
+!0 = metadata !{metadata !"cvex"}
+!1 = metadata !{metadata !"13.0.401"}
+
+;_code_end

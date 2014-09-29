@@ -1,0 +1,40 @@
+#include <pbr.h>
+
+#line 3 "ashikhmin_diffuse_eval.vfl"
+
+cvex ashikhmin_diffuse_eval(
+        vector u = 0;
+        vector v = 0;
+        int bounces = 0;
+        int reverse = 0;
+        export vector refl = 0.5;
+        export vector eval = 0;
+        export float pdf = 0;
+
+        int mybounces = 0;
+        vector ng = 0;
+        vector F0 = 0.04;
+        )
+{
+
+    if (bounces & mybounces) {
+
+        vector nn = normalize(ng);
+        vector un = normalize(select(reverse, v, u));
+        vector vn = normalize(select(reverse, u, v));
+
+        pdf = max(dot(vn, nn), 0);
+
+        if ( pdf > 0 ) {
+
+            float tmp1 = 1.0-(abs(dot(nn,un))/2.0);
+            float tmp1_sqr = tmp1*tmp1;
+            float tmp1_5 = tmp1_sqr * tmp1_sqr * tmp1;
+            float tmp2 = 1.0-(dot(nn,vn)/2.0);
+            float tmp2_sqr = tmp2*tmp2;
+            float tmp2_5 = tmp2_sqr * tmp2_sqr * tmp2;
+            eval = pdf * 28.0/23.0 * (1.0-F0) * 
+                    (1.0-tmp1_5) * (1.0-tmp2_5);
+        }
+    }
+}

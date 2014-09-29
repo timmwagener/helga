@@ -1,0 +1,78 @@
+#include <pbr.h>
+
+
+void makebasis(export vector x; export vector y; const vector z) {
+        if (abs(z.x) < 0.6)
+                y = {1.0, 0.0, 0.0};
+        else if (abs(z.z) < 0.6)
+                y = {0.0, 1.0, 0.0};
+        else
+                y = {0.0, 0.0, 1.0};
+        x = normalize(cross(y,z));
+        y = cross(z,x);
+}
+void makebasis(export vector x; export vector y; const vector z; const vector u) {
+    x = normalize(cross(z,u));
+    if (length(x)== 0.0)
+        makebasis(x,y,z);
+    else
+        y = cross(z,x);
+}
+
+
+
+#line 6 "ashikhmin_diffuse_sample.vfl"
+
+cvex ashikhmin_diffuse_sample(
+        vector u = 0;
+        float sx = 0;
+        float sy = 0;
+        int bounces = 0;
+
+        export vector refl = 0;
+        export vector v = 0;
+        export int bouncetype = 0;
+        export float pdf = 0;
+
+        int mybounces = 0;
+        vector ng = 0;
+        vector F0 = 0.04;
+        )
+{
+    bouncetype = bounces & mybounces;
+    if (bouncetype) {
+        vector nn = normalize(ng);
+
+        v = set(cos(sx*6.28318530717958647692 ), sin(sx*6.28318530717958647692 ), 0);
+        v *= sqrt(sy);
+        v.z = sqrt(1-sy);
+
+        pdf = 2*v.z;
+
+
+        vector framex = 0.0;
+        vector framey = 0.0;
+        makebasis(framex, framey, nn, u);
+
+        v = framex * v.x + framey * v.y + nn*v.z;
+
+        vector un = normalize(u);
+        vector vn = normalize(v);
+
+        if ( dot(nn,vn) > 0.0 ) {
+
+            float tmp1 = 1.0-(abs(dot(nn,un))/2.0);
+            float tmp1_sqr = tmp1*tmp1;
+            float tmp1_5 = tmp1_sqr * tmp1_sqr * tmp1;
+            float tmp2 = 1.0-(dot(nn,vn)/2.0);
+            float tmp2_sqr = tmp2*tmp2;
+            float tmp2_5 = tmp2_sqr * tmp2_sqr * tmp2;
+            refl = 0.5;
+            refl *= 28.0/23.0 * (1.0-F0) * 
+                    (1.0-tmp1_5) * (1.0-tmp2_5);
+        } else {
+            pdf = 0.0;
+            refl = 0.0;
+        }
+    }
+}

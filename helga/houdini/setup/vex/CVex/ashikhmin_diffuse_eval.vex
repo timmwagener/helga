@@ -1,0 +1,92 @@
+;_name	ashikhmin_diffuse_eval
+; ModuleID = 'ashikhmin_diffuse_eval'
+
+@refl = external global <3 x double>
+@eval = external global <3 x double>
+@pdf = external global double
+
+define void @ashikhmin_diffuse_eval(<3 x double> %u, <3 x double> %v, i32 %bounces, i32 %reverse, <3 x double> %refl, <3 x double> %eval, double %pdf, i32 %mybounces, <3 x double> %ng, <3 x double> %F0) nounwind {
+entry:
+  %return = and i32 %bounces, %mybounces
+  %0 = icmp ne i32 %return, 0
+  br i1 %0, label %true, label %end
+
+true:                                             ; preds = %entry
+  %return4 = call <3 x double> @"normalize@VV"(<3 x double> %ng)
+  %1 = icmp ne i32 %reverse, 0
+  %return8 = select i1 %1, <3 x double> %v, <3 x double> %u
+  %return9 = call <3 x double> @"normalize@VV"(<3 x double> %return8)
+  %return13 = select i1 %1, <3 x double> %u, <3 x double> %v
+  %return14 = call <3 x double> @"normalize@VV"(<3 x double> %return13)
+  %return17 = call double @"dot@FVV"(<3 x double> %return14, <3 x double> %return4)
+  %return18 = call double @"max@FFF"(double %return17, double 0.000000e+00)
+  %return20 = fcmp ogt double %return18, 0.000000e+00
+  %return21 = zext i1 %return20 to i32
+  br i1 %return20, label %true22, label %end
+
+end:                                              ; preds = %true, %true22, %entry
+  %eval66.0 = phi <3 x double> [ %output64, %true22 ], [ %eval, %true ], [ %eval, %entry ]
+  %pdf67.0 = phi double [ %return18, %true22 ], [ %return18, %true ], [ %pdf, %entry ]
+  store <3 x double> %refl, <3 x double>* @refl
+  store <3 x double> %eval66.0, <3 x double>* @eval
+  store double %pdf67.0, double* @pdf
+  ret void
+
+true22:                                           ; preds = %true
+  %return26 = call double @"dot@FVV"(<3 x double> %return4, <3 x double> %return9)
+  %return27 = call double @"abs@FF"(double %return26)
+  %output = call double @"div@FF"(double %return27, double 2.000000e+00)
+  %output28 = fsub double 1.000000e+00, %output
+  %output31 = fmul double %output28, %output28
+  %output34 = fmul double %output31, %output31
+  %output36 = fmul double %output34, %output28
+  %return39 = call double @"dot@FVV"(<3 x double> %return4, <3 x double> %return14)
+  %output40 = call double @"div@FF"(double %return39, double 2.000000e+00)
+  %output41 = fsub double 1.000000e+00, %output40
+  %output44 = fmul double %output41, %output41
+  %output47 = fmul double %output44, %output44
+  %output49 = fmul double %output47, %output41
+  %output51 = fmul double %return18, 2.800000e+01
+  %output52 = call double @"div@FF"(double %output51, double 2.300000e+01)
+  %cast = call <3 x double> @"set@VF"(double 1.000000e+00)
+  %output54 = call <3 x double> @"sub@VV"(<3 x double> %cast, <3 x double> %F0)
+  %cast55 = call <3 x double> @"set@VF"(double %output52)
+  %output56 = call <3 x double> @"mul@VV"(<3 x double> %cast55, <3 x double> %output54)
+  %output58 = fsub double 1.000000e+00, %output36
+  %cast59 = call <3 x double> @"set@VF"(double %output58)
+  %output60 = call <3 x double> @"mul@VV"(<3 x double> %output56, <3 x double> %cast59)
+  %output62 = fsub double 1.000000e+00, %output49
+  %cast63 = call <3 x double> @"set@VF"(double %output62)
+  %output64 = call <3 x double> @"mul@VV"(<3 x double> %output60, <3 x double> %cast63)
+  br label %end
+}
+
+declare <3 x double> @"normalize@VV"(<3 x double>) nounwind
+
+declare double @"dot@FVV"(<3 x double>, <3 x double>) nounwind
+
+declare double @"max@FFF"(double, double) nounwind readnone
+
+declare double @"abs@FF"(double) nounwind
+
+declare double @"div@FF"(double, double) nounwind readnone
+
+declare <3 x double> @"set@VF"(double) nounwind readnone
+
+declare <3 x double> @"sub@VV"(<3 x double>, <3 x double>) nounwind readnone
+
+declare <3 x double> @"mul@VV"(<3 x double>, <3 x double>) nounwind readnone
+
+define void @__shader_default_arguments() {
+entry:
+  call void @ashikhmin_diffuse_eval(<3 x double> zeroinitializer, <3 x double> zeroinitializer, i32 0, i32 0, <3 x double> <double 5.000000e-01, double 5.000000e-01, double 5.000000e-01>, <3 x double> zeroinitializer, double 0.000000e+00, i32 0, <3 x double> zeroinitializer, <3 x double> <double 4.000000e-02, double 4.000000e-02, double 4.000000e-02>)
+  ret void
+}
+
+!context = !{!0}
+!version = !{!1}
+
+!0 = metadata !{metadata !"cvex"}
+!1 = metadata !{metadata !"13.0.401"}
+
+;_code_end

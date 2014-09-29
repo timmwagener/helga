@@ -292,10 +292,107 @@ class AlembicImportChar(object):
 
     
 
+#hdaModule
+#------------------------------------------------------------------
+
+def create_char(node):
+    """
+    Create character hierarchy. Callback for node button.
+    """
+    
+    #node None
+    if not (node):
+        #log
+        print('No node passed, not building character hierarchy.')
+        return
+
+    #import
+    from helga.houdini.import_export.alembic_import import alembic_import_char
+    reload(alembic_import_char)
+    
+    
+    #alembic_import_char_instance
+    alembic_import_char_instance = alembic_import_char.AlembicImportChar(node = node)
+
+    #create_char
+    alembic_import_char_instance.create_char()
+
+
+
+def print_alembic_object_path_list(node):
+    """
+    Print Alembic object pathes and object types in the console.
+    """
+    
+    #node None
+    if not (node):
+        #log
+        print('No node passed, not printing alembic pathes.')
+        return
+
+
+    #import
+    from helga.houdini.import_export.alembic_import import alembic_import_char
+    reload(alembic_import_char)
+    
+    
+    #alembic_import_char_instance
+    alembic_import_char_instance = alembic_import_char.AlembicImportChar(node = node)
+
+    #print_alembic_object_path_list
+    alembic_import_char_instance.print_alembic_object_path_list()
 
 
 
 
+
+
+#OnCreated callback (copy this in the HDAs OnCreated callback)
+#------------------------------------------------------------------
+
+'''
+def set_expressions_on_subnet_parameters(node):
+    """
+    Set expressions on parameters.
+    """
+
+    #expression_frame
+    expression_frame = '$FF'
+    #set expression
+    parm_frame = node.parm('frame')
+    #set expression
+    parm_frame.setExpression(expression_frame, language = hou.exprLanguage.Hscript)
+
+
+    #expression_fps
+    expression_fps = '$FPS'
+    #set expression
+    parm_fps = node.parm('fps')
+    #set expression
+    parm_fps.setExpression(expression_fps, language = hou.exprLanguage.Hscript)
+
+
+def on_created():
+    """
+    Initialize node.
+    """
+
+    #node
+    node = kwargs['node']
+    
+    #set_expressions_on_subnet_parameters
+    set_expressions_on_subnet_parameters(node)
+
+
+#on_created
+on_created()
+
+'''
+
+
+
+
+    
 
 
 

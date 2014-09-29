@@ -260,11 +260,14 @@ class AlembicImportShotHighpolyRendergeo(object):
             #iterate, check and create
             for object_path in object_path_list:
 
-                #helga_highpoly_rendergeo_attr
-                helga_highpoly_rendergeo_attr = self.alembic_functionality.get_alembic_attribute_value(alembic_path, object_path, 'helga_highpoly_rendergeo')
+                #helga_locator_attr_exists
+                helga_locator_attr_exists = self.alembic_functionality.alembic_attribute_exists(alembic_path, object_path, 'helga_locator')
+
+                #helga_highpoly_rendergeo_attr_exists
+                helga_highpoly_rendergeo_attr_exists = self.alembic_functionality.alembic_attribute_exists(alembic_path, object_path, 'helga_highpoly_rendergeo')
 
                 #if attr exists append and break
-                if (helga_highpoly_rendergeo_attr):
+                if (helga_locator_attr_exists and helga_highpoly_rendergeo_attr_exists):
 
                     #append
                     checked_alembic_path_list.append(alembic_path)
@@ -435,6 +438,22 @@ class AlembicImportShotHighpolyRendergeo(object):
 #hdaModule
 #------------------------------------------------------------------
 
+def create_prop(node):
+    """
+    Function to be used in the hdaModule of the Python operator.
+    """
+
+    #import
+    from helga.houdini.import_export.alembic_import import alembic_import_shot_highpoly_rendergeo
+    reload(alembic_import_shot_highpoly_rendergeo)
+
+    #alembic_import_shot_instance
+    alembic_import_shot_instance = alembic_import_shot_highpoly_rendergeo.AlembicImportShotHighpolyRendergeo(node)
+
+    #create_prop
+    alembic_import_shot_instance.create_prop()
+
+
 def create_shot(node):
     """
     Function to be used in the hdaModule of the Python operator.
@@ -451,20 +470,7 @@ def create_shot(node):
     alembic_import_shot_instance.create_shot()
 
 
-def create_prop(node):
-    """
-    Function to be used in the hdaModule of the Python operator.
-    """
 
-    #import
-    from helga.houdini.import_export.alembic_import import alembic_import_shot_highpoly_rendergeo
-    reload(alembic_import_shot_highpoly_rendergeo)
-
-    #alembic_import_shot_instance
-    alembic_import_shot_instance = alembic_import_shot_highpoly_rendergeo.AlembicImportShotHighpolyRendergeo(node)
-
-    #create_prop
-    alembic_import_shot_instance.create_prop()
 
 
 

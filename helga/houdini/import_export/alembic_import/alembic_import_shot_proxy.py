@@ -1,10 +1,10 @@
 
 
 """
-alembic_import_shot
+alembic_import_shot_proxy
 ==========================================
 
-GUI to import Shot Alembics according to our pipeline standards.
+GUI to import Shot Proxy Alembics according to our pipeline standards.
 
 This module is mainly needed because of the weird Alembic
 import in Houdini, that generates all these Alembic xform nodes
@@ -95,23 +95,23 @@ TOOL_ROOT_PATH = alembic_import_globals.TOOL_ROOT_PATH
 
 
 
-#AlembicImportShot class
+#AlembicImportShotProxy class
 #------------------------------------------------------------------
-class AlembicImportShot(object):
+class AlembicImportShotProxy(object):
     """
-    AlembicImportShot
+    AlembicImportShotProxy
     """
 
 
     def __new__(cls, *args, **kwargs):
         """
-        AlembicImportShot instance factory.
+        AlembicImportShotProxy instance factory.
         """
 
-        #alembic_import_shot_instance
-        alembic_import_shot_instance = super(AlembicImportShot, cls).__new__(cls, args, kwargs)
+        #alembic_import_shot_proxy_instance
+        alembic_import_shot_proxy_instance = super(AlembicImportShotProxy, cls).__new__(cls, args, kwargs)
 
-        return alembic_import_shot_instance
+        return alembic_import_shot_proxy_instance
 
     
     def __init__(self,
@@ -122,7 +122,7 @@ class AlembicImportShot(object):
         """
 
         #super
-        self.parent_class = super(AlembicImportShot, self)
+        self.parent_class = super(AlembicImportShotProxy, self)
         self.parent_class.__init__()
 
 
@@ -166,38 +166,11 @@ class AlembicImportShot(object):
     #Checks
     #------------------------------------------------------------------
 
-    def base_data_check_shot(self):
-        """
-        Check base data from the node and return either False
-        or the needed data. (Equivalent to True).
-        The returned data is [alembic_path] 
-        """
-
-        pass
-
-
     def base_data_check_prop(self):
         """
         Check base data for props.
-        The returned data is [alembic_path, alembic_highpoly_rendergeo_dir]
+        The returned data is [alembic_path]
         """
-
-        #alembic_highpoly_rendergeo_dir
-        alembic_highpoly_rendergeo_dir = self.alembic_functionality.get_parm_value(self.node, 'alembic_highpoly_rendergeo_dir')
-        
-        #is False
-        if not (alembic_highpoly_rendergeo_dir):
-            #log
-            self.logger.debug('Parameter alembic highpoly rendergeo dir empty.')
-            return False
-
-        #dir exists
-        if not (os.path.isdir(alembic_highpoly_rendergeo_dir)):
-            #log
-            self.logger.debug('Alembic highpoly rendergeo dir {0} does not exist.'.format(alembic_highpoly_rendergeo_dir))
-            return False
-
-
 
         #alembic_path
         alembic_path = self.alembic_functionality.get_parm_value(self.node, 'alembic_path')
@@ -216,27 +189,51 @@ class AlembicImportShot(object):
 
 
         #return
-        return [alembic_path, alembic_highpoly_rendergeo_dir]
+        return [alembic_path]
+
+
+    def base_data_check_shot(self):
+        """
+        Check base data from the node and return either False
+        or the needed data. (Equivalent to True).
+        The returned data is [alembic_path_list].
+        """
+
+        #alembic_dir
+        alembic_dir = self.alembic_functionality.get_parm_value(self.node, 'alembic_dir')
+        
+        #is False
+        if not (alembic_dir):
+            #log
+            self.logger.debug('Parameter alembic dir empty.')
+            return False
+
+        #dir exists
+        if not (os.path.isdir(alembic_dir)):
+            #log
+            self.logger.debug('Alembic dir {0} does not exist.'.format(alembic_dir))
+            return False
+
+
+        #alembic_path_list
+        alembic_path_list = [os.path.join(alembic_dir, file).replace('\\', '/') for 
+                            file in 
+                            os.listdir(alembic_dir) if 
+                            (os.path.isfile(os.path.join(alembic_dir, file)) and file.split('.')[-1] == 'abc')]
+        #alembic_path_list empty
+        if not (alembic_path_list):
+            #log
+            self.logger.debug('alembic_path_list empty. Alembic dir {0} does not seem to contain alembic files.'.format(alembic_dir))
+            return False
+
+
+        #return
+        return [alembic_path_list]
 
 
 
     #Creation
     #------------------------------------------------------------------
-
-    def create_shot(self):
-        """
-        Create shot.
-        """
-
-        #base_data_check_shot
-        if not (self.base_data_check_shot()):
-            #log
-            self.logger.debug('Base data check failed, not creating shot.')
-            return
-
-        #create_character_hierarchy
-        self.alembic_functionality.create_shot(self.node)
-
 
     def create_prop(self):
         """
@@ -249,8 +246,46 @@ class AlembicImportShot(object):
             self.logger.debug('Base data check failed, not creating prop.')
             return
 
-        #create_character_hierarchy
-        self.alembic_functionality.create_prop(self.node)
+        #alembic_path, alembic_highpoly_rendergeo_dir
+        alembic_path = self.base_data_check_prop()[0]
+
+        #log
+        self.logger.debug('\n\n-------------------------\n{0}\n-------------------------\n\n'.format(alembic_path))
+
+        #create_prop_proxy
+        self.alembic_functionality.create_prop_proxy(self.node, alembic_path)
+
+
+    def create_shot(self):
+        """
+        Create shot.
+        """
+
+        #base_data_check_shot
+        if not (self.base_data_check_shot()):
+            #log
+            self.logger.debug('Base data check failed, not creating shot.')
+            return
+
+        #alembic_path_list
+        alembic_path_list = self.base_data_check_shot()[0]
+
+        #delete_content
+        self.alembic_functionality.delete_content(self.node)
+
+        #iterate
+        for alembic_path in alembic_path_list:
+
+            #log
+            self.logger.debug('\n\n-------------------------\n{0}\n-------------------------\n\n'.format(alembic_path))
+
+            #create_prop_proxy
+            self.alembic_functionality.create_prop_proxy(self.node, alembic_path)
+
+        #layout children
+        self.node.layoutChildren()
+
+    
 
 
     
@@ -330,38 +365,83 @@ class AlembicImportShot(object):
 #hdaModule
 #------------------------------------------------------------------
 
-def create_shot(node):
-    """
-    Function to be used in the hdaModule of the Python operator.
-    """
-
-    #import
-    from helga.houdini.import_export.alembic_import import alembic_import_shot
-    reload(alembic_import_shot)
-
-    #alembic_import_shot_instance
-    alembic_import_shot_instance = alembic_import_shot.AlembicImportShot(node)
-
-    #create_shot
-    alembic_import_shot_instance.create_shot()
-
-
 def create_prop(node):
     """
     Function to be used in the hdaModule of the Python operator.
     """
 
     #import
-    from helga.houdini.import_export.alembic_import import alembic_import_shot
-    reload(alembic_import_shot)
+    from helga.houdini.import_export.alembic_import import alembic_import_shot_proxy
+    reload(alembic_import_shot_proxy)
 
     #alembic_import_shot_instance
-    alembic_import_shot_instance = alembic_import_shot.AlembicImportShot(node)
+    alembic_import_shot_instance = alembic_import_shot_proxy.AlembicImportShotProxy(node)
 
     #create_prop
     alembic_import_shot_instance.create_prop()
 
 
+def create_shot(node):
+    """
+    Function to be used in the hdaModule of the Python operator.
+    """
+
+    #import
+    from helga.houdini.import_export.alembic_import import alembic_import_shot_proxy
+    reload(alembic_import_shot_proxy)
+
+    #alembic_import_shot_instance
+    alembic_import_shot_instance = alembic_import_shot_proxy.AlembicImportShotProxy(node)
+
+    #create_shot
+    alembic_import_shot_instance.create_shot()
+
+
+
+
+
+
+#OnCreated callback (copy this in the HDAs OnCreated callback)
+#------------------------------------------------------------------
+
+'''
+def set_expressions_on_subnet_parameters(node):
+    """
+    Set expressions on parameters.
+    """
+
+    #expression_frame
+    expression_frame = '$FF'
+    #set expression
+    parm_frame = node.parm('frame')
+    #set expression
+    parm_frame.setExpression(expression_frame, language = hou.exprLanguage.Hscript)
+
+
+    #expression_fps
+    expression_fps = '$FPS'
+    #set expression
+    parm_fps = node.parm('fps')
+    #set expression
+    parm_fps.setExpression(expression_fps, language = hou.exprLanguage.Hscript)
+
+
+def on_created():
+    """
+    Initialize node.
+    """
+
+    #node
+    node = kwargs['node']
+    
+    #set_expressions_on_subnet_parameters
+    set_expressions_on_subnet_parameters(node)
+
+
+#on_created
+on_created()
+
+'''
 
 
 

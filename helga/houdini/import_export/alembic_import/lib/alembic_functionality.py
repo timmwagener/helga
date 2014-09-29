@@ -310,7 +310,7 @@ class AlembicFunctionality(object):
         return geo_node
 
 
-    def create_character_alembic_node(self, top_node, parent_node, alembic_path, object_path):
+    def create_character_alembic_node(self, parent_node, object_path):
         """
         Return parm value for parm with parm_name on node.
         """
@@ -325,10 +325,6 @@ class AlembicFunctionality(object):
         #set objectPath
         alembic_node_object_path = alembic_node.parm('objectPath')
         alembic_node_object_path.set(object_path)
-
-
-        #create expressions
-        self.create_character_alembic_node_expressions(alembic_node, top_node)
 
 
         #return
@@ -436,8 +432,10 @@ class AlembicFunctionality(object):
                 geo_node = self.create_geo_node(parent_node, object_transform_name)
                 
                 #alembic_node
-                alembic_node = self.create_character_alembic_node(parent_node, geo_node, alembic_path, object_path)
+                alembic_node = self.create_character_alembic_node(geo_node, object_path)
 
+                #create expressions
+                self.create_character_alembic_node_expressions(alembic_node, parent_node)
 
 
         #layout children
@@ -462,6 +460,7 @@ class AlembicFunctionality(object):
 
         #locator_geo_node
         locator_geo_node = self.create_locator_geo_node(parent_node, alembic_file_name)
+        locator_geo_node.setDisplayFlag(False)
         locator_geo_node.moveToGoodPosition()
 
         #locator_alembic_node
@@ -472,11 +471,12 @@ class AlembicFunctionality(object):
 
 
         #geo_node
-        geo_node = self.create_geo_node(parent_node, alembic_file_name)
+        geo_node_name = alembic_file_name.replace('_locator', '')
+        geo_node = self.create_geo_node(parent_node, geo_node_name)
         geo_node.moveToGoodPosition()
 
         #alembic_node
-        alembic_node = self.create_prop_highpoly_rendergeo_alembic_node(geo_node, highpoly_rendergeo_path, node_name = alembic_file_name)
+        alembic_node = self.create_prop_highpoly_rendergeo_alembic_node(geo_node, highpoly_rendergeo_path, node_name = geo_node.name())
 
 
         #connect
@@ -559,7 +559,7 @@ class AlembicFunctionality(object):
 
         #rx
         #expression
-        expression = 'prim("{0}", 0, "parentRot", 0)'.format(locator_alembic_node.name())
+        expression = 'deg(prim("{0}", 0, "parentRot", 0))'.format(locator_alembic_node.name())
         #parm
         parm = locator_geo_node.parm('rx')
         #set expression
@@ -567,7 +567,7 @@ class AlembicFunctionality(object):
 
         #ry
         #expression
-        expression = 'prim("{0}", 0, "parentRot", 1)'.format(locator_alembic_node.name())
+        expression = 'deg(prim("{0}", 0, "parentRot", 1))'.format(locator_alembic_node.name())
         #parm
         parm = locator_geo_node.parm('ry')
         #set expression
@@ -575,7 +575,7 @@ class AlembicFunctionality(object):
 
         #rz
         #expression
-        expression = 'prim("{0}", 0, "parentRot", 2)'.format(locator_alembic_node.name())
+        expression = 'deg(prim("{0}", 0, "parentRot", 2))'.format(locator_alembic_node.name())
         #parm
         parm = locator_geo_node.parm('rz')
         #set expression
@@ -643,6 +643,15 @@ class AlembicFunctionality(object):
         if not (alembic_file_name):
             #log
             self.logger.debug('Could not aquire Alembic file name for path {0}.'.format(alembic_path))
+            return False
+
+
+        #helga_locator_attr_exists
+        helga_locator_attr_exists = self.alembic_attribute_exists(alembic_path, object_path, 'helga_locator')
+        #check attribute
+        if not (helga_locator_attr_exists):
+            #log
+            self.logger.debug('helga_locator attribute could not be aquired for {0}. Not creating prop'.format(object_path))
             return False
         
 
@@ -712,6 +721,154 @@ class AlembicFunctionality(object):
                                                         object_path, 
                                                         alembic_path, 
                                                         highpoly_rendergeo_path)
+
+
+    #Shot/Prop Proxy Methods
+    #------------------------------------------------------------------
+
+    def create_prop_proxy_nodes(self, parent_node, alembic_path):
+        """
+        Create prop proxy node.
+        """
+
+        #alembic_file_name
+        alembic_file_name = os.path.splitext(os.path.basename(alembic_path))[0]
+
+        #geo_node
+        geo_node = self.create_geo_node(parent_node, alembic_file_name)
+
+        #alembic_node
+        alembic_node = self.create_prop_proxy_alembic_node(geo_node, alembic_path)
+
+        #create expressions
+        self.create_prop_proxy_alembic_node_expressions(alembic_node, parent_node)
+
+
+    def create_prop_proxy_alembic_node(self, parent_node, alembic_path):
+        """
+        Create Alembic node specifically for prop proxy.
+        """
+
+        #alembic_node
+        alembic_node = parent_node.createNode('alembic', parent_node.name())
+
+        #set fileName
+        parm_file_name = alembic_node.parm('fileName')
+        parm_file_name.set(alembic_path)
+
+        #return
+        return alembic_node
+
+
+    def create_prop_proxy_alembic_node_expressions(self, alembic_node, top_node):
+        """
+        Create expressions for prop proxy alembic sop node.
+        The character alembic sop nodes tend to be controlled by
+        the top_node to make sure changes ripple through.
+        """
+
+        #relative_path
+        relative_path = alembic_node.relativePathTo(top_node)
+        
+
+        #parm_name
+        parm_name = 'frame'
+        #expression
+        expression = 'ch("{0}/{1}")'.format(relative_path, parm_name)
+        #parm
+        parm = alembic_node.parm('frame')
+        #set expression
+        parm.setExpression(expression, language = hou.exprLanguage.Hscript)
+
+
+        #parm_name
+        parm_name = 'fps'
+        #expression
+        expression = 'ch("{0}/{1}")'.format(relative_path, parm_name)
+        #parm
+        parm = alembic_node.parm('fps')
+        #set expression
+        parm.setExpression(expression, language = hou.exprLanguage.Hscript)
+
+
+        #parm_name
+        parm_name = 'loadmode'
+        #expression
+        expression = 'ch("{0}/{1}")'.format(relative_path, parm_name)
+        #parm
+        parm = alembic_node.parm('loadmode')
+        #set expression
+        parm.setExpression(expression, language = hou.exprLanguage.Hscript)
+
+
+    def check_prop_proxy(self, alembic_path):
+        """
+        Check the data needed for building a proxy alembic prop in Houdini.
+        Return false if the needed data is insufficient or the needed data if True.
+        The returned data is in the form of [alembic_path].
+        This should be all the data needed to build a prop.
+        """
+        
+        #alembic_file_name
+        alembic_file_name = os.path.splitext(os.path.basename(alembic_path))[0]
+        #alembic_file_name empty
+        if not (alembic_file_name):
+            #log
+            self.logger.debug('Could not aquire Alembic file name for path {0}.'.format(alembic_path))
+            return False
+
+
+        #object_path_list
+        object_path_list = self.get_alembic_object_path_list(alembic_path)
+        #object_path_list empty
+        if not (object_path_list):
+            #log
+            self.logger.debug('Object path list for alembic {0} empty.'.format(alembic_path))
+            return False
+        
+
+        #helga_proxy_attr_exists
+        helga_proxy_attr_exists = False
+        
+        #iterate and check
+        for object_path in object_path_list:
+            
+            #helga_proxy_attr
+            helga_proxy_attr = self.alembic_attribute_exists(alembic_path, object_path, 'helga_proxy')
+            
+            #if True then break
+            if (helga_proxy_attr):
+
+                #set helga_proxy_attr_exists
+                helga_proxy_attr_exists = True
+                break
+
+        #helga_proxy_attr_exists false
+        if not (helga_proxy_attr_exists):
+            #log
+            self.logger.debug('Alembic has no helga_proxy attribute.'.format(alembic_path))
+            return False
+
+        
+        #return
+        return [alembic_path]
+
+
+    def create_prop_proxy(self, 
+                            parent_node, 
+                            alembic_path):
+        """
+        Create a prop hierarchy according to our pipeline standards.
+        """
+        
+        #check
+        if not (self.check_prop_proxy(alembic_path)):
+            #log
+            self.logger.debug('Prop proxy check failed. Not creating prop')
+            return
+
+        #create
+        self.create_prop_proxy_nodes(parent_node, alembic_path)
 
             
 

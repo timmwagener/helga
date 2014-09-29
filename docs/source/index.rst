@@ -61,6 +61,7 @@ Checklists
 	checklists/mesh_checklist
 	checklists/animation_checklist
 	checklists/photogrammetry_checklist
+	checklists/asset_checklist
 
 
 I am a

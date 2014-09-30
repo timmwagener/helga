@@ -1,5 +1,18 @@
 
+"""
+metadata
+==========================================
 
+DEPRECATED
+
+This node is entirely a legacy node and not used for helga at all.
+Use helga_shots_metadata and helga_asset_metadata node plugins instead.
+This node is needed for the experimental exr scene reconstruction.
+
+DEPRECATED
+
+-----------------------
+"""
 
 
 

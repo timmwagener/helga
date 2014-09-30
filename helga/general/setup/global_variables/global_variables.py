@@ -182,7 +182,7 @@ if (PIPELINE_BASE_PATH):
     """Helga pipeline Maya icons pathes"""
 
 
-    MAYA_PLUGIN_PATH_LIST = [PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/plugins']
+    MAYA_PLUGIN_PATH_LIST = [PIPELINE_SCRIPTS_BASE_PATH + r'/bin/plugins/maya']
     """Helga pipeline Maya plugins pathes"""
 
 
@@ -235,6 +235,9 @@ if (PIPELINE_BASE_PATH):
     HOUDINI_SETUP_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/houdini/setup'
     """Helga pipeline HOUDINI setup path"""
 
+    HOUDINI_PLUGIN_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/bin/plugins/houdini'
+    """Helga pipeline HOUDINI binary plugins path"""
+
 
     HOUDINI_DIGITAL_ASSETS_PATH = MAYA_PROJECT_PATH + r'/scenes/assets'
     """Helga pipeline HOUDINI digital assets path"""
@@ -243,6 +246,7 @@ if (PIPELINE_BASE_PATH):
     """Helga pipeline HOUDINI otl path"""
 
     HOUDINI_PATH = [HOUDINI_SETUP_PATH,
+                    HOUDINI_PLUGIN_PATH,
                     HOUDINI_DIGITAL_ASSETS_PATH,
                     PIPELINE_LIBRARIES_PATH_GENERAL_FOR_HOUDINI,
                     PIPELINE_LIBRARIES_PATH_HOUDINI,

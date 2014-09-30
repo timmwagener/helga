@@ -1,0 +1,6 @@
+[submodule "bin/plugins/nuke/nuke.env"]
+	path = bin/plugins/nuke/nuke.env
+	url = https://github.com/dekekincaid/nuke.env.git
+[submodule "bin/plugins/nuke/LumaNukeGizmos"]
+	path = bin/plugins/nuke/LumaNukeGizmos
+	url = https://github.com/LumaPictures/LumaNukeGizmos.git

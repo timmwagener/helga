@@ -8,6 +8,8 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import uic
 
+from PyQt4.QtGui import *
+
 from PIL import Image
 from multiprocessing import Pool
 from multiprocessing import Process
@@ -28,6 +30,14 @@ class RatConverter(base_class, form_class):
         self.button_batch_convert.clicked.connect(self.batch_convert_threaded)
         self.button_remove_source.clicked.connect(self.remove_source)
         self.button_remove_target.clicked.connect(self.remove_target)
+
+        model = QStandardItemModel()
+        item = QStandardItem("item")
+        item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+        item.setData(QVariant(Qt.Checked). Qt.CheckStateRole)
+        model.appendRow(item)
+
+        self.list_extensions.setModel(model)
 
         self.setAcceptDrops(True)
 

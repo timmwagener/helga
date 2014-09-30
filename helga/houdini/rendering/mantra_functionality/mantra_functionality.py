@@ -294,6 +294,15 @@ class MantraFunctionality(object):
         From this foundation you are ment to try and tweak the look.
         """
 
+        #Main
+        #------------------------------------------------------------------
+
+        #soho_mkpath
+        self.set_parm_value(node, 'soho_mkpath', True)
+        #log
+        print('{0} to {1}'.format('soho_mkpath', self.get_parm_value(node, 'soho_mkpath')))
+
+        
 
         #Objects
         #------------------------------------------------------------------
@@ -303,6 +312,26 @@ class MantraFunctionality(object):
         #log
         print('{0} to {1}'.format('soho_autoheadlight', self.get_parm_value(node, 'soho_autoheadlight')))
         
+
+
+        #Properties/Output
+        #------------------------------------------------------------------
+
+        #override_camerares
+        self.set_parm_value(node, 'override_camerares', True)
+        #log
+        print('{0} to {1}'.format('override_camerares', self.get_parm_value(node, 'override_camerares')))
+
+        #res_overridex
+        self.set_parm_value(node, 'res_overridex', 1280)
+        #log
+        print('{0} to {1}'.format('res_overridex', self.get_parm_value(node, 'res_overridex')))
+
+        #res_overridey
+        self.set_parm_value(node, 'res_overridey', 720)
+        #log
+        print('{0} to {1}'.format('res_overridey', self.get_parm_value(node, 'res_overridey')))
+
 
         
         #Properties/Output Options
@@ -319,7 +348,7 @@ class MantraFunctionality(object):
         #------------------------------------------------------------------
 
         #vm_renderengine
-        self.set_parm_value(node, 'vm_renderengine', 'pbrraytrace')
+        self.set_parm_value(node, 'vm_renderengine', 'raytrace')
         #log
         print('{0} to {1}'.format('vm_renderengine', self.get_parm_value(node, 'vm_renderengine')))
 
@@ -339,12 +368,12 @@ class MantraFunctionality(object):
         #------------------------------------------------------------------
 
         #vm_reflectlimit
-        self.set_parm_value(node, 'vm_reflectlimit', 5)
+        self.set_parm_value(node, 'vm_reflectlimit', 2)
         #log
         print('{0} to {1}'.format('vm_reflectlimit', self.get_parm_value(node, 'vm_reflectlimit')))
 
         #vm_refractlimit
-        self.set_parm_value(node, 'vm_refractlimit', 5)
+        self.set_parm_value(node, 'vm_refractlimit', 2)
         #log
         print('{0} to {1}'.format('vm_refractlimit', self.get_parm_value(node, 'vm_refractlimit')))
 
@@ -362,6 +391,13 @@ class MantraFunctionality(object):
 
         #Properties/Statistics
         #------------------------------------------------------------------
+
+        #vm_verbose
+        self.set_parm_value(node, 'vm_verbose', 4)
+        #log
+        print('{0} to {1}'.format('vm_verbose', self.get_parm_value(node, 'vm_verbose')))
+
+
 
         #vm_alfprogress
         self.set_parm_value(node, 'vm_alfprogress', True)

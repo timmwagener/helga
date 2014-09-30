@@ -213,7 +213,7 @@ if (PIPELINE_BASE_PATH):
     """Default nuke icons path"""
 
 
-    NUKE_PLUGIN_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/nuke/setup/plugins'
+    NUKE_PLUGIN_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/bin/plugins/nuke'
     """Default nuke plugin path"""
 
 

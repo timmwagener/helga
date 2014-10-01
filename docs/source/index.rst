@@ -50,6 +50,7 @@ Standards
 	:maxdepth: 1
 
 	standards/formats_and_standards
+	standards/houdini_variables
 
 
 Checklists

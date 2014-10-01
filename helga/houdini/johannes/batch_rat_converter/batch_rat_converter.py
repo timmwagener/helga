@@ -9,6 +9,7 @@ from PyQt4 import QtGui
 from PyQt4 import uic
 
 from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 
 from PIL import Image
 from multiprocessing import Pool
@@ -23,23 +24,67 @@ MODE_TO_BPP = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 
 
 class RatConverter(base_class, form_class):
 
+    model_ext = QStandardItemModel()
+
     def __init__(self, parent=None):
         
         QtGui.QMainWindow.__init__(self, parent)
         self.setupUi(self)
-        self.button_batch_convert.clicked.connect(self.batch_convert_threaded)
+        self.button_batch_convert.clicked.connect(self.batch_convert)
         self.button_remove_source.clicked.connect(self.remove_source)
         self.button_remove_target.clicked.connect(self.remove_target)
 
-        model = QStandardItemModel()
-        item = QStandardItem("item")
-        item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-        item.setData(QVariant(Qt.Checked). Qt.CheckStateRole)
-        model.appendRow(item)
-
-        self.list_extensions.setModel(model)
-
         self.setAcceptDrops(True)
+        self.set_initial_filetypes()
+
+
+    def set_initial_filetypes(self):
+
+        self.add_ext_to_list('hdr')
+
+
+
+    def keyPressEvent(self, event):
+
+        if(event.key()==Qt.Key_Return):
+            self.add_ext()
+            #self.add_extension()
+        event.accept()
+
+
+    def add_ext(self):
+
+        file_ext = str(self.add_extension.text())
+
+        self.add_ext_to_list(file_ext)
+
+
+    def add_ext_to_list(self, file_ext):     
+        
+        print(self.list_extensions.batchSize())
+
+        if(len(file_ext)==0):
+            return
+
+        # check if item already in the qlistwidget
+        for row in range(self.model_ext.rowCount()):
+            item = self.model_ext.item(row).text()
+
+            if(item == file_ext):
+                return
+
+        
+        while(file_ext.startswith('.')):
+            file_ext = ext[1:]
+
+        item = QStandardItem(file_ext)
+        item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+
+        check = Qt.Checked
+        item.setData(QVariant(check), Qt.CheckStateRole)
+
+        self.model_ext.appendRow(item)
+        self.list_extensions.setModel(self.model_ext)
 
 
     def batch_convert_threaded(self):
@@ -50,7 +95,7 @@ class RatConverter(base_class, form_class):
 
         p = Pool(processes=pool_size, initializer=self.initializer, initargs=(self,), maxtasksperchild=1)
 
-        p.map(self.convert_file, (self,) *len([0, 1, 2]))
+        p.map(self.convert_file, (self,) * len([0, 1, 2]))
 
         print "after map"
 

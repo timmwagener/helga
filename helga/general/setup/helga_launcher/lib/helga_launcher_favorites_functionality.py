@@ -47,7 +47,14 @@ def get_pipeline_icon_path():
     if(do_reload):reload(global_variables)
 
     #pipeline_icon_path
-    pipeline_icon_path = clean_path_for_favorites(global_variables.PIPELINE_ICON_PATH)
+    pipeline_icon_path = global_variables.PIPELINE_ICON_PATH
+
+    #replace // at beginning with \\
+    if (pipeline_icon_path.startswith('//')):
+
+        #fix icon path
+        pipeline_icon_path = '\\\\' + pipeline_icon_path[2:]
+
 
     return pipeline_icon_path
 
@@ -270,7 +277,7 @@ def create_desktop_shortcuts():
             icon_path = os.path.join(icons_dir, 'iconhelgayellow.ico')
 
 
-        
+
 
         try:
             

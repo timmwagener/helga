@@ -18,9 +18,11 @@ import threading
 
 form_class, base_class = uic.loadUiType("media/rat_converter.ui")
 
-IMG_FORMATS = ["png", "tiff", "exr", "jpeg", 'jpg', 'tga', 'tif']
-ICONVERT_PATH = '\"C:/Program Files/Side Effects Software/Houdini 13.0.401/bin/iconvert.exe\"'
 MODE_TO_BPP = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
+
+
+class ConvertThread(threading.Thread):
+    def __init__(self, iconvert_path, )
 
 class RatConverter(base_class, form_class):
 
@@ -30,7 +32,7 @@ class RatConverter(base_class, form_class):
         
         QtGui.QMainWindow.__init__(self, parent)
         self.setupUi(self)
-        self.button_batch_convert.clicked.connect(self.batch_convert)
+        self.button_batch_convert.clicked.connect(self.batch_convert_threaded)
         self.button_remove_source.clicked.connect(self.remove_source)
         self.button_remove_target.clicked.connect(self.remove_target)
 
@@ -41,7 +43,12 @@ class RatConverter(base_class, form_class):
     def set_initial_filetypes(self):
 
         self.add_ext_to_list('hdr')
-
+        self.add_ext_to_list('jpg')
+        self.add_ext_to_list('jpeg')
+        self.add_ext_to_list('png')
+        self.add_ext_to_list('tga')
+        self.add_ext_to_list('tif')
+        self.add_ext_to_list('tiff')
 
 
     def keyPressEvent(self, event):
@@ -58,15 +65,15 @@ class RatConverter(base_class, form_class):
 
         self.add_ext_to_list(file_ext)
 
+        self.add_extension.setText('')
+
 
     def add_ext_to_list(self, file_ext):     
-        
-        print(self.list_extensions.batchSize())
 
         if(len(file_ext)==0):
             return
 
-        # check if item already in the qlistwidget
+        # check if item already in the listview
         for row in range(self.model_ext.rowCount()):
             item = self.model_ext.item(row).text()
 
@@ -89,21 +96,21 @@ class RatConverter(base_class, form_class):
 
     def batch_convert_threaded(self):
 
-        print "before pool"
 
-        pool_size = 4
+        p = Process(target = self.f, args=(2,))
+        p.start()
 
-        p = Pool(processes=pool_size, initializer=self.initializer, initargs=(self,), maxtasksperchild=1)
 
-        p.map(self.convert_file, (self,) * len([0, 1, 2]))
+    def f(self, x):
 
-        print "after map"
-
+        print str(x*x)
 
     def initializer(self, inst):
         inst.start_process()
 
     def batch_convert(self, id):
+
+        iconvert_path = '\"' + self.path_iconvert.text() + '\"'
 
         current_img_number = 1
         for item_row in range(self.target_list.count()):
@@ -202,7 +209,14 @@ class RatConverter(base_class, form_class):
         splitted_filename = item.split('.')
         extension = splitted_filename[len(splitted_filename)-1]
 
-        if(extension in IMG_FORMATS):
+        img_formats = []
+
+        for row in range(self.model_ext.rowCount()):
+            item = self.model_ext.item(row).text()
+
+            img_formats.append(item)
+
+        if(extension in img_formats):
             return True
 
 

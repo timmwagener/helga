@@ -16,88 +16,8 @@
   <property name="windowTitle">
    <string>Batch RAT Converter</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
-    <widget class="QLineEdit" name="add_extension"/>
-   </item>
-   <item row="7" column="0" colspan="2">
-    <widget class="QProgressBar" name="progressbar">
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <property name="value">
-      <number>0</number>
-     </property>
-     <property name="textDirection">
-      <enum>QProgressBar::TopToBottom</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="2">
-    <widget class="QPushButton" name="button_remove_target">
-     <property name="acceptDrops">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>Remove Target</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="2">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Target</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0">
-    <widget class="QPushButton" name="button_batch_convert">
-     <property name="text">
-      <string>Batch Convert</string>
-     </property>
-     <property name="autoDefault">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0" rowspan="2">
-    <widget class="QLabel" name="label_folders">
-     <property name="text">
-      <string>Source</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QListWidget" name="source_list">
-     <property name="acceptDrops">
-      <bool>false</bool>
-     </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::MultiSelection</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QPushButton" name="button_remove_source">
-     <property name="text">
-      <string>Remove Source</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="2">
-    <widget class="QListWidget" name="target_list">
-     <property name="acceptDrops">
-      <bool>false</bool>
-     </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::MultiSelection</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="3">
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="autoFillBackground">
       <bool>false</bool>
@@ -105,15 +25,15 @@
      <property name="title">
       <string>iconvert path</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
        <widget class="QLabel" name="path_iconvert">
         <property name="text">
          <string>C:/Program Files/Side Effects Software/Houdini 13.0.401/bin/iconvert.exe</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="0" column="1">
        <widget class="QPushButton" name="set_iconvert_path">
         <property name="enabled">
          <bool>true</bool>
@@ -132,21 +52,109 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QListView" name="list_extensions"/>
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>File Extensions</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLineEdit" name="add_extension"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QListView" name="list_extensions"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_folders">
+     <property name="text">
+      <string>Source</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QListWidget" name="source_list">
+     <property name="acceptDrops">
+      <bool>false</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QListWidget" name="target_list">
+     <property name="acceptDrops">
+      <bool>false</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QPushButton" name="button_remove_source">
+     <property name="text">
+      <string>Remove Source</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QPushButton" name="button_remove_target">
+     <property name="acceptDrops">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Remove Target</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="2">
+    <widget class="QProgressBar" name="progressbar">
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="textDirection">
+      <enum>QProgressBar::TopToBottom</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" colspan="2">
+    <widget class="QPushButton" name="button_batch_convert">
+     <property name="text">
+      <string>Batch Convert</string>
+     </property>
+     <property name="autoDefault">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Target</string>
+     </property>
+    </widget>
    </item>
   </layout>
-  <zorder>progressbar</zorder>
-  <zorder>target_list</zorder>
   <zorder>source_list</zorder>
-  <zorder>button_remove_source</zorder>
   <zorder>button_batch_convert</zorder>
   <zorder>groupBox</zorder>
   <zorder>label_folders</zorder>
-  <zorder>label</zorder>
+  <zorder>groupBox_2</zorder>
+  <zorder>target_list</zorder>
   <zorder>button_remove_target</zorder>
-  <zorder>list_extensions</zorder>
-  <zorder>add_extension</zorder>
+  <zorder>button_remove_source</zorder>
+  <zorder>progressbar</zorder>
+  <zorder>label</zorder>
  </widget>
  <resources/>
  <connections/>

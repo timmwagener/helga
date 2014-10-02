@@ -69,7 +69,7 @@ I am a
 ------------
 
 .. toctree::
-	:maxdepth: 1
+	:maxdepth: 2
 
 	i_am_a/i_am_a
 

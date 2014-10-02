@@ -25,7 +25,7 @@ Houdini Variables
 	All helga variables are prefixed with HELGA, if they arent, they are not specific to
 	the helga project.
 
-.. info::
+.. note::
 
 	This list is subject to constant updates.
 

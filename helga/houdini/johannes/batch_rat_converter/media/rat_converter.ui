@@ -52,21 +52,6 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>File Extensions</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QLineEdit" name="add_extension"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QListView" name="list_extensions"/>
-      </item>
-     </layout>
-    </widget>
-   </item>
    <item row="3" column="0">
     <widget class="QLabel" name="label_folders">
      <property name="text">
@@ -144,6 +129,43 @@
      </property>
     </widget>
    </item>
+   <item row="0" column="1">
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Thread Count</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QSpinBox" name="thread_count">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>File Extensions</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="2" column="1">
+       <widget class="QListWidget" name="bit_depth"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QListView" name="list_extensions"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLineEdit" name="add_extension"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="add_bit_depth"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
   </layout>
   <zorder>source_list</zorder>
   <zorder>button_batch_convert</zorder>
@@ -155,6 +177,7 @@
   <zorder>button_remove_source</zorder>
   <zorder>progressbar</zorder>
   <zorder>label</zorder>
+  <zorder>groupBox_3</zorder>
  </widget>
  <resources/>
  <connections/>

@@ -12,6 +12,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 from PIL import Image
+import multiprocessing
 from multiprocessing import Pool
 from multiprocessing import Process
 import threading
@@ -19,10 +20,46 @@ import threading
 form_class, base_class = uic.loadUiType("media/rat_converter.ui")
 
 MODE_TO_BPP = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
-
+INDEX_TO_BIT_DEPTH = {0:, 1:, 2:, 3:}
 
 class ConvertThread(threading.Thread):
-    def __init__(self, iconvert_path, )
+
+    def __init__(self, iconvert_path, source_paths):
+
+        super(ConvertThread, self).__init__()
+
+        self.iconvert_path = iconvert_path
+        self.source_paths = source_paths
+
+    def run(self):
+
+        for path in self.source_paths:
+
+            img_full_path = str(path.replace('\\', '/'))
+
+            dst_full_path = str(img_full_path.rsplit('.', 1)[0] + '.rat')
+
+            commandline = str(self.iconvert_path + ' -d ' + str(self.get_image_bit_depth(img_full_path)) + ' ' + '-g off ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"' + '\n')
+
+            subprocess.call(commandline, shell=True)
+
+            print path
+
+    def get_image_bit_depth(self, path):
+
+        if(path.endswith('.exr')):
+            return 32
+
+        else:
+            return 8
+
+        '''
+        data = Image.open(path)
+        print MODE_TO_BPP[data.mode]/3
+
+        return MODE_TO_BPP[data.mode]/3
+        '''
+
 
 class RatConverter(base_class, form_class):
 
@@ -37,18 +74,28 @@ class RatConverter(base_class, form_class):
         self.button_remove_target.clicked.connect(self.remove_target)
 
         self.setAcceptDrops(True)
+
+        self.thread_count.setMaximum(multiprocessing.cpu_count())
+        self.thread_count.setValue(int(multiprocessing.cpu_count()/2))
+        
+        self.add_bit_depth.insertItem(0,'8 bit')
+        self.add_bit_depth.insertItem(1,'16 bit unsigned int')
+        self.add_bit_depth.insertItem(2,'16 bit floating point')
+        self.add_bit_depth.insertItem(3,'32 bit')
+
         self.set_initial_filetypes()
 
 
     def set_initial_filetypes(self):
 
-        self.add_ext_to_list('hdr')
-        self.add_ext_to_list('jpg')
-        self.add_ext_to_list('jpeg')
-        self.add_ext_to_list('png')
-        self.add_ext_to_list('tga')
-        self.add_ext_to_list('tif')
-        self.add_ext_to_list('tiff')
+        self.add_ext_to_list('exr', 3)
+        self.add_ext_to_list('hdr', 3)
+        self.add_ext_to_list('jpg', 0)
+        self.add_ext_to_list('jpeg', 0)
+        self.add_ext_to_list('png', 0)
+        self.add_ext_to_list('tga', 0)
+        self.add_ext_to_list('tif', 0)
+        self.add_ext_to_list('tiff', 0)
 
 
     def keyPressEvent(self, event):
@@ -63,12 +110,12 @@ class RatConverter(base_class, form_class):
 
         file_ext = str(self.add_extension.text())
 
-        self.add_ext_to_list(file_ext)
+        self.add_ext_to_list(file_ext, self.add_bit_depth.currentIndex())
 
         self.add_extension.setText('')
 
 
-    def add_ext_to_list(self, file_ext):     
+    def add_ext_to_list(self, file_ext, bit):     
 
         if(len(file_ext)==0):
             return
@@ -80,11 +127,27 @@ class RatConverter(base_class, form_class):
             if(item == file_ext):
                 return
 
+        switch(bit) {
+            case 0:
+                self.bit_depth.addItem('8 bit')
+                break
+            case 1:
+                self.bit_depth.addItem('16 bit unsigned int')
+                break
+            case 2:
+                self.bit_depth.addItem('16 bit floating point')
+                break
+            case 3:
+                self.bit_depth.addItem('32 bit')
+                break
+        }
+        
         
         while(file_ext.startswith('.')):
             file_ext = ext[1:]
 
         item = QStandardItem(file_ext)
+        item.setColumnCount(2)
         item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
 
         check = Qt.Checked
@@ -96,11 +159,33 @@ class RatConverter(base_class, form_class):
 
     def batch_convert_threaded(self):
 
+        iconvert_path = '\"' + self.path_iconvert.text() + '\"'
 
-        p = Process(target = self.f, args=(2,))
-        p.start()
+        threads = []
+        all_paths = []
+
+        nthreads = int(self.thread_count.value())
+
+        # get all target paths
+        for item_row in range(self.target_list.count()):
+            all_paths.append(str(self.target_list.item(item_row).text()).replace('\\', '/'))
 
 
+        chunk_count = int(len(all_paths)/nthreads)
+
+        # split all paths and send them to threads
+        for thread_nr in range(nthreads):
+            if(thread_nr == nthreads-1):
+                paths = all_paths[thread_nr*chunk_count:]
+            else:
+                paths = all_paths[thread_nr*chunk_count:thread_nr*chunk_count+chunk_count]
+
+            print paths
+
+            thread = ConvertThread(iconvert_path, paths)
+            threads.append(thread)
+            thread.start()
+        
     def f(self, x):
 
         print str(x*x)

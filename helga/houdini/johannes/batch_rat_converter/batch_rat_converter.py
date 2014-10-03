@@ -1,8 +1,9 @@
 #!usr/bin/env/python
 
-import sys
 import os
 import subprocess
+import signal
+import sys
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -11,69 +12,85 @@ from PyQt4 import uic
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+import Tkinter
+import tkFileDialog
+
 from PIL import Image
 import multiprocessing
-from multiprocessing import Pool
-from multiprocessing import Process
 import threading
 
 form_class, base_class = uic.loadUiType("media/rat_converter.ui")
 
 MODE_TO_BPP = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
-INDEX_TO_BIT_DEPTH = {0:, 1:, 2:, 3:}
+INDEX_TO_NAME = {0:'8 bit', 1:'16 bit unsigned int', 2:'16 bit floating point', 3:'32 bit'}
+NAME_TO_COMMAND = {'8 bit':'8', '16 bit unsigned int':'16', '16 bit floating point':'half', '32 bit':'float'}
 
-class ConvertThread(threading.Thread):
+# Worker Thread For Conversion
+class ConvertThread(QThread):
 
-    def __init__(self, iconvert_path, source_paths):
-
+    def __init__(self, iconvert_path, source_paths, dest_path, ext_to_bit):
         super(ConvertThread, self).__init__()
 
         self.iconvert_path = iconvert_path
         self.source_paths = source_paths
+        self.ext_to_bit = ext_to_bit
+        self.dest_path = dest_path
+
 
     def run(self):
-
         for path in self.source_paths:
 
             img_full_path = str(path.replace('\\', '/'))
 
-            dst_full_path = str(img_full_path.rsplit('.', 1)[0] + '.rat')
+            dst_full_path = ''
+            if(len(self.dest_path)==0):
+                dst_full_path = str(img_full_path.rsplit('.', 1)[0] + '.rat')
+            else:
+                dst_full_path = str(self.dest_path) + '/' + str(img_full_path.rsplit('/')[-1].rsplit('.', 1)[0] + '.rat')
+            
+            bit_depth = str(self.get_image_bit_depth(img_full_path))
 
-            commandline = str(self.iconvert_path + ' -d ' + str(self.get_image_bit_depth(img_full_path)) + ' ' + '-g off ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"' + '\n')
+            color_correction = 'auto' if(bit_depth=='8' or bit_depth=='16') else 'off'
+            #if(bit_depth=='8' or bit_depth=='16'):
+            #    color_correction = 'on' 
+            #else:
+            #    color_correction = 'off'
+
+            commandline = str(self.iconvert_path + ' -d ' + bit_depth + ' ' + '-g ' + color_correction + ' ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"' + '\n')
+            print(img_full_path.rsplit('/')[-1] + ' --> ' + dst_full_path.rsplit('/')[-1] + ' (Bit Depth: ' + bit_depth + ', Color Correction: ' + color_correction + ')')
 
             subprocess.call(commandline, shell=True)
 
-            print path
+            self.emit(SIGNAL('progressbar_plus'))
+
 
     def get_image_bit_depth(self, path):
+        splitted_path = path.rsplit('.')
+        extension = splitted_path[len(splitted_path)-1]
 
-        if(path.endswith('.exr')):
-            return 32
-
-        else:
-            return 8
-
-        '''
-        data = Image.open(path)
-        print MODE_TO_BPP[data.mode]/3
-
-        return MODE_TO_BPP[data.mode]/3
-        '''
+        return self.ext_to_bit[extension]
 
 
+# Main Class
 class RatConverter(base_class, form_class):
 
-    model_ext = QStandardItemModel()
-
     def __init__(self, parent=None):
-        
         QtGui.QMainWindow.__init__(self, parent)
+
         self.setupUi(self)
+        self.setup_ui()
+
+
+    def setup_ui(self):
+        self.button_iconvert_path.clicked.connect(self.set_iconvert_path)
+        self.button_destination_path.clicked.connect(self.set_destination_path)
         self.button_batch_convert.clicked.connect(self.batch_convert_threaded)
         self.button_remove_source.clicked.connect(self.remove_source)
         self.button_remove_target.clicked.connect(self.remove_target)
 
         self.setAcceptDrops(True)
+
+        self.model_ext = QStandardItemModel()
 
         self.thread_count.setMaximum(multiprocessing.cpu_count())
         self.thread_count.setValue(int(multiprocessing.cpu_count()/2))
@@ -82,11 +99,6 @@ class RatConverter(base_class, form_class):
         self.add_bit_depth.insertItem(1,'16 bit unsigned int')
         self.add_bit_depth.insertItem(2,'16 bit floating point')
         self.add_bit_depth.insertItem(3,'32 bit')
-
-        self.set_initial_filetypes()
-
-
-    def set_initial_filetypes(self):
 
         self.add_ext_to_list('exr', 3)
         self.add_ext_to_list('hdr', 3)
@@ -98,8 +110,27 @@ class RatConverter(base_class, form_class):
         self.add_ext_to_list('tiff', 0)
 
 
-    def keyPressEvent(self, event):
+    def update_progressbar(self):
+        self.progressbar.setValue(self.progressbar.value()+1)
 
+
+    def set_iconvert_path(self):
+        filetypes = [('All files', '*'), ('iconvert', 'iconvert.exe')]
+
+        Tkinter.Tk().withdraw()
+        in_path = tkFileDialog.askopenfilename(filetypes=filetypes, initialfile='iconvert.exe', title='Set iconvert path')
+        
+        self.path_iconvert.setText(in_path)
+
+
+    def set_destination_path(self):
+        Tkinter.Tk().withdraw()
+        in_path = tkFileDialog.askdirectory(mustexist=True, title='Set destination path')
+        
+        self.destination_path.setText(in_path)
+
+
+    def keyPressEvent(self, event):
         if(event.key()==Qt.Key_Return):
             self.add_ext()
             #self.add_extension()
@@ -107,41 +138,22 @@ class RatConverter(base_class, form_class):
 
 
     def add_ext(self):
-
         file_ext = str(self.add_extension.text())
-
         self.add_ext_to_list(file_ext, self.add_bit_depth.currentIndex())
-
         self.add_extension.setText('')
 
 
     def add_ext_to_list(self, file_ext, bit):     
-
         if(len(file_ext)==0):
             return
 
         # check if item already in the listview
         for row in range(self.model_ext.rowCount()):
             item = self.model_ext.item(row).text()
-
             if(item == file_ext):
                 return
 
-        switch(bit) {
-            case 0:
-                self.bit_depth.addItem('8 bit')
-                break
-            case 1:
-                self.bit_depth.addItem('16 bit unsigned int')
-                break
-            case 2:
-                self.bit_depth.addItem('16 bit floating point')
-                break
-            case 3:
-                self.bit_depth.addItem('32 bit')
-                break
-        }
-        
+        self.bit_depth.addItem(INDEX_TO_NAME[bit])
         
         while(file_ext.startswith('.')):
             file_ext = ext[1:]
@@ -158,10 +170,9 @@ class RatConverter(base_class, form_class):
 
 
     def batch_convert_threaded(self):
-
         iconvert_path = '\"' + self.path_iconvert.text() + '\"'
 
-        threads = []
+        self.threads = []
         all_paths = []
 
         nthreads = int(self.thread_count.value())
@@ -170,8 +181,9 @@ class RatConverter(base_class, form_class):
         for item_row in range(self.target_list.count()):
             all_paths.append(str(self.target_list.item(item_row).text()).replace('\\', '/'))
 
-
         chunk_count = int(len(all_paths)/nthreads)
+        self.progressbar.setValue(0)
+        self.progressbar.setMaximum(len(all_paths))
 
         # split all paths and send them to threads
         for thread_nr in range(nthreads):
@@ -180,84 +192,43 @@ class RatConverter(base_class, form_class):
             else:
                 paths = all_paths[thread_nr*chunk_count:thread_nr*chunk_count+chunk_count]
 
-            print paths
+            thread = ConvertThread(iconvert_path, paths, self.destination_path.text(), self.build_ext_to_bit())
 
-            thread = ConvertThread(iconvert_path, paths)
-            threads.append(thread)
+            QObject.connect(thread, SIGNAL('progressbar_plus'), self.update_progressbar, Qt.QueuedConnection)
+
+            self.threads.append(thread)
             thread.start()
-        
-    def f(self, x):
-
-        print str(x*x)
-
-    def initializer(self, inst):
-        inst.start_process()
-
-    def batch_convert(self, id):
-
-        iconvert_path = '\"' + self.path_iconvert.text() + '\"'
-
-        current_img_number = 1
-        for item_row in range(self.target_list.count()):
-
-            img_full_path = str(self.target_list.item(item_row).text().replace('\\', '/'))
-
-            dst_full_path = str(img_full_path.rsplit('.', 1)[0] + '.rat')
-
-            commandline = ICONVERT_PATH + ' -d ' + str(self.get_image_bit_depth(img_full_path)) + ' ' + '-g off ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"' + '\n'
-
-            self.progressbar.setFormat('Converting ' + img_full_path.rstrip('/')[0])
-
-            print(commandline)
-
-            subprocess.call(commandline, shell =True)
-
-            self.progressbar.setValue((current_img_number*100)/self.target_list.count())
-            current_img_number += 1
-
-            pass
-
-        self.progressbar.setFormat('Done.')
 
 
-    def convert_file(self, row):
+    def build_ext_to_bit(self):
+        ext_to_bit={}
 
-        print "convert_file"
+        for row in range(self.model_ext.rowCount()):
+            ext = str(self.model_ext.item(row).text())
+            bit = str(self.bit_depth.item(row).text())
+            ext_to_bit[ext] = NAME_TO_COMMAND[bit]
 
-        img_full_path = str(self.target_list.item(item_row).text().replace('\\', '/'))
-
-        dst_full_path = str(img_full_path.rsplit('.', 1)[0] + '.rat')
-
-        commandline = ICONVERT_PATH + ' -d ' + str(self.get_image_bit_depth(img_full_path)) + ' ' + '-g off ' + '\"' + img_full_path + '\"' + ' ' + '\"'+ dst_full_path + '\"' + '\n'
-
-        self.progressbar.setFormat('Converting ' + img_full_path.rstrip('/')[0])
-
-        print(commandline)
-
-        subprocess.call(commandline, shell =True)
-
-        self.progressbar.setValue((current_img_number*100)/self.target_list.count())
+        return ext_to_bit
 
 
     def remove_source(self):
-
         selection = self.source_list.selectedItems()
 
         for item in selection:
             row = self.source_list.row(item)
             self.source_list.takeItem(row)
 
-    def remove_target(self):
 
+    def remove_target(self):
         selection = self.target_list.selectedItems()
 
         for item in selection:
             row = self.target_list.row(item)
             self.target_list.takeItem(row)
 
+
     # Drop Event Handler
     def dropEvent(self, event):
-
         for url in event.mimeData().urls():
             url_str = str(url.toLocalFile())
 
@@ -271,18 +242,17 @@ class RatConverter(base_class, form_class):
                 images = self.get_images_from_folder(url_str)
 
                 if(len(images) == 0):
-                    print "No images in " + url_str
+                    print('No images in ' + url_str)
 
                 for image in images:
                     self.insert_in_qlistwidget(image, self.target_list)
 
             else:
-                print "Neither Folder Nor File"
+                print('Neither Folder Nor File')
 
 
     # Drag Event Handler
     def dragEnterEvent(self, event):
-
         if(event.mimeData().hasUrls()):
             event.accept()
         else:
@@ -290,23 +260,22 @@ class RatConverter(base_class, form_class):
 
 
     def checkFileIsImg(self, item):
-
         splitted_filename = item.split('.')
         extension = splitted_filename[len(splitted_filename)-1]
 
         img_formats = []
 
         for row in range(self.model_ext.rowCount()):
-            item = self.model_ext.item(row).text()
-
-            img_formats.append(item)
+            item = self.model_ext.item(row)
+            
+            if(item.checkState()==2):
+                img_formats.append(item.text())
 
         if(extension in img_formats):
             return True
 
 
     def insert_in_qlistwidget(self, item, widget):
-
         # check if item already in the qlistwidget
         for row in range(widget.count()):
             widget_item = widget.item(row)
@@ -318,9 +287,8 @@ class RatConverter(base_class, form_class):
 
 
     def get_images_from_folder(self, folder):
-
         if(os.path.isdir(folder) == False):
-            print folder + ' is not a directory'
+            print(folder + ' is not a directory')
 
         # Get images from folder
         folder_content = os.listdir(folder)
@@ -338,28 +306,13 @@ class RatConverter(base_class, form_class):
 
         return images
 
-    def get_image_bit_depth(self, path):
-
-        if(path.endswith('.exr')):
-            return 32
-
-        else:
-            return 8
-
-        '''
-        data = Image.open(path)
-        print MODE_TO_BPP[data.mode]/3
-
-        return MODE_TO_BPP[data.mode]/3
-        '''
 
 if(__name__ == '__main__'):
-
     app = QtGui.QApplication(sys.argv)
     app.setStyle('plastique')
     window = RatConverter(None)
     window.show()
 
-    print "Starting App"
+    print('Starting RatConverter')
     app.exec_()
-    print "Closing App"
+    print('Closing RatConverter')

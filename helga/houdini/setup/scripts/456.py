@@ -57,6 +57,8 @@ PIPELINE_RENDER_PATH = global_variables.PIPELINE_RENDER_PATH
 
 
 
+
+
 #Run houdini 456 default setup
 #------------------------------------------------------------------
 
@@ -88,6 +90,8 @@ except:
 #For example: $HELGA_HDRI_PATH expands to //bigfoot/grimmhelga/Production/2d/hdri
 
 try:
+
+    """
     #set variables
     os.environ['HELGA_SCRIPTS_BASE_PATH'] = PIPELINE_SCRIPTS_BASE_PATH
     os.environ['HELGA_HDRI_PATH'] = PIPELINE_HDRI_PATH
@@ -96,6 +100,17 @@ try:
     os.environ['HELGA_ALEMBIC_PATH'] = PIPELINE_ALEMBIC_PATH
     os.environ['HELGA_TEXTURES_PATH'] = PIPELINE_TEXTURES_PATH
     os.environ['HELGA_RENDER_PATH'] = PIPELINE_RENDER_PATH
+    """
+
+
+    #set global in houdini
+    hou.hscript("set -g HELGA_SCRIPTS_BASE_PATH = {0}".format(PIPELINE_SCRIPTS_BASE_PATH))
+    hou.hscript("set -g HELGA_HDRI_PATH = {0}".format(PIPELINE_HDRI_PATH))
+    hou.hscript("set -g HELGA_OTL_PATH = {0}".format(HOUDINI_OTL_PATH))
+    hou.hscript("set -g HELGA_FUR_PATH = {0}".format(PIPELINE_FUR_PATH))
+    hou.hscript("set -g HELGA_ALEMBIC_PATH = {0}".format(PIPELINE_ALEMBIC_PATH))
+    hou.hscript("set -g HELGA_TEXTURES_PATH = {0}".format(PIPELINE_TEXTURES_PATH))
+    hou.hscript("set -g HELGA_RENDER_PATH = {0}".format(PIPELINE_RENDER_PATH))
 
 
     #SuccessMsg

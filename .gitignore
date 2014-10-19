@@ -21,3 +21,13 @@
 #Folders
 #-------------------------
 docs/build
+
+
+
+
+
+#Allow specific folders and subfolders
+#(never allow .db though)
+#-------------------------
+!/helga/maya/setup/scripts/**
+*.db

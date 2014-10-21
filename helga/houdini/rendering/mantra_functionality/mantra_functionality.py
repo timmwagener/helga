@@ -68,6 +68,7 @@ HELGA_RENDER_PATH = '$HELGA_RENDER_PATH'
 HIP = '$HIP'
 HIPNAME = '$HIPNAME:r'
 FRAME_PADDING = '$F4'
+OPERATOR_NAME = '$OS'
 
 
 
@@ -187,30 +188,20 @@ class MantraFunctionality(object):
         if (testing):
             
             #ifd_path
-            ifd_path = '{0}/ifd/{1}/{2}/{3}/{2}_{3}.{4}.ifd'.format(HIP, 'testing', HIPNAME, take, FRAME_PADDING)
+            ifd_path = '{0}/ifd/{1}/{2}/{3}/{4}/{2}_{3}.{5}.ifd'.format(HIP, 'testing', HIPNAME, OPERATOR_NAME, take, FRAME_PADDING)
 
         #comp
         else:
 
             #ifd_path
-            ifd_path = '{0}/ifd/{1}/{2}/{3}/{2}_{3}.{4}.ifd'.format(HIP, 'comp', HIPNAME, take, FRAME_PADDING)
+            ifd_path = '{0}/ifd/{1}/{2}/{3}/{4}/{2}_{3}.{5}.ifd'.format(HIP, 'comp', HIPNAME, OPERATOR_NAME, take, FRAME_PADDING)
 
         
         #set ifd path
         parm_soho_diskfile.set(ifd_path)
 
-        #enable ifd rendering if not take __current__
-        if not (take == '_current_'):
-
-            #set outputmode
-            parm_soho_outputmode.set(True)
-
-        #else
-        else:
-
-            #log
-            print('{0} --> Take is _current_. Not enabling outputmode'.format(node.path()))
-
+        #set outputmode
+        parm_soho_outputmode.set(True)
 
 
         #log
@@ -244,7 +235,7 @@ class MantraFunctionality(object):
         if (testing):
 
             #picture_path
-            picture_path = '{0}/{1}/{2}/{3}/{4}/{3}_{4}.{5}.{6}'.format(HELGA_RENDER_PATH, 'testing', username, HIPNAME, take, FRAME_PADDING, RENDER_IMAGE_FORMAT)
+            picture_path = '{0}/{1}/{2}/{3}/{4}/{5}/{3}_{4}.{6}.{7}'.format(HELGA_RENDER_PATH, 'testing', username, HIPNAME, OPERATOR_NAME, take, FRAME_PADDING, RENDER_IMAGE_FORMAT)
         
         #comp
         else:
@@ -253,7 +244,7 @@ class MantraFunctionality(object):
             shot_name = self.get_shot_name()
 
             #picture_path
-            picture_path = '{0}/{1}/{2}/{3}/{4}/{3}_{4}.{5}.{6}'.format(HELGA_RENDER_PATH, 'comp', shot_name, HIPNAME, take, FRAME_PADDING, RENDER_IMAGE_FORMAT)
+            picture_path = '{0}/{1}/{2}/{3}/{4}/{5}/{3}_{4}.{6}.{7}'.format(HELGA_RENDER_PATH, 'comp', shot_name, HIPNAME, OPERATOR_NAME, take, FRAME_PADDING, RENDER_IMAGE_FORMAT)
 
         #set ifd path
         parm_vm_picture.set(picture_path)

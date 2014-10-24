@@ -635,6 +635,21 @@ def setup_menu_assets(wdgt, menubar):
     wdgt.mnu_attributes.addAction(wdgt.acn_remove_locator_attributes)
 
 
+    #separator
+    wdgt.mnu_attributes.addSeparator()
+
+
+    #acn_add_material_attribute
+    wdgt.acn_add_material_attribute = QtGui.QAction('Add material attribute to selected geo', wdgt)
+    wdgt.acn_add_material_attribute.setObjectName('acn_add_material_attribute')
+    wdgt.mnu_attributes.addAction(wdgt.acn_add_material_attribute)
+
+    #acn_remove_material_attribute
+    wdgt.acn_remove_material_attribute = QtGui.QAction('Remove material attribute from selected geo', wdgt)
+    wdgt.acn_remove_material_attribute.setObjectName('acn_remove_material_attribute')
+    wdgt.mnu_attributes.addAction(wdgt.acn_remove_material_attribute)
+
+
 
 
     #separator
@@ -838,14 +853,10 @@ def connect_menu_assets(wdgt):
     """
 
     #acn_add_proxy_attributes
-    wdgt.acn_add_proxy_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_attribute_to_selected_nodes, 
-                                                                        'helga_proxy',
-                                                                        'transform'))
+    wdgt.acn_add_proxy_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_proxy_attributes_to_selected_nodes, 'transform'))
 
     #acn_add_rendergeo_attributes
-    wdgt.acn_add_rendergeo_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_attribute_to_selected_nodes, 
-                                                                        'helga_rendergeo',
-                                                                        'transform'))
+    wdgt.acn_add_rendergeo_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_rendergeo_attributes_to_selected_nodes, 'transform'))
 
     #acn_add_locator_attributes
     wdgt.acn_add_locator_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.add_locator_attributes_to_selected_nodes, 'transform'))
@@ -853,17 +864,27 @@ def connect_menu_assets(wdgt):
 
 
     #acn_remove_proxy_attributes
-    wdgt.acn_remove_proxy_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_attribute_from_selected_nodes, 
-                                                                        'helga_proxy',
-                                                                        'transform'))
+    wdgt.acn_remove_proxy_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_proxy_attributes_from_selected_nodes, 'transform'))
 
     #acn_remove_rendergeo_attributes
-    wdgt.acn_remove_rendergeo_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_attribute_from_selected_nodes, 
-                                                                        'helga_rendergeo',
-                                                                        'transform'))
+    wdgt.acn_remove_rendergeo_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_rendergeo_attributes_from_selected_nodes, 'transform'))
 
     #acn_remove_locator_attributes
     wdgt.acn_remove_locator_attributes.triggered.connect(functools.partial(wdgt.maya_functionality.remove_locator_attributes_from_selected_nodes, 'transform'))
+
+
+
+    #acn_add_material_attribute
+    wdgt.acn_add_material_attribute.triggered.connect(functools.partial(wdgt.maya_functionality.add_attribute_to_selected_nodes, 
+                                                                        'helga_material', 
+                                                                        'transform', 
+                                                                        attribute_type = 'string'))
+
+    #acn_remove_material_attribute
+    wdgt.acn_remove_material_attribute.triggered.connect(functools.partial(wdgt.maya_functionality.remove_attribute_from_selected_nodes, 
+                                                                        'helga_material', 
+                                                                        'transform'))
+
 
 
     #acn_create_prop_base_setup

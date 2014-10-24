@@ -106,6 +106,138 @@ class AlembicFunctionality(object):
     #Houdini Utility Methods
     #------------------------------------------------------------------
 
+    def get_all_nodes(self):
+        """
+        Get list of all nodes in the scene.
+        """
+
+        #all_nodes_list
+        all_nodes_list = hou.node("/").allSubChildren()
+
+        return all_nodes_list
+
+    
+    def get_selected_nodes(self, verbose = False):
+        """
+        Get list of selected nodes.
+        """
+
+        #selected_nodes_list
+        selected_nodes_list = hou.selectedNodes()
+
+        #verbose
+        if (verbose):
+
+            #iterate and print name and type
+            for selected_node in selected_nodes_list:
+
+                print('{0} - {1}'.format(selected_node.name(), 
+                                            selected_node.type().name()))
+        
+        #return
+        return selected_nodes_list
+
+
+    def get_selected_nodes_of_type(self, node_type = None):
+        """
+        Get list of selected Mantra nodes.
+        """
+
+        #node_type None
+        if not (node_type):
+            #log
+            print('No node type given. Returning empty list')
+            return []
+
+        #selected_nodes_list
+        selected_nodes_list = hou.selectedNodes()
+
+        #matching_nodes_list
+        matching_nodes_list = []
+
+        #iterate and append
+        for selected_node in selected_nodes_list:
+
+            #selected_node_type
+            selected_node_type = selected_node.type().name()
+
+            #type matching
+            if (selected_node_type == node_type):
+
+                #append
+                matching_nodes_list.append(selected_node)
+
+        
+        #return
+        return matching_nodes_list
+
+
+    def filter_node_list(self, node_list, node_type_filter_list):
+        """
+        Return list of nodes that match a node_type in node_type_filter_list
+        """
+
+        #node_list_filtered
+        node_list_filtered = []
+
+        #iterate and append
+        for node in node_list:
+
+            #match
+            if (node.type().name() in node_type_filter_list):
+
+                #append
+                node_list_filtered.append(node)
+
+
+        #return
+        return node_list_filtered
+
+
+    def get_children_of_type(self, parent_node = None, children_node_type = None):
+        """
+        Get list of children of type.
+        """
+
+        #parent_node None
+        if not (parent_node):
+            #log
+            print('No parent node given. Returning empty list')
+            return []
+
+        #children_node_type None
+        if not (children_node_type):
+            #log
+            print('No children node type given. Returning empty list')
+            return []
+
+
+        #children_list
+        children_list = parent_node.children()
+
+        #children_list empty
+        if not (children_list):
+            #log
+            print('Children list for node {0} empty. Returning empty list'.format(parent_node.name()))
+            return []
+
+        #children_node_type_list
+        children_node_type_list = []
+
+        #iterate and append
+        for child_node in children_list:
+            
+            #if type matches append
+            if (child_node.type().name() == children_node_type):
+
+                #append
+                children_node_type_list.append(child_node)
+
+
+        #return
+        return children_node_type_list
+    
+
     def delete_content(self, node):
         """
         Delete all children of node.
@@ -208,7 +340,8 @@ class AlembicFunctionality(object):
 
     def get_alembic_object_type(self, alembic_path, object_path):
         """
-        Return tuple of type (object_name, object_type, children).
+        Return object type of tuple (object_name, object_type, children).
+        Returned result is object_tuple[1].
         Each tuple represents an object exported with -root in the Alembic
         job args.
         """

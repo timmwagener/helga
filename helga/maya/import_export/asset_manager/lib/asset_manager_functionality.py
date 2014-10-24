@@ -528,6 +528,162 @@ class AssetManagerFunctionality(QtCore.QObject):
             self.remove_attribute_from_node(node, attribute_name)
 
 
+    def add_proxy_attributes_to_selected_nodes(self,
+                                                    node_type_name, 
+                                                    shape_node_type_name = None):
+        """
+        Add helga proxy attributes to selected nodes.
+        The attributes for helga proxy nodes are:
+
+        #. helga_proxy:bool
+        #. helga_material:string
+        """
+
+        #node_list
+        node_list = self.get_nodes_of_type(node_type_name, selection = True)
+        #node_list empty
+        if not(node_list):
+            #log
+            self.logger.debug('Node list empty.')
+            return
+
+        #check node list
+        if not(self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)):
+            #log
+            self.logger.debug('Not adding attributes.')
+            return
+
+        #checked_node_list
+        checked_node_list = self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)
+
+        
+        #iterate
+        for node in checked_node_list:
+
+            #helga_proxy
+            self.add_attribute_to_node(node, 'helga_proxy', 'bool')
+
+            #helga_material
+            self.add_attribute_to_node(node, 'helga_material', 'string')
+
+
+    def remove_proxy_attributes_from_selected_nodes(self,
+                                                        node_type_name, 
+                                                        shape_node_type_name = None):
+        """
+        Remove helga proxy attributes from selected nodes.
+        The attributes for helga proxy nodes are:
+
+        #. helga_proxy:bool
+        #. helga_material:string
+        """
+
+        #node_list
+        node_list = self.get_nodes_of_type(node_type_name, selection = True)
+        #node_list empty
+        if not(node_list):
+            #log
+            self.logger.debug('Node list empty.')
+            return
+
+        #check node list
+        if not(self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)):
+            #log
+            self.logger.debug('Not removing attributes.')
+            return
+
+        #checked_node_list
+        checked_node_list = self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)
+
+        
+        #iterate
+        for node in checked_node_list:
+
+            #helga_proxy
+            self.remove_attribute_from_node(node, 'helga_proxy')
+
+            #helga_material
+            self.remove_attribute_from_node(node, 'helga_material')
+
+
+    def add_rendergeo_attributes_to_selected_nodes(self,
+                                                    node_type_name, 
+                                                    shape_node_type_name = None):
+        """
+        Add helga rendergeo attributes to selected nodes.
+        The attributes for helga rendergeo nodes are:
+
+        #. helga_rendergeo:bool
+        #. helga_material:string
+        """
+
+        #node_list
+        node_list = self.get_nodes_of_type(node_type_name, selection = True)
+        #node_list empty
+        if not(node_list):
+            #log
+            self.logger.debug('Node list empty.')
+            return
+
+        #check node list
+        if not(self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)):
+            #log
+            self.logger.debug('Not adding attributes.')
+            return
+
+        #checked_node_list
+        checked_node_list = self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)
+
+        
+        #iterate
+        for node in checked_node_list:
+
+            #helga_rendergeo
+            self.add_attribute_to_node(node, 'helga_rendergeo', 'bool')
+
+            #helga_material
+            self.add_attribute_to_node(node, 'helga_material', 'string')
+
+
+    def remove_rendergeo_attributes_from_selected_nodes(self,
+                                                        node_type_name, 
+                                                        shape_node_type_name = None):
+        """
+        Remove helga rendergeo attributes from selected nodes.
+        The attributes for helga rendergeo nodes are:
+
+        #. helga_rendergeo:bool
+        #. helga_material:string
+        """
+
+        #node_list
+        node_list = self.get_nodes_of_type(node_type_name, selection = True)
+        #node_list empty
+        if not(node_list):
+            #log
+            self.logger.debug('Node list empty.')
+            return
+
+        #check node list
+        if not(self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)):
+            #log
+            self.logger.debug('Not removing attributes.')
+            return
+
+        #checked_node_list
+        checked_node_list = self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)
+
+        
+        #iterate
+        for node in checked_node_list:
+
+            #helga_rendergeo
+            self.remove_attribute_from_node(node, 'helga_rendergeo')
+
+            #helga_material
+            self.remove_attribute_from_node(node, 'helga_material')
+
+
     def add_locator_attributes_to_selected_nodes(self,
                                                     node_type_name, 
                                                     shape_node_type_name = None):
@@ -589,7 +745,7 @@ class AssetManagerFunctionality(QtCore.QObject):
         #check node list
         if not(self.checks_functionality.check_node_list_for_attribute_addition_or_removal(node_list, shape_node_type_name)):
             #log
-            self.logger.debug('Not adding attributes.')
+            self.logger.debug('Not removing attributes.')
             return
 
         #checked_node_list

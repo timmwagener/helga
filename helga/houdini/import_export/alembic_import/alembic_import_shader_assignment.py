@@ -81,8 +81,11 @@ if(do_reload):reload(alembic_functionality)
 
 #Pathes
 TOOL_ROOT_PATH = alembic_import_globals.TOOL_ROOT_PATH
-#Attributes
+#helga
 HELGA_MATERIAL_ATTRIBUTE_NAME = 'helga_material'
+
+#Houdini
+NETWORK_BOXES_OFFSET_X = 10
 
 
 
@@ -112,7 +115,9 @@ class AlembicImportShaderAssignment(object):
         return alembic_import_shader_assignment_instance
 
     
-    def __init__(self, logging_level = logging.DEBUG):
+    def __init__(self, 
+                    node = None,
+                    logging_level = logging.DEBUG):
         """
         Customize instance.
         """
@@ -139,6 +144,9 @@ class AlembicImportShaderAssignment(object):
         #instance variables
         #------------------------------------------------------------------
 
+        #node
+        self.node = node
+
         #alembic_functionality
         self.alembic_functionality = alembic_functionality.AlembicFunctionality()
 
@@ -152,12 +160,252 @@ class AlembicImportShaderAssignment(object):
 
 
 
-    #Methods
+
+
+    #Main Methods
     #------------------------------------------------------------------
 
+    def assign_materials(self):
+        """
+        Assign materials.
+        Search the scene for a material of this name and assign it.
+        """
+
+        #all_nodes_list
+        all_nodes_list = self.alembic_functionality.get_all_nodes()
+
+
+        #geo_node_list
+        geo_node_list = self.get_geo_node_list()
+        #geo_alembic_node_list
+        geo_alembic_node_list = self.get_geo_alembic_node_list(geo_node_list)
+        #geo_alembic_material_list
+        geo_alembic_material_list = self.get_geo_alembic_material_list(geo_alembic_node_list)
+
+
+        #geo_alembic_material_list empty
+        if not (geo_alembic_material_list):
+            #log
+            self.logger.debug('Geo_alembic_material_list empty. Check if you have any matching materials in the scene or if the assets need to be updated.')
+            return
+
+        
+        #iterate and assign if name matches
+        for geo_node, alembic_node, material_name in geo_alembic_material_list:
+
+            #iterate all nodes list
+            for node in all_nodes_list:
+
+                #name matches
+                if (node.name() == material_name):
+
+                    try:
+                        
+                        #assign
+                        geo_node.parm('shop_materialpath').set(node.path())
+
+                        #log
+                        self.logger.debug('Assigned {0} to node {1}'.format(node.path(), geo_node.name()))
+
+                    except:
+
+                        #log
+                        self.logger.debug('Error assigning {0} to node {1}'.format(node.path(), geo_node.name()))
+
+                    continue
+
+
+    def create_network_boxes_from_materials(self):
+        """
+        Create network boxes for geo nodes based on helga_material
+        attribute in alembic files.
+        """
+
+        #geo_node_list
+        geo_node_list = self.get_geo_node_list()
+        #geo_alembic_node_list
+        geo_alembic_node_list = self.get_geo_alembic_node_list(geo_node_list)
+        #geo_alembic_material_list
+        geo_alembic_material_list = self.get_geo_alembic_material_list(geo_alembic_node_list)
+        #material_name_geo_node_dict
+        material_name_geo_node_dict = self.get_material_name_geo_node_dict(geo_alembic_material_list)
+
+
+        #remove network boxes
+        self.alembic_functionality.remove_network_boxes(self.node)
+
+        #index
+        index = 0
+
+        #iterate and create
+        for material_name, geo_node_list in material_name_geo_node_dict.iteritems():
+
+            #position_x
+            position_x = index * NETWORK_BOXES_OFFSET_X
+            #position_y
+            position_y = 0
+
+            #create network box
+            self.alembic_functionality.create_network_box(self.node, 
+                                                            geo_node_list, 
+                                                            network_box_name = material_name,
+                                                            position_x = position_x,
+                                                            position_y = position_y)
+
+            #increment index
+            index = index + 1
+
+
+
+        
+
+
+    
+
+
+
+
+    #Utility Methods
+    #------------------------------------------------------------------
+
+    def get_geo_node_list(self):
+        """
+        Return list of geo nodes that are children of node.
+        """
+
+        return self.alembic_functionality.get_children_of_type(self.node, children_node_type = 'geo')
+
+
+    def get_geo_alembic_node_list(self, geo_node_list):
+        """
+        Return list of type [[geo_node, alembic_node], [geo_node, alembic_node], ...].
+        """
+
+        #geo_node_list empty
+        if not (geo_node_list):
+            #log
+            self.logger.debug('Geo_node_list empty. Returning empty list.')
+            return []
+
+
+        #geo_alembic_node_list
+        geo_alembic_node_list = []
+
+        #iterate and append
+        for geo_node in geo_node_list:
+
+            #alembic_node_list
+            alembic_node_list = self.alembic_functionality.get_children_of_type(parent_node = geo_node, children_node_type = 'alembic')
+
+            #if alembic node list
+            if (alembic_node_list):
+
+                #alembic_node
+                alembic_node = alembic_node_list[0]
+
+                #append
+                geo_alembic_node_list.append([geo_node, alembic_node])
+
+
+
+        #return
+        return geo_alembic_node_list
+
+
+    def get_geo_node_list_from_selection(self):
+        """
+        Return list of type [geo_node, geo_node, ...] from selected nodes.
+        Valid selected node types are geo nodes, alembic_import_shot_highpoly,
+        alembic_import_shot_proxy and alembic_import_char.
+        """
+
+        #selected_nodes_list
+        selected_nodes_list = self.alembic_functionality.get_selected_nodes()
+
+        #node_type_filter_list
+        node_type_filter_list = ['alembic_import_shot_highpoly', 
+                                    'alembic_import_shot_proxy',
+                                    'alembic_import_char',
+                                    'geo']
+        #alembic_import_and_geo_node_list
+        alembic_import_and_geo_node_list = self.alembic_functionality.filter_node_list(selected_nodes_list, node_type_filter_list)
+
+        #geo_node_list
+        geo_node_list = []
+        #iterate and append
+        for node in alembic_import_and_geo_node_list:
+
+            #node is geo
+            if (node.type().name() == 'geo'):
+
+                #append
+                geo_node_list.append(node)
+                continue
+
+            #node of type alembic_import_x
+            if (node.type().name() in node_type_filter_list[:-1]):
+
+                #children_geo_list
+                children_geo_list = self.alembic_functionality.get_children_of_type(parent_node = node, children_node_type = 'geo')
+
+                #add
+                geo_node_list = geo_node_list + children_geo_list
+
+
+        #return
+        return geo_node_list
+
+    
+    def get_geo_alembic_material_list(self, geo_alembic_node_list):
+        """
+        Return list of type [[geo_node, alembic_node, material_name], [geo_node, alembic_node, material_name], ...].
+        The material_name is aquired from the alembic attribute helga_material on the asset transform nodes.
+        An empty entry in this attr. or no attr. on the transform node at all means no addition to the
+        geo_alembic_material_list.
+        """
+
+        #geo_alembic_node_list empty
+        if not (geo_alembic_node_list):
+            #log
+            self.logger.debug('Geo_alembic_node_list empty. Returning empty list.')
+            return []
+
+
+        #geo_alembic_material_list
+        geo_alembic_material_list = []
+
+        #iterate
+        for geo_node, alembic_node in geo_alembic_node_list:
+
+            #alembic_path
+            alembic_path = self.alembic_functionality.get_parm_value(alembic_node, 'fileName')
+            #alembic_path exists
+            if not (os.path.isfile(alembic_path)):
+                #log
+                self.logger.debug('Alembic path does not exist. Continuing...')
+                continue
+
+
+            #object_path
+            object_path = self.alembic_functionality.get_parm_value(alembic_node, 'objectPath')
+
+            #material_name
+            material_name = self.get_material_name(alembic_path, object_path)
+
+            #if material_name then append
+            if (material_name):
+
+                #append
+                geo_alembic_material_list.append([geo_node, alembic_node, material_name])
+
+
+        #return
+        return geo_alembic_material_list
+
+    
     def get_material_name(self, alembic_path, object_path):
         """
-        Get material for alembic path and/or object_path within alembic.
+        Get material name for alembic path and/or object_path within alembic.
         """
 
         #material_name
@@ -254,135 +502,34 @@ class AlembicImportShaderAssignment(object):
         #return
         return material_name
 
-        
 
-    
-    def get_geo_alembic_material_list(self, geo_alembic_node_dict):
+    def get_material_name_geo_node_dict(self, geo_alembic_material_list):
         """
-        Return helga_material attribute value from alembic.
+        Return dict of type {material_name:[geo_node, geo_node], material_name:[geo_node, geo_node], ...}
         """
 
-        #geo_alembic_material_list
-        geo_alembic_material_list = []
-
-        #iterate
-        for geo_node, alembic_node in geo_alembic_node_dict.iteritems():
-
-            #alembic_path
-            alembic_path = self.alembic_functionality.get_parm_value(alembic_node, 'fileName')
-            #alembic_path exists
-            if not (os.path.isfile(alembic_path)):
-                #log
-                self.logger.debug('Alembic path does not exist. Continuing...')
-                continue
-
-
-            #object_path
-            object_path = self.alembic_functionality.get_parm_value(alembic_node, 'objectPath')
-
-            #material_name
-            material_name = self.get_material_name(alembic_path, object_path)
-
-            #if material_name then append
-            if (material_name):
-
-                #append
-                geo_alembic_material_list.append([geo_node, alembic_node, material_name])
-
-
-        #return
-        return geo_alembic_material_list
-
-
-    def assign_materials(self, geo_alembic_material_list):
-        """
-        Assign materials.
-        Search the scene for a material of this name and assign it.
-        """
-
-        #all_nodes_list
-        all_nodes_list = self.alembic_functionality.get_all_nodes()
+        #material_name_geo_node_dict
+        material_name_geo_node_dict = {}
 
         #iterate and assign if name matches
         for geo_node, alembic_node, material_name in geo_alembic_material_list:
 
-            #iterate all nodes list
-            for node in all_nodes_list:
-
-                #name matches
-                if (node.name() == material_name):
-
-                    #assign
-                    geo_node.parm('shop_materialpath').set(node.path())
-
-                    #log
-                    self.logger.debug('Assigned {0} to node {1}'.format(node.path(), geo_node.name()))
-
-                    continue
-
-
-
-
-
-    def get_geo_alembic_node_dict_from_selection(self):
-        """
-        Return dict {geo_node:alembic_sop_node, geo_node:alembic_sop_node, ...} for selected geo
-        or helga pipeline alembic import nodes.
-        """
-
-        #selected_nodes_list
-        selected_nodes_list = self.alembic_functionality.get_selected_nodes()
-
-        #node_type_filter_list
-        node_type_filter_list = ['alembic_import_shot_highpoly', 
-                                    'alembic_import_shot_proxy',
-                                    'alembic_import_char',
-                                    'geo']
-        #alembic_import_and_geo_node_list
-        alembic_import_and_geo_node_list = self.alembic_functionality.filter_node_list(selected_nodes_list, node_type_filter_list)
-
-        #geo_node_list
-        geo_node_list = []
-        #iterate and append
-        for node in alembic_import_and_geo_node_list:
-
-            #node is geo
-            if (node.type().name() == 'geo'):
+            #material_name already key
+            if (material_name in material_name_geo_node_dict.keys()):
 
                 #append
-                geo_node_list.append(node)
-                continue
+                geo_node_list = material_name_geo_node_dict[material_name]
+                material_name_geo_node_dict[material_name] = geo_node_list + [geo_node]
 
-            #node of type alembic_import_x
-            if (node.type().name() in node_type_filter_list[:-1]):
+            #else
+            else:
 
-                #children_geo_list
-                children_geo_list = self.alembic_functionality.get_children_of_type(parent_node = node, children_node_type = 'geo')
-
-                #add
-                geo_node_list = geo_node_list + children_geo_list
-
-
-        #geo_alembic_node_dict
-        geo_alembic_node_dict = {}
-
-        #iterate and append
-        for geo_node in geo_node_list:
-
-            #alembic_node_list
-            alembic_node_list = self.alembic_functionality.get_children_of_type(parent_node = geo_node, children_node_type = 'alembic')
-
-            #if alembic node list
-            if (alembic_node_list):
-
-                #set in dict
-                geo_alembic_node_dict[geo_node] = alembic_node_list[0]
-
+                #new
+                material_name_geo_node_dict[material_name] = [geo_node]
 
 
         #return
-        return geo_alembic_node_dict
-
+        return material_name_geo_node_dict
 
 
 
@@ -393,33 +540,6 @@ class AlembicImportShaderAssignment(object):
 
 #Test
 #------------------------------------------------------------------
-
-def test():
-    """
-    Test method.
-    """
-
-    #import
-    from helga.houdini.import_export.alembic_import import alembic_import_shader_assignment
-    reload(alembic_import_shader_assignment)
-
-    #alembic_import_shader_assignment_instance
-    alembic_import_shader_assignment_instance = alembic_import_shader_assignment.AlembicImportShaderAssignment()
-
-    #get_geo_alembic_node_dict_from_selection
-    geo_alembic_node_dict = alembic_import_shader_assignment_instance.get_geo_alembic_node_dict_from_selection()
-
-    #get_geo_alembic_material_list
-    geo_alembic_material_list = alembic_import_shader_assignment_instance.get_geo_alembic_material_list(geo_alembic_node_dict)
-
-    #assign_materials
-    alembic_import_shader_assignment_instance.assign_materials(geo_alembic_material_list)
-
-
-
-
-
-#import guard
 if (__name__ == '__main__'):
 
     pass

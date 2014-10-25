@@ -106,6 +106,62 @@ class AlembicFunctionality(object):
     #Houdini Utility Methods
     #------------------------------------------------------------------
 
+    def get_network_boxes(self, parent_node):
+        """
+        Return list of network boxes that are children of parent_node.
+        """
+
+        return parent_node.networkBoxes()
+
+
+    def remove_network_boxes(self, parent_node):
+        """
+        Get all network boxes that are children of node and remove them.
+        The nodes inside the network boxes are not deleted, just
+        reparented.
+        """
+
+        #network_boxes_list
+        network_boxes_list = self.get_network_boxes(parent_node)
+
+        #iterate
+        for network_box_node in network_boxes_list:
+
+            #delete
+            network_box_node.destroy()
+
+
+    def create_network_box(self, 
+                            parent_node, 
+                            child_node_list, 
+                            network_box_name = None, 
+                            position_x = 0,
+                            position_y = 0):
+        """
+        Create network box with children and optional name.
+        """
+
+        #network_box_node
+        network_box_node = parent_node.createNetworkBox(network_box_name)
+
+        #layout children
+        parent_node.layoutChildren(child_nodes = child_node_list)
+
+        #add children
+        for child_node in child_node_list:
+
+            #add
+            network_box_node.addNode(child_node)
+
+        #fit
+        network_box_node.fitAroundContents()
+
+        #setPosition
+        vec_position = hou.Vector2((position_x, position_y))
+        network_box_node.setPosition(vec_position)
+
+
+    
     def get_all_nodes(self):
         """
         Get list of all nodes in the scene.
@@ -246,6 +302,9 @@ class AlembicFunctionality(object):
         #Delete parent_node content
         for child in node.children():
             child.destroy()
+
+        #remove network boxes
+        self.remove_network_boxes(node)
 
 
     def get_parm_value(self, node, parm_name):

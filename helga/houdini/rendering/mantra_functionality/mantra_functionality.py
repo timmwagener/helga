@@ -69,6 +69,7 @@ HIP = '$HIP'
 HIPNAME = '$HIPNAME:r'
 FRAME_PADDING = '$F4'
 OPERATOR_NAME = '$OS'
+TAKE_NAME = '$ACTIVETAKE'
 
 
 
@@ -188,13 +189,13 @@ class MantraFunctionality(object):
         if (testing):
             
             #ifd_path
-            ifd_path = '{0}/ifd/{1}/{2}/{3}/{4}/{2}_{3}.{5}.ifd'.format(HIP, 'testing', HIPNAME, OPERATOR_NAME, take, FRAME_PADDING)
+            ifd_path = '{0}/ifd/{1}/{2}/{3}/{4}/{2}_{3}.{5}.ifd'.format(HIP, 'testing', HIPNAME, OPERATOR_NAME, TAKE_NAME, FRAME_PADDING)
 
         #comp
         else:
 
             #ifd_path
-            ifd_path = '{0}/ifd/{1}/{2}/{3}/{4}/{2}_{3}.{5}.ifd'.format(HIP, 'comp', HIPNAME, OPERATOR_NAME, take, FRAME_PADDING)
+            ifd_path = '{0}/ifd/{1}/{2}/{3}/{4}/{2}_{3}.{5}.ifd'.format(HIP, 'comp', HIPNAME, OPERATOR_NAME, TAKE_NAME, FRAME_PADDING)
 
         
         #set ifd path
@@ -235,7 +236,7 @@ class MantraFunctionality(object):
         if (testing):
 
             #picture_path
-            picture_path = '{0}/{1}/{2}/{3}/{4}/{5}/{3}_{4}.{6}.{7}'.format(HELGA_RENDER_PATH, 'testing', username, HIPNAME, OPERATOR_NAME, take, FRAME_PADDING, RENDER_IMAGE_FORMAT)
+            picture_path = '{0}/{1}/{2}/{3}/{4}/{5}/{3}_{4}.{6}.{7}'.format(HELGA_RENDER_PATH, 'testing', username, HIPNAME, OPERATOR_NAME, TAKE_NAME, FRAME_PADDING, RENDER_IMAGE_FORMAT)
         
         #comp
         else:
@@ -244,7 +245,7 @@ class MantraFunctionality(object):
             shot_name = self.get_shot_name()
 
             #picture_path
-            picture_path = '{0}/{1}/{2}/{3}/{4}/{5}/{3}_{4}.{6}.{7}'.format(HELGA_RENDER_PATH, 'comp', shot_name, HIPNAME, OPERATOR_NAME, take, FRAME_PADDING, RENDER_IMAGE_FORMAT)
+            picture_path = '{0}/{1}/{2}/{3}/{4}/{5}/{3}_{4}.{6}.{7}'.format(HELGA_RENDER_PATH, 'comp', shot_name, HIPNAME, OPERATOR_NAME, TAKE_NAME, FRAME_PADDING, RENDER_IMAGE_FORMAT)
 
         #set ifd path
         parm_vm_picture.set(picture_path)

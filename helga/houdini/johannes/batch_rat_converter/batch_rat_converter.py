@@ -50,7 +50,7 @@ class ConvertThread(QThread):
             
             bit_depth = str(self.get_image_bit_depth(img_full_path))
 
-            color_correction = 'auto' if(bit_depth=='8' or bit_depth=='16') else 'off'
+            color_correction = 'auto' if((bit_depth=='8' or bit_depth=='16') and not img_full_path.endswith('.tga')) else 'off'
             #if(bit_depth=='8' or bit_depth=='16'):
             #    color_correction = 'on' 
             #else:

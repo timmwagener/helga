@@ -298,6 +298,8 @@ class AlembicImportChar(object):
 def create_char(node):
     """
     Create character hierarchy. Callback for node button.
+    ------------------------------------------------------------------
+    kwargs['node'].hdaModule().create_char(kwargs['node'])
     """
     
     #node None
@@ -318,10 +320,64 @@ def create_char(node):
     alembic_import_char_instance.create_char()
 
 
+def assign_materials(node):
+    """
+    Try to assign materials for content of this node.
+    ------------------------------------------------------------------
+    kwargs['node'].hdaModule().assign_materials(kwargs['node'])
+    """
+    
+    #node None
+    if not (node):
+        #log
+        print('No node passed, not assigning materials.')
+        return
+
+    #import
+    from helga.houdini.import_export.alembic_import import alembic_import_shader_assignment
+    reload(alembic_import_shader_assignment)
+    
+    
+    #alembic_import_shader_assignment_instance
+    alembic_import_shader_assignment_instance = alembic_import_shader_assignment.AlembicImportShaderAssignment(node = node)
+
+    #assign materials
+    alembic_import_shader_assignment_instance.assign_materials()
+
+
+def create_network_boxes_from_materials(node):
+    """
+    Try to create network boxes for the geo node children of this node.
+    The network boxes are based on the helga_material attr. of alembic
+    files within alembic sops under the geo nodes.
+    ------------------------------------------------------------------
+    kwargs['node'].hdaModule().create_network_boxes_from_materials(kwargs['node'])
+    """
+    
+    #node None
+    if not (node):
+        #log
+        print('No node passed, not assigning materials.')
+        return
+
+    #import
+    from helga.houdini.import_export.alembic_import import alembic_import_shader_assignment
+    reload(alembic_import_shader_assignment)
+    
+    
+    #alembic_import_shader_assignment_instance
+    alembic_import_shader_assignment_instance = alembic_import_shader_assignment.AlembicImportShaderAssignment(node = node)
+
+    #create_network_boxes_from_materials
+    alembic_import_shader_assignment_instance.create_network_boxes_from_materials()
+
+
 
 def print_alembic_object_path_list(node):
     """
     Print Alembic object pathes and object types in the console.
+    ------------------------------------------------------------------
+    kwargs['node'].hdaModule().print_alembic_object_path_list(kwargs['node'])
     """
     
     #node None

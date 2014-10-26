@@ -106,6 +106,194 @@ class AlembicFunctionality(object):
     #Houdini Utility Methods
     #------------------------------------------------------------------
 
+    def get_network_boxes(self, parent_node):
+        """
+        Return list of network boxes that are children of parent_node.
+        """
+
+        return parent_node.networkBoxes()
+
+
+    def remove_network_boxes(self, parent_node):
+        """
+        Get all network boxes that are children of node and remove them.
+        The nodes inside the network boxes are not deleted, just
+        reparented.
+        """
+
+        #network_boxes_list
+        network_boxes_list = self.get_network_boxes(parent_node)
+
+        #iterate
+        for network_box_node in network_boxes_list:
+
+            #delete
+            network_box_node.destroy()
+
+
+    def create_network_box(self, 
+                            parent_node, 
+                            child_node_list, 
+                            network_box_name = None, 
+                            position_x = 0,
+                            position_y = 0):
+        """
+        Create network box with children and optional name.
+        """
+
+        #network_box_node
+        network_box_node = parent_node.createNetworkBox(network_box_name)
+
+        #layout children
+        parent_node.layoutChildren(child_nodes = child_node_list)
+
+        #add children
+        for child_node in child_node_list:
+
+            #add
+            network_box_node.addNode(child_node)
+
+        #fit
+        network_box_node.fitAroundContents()
+
+        #setPosition
+        vec_position = hou.Vector2((position_x, position_y))
+        network_box_node.setPosition(vec_position)
+
+
+    
+    def get_all_nodes(self):
+        """
+        Get list of all nodes in the scene.
+        """
+
+        #all_nodes_list
+        all_nodes_list = hou.node("/").allSubChildren()
+
+        return all_nodes_list
+
+    
+    def get_selected_nodes(self, verbose = False):
+        """
+        Get list of selected nodes.
+        """
+
+        #selected_nodes_list
+        selected_nodes_list = hou.selectedNodes()
+
+        #verbose
+        if (verbose):
+
+            #iterate and print name and type
+            for selected_node in selected_nodes_list:
+
+                print('{0} - {1}'.format(selected_node.name(), 
+                                            selected_node.type().name()))
+        
+        #return
+        return selected_nodes_list
+
+
+    def get_selected_nodes_of_type(self, node_type = None):
+        """
+        Get list of selected Mantra nodes.
+        """
+
+        #node_type None
+        if not (node_type):
+            #log
+            print('No node type given. Returning empty list')
+            return []
+
+        #selected_nodes_list
+        selected_nodes_list = hou.selectedNodes()
+
+        #matching_nodes_list
+        matching_nodes_list = []
+
+        #iterate and append
+        for selected_node in selected_nodes_list:
+
+            #selected_node_type
+            selected_node_type = selected_node.type().name()
+
+            #type matching
+            if (selected_node_type == node_type):
+
+                #append
+                matching_nodes_list.append(selected_node)
+
+        
+        #return
+        return matching_nodes_list
+
+
+    def filter_node_list(self, node_list, node_type_filter_list):
+        """
+        Return list of nodes that match a node_type in node_type_filter_list
+        """
+
+        #node_list_filtered
+        node_list_filtered = []
+
+        #iterate and append
+        for node in node_list:
+
+            #match
+            if (node.type().name() in node_type_filter_list):
+
+                #append
+                node_list_filtered.append(node)
+
+
+        #return
+        return node_list_filtered
+
+
+    def get_children_of_type(self, parent_node = None, children_node_type = None):
+        """
+        Get list of children of type.
+        """
+
+        #parent_node None
+        if not (parent_node):
+            #log
+            print('No parent node given. Returning empty list')
+            return []
+
+        #children_node_type None
+        if not (children_node_type):
+            #log
+            print('No children node type given. Returning empty list')
+            return []
+
+
+        #children_list
+        children_list = parent_node.children()
+
+        #children_list empty
+        if not (children_list):
+            #log
+            print('Children list for node {0} empty. Returning empty list'.format(parent_node.name()))
+            return []
+
+        #children_node_type_list
+        children_node_type_list = []
+
+        #iterate and append
+        for child_node in children_list:
+            
+            #if type matches append
+            if (child_node.type().name() == children_node_type):
+
+                #append
+                children_node_type_list.append(child_node)
+
+
+        #return
+        return children_node_type_list
+    
+
     def delete_content(self, node):
         """
         Delete all children of node.
@@ -114,6 +302,9 @@ class AlembicFunctionality(object):
         #Delete parent_node content
         for child in node.children():
             child.destroy()
+
+        #remove network boxes
+        self.remove_network_boxes(node)
 
 
     def get_parm_value(self, node, parm_name):
@@ -208,7 +399,8 @@ class AlembicFunctionality(object):
 
     def get_alembic_object_type(self, alembic_path, object_path):
         """
-        Return tuple of type (object_name, object_type, children).
+        Return object type of tuple (object_name, object_type, children).
+        Returned result is object_tuple[1].
         Each tuple represents an object exported with -root in the Alembic
         job args.
         """

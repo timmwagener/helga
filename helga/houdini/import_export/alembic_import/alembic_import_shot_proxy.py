@@ -368,6 +368,8 @@ class AlembicImportShotProxy(object):
 def create_prop(node):
     """
     Function to be used in the hdaModule of the Python operator.
+    ------------------------------------------------------------------
+    kwargs['node'].hdaModule().create_prop(kwargs['node'])
     """
 
     #import
@@ -384,6 +386,8 @@ def create_prop(node):
 def create_shot(node):
     """
     Function to be used in the hdaModule of the Python operator.
+    ------------------------------------------------------------------
+    kwargs['node'].hdaModule().create_shot(kwargs['node'])
     """
 
     #import
@@ -395,6 +399,31 @@ def create_shot(node):
 
     #create_shot
     alembic_import_shot_instance.create_shot()
+
+
+def assign_materials(node):
+    """
+    Try to assign materials for content of this node.
+    ------------------------------------------------------------------
+    kwargs['node'].hdaModule().assign_materials(kwargs['node'])
+    """
+    
+    #node None
+    if not (node):
+        #log
+        print('No node passed, not assigning materials.')
+        return
+
+    #import
+    from helga.houdini.import_export.alembic_import import alembic_import_shader_assignment
+    reload(alembic_import_shader_assignment)
+    
+    
+    #alembic_import_shader_assignment_instance
+    alembic_import_shader_assignment_instance = alembic_import_shader_assignment.AlembicImportShaderAssignment(node = node)
+
+    #assign materials
+    alembic_import_shader_assignment_instance.assign_materials()
 
 
 

@@ -6,6 +6,6 @@ python "import os";
 python "do_reload = True";
 python "from helga.general.setup.global_variables import global_variables";
 python "if(do_reload):reload(global_variables)";
-python "sys.path.append(global_variables.MAYA_USERSETUP_PATH)";
+python "sys.path.insert(1, global_variables.MAYA_USERSETUP_PATH)";
 
 python "import userSetup";

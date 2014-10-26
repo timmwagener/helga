@@ -514,9 +514,9 @@ class HelgaLauncher(classes_list[0], classes_list[1]):
                 #env var does not exist
                 if not(os.getenv(variable_name, False)):
                     os.environ[variable_name] = variable_value
-                #env var exists
+                #env var exists (insert new value at the beginning)
                 else:
-                    os.environ[variable_name] = os.getenv(variable_name) + ';' + variable_value
+                    os.environ[variable_name] = variable_value + ';' + os.getenv(variable_name)
 
                 #exception for ocio (needs to be unique)
                 if(variable_name in unique_value_list):

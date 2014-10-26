@@ -164,12 +164,12 @@ if (PIPELINE_BASE_PATH):
     """Path to userSetup.py and userSetup.mel"""
 
 
-    MAYA_SCRIPTS_PATH_LIST = [MAYA_USERSETUP_PATH,
-                                PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts',
+    MAYA_SCRIPTS_PATH_LIST = [PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts',
                                 PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts/cometScripts',
                                 PIPELINE_SCRIPTS_BASE_PATH + r'/helga/maya/setup/scripts/ae_templates',
                                 PIPELINE_LIBRARIES_PATH_GENERAL,
-                                PIPELINE_LIBRARIES_PATH_MAYA]
+                                PIPELINE_LIBRARIES_PATH_MAYA,
+                                MAYA_USERSETUP_PATH]
     """Helga pipeline Maya scripts pathes"""
 
 

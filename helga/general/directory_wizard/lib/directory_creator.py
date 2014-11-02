@@ -47,6 +47,42 @@ if(do_reload):reload(global_functions)
 
 
 
+
+
+
+
+#Globals
+#------------------------------------------------------------------
+
+CHARACTER_DIRECTORY_LIST = ['model', ['export'], 'rig', ['last_published'], 'sculpt', ['export'], 'textures', 'temp']
+"""Helga character directory structure"""
+
+PROP_DIRECTORY_LIST = ['model', ['export'], 'photoscan', ['masks', 'out', 'photos', 'nuke'], 'rig', ['last_published'], 'sculpt', ['export'], 'textures', 'temp']
+"""Helga prop directory structure"""
+
+SHOT_DIRECTORY_LIST = ['animation', 'lighting', 'fx', ['cloth']]
+"""Helga shot directory structure"""
+
+COMP_DIRECTORY_LIST = ['2d_render', '3d_render', 'nuke', 'ae', 'mattepainting', 'footage', 'temp']
+"""Helga comp directory structure"""
+
+PHOTOSCAN_DIRECTORY_LIST = ['photos', 'masks', 'nuke', 'photoscan', ['out'], 'temp']
+"""Helga photoscan directory structure"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #DirectoryCreator class
 #------------------------------------------------------------------
 
@@ -230,7 +266,7 @@ class CharacterDirectoryCreator(DirectoryCreator):
 
         #directory_list
         #------------------------------------------------------------------
-        self.directory_list = global_variables.CHARACTER_DIRECTORY_LIST
+        self.directory_list = CHARACTER_DIRECTORY_LIST
         self.directory_type = 'character'
 
 
@@ -260,7 +296,7 @@ class PropDirectoryCreator(DirectoryCreator):
 
         #directory_list
         #------------------------------------------------------------------
-        self.directory_list = global_variables.PROP_DIRECTORY_LIST
+        self.directory_list = PROP_DIRECTORY_LIST
         self.directory_type = 'prop'
 
 
@@ -289,7 +325,7 @@ class ShotDirectoryCreator(DirectoryCreator):
 
         #directory_list
         #------------------------------------------------------------------
-        self.directory_list = global_variables.SHOT_DIRECTORY_LIST
+        self.directory_list = SHOT_DIRECTORY_LIST
         self.directory_type = 'shot'
 
 
@@ -318,7 +354,7 @@ class CompDirectoryCreator(DirectoryCreator):
 
         #directory_list
         #------------------------------------------------------------------
-        self.directory_list = global_variables.COMP_DIRECTORY_LIST
+        self.directory_list = COMP_DIRECTORY_LIST
         self.directory_type = 'comp'
 
 
@@ -347,7 +383,7 @@ class PhotoscanDirectoryCreator(DirectoryCreator):
 
         #directory_list
         #------------------------------------------------------------------
-        self.directory_list = global_variables.PHOTOSCAN_DIRECTORY_LIST
+        self.directory_list = PHOTOSCAN_DIRECTORY_LIST
         self.directory_type = 'photoscan'
 
 

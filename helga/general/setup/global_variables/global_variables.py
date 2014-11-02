@@ -121,23 +121,7 @@ if (PIPELINE_BASE_PATH):
 
 
 
-    #Directory Wizard
-    #----------------------------------------------------
 
-    CHARACTER_DIRECTORY_LIST = ['model', ['export'], 'rig', ['last_published'], 'sculpt', ['export'], 'textures', 'temp']
-    """Helga character directory structure"""
-
-    PROP_DIRECTORY_LIST = ['model', ['export'], 'photoscan', ['masks', 'out', 'photos', 'nuke'], 'rig', ['last_published'], 'sculpt', ['export'], 'textures', 'temp']
-    """Helga prop directory structure"""
-
-    SHOT_DIRECTORY_LIST = ['animation', 'lighting', 'fx', ['cloth']]
-    """Helga shot directory structure"""
-
-    COMP_DIRECTORY_LIST = ['2d_render', '3d_render', 'nuke', 'ae', 'mattepainting', 'footage', 'temp']
-    """Helga comp directory structure"""
-
-    PHOTOSCAN_DIRECTORY_LIST = ['photos', 'masks', 'nuke', 'photoscan', ['out'], 'temp']
-    """Helga photoscan directory structure"""
 
 
 

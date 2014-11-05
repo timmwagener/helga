@@ -523,6 +523,49 @@ class AlembicFunctionality(object):
         return alembic_node
 
 
+    def create_character_time_blend_node(self, parent_node, alembic_node):
+        """
+        Append timeblend sop to alembic sop to interpolate
+        at fractions of a frame for velocity motionblur.
+        """
+
+        #time_blend_node
+        time_blend_node = parent_node.createNode('timeblend')
+
+        #uncheck clamp at first frame
+        parm_holdfirst = time_blend_node.parm('holdfirst')
+        parm_holdfirst.set(False)
+
+        #connect to alembic sop
+        time_blend_node.setFirstInput(alembic_node)
+
+        #return
+        return time_blend_node
+
+
+    def create_character_trail_node(self, parent_node, time_blend_node):
+        """
+        Append trail sop to add v point attr. for velocity motionblur.
+        """
+
+        #trail_node
+        trail_node = parent_node.createNode('trail')
+
+        #result
+        parm_result = trail_node.parm('result')
+        parm_result.set(3)
+
+        #velapproximation
+        parm_velapproximation = trail_node.parm('velapproximation')
+        parm_velapproximation.set(1)
+
+        #connect to time_blend sop
+        trail_node.setFirstInput(time_blend_node)
+
+        #return
+        return trail_node
+
+
     def create_character_alembic_node_expressions(self, alembic_node, top_node):
         """
         Create expressions for character alembic sop node.
@@ -573,6 +616,47 @@ class AlembicFunctionality(object):
         #set expression
         parm.setExpression(expression, language = hou.exprLanguage.Hscript)
 
+
+    def create_character_velocity_motionblur_expressions(self, geo_node, trail_node, top_node):
+        """
+        Create expressions for velocity motionblur.
+        This add the ability to enable and scale velocity
+        motionblur. This only works if the alembic
+        is imported as Houdini Geometry (default for
+        character imports)
+        """
+
+        #trail_node_relative_path
+        trail_node_relative_path = trail_node.relativePathTo(top_node)
+
+        #geo_node_relative_path
+        geo_node_relative_path = geo_node.relativePathTo(top_node)
+
+
+        #trail_node expressions
+
+        #parm_name
+        parm_name = 'velscale'
+        #expression
+        expression = 'ch("{0}/{1}")'.format(trail_node_relative_path, parm_name)
+        #parm
+        parm = trail_node.parm('velscale')
+        #set expression
+        parm.setExpression(expression, language = hou.exprLanguage.Hscript)
+
+
+
+        #geo_node expressions
+
+        #parm_name
+        parm_name = 'geo_velocityblur'
+        #expression
+        expression = 'ch("{0}/{1}")'.format(geo_node_relative_path, parm_name)
+        #parm
+        parm = geo_node.parm('geo_velocityblur')
+        #set expression
+        parm.setExpression(expression, language = hou.exprLanguage.Hscript)
+
     
     def create_char(self, parent_node):
         """
@@ -620,14 +704,32 @@ class AlembicFunctionality(object):
                 self.logger.debug('Create geo node {0}'.format(object_transform_name))
 
                 
+                
                 #geo_node
                 geo_node = self.create_geo_node(parent_node, object_transform_name)
                 
                 #alembic_node
                 alembic_node = self.create_character_alembic_node(geo_node, object_path)
 
-                #create expressions
+                #time_blend_node
+                time_blend_node = self.create_character_time_blend_node(geo_node, alembic_node)
+
+                #trail_node
+                trail_node = self.create_character_trail_node(geo_node, time_blend_node)
+                trail_node.setDisplayFlag(True)
+                trail_node.setRenderFlag(True)
+
+
+
+                #create alembic expressions
                 self.create_character_alembic_node_expressions(alembic_node, parent_node)
+
+                #create velocity motionblur expressions
+                self.create_character_velocity_motionblur_expressions(geo_node, trail_node, parent_node)
+
+                #layout children geo node
+                geo_node.layoutChildren()
+
 
 
         #layout children

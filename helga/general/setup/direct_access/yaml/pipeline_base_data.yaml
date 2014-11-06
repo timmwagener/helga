@@ -6,8 +6,8 @@
 #The order of the command line arguments when using with shortcuts is as the order below.
 
 
-PIPELINE_BASE_PATH: "/home/MEDIANET/twagener/home/helga"
-PIPELINE_FLAVOUR: "sandbox"
+PIPELINE_BASE_PATH: "//bigfoot/grimmhelga"
+PIPELINE_FLAVOUR: "deploy"
 MAYA_EXE: "C:/Program Files/Autodesk/Maya2014/bin/maya.exe"
-NUKE_EXE: "/usr/local/Nuke8.0v6/Nuke8.0"
-HOUDINI_EXE: "/opt/hfs/bin/houdinifx"
+NUKE_EXE: "C:/Program Files/Nuke8.0v5/Nuke8.0.exe"
+HOUDINI_EXE: "C:/Program Files/Side Effects Software/Houdini 13.0.547/bin/houdinifx.exe"

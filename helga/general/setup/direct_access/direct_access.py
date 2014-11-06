@@ -419,7 +419,7 @@ def set_environment_vars(unique_value_list = ['OCIO']):
                 os.environ[variable_name] = variable_value
             #env var exists (insert new value at the beginning)
             else:
-                os.environ[variable_name] = variable_value + ';' + os.getenv(variable_name)
+                os.environ[variable_name] = variable_value + os.pathsep + os.getenv(variable_name)
 
             #exception for ocio (needs to be unique)
             if(variable_name in unique_value_list):

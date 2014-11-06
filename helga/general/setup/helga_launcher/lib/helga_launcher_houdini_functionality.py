@@ -99,16 +99,21 @@ def run(file_path = None):
     DETACHED_PROCESS = 0x00000008
     
     try:
+
         #start
         subprocess.Popen(r'{0}'.format(command), shell = True, creationflags = DETACHED_PROCESS)
 
     except:
 
         #log
-        print('Detached process not supported on current operating system.')
+        print('Detached process not supported on current operating system. Running without it.')
 
         #start
         subprocess.Popen(r'{0}'.format(command), shell = True)
+    
+
+
+    
 
 
 

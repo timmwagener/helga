@@ -2484,7 +2484,7 @@ class AssetManager(form_class, base_class):
             asset_name_suffix = '_proxy'
         #rendergeo
         elif (attr_name == 'helga_rendergeo'):
-            asset_name_suffix = ''
+            asset_name_suffix = '_rendergeo'
         #locator
         elif (attr_name == 'helga_locator'):
             asset_name_suffix = '_locator'

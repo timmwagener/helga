@@ -2,7 +2,7 @@
 
 """
 alembic_functionality
-==========================================
+=====================
 
 Module that provides general functions to be used with the alembic_import module.
 Encapsulates Houdini and Alembic from alembic_import.
@@ -33,11 +33,11 @@ do_reload = True
 #lib
 
 #alembic_import_globals
-from lib import alembic_import_globals
+import alembic_import_globals
 if(do_reload):reload(alembic_import_globals)
 
 #alembic_import_logging_handler
-from lib import alembic_import_logging_handler
+import alembic_import_logging_handler
 if(do_reload):reload(alembic_import_logging_handler)
 
 
@@ -1163,6 +1163,111 @@ class AlembicFunctionality(object):
 
         #create
         self.create_prop_proxy_nodes(parent_node, alembic_path)
+
+
+
+    #Shot/Prop Rendergeo Methods
+    #------------------------------------------------------------------
+
+    def create_prop_rendergeo_nodes(self, parent_node, alembic_path):
+        """
+        Create prop proxy node.
+        """
+
+        #alembic_file_name
+        alembic_file_name = os.path.splitext(os.path.basename(alembic_path))[0]
+
+        #geo_node
+        geo_node = self.create_geo_node(parent_node, alembic_file_name)
+
+        #alembic_node
+        alembic_node = self.create_prop_rendergeo_alembic_node(geo_node, alembic_path)
+
+
+    def create_prop_rendergeo_alembic_node(self, parent_node, alembic_path):
+        """
+        Create Alembic node specifically for prop rendergeo.
+        """
+
+        #alembic_node
+        alembic_node = parent_node.createNode('alembic', parent_node.name())
+
+        #set fileName
+        parm_file_name = alembic_node.parm('fileName')
+        parm_file_name.set(alembic_path)
+
+        #return
+        return alembic_node
+
+
+    def check_prop_rendergeo(self, alembic_path):
+        """
+        Check the data needed for building a rendergeo alembic prop in Houdini.
+        Return false if the needed data is insufficient or the needed data if True.
+        The returned data is in the form of [alembic_path].
+        This should be all the data needed to build a prop.
+        """
+        
+        #alembic_file_name
+        alembic_file_name = os.path.splitext(os.path.basename(alembic_path))[0]
+        #alembic_file_name empty
+        if not (alembic_file_name):
+            #log
+            self.logger.debug('Could not aquire Alembic file name for path {0}.'.format(alembic_path))
+            return False
+
+
+        #object_path_list
+        object_path_list = self.get_alembic_object_path_list(alembic_path)
+        #object_path_list empty
+        if not (object_path_list):
+            #log
+            self.logger.debug('Object path list for alembic {0} empty.'.format(alembic_path))
+            return False
+        
+
+        #helga_rendergeo_attr_exists
+        helga_rendergeo_attr_exists = False
+        
+        #iterate and check
+        for object_path in object_path_list:
+            
+            #helga_rendergeo_attr
+            helga_rendergeo_attr = self.alembic_attribute_exists(alembic_path, object_path, 'helga_rendergeo')
+            
+            #if True then break
+            if (helga_rendergeo_attr):
+
+                #set helga_rendergeo_attr_exists
+                helga_rendergeo_attr_exists = True
+                break
+
+        #helga_rendergeo_attr_exists false
+        if not (helga_rendergeo_attr_exists):
+            #log
+            self.logger.debug('Alembic has no helga_rendergeo attribute.'.format(alembic_path))
+            return False
+
+        
+        #return
+        return [alembic_path]
+
+
+    def create_prop_rendergeo(self, 
+                                parent_node, 
+                                alembic_path):
+        """
+        Create a prop hierarchy according to our pipeline standards.
+        """
+        
+        #check
+        if not (self.check_prop_rendergeo(alembic_path)):
+            #log
+            self.logger.debug('Prop rendergeo check failed. Not creating prop')
+            return
+
+        #create
+        self.create_prop_rendergeo_nodes(parent_node, alembic_path)
 
             
 

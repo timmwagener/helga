@@ -15,16 +15,7 @@ Bitte sterbt alle ihr gottverdammten Huhrensoehne.
 
 
 
-#Add tool root path
-#------------------------------------------------------------------
 
-#import
-import sys
-import os
-
-#tool_root_path
-tool_root_path = os.path.abspath(os.path.dirname(__file__))
-sys.path.append(tool_root_path)
 
 
 
@@ -33,6 +24,8 @@ sys.path.append(tool_root_path)
 #Import
 #------------------------------------------------------------------
 #python
+import sys
+import os
 import functools
 import logging
 import time
@@ -59,15 +52,15 @@ if(do_reload):reload(global_functions)
 #lib
 
 #alembic_import_globals
-from lib import alembic_import_globals
+import alembic_import_globals
 if(do_reload):reload(alembic_import_globals)
 
 #alembic_import_logging_handler
-from lib import alembic_import_logging_handler
+import alembic_import_logging_handler
 if(do_reload):reload(alembic_import_logging_handler)
 
 #alembic_functionality
-from lib import alembic_functionality
+import alembic_functionality
 if(do_reload):reload(alembic_functionality)
 
 
@@ -78,13 +71,7 @@ if(do_reload):reload(alembic_functionality)
 
 #Globals
 #------------------------------------------------------------------
-
-#Pathes
-TOOL_ROOT_PATH = alembic_import_globals.TOOL_ROOT_PATH
-#helga
 HELGA_MATERIAL_ATTRIBUTE_NAME = 'helga_material'
-
-#Houdini
 NETWORK_BOXES_OFFSET_X = 10
 
 

@@ -18,24 +18,14 @@ and geometry nodes without all the usual parameters for subdiving etc.
 
 
 
-#Add tool root path
-#------------------------------------------------------------------
-
-#import
-import sys
-import os
-
-#tool_root_path
-tool_root_path = os.path.abspath(os.path.dirname(__file__))
-sys.path.append(tool_root_path)
-
-
 
 
 
 #Import
 #------------------------------------------------------------------
 #python
+import sys
+import os
 import functools
 import logging
 import time
@@ -63,15 +53,15 @@ if(do_reload):reload(global_functions)
 #lib
 
 #alembic_import_globals
-from lib import alembic_import_globals
+import alembic_import_globals
 if(do_reload):reload(alembic_import_globals)
 
 #alembic_import_logging_handler
-from lib import alembic_import_logging_handler
+import alembic_import_logging_handler
 if(do_reload):reload(alembic_import_logging_handler)
 
 #alembic_functionality
-from lib import alembic_functionality
+import alembic_functionality
 if(do_reload):reload(alembic_functionality)
 
 
@@ -83,8 +73,6 @@ if(do_reload):reload(alembic_functionality)
 #Globals
 #------------------------------------------------------------------
 
-#Pathes
-TOOL_ROOT_PATH = alembic_import_globals.TOOL_ROOT_PATH
 
 
 
@@ -270,8 +258,6 @@ class AlembicImportShotProxy(object):
         #alembic_path_list
         alembic_path_list = self.base_data_check_shot()[0]
 
-        #delete_content
-        self.alembic_functionality.delete_content(self.node)
 
         #iterate
         for alembic_path in alembic_path_list:
@@ -288,32 +274,6 @@ class AlembicImportShotProxy(object):
     
 
 
-    
-    #Utillity methods
-    #------------------------------------------------------------------
-
-    def print_alembic_object_path_list(self):
-        """
-        Print object path list.
-        """
-
-        pass
-
-        
-
-        
-
-        
-        
-        
-
-        
-
-        
-
-
-
-        
 
     #Test
     #------------------------------------------------------------------
@@ -356,74 +316,6 @@ class AlembicImportShotProxy(object):
     
 
 
-
-
-
-
-
-
-#hdaModule
-#------------------------------------------------------------------
-
-def create_prop(node):
-    """
-    Function to be used in the hdaModule of the Python operator.
-    ------------------------------------------------------------------
-    kwargs['node'].hdaModule().create_prop(kwargs['node'])
-    """
-
-    #import
-    from helga.houdini.import_export.alembic_import import alembic_import_shot_proxy
-    reload(alembic_import_shot_proxy)
-
-    #alembic_import_shot_instance
-    alembic_import_shot_instance = alembic_import_shot_proxy.AlembicImportShotProxy(node)
-
-    #create_prop
-    alembic_import_shot_instance.create_prop()
-
-
-def create_shot(node):
-    """
-    Function to be used in the hdaModule of the Python operator.
-    ------------------------------------------------------------------
-    kwargs['node'].hdaModule().create_shot(kwargs['node'])
-    """
-
-    #import
-    from helga.houdini.import_export.alembic_import import alembic_import_shot_proxy
-    reload(alembic_import_shot_proxy)
-
-    #alembic_import_shot_instance
-    alembic_import_shot_instance = alembic_import_shot_proxy.AlembicImportShotProxy(node)
-
-    #create_shot
-    alembic_import_shot_instance.create_shot()
-
-
-def assign_materials(node):
-    """
-    Try to assign materials for content of this node.
-    ------------------------------------------------------------------
-    kwargs['node'].hdaModule().assign_materials(kwargs['node'])
-    """
-    
-    #node None
-    if not (node):
-        #log
-        print('No node passed, not assigning materials.')
-        return
-
-    #import
-    from helga.houdini.import_export.alembic_import import alembic_import_shader_assignment
-    reload(alembic_import_shader_assignment)
-    
-    
-    #alembic_import_shader_assignment_instance
-    alembic_import_shader_assignment_instance = alembic_import_shader_assignment.AlembicImportShaderAssignment(node = node)
-
-    #assign materials
-    alembic_import_shader_assignment_instance.assign_materials()
 
 
 

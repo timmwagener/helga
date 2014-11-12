@@ -45,6 +45,23 @@ if(do_reload):reload(alembic_import_logging_handler)
 
 
 
+
+
+#Globals
+#------------------------------------------------------------------
+
+HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE = '$HELGA_ALEMBIC_PATH'
+
+
+
+
+
+
+
+
+
+
+
 #AlembicFunctionality class
 #------------------------------------------------------------------
 class AlembicFunctionality(object):
@@ -322,6 +339,34 @@ class AlembicFunctionality(object):
 
         #return
         return parm.eval()
+
+
+    def replace_global_variable(self, string_value, global_variable_name):
+        """
+        Expand global_variable_name, check if this string is in string value and replace if so.
+        """
+
+        #check if variable exists
+        try:
+
+            hou.hscriptExpression('{0}'.format(global_variable_name))
+
+        except:
+
+            #log
+            self.logger.debug('Global variable {0} does not exist. Not altering string value'.format(global_variable_name))
+            return string_value
+
+
+        #global_variable_value
+        global_variable_value = hou.expandString('{0}'.format(global_variable_name))
+
+        #replace
+        string_value = string_value.replace(global_variable_value, global_variable_name)
+
+        #return
+        return string_value
+
 
     
     #Alembic Utility Methods
@@ -811,6 +856,11 @@ class AlembicFunctionality(object):
         parm_load_locator = alembic_node.parm('loadLocator')
         parm_load_locator.set(True)
 
+
+        #update alembic_path with global var if possible
+        alembic_path = self.replace_global_variable(alembic_path, 
+                                                    HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE)
+
         #set fileName
         parm_file_name = alembic_node.parm('fileName')
         parm_file_name.set(alembic_path)
@@ -914,6 +964,11 @@ class AlembicFunctionality(object):
         #set viewportlod
         parm_viewportlod = alembic_node.parm('viewportlod')
         parm_viewportlod.set(2)
+
+
+        #update alembic_path with global var if possible
+        alembic_path = self.replace_global_variable(alembic_path, 
+                                                    HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE)
 
         #set fileName
         parm_file_name = alembic_node.parm('fileName')
@@ -1045,6 +1100,10 @@ class AlembicFunctionality(object):
 
         #alembic_node
         alembic_node = parent_node.createNode('alembic', parent_node.name())
+
+        #update alembic_path with global var if possible
+        alembic_path = self.replace_global_variable(alembic_path, 
+                                                    HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE)
 
         #set fileName
         parm_file_name = alembic_node.parm('fileName')
@@ -1191,6 +1250,10 @@ class AlembicFunctionality(object):
 
         #alembic_node
         alembic_node = parent_node.createNode('alembic', parent_node.name())
+
+        #update alembic_path with global var if possible
+        alembic_path = self.replace_global_variable(alembic_path, 
+                                                    HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE)
 
         #set fileName
         parm_file_name = alembic_node.parm('fileName')

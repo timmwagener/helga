@@ -237,6 +237,9 @@ if (PIPELINE_BASE_PATH):
                     '&']
     """Helga Houdini path"""
 
+    HOUDINI_BUFFEREDSAVE = '1'
+    """Avoid slow saving for Houdini files when saving over the network. This stores the file temporarily on disk and then copies to the network."""
+
 
 
 

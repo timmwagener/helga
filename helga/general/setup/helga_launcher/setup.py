@@ -288,6 +288,9 @@ if (__name__ == '__main__'):
         #helga_launcher_path
         helga_launcher_path = r'Y:/Production/scripts/deploy/helga/bin/HelgaLauncher/helga_launcher_loader.exe'
 
+        #helga_launcher_path_sandbox
+        helga_launcher_path_sandbox = r'Y:/Production/scripts/sandbox/helga/bin/HelgaLauncher/helga_launcher_loader.exe'
+
         #helga_launcher_path_home
         helga_launcher_path_home = r'C:/symlinks/filmaka/helga/Production/scripts/deploy/helga/bin/HelgaLauncher/helga_launcher_loader.exe'
 
@@ -322,19 +325,19 @@ if (__name__ == '__main__'):
 
         #helga_launcher_sandbox
         batch_name = 'helga_launcher_sandbox.bat'
-        create_batch(helga_launcher_path, batch_dir, batch_name, [r' -sbx 1'])
+        create_batch(helga_launcher_path_sandbox, batch_dir, batch_name, [r' -sbx 1'])
 
         #helga_launcher_sandbox_maya
         batch_name = 'helga_launcher_sandbox_maya.bat'
-        create_batch(helga_launcher_path, batch_dir, batch_name, [r' -sbx 1', r' -rma 1'])
+        create_batch(helga_launcher_path_sandbox, batch_dir, batch_name, [r' -sbx 1', r' -rma 1'])
 
         #helga_launcher_sandbox_nuke
         batch_name = 'helga_launcher_sandbox_nuke.bat'
-        create_batch(helga_launcher_path, batch_dir, batch_name, [r' -sbx 1', r' -rnk 1'])
+        create_batch(helga_launcher_path_sandbox, batch_dir, batch_name, [r' -sbx 1', r' -rnk 1'])
 
         #helga_launcher_sandbox_houdini
         batch_name = 'helga_launcher_sandbox_houdini.bat'
-        create_batch(helga_launcher_path, batch_dir, batch_name, [r' -sbx 1', r' -rho 1'])
+        create_batch(helga_launcher_path_sandbox, batch_dir, batch_name, [r' -sbx 1', r' -rho 1'])
 
 
 

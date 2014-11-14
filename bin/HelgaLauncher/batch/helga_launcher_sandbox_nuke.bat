@@ -1,1 +1,1 @@
-Y:/Production/scripts/deploy/helga/bin/HelgaLauncher/helga_launcher_loader.exe -sbx 1 -rnk 1
+Y:/Production/scripts/sandbox/helga/bin/HelgaLauncher/helga_launcher_loader.exe -sbx 1 -rnk 1

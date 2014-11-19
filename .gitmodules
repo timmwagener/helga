@@ -4,3 +4,6 @@
 [submodule "bin/plugins/nuke/LumaNukeGizmos"]
 	path = bin/plugins/nuke/LumaNukeGizmos
 	url = https://github.com/LumaPictures/LumaNukeGizmos.git
+[submodule "helga/houdini/setup/otls/qLib"]
+	path = helga/houdini/setup/otls/qLib
+	url = https://github.com/qLab/qLib.git

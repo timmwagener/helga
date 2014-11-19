@@ -275,8 +275,139 @@ class MantraFunctionality(object):
             #log
             print('\n\n\n----------------------------------\n{0}\n----------------------------------'.format(mantra_node.path()))
 
+            try:
+                #decouple_indirect_noise_parameters
+                self.decouple_indirect_noise_parameters(mantra_node)
+            
+            except:
+                #log
+                print('Error adding indirect parameters. Maybe they already existed.')
+
             #set_mantra_base_parameters
             self.set_mantra_base_parameters(mantra_node)
+
+
+    def decouple_indirect_noise_parameters(self, node):
+        """
+        Decouple indirect noise parameters on Mantra node.
+        """
+
+        #Create Parameters
+        #------------------------------------------------------------------
+
+        #parm_group
+        parm_group = node.parmTemplateGroup()
+
+        
+        #folder_sampling
+        folder_sampling = parm_group.containingFolder('vm_minraysamples')
+        #vm_decoupleindirect
+        hou_parm_template = hou.ToggleParmTemplate("vm_decoupleindirect", "Decouple Indirect Sample Limits", default_value=False)
+        hou_parm_template.setHelp("None")
+        hou_parm_template.setTags({"spare_category": "Sampling"})
+        #append
+        parm_group.appendToFolder(folder_sampling, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_group)
+
+        #log
+        parm = node.parm("vm_decoupleindirect")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+
+        #folder_sampling
+        folder_sampling = parm_group.containingFolder('vm_minraysamples')
+        #vm_minindirectraysamples
+        hou_parm_template = hou.IntParmTemplate("vm_minindirectraysamples", "Min Indirect Ray Samples", 1, default_value=([1]), min=1, max=64, min_is_strict=False, max_is_strict=False, naming_scheme=hou.parmNamingScheme.Base1)
+        hou_parm_template.setConditional( hou.parmCondType.DisableWhen, "{ vm_decoupleindirect == 0 }")
+        hou_parm_template.setHelp("None")
+        hou_parm_template.setTags({"spare_category": "Sampling"})
+        #append
+        parm_group.appendToFolder(folder_sampling, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_group)
+
+        #log
+        parm = node.parm("vm_minindirectraysamples")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+
+        #folder_sampling
+        folder_sampling = parm_group.containingFolder('vm_minraysamples')
+        #vm_maxindirectraysamples
+        hou_parm_template = hou.IntParmTemplate("vm_maxindirectraysamples", "Max Indirect Ray Samples", 1, default_value=([9]), min=1, max=64, min_is_strict=False, max_is_strict=False, naming_scheme=hou.parmNamingScheme.Base1)
+        hou_parm_template.setConditional( hou.parmCondType.DisableWhen, "{ vm_decoupleindirect == 0 } { vm_dorayvariance == 0 }")
+        hou_parm_template.setHelp("None")
+        hou_parm_template.setTags({"spare_category": "Sampling"})
+        #append
+        parm_group.appendToFolder(folder_sampling, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_group)
+
+        #log
+        parm = node.parm("vm_maxindirectraysamples")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+        
+        #folder_sampling
+        folder_sampling = parm_group.containingFolder('vm_minraysamples')
+        #vm_indirectvariance
+        hou_parm_template = hou.FloatParmTemplate("vm_indirectvariance", "Indirect Noise Level", 1, default_value=([0.05]), min=0, max=0.1, min_is_strict=False, max_is_strict=False, look=hou.parmLook.Regular, naming_scheme=hou.parmNamingScheme.Base1)
+        hou_parm_template.setConditional( hou.parmCondType.DisableWhen, "{ vm_decoupleindirect == 0 } { vm_dorayvariance == 0 }")
+        hou_parm_template.setHelp("None")
+        hou_parm_template.setTags({"spare_category": "Sampling"})
+        #append
+        parm_group.appendToFolder(folder_sampling, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_group)
+
+        #log
+        parm = node.parm("vm_indirectvariance")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+        
+        
+        #Adjust Parameters
+        #------------------------------------------------------------------
+
+        # Code for /out/mantra1/vm_decoupleindirect parm 
+        hou_parm = node.parm("vm_decoupleindirect")
+        hou_parm.lock(False)
+        hou_parm.setAutoscope(False)
+
+
+        # Code for /out/mantra1/vm_minindirectraysamples parm 
+        hou_parm = node.parm("vm_minindirectraysamples")
+        hou_parm.lock(False)
+        hou_parm.setAutoscope(False)
+
+
+        # Code for /out/mantra1/vm_maxindirectraysamples parm 
+        hou_parm = node.parm("vm_maxindirectraysamples")
+        hou_parm.lock(False)
+        hou_parm.setAutoscope(False)
+
+
+        # Code for /out/mantra1/vm_indirectvariance parm 
+        hou_parm = node.parm("vm_indirectvariance")
+        hou_parm.lock(False)
+        hou_parm.setAutoscope(False)
+
+
+        
+
+
+        
+
+        
 
 
     def set_mantra_base_parameters(self, node):
@@ -346,13 +477,54 @@ class MantraFunctionality(object):
 
 
 
-        #Properties/Render
+        #Properties/Sampling
         #------------------------------------------------------------------
 
         #vm_samplelock
         self.set_parm_value(node, 'vm_samplelock', False)
         #log
         print('{0} to {1}'.format('vm_samplelock', self.get_parm_value(node, 'vm_samplelock')))
+
+        #shutteroffset
+        self.set_parm_value(node, 'shutteroffset', 0)
+        #log
+        print('{0} to {1}'.format('shutteroffset', self.get_parm_value(node, 'shutteroffset')))
+
+        #vm_minraysamples
+        self.set_parm_value(node, 'vm_minraysamples', 2)
+        #log
+        print('{0} to {1}'.format('vm_minraysamples', self.get_parm_value(node, 'vm_minraysamples')))
+
+        #vm_maxraysamples
+        self.set_parm_value(node, 'vm_maxraysamples', 9)
+        #log
+        print('{0} to {1}'.format('vm_maxraysamples', self.get_parm_value(node, 'vm_maxraysamples')))
+
+        #vm_variance
+        self.set_parm_value(node, 'vm_variance', 0.01)
+        #log
+        print('{0} to {1}'.format('vm_variance', self.get_parm_value(node, 'vm_variance')))
+
+        
+        #vm_decoupleindirect
+        self.set_parm_value(node, 'vm_decoupleindirect', 0)
+        #log
+        print('{0} to {1}'.format('vm_decoupleindirect', self.get_parm_value(node, 'vm_decoupleindirect')))
+
+        #vm_minindirectraysamples
+        self.set_parm_value(node, 'vm_minindirectraysamples', 2)
+        #log
+        print('{0} to {1}'.format('vm_minindirectraysamples', self.get_parm_value(node, 'vm_minindirectraysamples')))
+
+        #vm_maxindirectraysamples
+        self.set_parm_value(node, 'vm_maxindirectraysamples', 9)
+        #log
+        print('{0} to {1}'.format('vm_maxindirectraysamples', self.get_parm_value(node, 'vm_maxindirectraysamples')))
+
+        #vm_indirectvariance
+        self.set_parm_value(node, 'vm_indirectvariance', 0.01)
+        #log
+        print('{0} to {1}'.format('vm_indirectvariance', self.get_parm_value(node, 'vm_indirectvariance')))
 
 
 
@@ -378,6 +550,11 @@ class MantraFunctionality(object):
         self.set_parm_value(node, 'vm_pbrreflectratio', 1)
         #log
         print('{0} to {1}'.format('vm_pbrreflectratio', self.get_parm_value(node, 'vm_pbrreflectratio')))
+
+        #vm_colorlimit
+        self.set_parm_value(node, 'vm_colorlimit', 5)
+        #log
+        print('{0} to {1}'.format('vm_colorlimit', self.get_parm_value(node, 'vm_colorlimit')))
 
 
 

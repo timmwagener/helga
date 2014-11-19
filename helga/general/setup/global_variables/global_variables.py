@@ -229,6 +229,20 @@ if (PIPELINE_BASE_PATH):
     HOUDINI_OTL_PATH = HOUDINI_DIGITAL_ASSETS_PATH + r'/otls'
     """Helga pipeline HOUDINI otl path"""
 
+    
+    HOUDINI_QLIB_PATH = HOUDINI_SETUP_PATH + r'/otls/qLib/otls'
+    """Path to qLib otl base directory"""
+
+    HOUDINI_QLIB_BASE_PATH = HOUDINI_QLIB_PATH + r'/base'
+    """Path to qLib base otls"""
+
+    HOUDINI_QLIB_EXPERIMENTAL_PATH = HOUDINI_QLIB_PATH + r'/experimental'
+    """Path to qLib experimental otls"""
+
+    HOUDINI_QLIB_FUTURE_PATH = HOUDINI_QLIB_PATH + r'/future'
+    """Path to qLib future otls"""
+
+    
     HOUDINI_PATH = [HOUDINI_SETUP_PATH,
                     HOUDINI_PLUGIN_PATH,
                     HOUDINI_DIGITAL_ASSETS_PATH,
@@ -236,6 +250,12 @@ if (PIPELINE_BASE_PATH):
                     PIPELINE_LIBRARIES_PATH_HOUDINI,
                     '&']
     """Helga Houdini path"""
+
+    HOUDINI_OTLSCAN_PATH = [HOUDINI_QLIB_BASE_PATH,
+                            HOUDINI_QLIB_EXPERIMENTAL_PATH,
+                            HOUDINI_QLIB_FUTURE_PATH,
+                            '&']
+    """Explicit Helga houdini otl scan path. Use this if otls have own directories, like qLib."""
 
     HOUDINI_BUFFEREDSAVE = '1'
     """Avoid slow saving for Houdini files when saving over the network. This stores the file temporarily on disk and then copies to the network."""

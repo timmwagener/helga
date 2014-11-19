@@ -65,6 +65,7 @@ def get_env_vars():
 
     #environment_pathes_dict
     environment_pathes_dict = {'HOUDINI_PATH': global_variables.HOUDINI_PATH,
+                                'HOUDINI_OTLSCAN_PATH': global_variables.HOUDINI_OTLSCAN_PATH,
                                 'HOUDINI_BUFFEREDSAVE': global_variables.HOUDINI_BUFFEREDSAVE}
 
     return environment_pathes_dict

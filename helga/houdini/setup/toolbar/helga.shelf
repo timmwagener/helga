@@ -9,6 +9,7 @@
     <memberTool name="set_renderpathes_testing"/>
     <memberTool name="set_renderpathes"/>
     <memberTool name="apply_base_setup"/>
+    <memberTool name="add_image_planes"/>
   </toolshelf>
 
   <tool name="set_renderpathes" label="Set renderpathes" icon="PLASMA_App">
@@ -57,5 +58,21 @@ mantra_functionality_instance = mantra_functionality.MantraFunctionality()
 
 #run
 mantra_functionality_instance.apply_base_setup()]]></script>
+  </tool>
+
+  <tool name="add_image_planes" label="Add image planes to selected mantra nodes" icon="PLASMA_App">
+    <toolMenuContext name="network">
+      <contextNetType>ROP</contextNetType>
+    </toolMenuContext>
+    <toolSubmenu>helga/rendering</toolSubmenu>
+    <script scriptType="python"><![CDATA[#import
+from helga.houdini.rendering.mantra_functionality import image_plane_functionality
+reload(image_plane_functionality)
+
+#image_plane_functionality_instance
+image_plane_functionality_instance = image_plane_functionality.ImagePlaneFunctionality()
+
+#run
+image_plane_functionality_instance.add_image_planes()]]></script>
   </tool>
 </shelfDocument>

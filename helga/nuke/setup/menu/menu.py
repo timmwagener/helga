@@ -65,10 +65,17 @@ PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH
 NUKE_ICONS_PATH = global_variables.NUKE_ICONS_PATH
 NUKE_PLUGIN_PATH = global_variables.NUKE_PLUGIN_PATH
 
+PIPELINE_COMP_PATH = global_variables.PIPELINE_COMP_PATH
+PIPELINE_2D_PATH = global_variables.PIPELINE_2D_PATH
+PIPELINE_HDRI_PATH = global_variables.PIPELINE_HDRI_PATH
+PIPELINE_RENDER_PATH = global_variables.PIPELINE_RENDER_PATH
 PIPELINE_ASSETS_PATH = global_variables.PIPELINE_ASSETS_PATH
 PIPELINE_SHOTS_PATH = global_variables.PIPELINE_SHOTS_PATH
 PIPELINE_WORK_PROPS_PATH = global_variables.PIPELINE_WORK_PROPS_PATH
 PIPELINE_RND_PATH = global_variables.PIPELINE_RND_PATH
+
+
+
 
 
 
@@ -107,7 +114,11 @@ try:
     favorite_icon = NUKE_ICONS_PATH + r'/iconHelgaMenuMain.png'
     
     #favorite_dict
-    favorite_dict = {'helga_assets':['helga_assets', PIPELINE_ASSETS_PATH, display_type, favorite_icon],
+    favorite_dict = {'helga_comp':['helga_comp', PIPELINE_COMP_PATH, display_type, favorite_icon],
+    'helga_2d':['helga_2d', PIPELINE_2D_PATH, display_type, favorite_icon],
+    'helga_hdri':['helga_hdri', PIPELINE_HDRI_PATH, display_type, favorite_icon],
+    'helga_render':['helga_render', PIPELINE_RENDER_PATH, display_type, favorite_icon],
+    'helga_assets':['helga_assets', PIPELINE_ASSETS_PATH, display_type, favorite_icon],
     'helga_shots':['helga_shots', PIPELINE_SHOTS_PATH, display_type, favorite_icon],
     'helga_props':['helga_props', PIPELINE_WORK_PROPS_PATH, display_type, favorite_icon],
     'helga_rnd':['helga_rnd', PIPELINE_RND_PATH, display_type, favorite_icon]

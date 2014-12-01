@@ -109,12 +109,23 @@ if (PIPELINE_BASE_PATH):
     """Pipeline rnd path. Personal RnD folders for all team members."""
 
 
-    PIPELINE_HDRI_PATH = PIPELINE_BASE_PATH + r'/Production/2d/hdri'
+    
+
+    PIPELINE_2D_PATH = PIPELINE_BASE_PATH + r'/Production/2d'
+    """Pipeline 2d path. Everything related to 2d is under here"""
+
+    PIPELINE_COMP_PATH = PIPELINE_2D_PATH + r'/comp'
+    """Pipeline comp path. All shot comps are located here."""
+
+    PIPELINE_HDRI_PATH = PIPELINE_2D_PATH + r'/hdri'
     """Pipeline HDRI path. Below here are all HDRIs for helga."""
 
 
     PIPELINE_DOCUMENTATION_URL = r'http://helga-docs.readthedocs.org/'
     """Default URL constant. Points to pipeline documentation"""
+
+
+    
 
 
 

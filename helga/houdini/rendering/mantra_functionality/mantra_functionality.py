@@ -278,6 +278,8 @@ class MantraFunctionality(object):
             try:
                 #decouple_indirect_noise_parameters
                 self.decouple_indirect_noise_parameters(mantra_node)
+                #add_operator_id_render_property
+                self.add_operator_id_render_property(mantra_node)
             
             except:
                 #log
@@ -398,6 +400,47 @@ class MantraFunctionality(object):
 
         # Code for /out/mantra1/vm_indirectvariance parm 
         hou_parm = node.parm("vm_indirectvariance")
+        hou_parm.lock(False)
+        hou_parm.setAutoscope(False)
+
+
+
+    def add_operator_id_render_property(self, node):
+        """
+        Add vm_generate_opid property to mantra node. This property ensures that
+        the render_id passes work.
+        """
+
+        #Create Parameters
+        #------------------------------------------------------------------
+
+        #parm_group
+        parm_group = node.parmTemplateGroup()
+
+        
+        #folder_output
+        folder_output = parm_group.containingFolder('vm_picture')
+        #vm_decoupleindirect
+        hou_parm_template = hou.ToggleParmTemplate("vm_generate_opid", "Generate Operator IDs", default_value = True)
+        hou_parm_template.setHelp("None")
+        hou_parm_template.setTags({"spare_category": "Output"})
+        #append
+        parm_group.appendToFolder(folder_output, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_group)
+
+        #log
+        parm = node.parm("vm_generate_opid")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+
+        #Adjust Parameters
+        #------------------------------------------------------------------
+
+        #vm_generate_opid 
+        hou_parm = node.parm("vm_generate_opid")
         hou_parm.lock(False)
         hou_parm.setAutoscope(False)
 

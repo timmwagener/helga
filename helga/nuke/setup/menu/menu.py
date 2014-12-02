@@ -289,7 +289,6 @@ try:
 
 
 
-
     #nuke_env_menu
     #------------------------------------------------------------------
 
@@ -322,6 +321,33 @@ try:
 
 
 
+
+    #custom_menu
+    #------------------------------------------------------------------
+
+    #custom_menu
+    custom_menu = third_party_gizmos_menu.addMenu('Custom')
+
+    
+    #custom_gizmo_file_list
+    custom_gizmo_file_list = [gizmo_name for 
+                            gizmo_name in 
+                            os.listdir(NUKE_PLUGIN_PATH) if
+                            os.path.isfile(os.path.join(NUKE_PLUGIN_PATH, gizmo_name))]
+
+    
+    #custom_gizmo_list
+    custom_gizmo_list = [gizmo_name.split('.')[0] for 
+                            gizmo_name in 
+                            custom_gizmo_file_list if
+                            gizmo_name.split('.')[-1] == 'gizmo']
+
+
+    #iterate and add commands
+    for custom_gizmo in custom_gizmo_list:
+        
+        #cmds
+        custom_menu.addCommand(custom_gizmo, "nuke.createNode('{0}')".format(custom_gizmo))
     
 
 

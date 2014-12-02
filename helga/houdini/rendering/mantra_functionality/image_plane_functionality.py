@@ -92,6 +92,28 @@ SAMPLE_FILTER_LIST = ["direct_emission"]
 EXPORT_VAR_FOR_EACH_COMPONENT_LIST = ["direct_comp", "indirect_comp"]
 
 
+VM_FILENAME_PLANE_EXPRESSION = r"""
+import os
+
+#vex_variable
+vex_variable = "%(vex_variable)s"
+
+#node
+node = hou.pwd()
+#picture_path
+picture_path = node.evalParm("vm_picture")
+#picture_directory, picture_name
+picture_directory, picture_name = os.path.split(picture_path)
+#picture_basename, picture_padding, picture_ext
+picture_basename, picture_padding, picture_ext = picture_name.split(".")
+#new_picture_name
+new_picture_name = "{0}_{1}.{2}.{3}".format(picture_basename, vex_variable, picture_padding, picture_ext)
+#new_picture_path
+new_picture_path = "{0}/{1}".format(picture_directory, new_picture_name)
+
+#return
+return new_picture_path
+"""
 
 
 
@@ -121,6 +143,8 @@ class ImagePlane(object):
         self.vm_lightexport = False
         self.vm_lightexport_scope = "*"
         self.vm_lightexport_select = "*"
+        self.vm_filename_plane = ""
+        self.vm_usefile_plane = False
 
 
 
@@ -288,7 +312,7 @@ class ImagePlaneFunctionality(object):
     #Methods
     #------------------------------------------------------------------
 
-    def add_image_plane(self, mantra_node, variable_name):
+    def add_image_plane(self, mantra_node, variable_name, different_file = True):
         """
         Check if image plane with variable of t
         """
@@ -323,10 +347,40 @@ class ImagePlaneFunctionality(object):
             if (parm):
                 parm.set(value)
 
+        #different_file
+        if (different_file):
+
+            #set_different_file_expression
+            self.set_different_file_expression(mantra_node, target_index)
+
+
         #log
         print('{0} - {1}'.format(variable_name, mantra_node.path()))
 
 
+    def set_different_file_expression(self, node, target_index):
+        """
+        Enable and set the property that exports the image plane
+        at given target index with the correct file path.
+        """
+
+        #vex_variable_parm
+        vex_variable_parm = node.parm("{0}{1}".format('vm_variable_plane', target_index))
+        #vex_variable_value
+        vex_variable_value = vex_variable_parm.eval()
+
+        #parm_vm_usefile_plane
+        parm_vm_usefile_plane = node.parm("{0}{1}".format('vm_usefile_plane', target_index))
+        parm_vm_usefile_plane.set(True)
+
+        
+        #parm_vm_filename_plane
+        parm_vm_filename_plane = node.parm("{0}{1}".format('vm_filename_plane', target_index))
+
+        #set expression
+        parm_vm_filename_plane.setExpression(VM_FILENAME_PLANE_EXPRESSION % {'vex_variable': vex_variable_value}, language = hou.exprLanguage.Python)
+
+    
     def get_image_plane_count(self, mantra_node):
         """
         Return number of image planes of the mantra rop.

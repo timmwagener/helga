@@ -312,7 +312,7 @@ class ImagePlaneFunctionality(object):
     #Methods
     #------------------------------------------------------------------
 
-    def add_image_plane(self, mantra_node, variable_name, different_file = True):
+    def add_image_plane(self, mantra_node, variable_name, different_file = False):
         """
         Check if image plane with variable of t
         """

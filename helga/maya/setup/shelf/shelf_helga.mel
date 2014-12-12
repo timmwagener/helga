@@ -372,8 +372,8 @@ global proc shelf_helga () {
     shelfButton
         -enableCommandRepeat 1
         -enable 1
-        -width 34
-        -height 34
+        -width 35
+        -height 35
         -manage 1
         -visible 1
         -preventOverride 0
@@ -637,6 +637,32 @@ global proc shelf_helga () {
         -manage 1
         -visible 1
         -preventOverride 0
+        -annotation "PAIE (Python Attribute Import/Export)" 
+        -enableBackground 0
+        -align "center" 
+        -label "paie" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_paie.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_paie.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "import paie\npaie.GUI()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
         -annotation "header_arash" 
         -enableBackground 0
         -align "center" 
@@ -703,6 +729,58 @@ global proc shelf_helga () {
         -marginWidth 1
         -marginHeight 1
         -command "from helga.maya.arash.helga_login import helga_login\nreload(helga_login)\n\n\nhelga_login.run()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "User Script" 
+        -enableBackground 0
+        -align "center" 
+        -label "header_hanna" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.25 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDummy.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/iconDummy.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "print(\"User defined macro\");" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Switch Parentspace for Tankard" 
+        -enableBackground 0
+        -align "center" 
+        -label "switch_parentspace" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_switch_parentspace.png" 
+        -image1 "//bigfoot/grimmhelga/Production/scripts/deploy/helga/helga/maya/setup/icons/icon_switch_parentspace.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "from helga.maya.hanna.switch_parentspace import switch_parentspace\nreload(switch_parentspace)\nswitch_parentspace.SwitchParentspace().run()" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1

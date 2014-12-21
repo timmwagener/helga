@@ -144,8 +144,16 @@ if (PIPELINE_BASE_PATH):
     MAYA_EXE = os.getenv('HELGA_MAYA_EXE', False)
     """Helga pipeline Maya exe"""
 
-    MAYA_PY = os.path.abspath(os.path.join(os.path.dirname(MAYA_EXE), 'mayapy.exe')).replace('\\', '/')
-    """Helga pipeline Maya Python interpreter path"""
+    #maya_exe guard (for nuke farm rendering)
+    if not (MAYA_EXE):
+
+        #log
+        print('MAYE_EXE env. var. not found. Skipping MAYA_PY assignment')
+
+    else:
+
+        MAYA_PY = os.path.abspath(os.path.join(os.path.dirname(MAYA_EXE), 'mayapy.exe')).replace('\\', '/')
+        """Helga pipeline Maya Python interpreter path"""
 
 
     MAYA_PROJECT_PATH = PIPELINE_BASE_PATH + r'/Production/3d/maya'
@@ -195,7 +203,7 @@ if (PIPELINE_BASE_PATH):
     NUKE_EXE = os.getenv('HELGA_NUKE_EXE', False)
     """Helga pipeline Nuke exe"""
 
-
+    
     NUKE_INIT_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/helga/nuke/setup/init'
     """Default nuke init path"""
 

@@ -51,6 +51,12 @@ class SwitchParentspace:
         self.logger.debug('--- switch_Parentspace ___init()___ ---')
         self.window_name = 'SwitchParentspace'
 
+        self.optionMenu_default_value = '-select-'
+
+        self.confirm_overwrite = 0
+        
+
+
         
         '''
         TANKARD
@@ -67,12 +73,13 @@ class SwitchParentspace:
                               'HelgaHandL',
                               'HelgaHandR']
 
-        self.follow_sources = ['', 'ulfbert_rig:L_Arm_Wrist_ToParent_Ctrl',
-                                   'ulfbert_rig:R_Arm_Wrist_ToParent_Ctrl',
-                                   'snorri_rig:L_Arm_Wrist_ToParent_Ctrl',
-                                   'snorri_rig:R_Arm_Wrist_ToParent_Ctrl',
-                                   'helga_rig:L_Arm_Wrist_ToParent_Ctrl',
-                                   'helga_rig:R_Arm_Wrist_ToParent_Ctrl']
+        self.follow_nodes = ['con_CON_World', 'con_CON_UlfbertHandL', 'con_CON_UlfbertHandR', 'con_CON_SnorriHandL', 'con_CON_SnorriHandR', 'con_CON_HelgaHandL', 'con_CON_HelgaHandR']
+
+        self.follow_sources = ['L_Arm_Wrist_ToParent_Ctrl', 'R_Arm_Wrist_ToParent_Ctrl']
+
+        self.ns_ulfbert = []
+        self.ns_snorri = []
+        self.ns_helga = []
 
         self.con_grp_tankard = 'grp_CON_PS_DONT_TOUCH'
 
@@ -80,6 +87,10 @@ class SwitchParentspace:
     def run(self):
 
         self.logger.debug('--- run()')
+
+
+        #get namespaces
+        self.get_scene_namespaces()
 
         global win
 
@@ -92,8 +103,26 @@ class SwitchParentspace:
         win = pm.window(self.window_name, title = self.window_name, w = 150, h = 100,
                         te = 210, le = 70)
 
-        layout1 = pm.rowColumnLayout(numberOfColumns = 1, cw = [(1,100)])
+        layout1 = pm.rowColumnLayout(numberOfColumns = 1, cw = [(1,150)])
 
+        '''
+        character namespaces
+        '''
+
+        pm.optionMenu('optionMenu_ns_ulfbert', label = ' Ulfbert:')
+        pm.menuItem( label = self.optionMenu_default_value)
+        for obj in self.ns_ulfbert:
+            pm.menuItem( label = obj)
+        pm.optionMenu('optionMenu_ns_snorri', label = ' Snorri:')
+        pm.menuItem( label = self.optionMenu_default_value)
+        for obj in self.ns_snorri:
+            pm.menuItem( label = obj)
+        pm.optionMenu('optionMenu_ns_helga', label = ' Helga:')
+        pm.menuItem( label = self.optionMenu_default_value)
+        for obj in self.ns_helga:
+            pm.menuItem( label = obj)
+
+        pm.text(label = '')
 
         '''
         TANKARD
@@ -107,7 +136,7 @@ class SwitchParentspace:
         pm.text(label = '')
         pm.optionMenu('optionMenu_tankard', enable = False)
 
-        pm.menuItem( label = '-select-')
+        pm.menuItem( label = self.optionMenu_default_value)
         for obj in self.follow_values:
             pm.menuItem( label = obj)
         pm.text(label = '')
@@ -119,6 +148,34 @@ class SwitchParentspace:
         pm.text(label = '')
 
         win.show()
+
+    def get_scene_namespaces(self):
+
+        self.logger.debug('--- get_namespaces()')
+
+        tmp_namespaces = pm.namespaceInfo(listOnlyNamespaces = 1)
+
+        self.logger.debug('namespaces: ')
+        self.logger.debug(tmp_namespaces)
+
+        for obj in tmp_namespaces:
+
+            chunks = obj.split('_')
+
+            for chunk in chunks:
+
+                if chunk == 'ulfbert':
+                    self.ns_ulfbert.append(obj + ':')
+
+                if chunk == 'snorri':
+                    self.ns_snorri.append(obj + ':')
+
+                if chunk == 'helga':
+                    self.ns_helga.append(obj + ':')
+
+        self.logger.debug(self.ns_ulfbert)
+        self.logger.debug(self.ns_snorri)
+        self.logger.debug(self.ns_helga)
 
 
     def initialize_tankard(self, x):
@@ -176,39 +233,309 @@ class SwitchParentspace:
         pm.button('b_switch_PS_tankard', e = True, label = 'SWITCH!', enable = True)
         pm.button('b_select_switch_obj_tankard', e = True, label = '"Select Switch Object"', enable = True)
 
+    def get_namespace(self, in_obj):
+
+        self.logger.debug('--- get_namespace()')
+
+        iterator = 0
+        tmp_namespace = ''
+
+        self.logger.debug(in_obj)
+
+        if ':' in in_obj:
+            chunk_splitted = in_obj.split(':')
+
+            while iterator < len(chunk_splitted)-1:
+
+                tmp_namespace = tmp_namespace + chunk_splitted[iterator] + ':'
+                iterator += 1
+
+        return tmp_namespace
+
+
 
     def set_constraints_tankard(self):
 
         self.logger.debug('--- set_constraints_tankard()')
 
-        children = pm.listRelatives(self.namespace_tankard + self.con_grp_tankard, c = True, type = 'transform')
+        ns_ulfbert = pm.optionMenu('optionMenu_ns_ulfbert', q=1, value=1)
+        ns_snorri = pm.optionMenu('optionMenu_ns_snorri', q=1, value=1)
+        ns_helga = pm.optionMenu('optionMenu_ns_helga', q=1, value=1)
 
-        self.logger.debug(children)
-        self.logger.debug(len(children))
+        self.logger.debug('ns_ulfbert: ' + str(ns_ulfbert))
+        self.logger.debug('ns_snorri: ' + str(ns_snorri))
+        self.logger.debug('ns_helga: ' + str(ns_helga))
 
-        for child in children:
+        if ns_ulfbert == self.optionMenu_default_value:
+            self.logger.warning('No namespace selected! - switch might not behave correctly')
 
-            pm.select(child)
-            tmp_con_grp =  pm.pickWalk(type = 'nodes', direction = 'down')[0]
+        if ns_snorri == self.optionMenu_default_value:
+            self.logger.warning('No namespace selected! - switch might not behave correctly')
 
-            self.logger.debug(tmp_con_grp)
+        if ns_helga == self.optionMenu_default_value:
+            self.logger.warning('No namespace selected! - switch might not behave correctly')
 
-            tmp_constraints = pm.listRelatives(tmp_con_grp, c = True, type = 'parentConstraint')
-            
-            chunks = child.split('_')
-            tmp_value = chunks[-1]
-            self.logger.debug(tmp_value)
 
+        #check existing constraints
+        for iterator, obj in enumerate(self.follow_nodes):
+
+            tmp_constraints = pm.listRelatives(self.namespace_tankard + obj, c = True, type = 'parentConstraint')
             self.logger.debug(tmp_constraints)
 
-            if len(tmp_constraints) != 0:
+            if len(tmp_constraints) == 1:
 
-                self.logger.debug('constraint set')
+                self.logger.debug('constraint set for ' + obj)
+
+                tmp_constraint_targets = pm.parentConstraint(tmp_constraints[0], q=1, tl=1 )
+
+                self.logger.debug(tmp_constraint_targets)
+
+                if len(tmp_constraint_targets) == 1:
+
+                    tmp_namespace_old = self.get_namespace(tmp_constraint_targets[0])
+
+                    self.logger.debug('NAMESPACE OLD: ' + tmp_namespace_old)
+
+                    if iterator == 1:
+
+                        self.logger.debug('NAMESPACE NEW: ' + ns_ulfbert)
+
+                        if ns_ulfbert != self.optionMenu_default_value:
+
+                            if tmp_namespace_old != ns_ulfbert:
+                                self.confirm_overwrite = cmds.confirmDialog( title='Confirm', message='Do you want to overwrite existing parent space of Ulfbert with new one?',
+                                                                    button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+
+                                if self.confirm_overwrite:
+                                    self.logger.debug('overwrite confirmed')
+
+                                    tmp_con_grp = ns_ulfbert + str(self.follow_sources[0])
+
+                                    if pm.objExists(tmp_con_grp):
+
+                                        pm.delete(tmp_constraints)
+                                        pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                                    else:
+                                        self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+                                else:
+                                    self.logger.debug('overwrite canceled')
+
+                    if iterator == 2:
+
+                        self.logger.debug('NAMESPACE NEW: ' + ns_ulfbert)
+
+                        if ns_ulfbert != self.optionMenu_default_value:
+
+                            if self.confirm_overwrite:
+                                self.logger.debug('overwrite confirmed')
+
+                                tmp_con_grp = ns_ulfbert + str(self.follow_sources[1])
+
+                                if pm.objExists(tmp_con_grp):
+
+                                    pm.delete(tmp_constraints)
+                                    pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                                else:
+                                    self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+                        else:
+                            self.logger.debug('overwrite canceled')
+
+                    if iterator == 3:
+
+                        self.logger.debug('NAMESPACE NEW: ' + ns_snorri)
+
+                        if ns_snorri != self.optionMenu_default_value:
+
+                            if tmp_namespace_old != ns_snorri:
+                                self.confirm_overwrite = cmds.confirmDialog( title='Confirm', message='Do you want to overwrite existing parent space of snorri with new one?',
+                                                                    button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+
+                                if self.confirm_overwrite:
+                                    self.logger.debug('overwrite confirmed')
+
+                                    tmp_con_grp = ns_snorri + str(self.follow_sources[0])
+
+                                    if pm.objExists(tmp_con_grp):
+
+                                        pm.delete(tmp_constraints)
+                                        pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                                    else:
+                                        self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+                                else:
+                                    self.logger.debug('overwrite canceled')
+
+                    if iterator == 4:
+
+                        self.logger.debug('NAMESPACE NEW: ' + ns_snorri)
+
+                        if ns_snorri != self.optionMenu_default_value:
+
+                            if self.confirm_overwrite:
+                                self.logger.debug('overwrite confirmed')
+
+                                tmp_con_grp = ns_snorri + str(self.follow_sources[1])
+
+                                if pm.objExists(tmp_con_grp):
+
+                                    pm.delete(tmp_constraints)
+                                    pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                                else:
+                                    self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+                        else:
+                            self.logger.debug('overwrite canceled')
+
+                    if iterator == 5:
+
+                        self.logger.debug('NAMESPACE NEW: ' + ns_helga)
+
+                        if ns_helga != self.optionMenu_default_value:
+
+                            if tmp_namespace_old != ns_helga:
+                                self.confirm_overwrite = cmds.confirmDialog( title='Confirm', message='Do you want to overwrite existing parent space of helga with new one?',
+                                                                    button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+
+                                if self.confirm_overwrite:
+                                    self.logger.debug('overwrite confirmed')
+
+                                    tmp_con_grp = ns_helga + str(self.follow_sources[0])
+
+                                    if pm.objExists(tmp_con_grp):
+
+                                        pm.delete(tmp_constraints)
+                                        pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                                    else:
+                                        self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+                                else:
+                                    self.logger.debug('overwrite canceled')
+
+                    if iterator == 6:
+
+                        self.logger.debug('NAMESPACE NEW: ' + ns_helga)
+
+                        if ns_helga != self.optionMenu_default_value:
+
+                            if self.confirm_overwrite:
+                                self.logger.debug('overwrite confirmed')
+
+                                tmp_con_grp = ns_helga + str(self.follow_sources[1])
+
+                                if pm.objExists(tmp_con_grp):
+
+                                    pm.delete(tmp_constraints)
+                                    pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                                else:
+                                    self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+                        else:
+                            self.logger.debug('overwrite canceled')
+
 
             else:
 
-                self.logger.debug('no constraint yet - setting constraint')
+                self.logger.debug('no constraint yet - setting constraint for ' + obj)
 
+                if iterator == 1:
+
+                    if ns_ulfbert != self.optionMenu_default_value:
+
+                        tmp_con_grp = ns_ulfbert + str(self.follow_sources[0])
+
+                        if pm.objExists(tmp_con_grp):
+
+                            pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                        else:
+                            self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+                    else:
+                            self.logger.warning('Select namespace for ulfbert!')
+
+                if iterator == 2:
+
+                    if ns_ulfbert != self.optionMenu_default_value:
+
+                        tmp_con_grp = ns_ulfbert + str(self.follow_sources[1])
+
+                        if pm.objExists(tmp_con_grp):
+
+                            pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                        else:
+                            self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+
+                if iterator == 3:
+
+                    if ns_snorri != self.optionMenu_default_value:
+
+                        tmp_con_grp = ns_snorri + str(self.follow_sources[0])
+
+                        if pm.objExists(tmp_con_grp):
+
+                            pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                        else:
+                            self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+                    else:
+                            self.logger.warning('Select namespace for snorri!')
+
+                if iterator == 4:
+
+                    if ns_snorri != self.optionMenu_default_value:
+
+                        tmp_con_grp = ns_snorri + str(self.follow_sources[1])
+
+                        if pm.objExists(tmp_con_grp):
+
+                            pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                        else:
+                            self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+                if iterator == 5:
+
+                    if ns_helga != self.optionMenu_default_value:
+
+                        self.logger.debug('NAMESPACE NEW: ' + ns_helga)
+
+                        tmp_con_grp = ns_helga + str(self.follow_sources[0])
+
+                        if pm.objExists(tmp_con_grp):
+
+                            pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                        else:
+                            self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+                    else:
+                            self.logger.warning('Select namespace for helga!')
+
+                if iterator == 6:
+
+                    if ns_helga != self.optionMenu_default_value:
+
+                        self.logger.debug('NAMESPACE NEW: ' + ns_helga)
+
+                        tmp_con_grp = ns_helga + str(self.follow_sources[1])
+
+                        if pm.objExists(tmp_con_grp):
+
+                            pm.parentConstraint(tmp_con_grp, self.namespace_tankard + obj, maintainOffset = True)
+
+                        else:
+                            self.logger.warning('Source not found: ' + tmp_con_grp + ' -Ignore warning if character is not needed-')
+
+                '''
                 for iterator, obj in enumerate(self.follow_values):
 
                     if obj == tmp_value:
@@ -230,6 +557,8 @@ class SwitchParentspace:
                     if iterator == len(self.follow_values):
 
                         self.logger.warning('PS value not recognized!')
+
+                '''
 
                 self.logger.debug('DONE - setting constraint')
 
@@ -308,13 +637,13 @@ class SwitchParentspace:
 
         tmp_sel = pm.ls(sl = True)
         self.logger.debug('selection: ' + str(tmp_sel))
-        
-        if tmp_sel[0] != (self.namespace_tankard + self.root_obj_tankard):
 
-            print(tmp_sel[0])
-            print(self.namespace_tankard + self.root_obj_tankard)
+        if len(tmp_sel) != 0:
+            if tmp_sel[0] == (self.namespace_tankard + self.root_obj_tankard):
 
-            pm.warning('Select root controller of initialized tankard or initialize selected!')
+                pm.select(self.switch_obj_tankard)
+            else:
+                pm.warning('Select root controller of initialized tankard or initialize selected!')
 
         else:
-            pm.select(self.switch_obj_tankard)
+            pm.warning('Select root controller of initialized tankard or initialize selected!')

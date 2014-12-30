@@ -3,7 +3,7 @@ helga
 =====
 
 <div align="center">
-	<a href="http://helga-docs.readthedocs.org/" target="_blank"><img src="http://www.kiiia.com/opencolorio/opencolorio.jpg"></a>
+	<a href="http://helga-docs.readthedocs.org/" target="_blank"><img src="helga/docs/source/media/images/general/github_readme_header.jpg"></a>
 </div>
 
 =====

@@ -219,6 +219,11 @@ if (PIPELINE_BASE_PATH):
     NUKE_PLUGIN_PATH = PIPELINE_SCRIPTS_BASE_PATH + r'/bin/plugins/nuke'
     """Default nuke plugin path"""
 
+    NUKE_PATH = [PIPELINE_LIBRARIES_PATH_GENERAL,
+                    PIPELINE_LIBRARIES_PATH_NUKE,
+                    NUKE_INIT_PATH]
+    """Helga Nuke path"""
+
 
 
 

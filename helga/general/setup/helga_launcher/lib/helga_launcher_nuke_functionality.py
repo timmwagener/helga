@@ -65,7 +65,7 @@ def get_env_vars():
     #------------------------------------------------------------------
 
     #environment_pathes_dict
-    environment_pathes_dict = {'NUKE_PATH': global_variables.NUKE_INIT_PATH}
+    environment_pathes_dict = {'NUKE_PATH': global_variables.NUKE_PATH}
 
     return environment_pathes_dict
 

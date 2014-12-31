@@ -30,5 +30,6 @@ helga/maya/hanna/switch_parentspace/_history
 #Allow specific folders and subfolders
 #(never allow .db though)
 #-------------------------
+!/helga/nuke/rendering/renderthreads/lib/third_party/**
 !/helga/maya/setup/scripts/**
 *.db

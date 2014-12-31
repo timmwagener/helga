@@ -1,11 +1,10 @@
 
 
 """
-AssetManager Package
+RenderThreads Package
 ==========================================
 
-Tool to export Alembic files from Maya according to our pipeline standards.
-It is tightly knit with our asset metadata system (*to be found in helga/maya/metadata...*).
+Tool to facilitate multithreaded export out of Nuke.
 
 
 -----------------------

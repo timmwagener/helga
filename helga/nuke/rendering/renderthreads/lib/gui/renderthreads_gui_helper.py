@@ -11,13 +11,48 @@ helper functions
 
 # Import
 # ------------------------------------------------------------------
+# Python
+import logging
 # PySide
 from PySide import QtGui
 from PySide import QtCore
 
 
+# Import variable
+do_reload = True
+
+# renderthreads
+
+# lib
+
+# renderthreads_globals
+from .. import renderthreads_globals
+if(do_reload):
+    reload(renderthreads_globals)
+
+# renderthreads_logging
+from .. import renderthreads_logging
+if(do_reload):
+    reload(renderthreads_logging)
+
+# lib.gui
+
+# renderthreads_dock_widget
+from ..gui import renderthreads_dock_widget
+if(do_reload):
+    reload(renderthreads_dock_widget)
+
+
 # Globals
 # ------------------------------------------------------------------
+# Pathes
+THIRD_PARTY_PATH = renderthreads_globals.THIRD_PARTY_PATH
+
+
+# logger (Module Level)
+# ------------------------------------------------------------------
+logger = renderthreads_logging.get_logger(__name__)
+
 
 
 # Cleanup
@@ -95,7 +130,7 @@ def check_and_delete_wdgt_instances_with_class_name(wdgt_class_name):
         # schedule widget for deletion
         try:
             # log
-            print('Scheduled widget {0} for deletion'.format(wdgt.objectName()))
+            logger.debug('Scheduled widget {0} for deletion'.format(wdgt.objectName()))
             # delete
             wdgt.deleteLater()
         except:
@@ -121,7 +156,7 @@ def check_and_delete_wdgt_instances_with_name(wdgt_name):
         # schedule widget for deletion
         try:
             # log
-            print('Scheduled widget {0} for deletion'.format(wdgt.objectName()))
+            logger.debug('Scheduled widget {0} for deletion'.format(wdgt.objectName()))
             # delete
             wdgt.deleteLater()
         except:
@@ -130,7 +165,7 @@ def check_and_delete_wdgt_instances_with_name(wdgt_name):
     return wdgt_list
 
 
-# PySide
+# Organize and Compile
 # ------------------------------------------------------------------
 def load_ui_type(ui_file):
     """
@@ -139,12 +174,15 @@ def load_ui_type(ui_file):
     This function return the form and base classes for the given qtdesigner ui file.
     """
 
+    # add path for pysideuic
+    import sys
+    sys.path.append(THIRD_PARTY_PATH)
+
     # lazy import
 
     try:
-        #python
+        # python
         import os
-        import sys
         import logging
         import re
         import shutil
@@ -159,7 +197,7 @@ def load_ui_type(ui_file):
 
     except Exception as exception_instance:
         # log
-        print('Import failed: {0}'.format(exception_instance))
+        logger.debug('Import failed: {0}'.format(exception_instance))
         # return None
         return None
 
@@ -197,7 +235,7 @@ def get_nuke_main_window():
     except Exception as exception_instance:
 
         # log
-        print('Import failed: {0}'.format(exception_instance))
+        logger.debug('Import failed: {0}'.format(exception_instance))
         # return None
         return None
 
@@ -209,3 +247,85 @@ def get_nuke_main_window():
         return ptr_main_window
 
     return None
+
+
+# Style
+# ------------------------------------------------------------------
+def correct_styled_background_attribute(wdgt):
+    """
+    Set QtCore.Qt.WA_StyledBackground True for all widgets.
+    Without this attr. set, the background-color stylesheet
+    will have no effect on QWidgets. This should replace the
+    need for palette settings.
+    ToDo:
+    Maybe add exclude list when needed.
+    """
+
+    # wdgt_list
+    wdgt_list = wdgt.findChildren(QtGui.QWidget)  # Return several types ?!?!
+
+    # iterate and set
+    for wdgt in wdgt_list:
+
+        # check type
+        if(type(wdgt) is QtGui.QWidget):
+
+            # styled_background
+            wdgt.setAttribute(QtCore.Qt.WA_StyledBackground, True)
+
+def set_margins_and_spacing_for_child_layouts(wdgt, margin_list=[0, 0, 0, 0]):
+    """
+    Eliminate margin and spacing for all layout widgets.
+    """
+
+    # lyt_classes_list
+    lyt_classes_list = [QtGui.QStackedLayout, QtGui.QGridLayout, QtGui.QFormLayout,
+                        QtGui.QBoxLayout, QtGui.QVBoxLayout, QtGui.QHBoxLayout, QtGui.QBoxLayout]
+
+    # lyt_list
+    lyt_list = []
+    for lyt_class in lyt_classes_list:
+        lyt_list += [child_wdgt for child_wdgt in wdgt.findChildren(lyt_class)]
+
+    # set margin and spacing
+    for lyt in lyt_list:
+
+        # check type
+        if(type(lyt) in lyt_classes_list):
+
+            # set
+            lyt.setContentsMargins(*margin_list)
+            lyt.setSpacing(0)
+
+
+# Docking
+# ------------------------------------------------------------------
+def make_dockable(wdgt):
+    """
+    Make this wdgt dockable.
+    """
+
+    # nuke_main_window
+    nuke_main_window = get_nuke_main_window()
+
+    # q_main_window_list
+    q_main_window_list = nuke_main_window.findChildren(QtGui.QMainWindow)
+    # check
+    if not (q_main_window_list):
+        # log
+        logger.debug('Current Nuke configuration has no QMainWindow instance which is needed for docking\
+Not performing dock behaviour.')
+        return
+
+    # q_main_window
+    q_main_window = q_main_window_list[0]
+
+    # wdgt_dock
+    wdgt_dock = renderthreads_dock_widget.RenderThreadsDockWidget(parent=q_main_window)
+    wdgt_dock.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+
+    # set wdgt
+    wdgt_dock.setWidget(wdgt)
+
+    # add to maya main window
+    q_main_window.addDockWidget(QtCore.Qt.LeftDockWidgetArea, wdgt_dock)

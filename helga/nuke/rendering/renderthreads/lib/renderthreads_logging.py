@@ -1,81 +1,233 @@
 
 
 """
-asset_manager_logging_handler
+renderthreads_logging
 ==========================================
 
-Automaticaly log to le_status from given widget.
+Module to handle all things related to logging in
+the renderthreads package.
+
+------------------------------------------
+
+Members:
+
+#. UniversalPrintObject
+    Implements the print_message interface
+    used in UniversalStreamHandler.
+
+#. UniversalStreamHandler
+    Stream handler subclass that is initialized with
+    a UniversalPrintObject that delivers the correct
+    print behaviour under the same interface.
+
+...
 """
 
 
-
-
-#Import
-#------------------------------------------------------------------
-#python
+#  Import
+#  ------------------------------------------------------------------
+#  python
+import sys
 import logging
+#  PySide
+from PySide import QtGui
+from PySide import QtCore
 
 
-
-
-
-
-
-#StatusStreamHandler class
-#------------------------------------------------------------------
-class StatusStreamHandler(logging.StreamHandler):
+#  UniversalPrintObject
+#  ------------------------------------------------------------------
+class UniversalPrintObject(object):
     """
-    Stream handler subclass that calls the set_status() method of
-    the wdgt_status object used for initialization.
-
-    Normally the set_status() method would set a QLineEdit or
-    similiar to display the log message.
+    UniversalPrintObject implements the print_message interface
+    used in UniversalStreamHandler.
+    UniversalStreamHandler gets initialized with an instance var.
+    of type UniversalPrintObject which in turn is initialized
+    with a display member. Based on the type of display,
+    UniversalPrintObject delivers the correct print behaviour
+    to UniversalStreamHandler.
     """
-    
+
     def __init__(self,
-                    wdgt_status = None,
-                    logging_level = logging.DEBUG):
+                    display=sys.stdout,
+                    logging_level=logging.DEBUG):
         """
-        Initialize StatusStreamHandler
+        Initialize UniversalPrintObject
         """
 
-        #super class init
-        super(StatusStreamHandler, self).__init__()
+        #  super
+        #  ------------------------------------------------------------------
+        self.parent_class = super(UniversalPrintObject, self)
+        self.parent_class.__init__()
 
-        #logger
-        #------------------------------------------------------------------
+        #  logger
+        #  ------------------------------------------------------------------
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logging_level = logging_level
         self.logger.setLevel(self.logging_level)
 
-        #wdgt_status
-        #------------------------------------------------------------------
-        self.wdgt_status = wdgt_status
+        #  instance vars
+        #  ------------------------------------------------------------------
+        #  display
+        self.display = display
 
-    
+    #  Methods
+    #  ------------------------------------------------------------------
+    def get_print_message(self):
+        """
+        Return correct print method based on
+        type of self.display.
+        """
+
+        #  stdout
+        if (self.display == sys.stdout):
+            return self.print_message_stdout
+
+        #  QtGui.QTextEdit
+        elif (type(self.display) == QtGui.QTextEdit):
+            return self.print_message_qtextedit
+
+        #  unknown
+        else:
+            return None
+
+    print_message = property(fget=get_print_message)
+    """descriptor object"""
+
+    def print_message_stdout(*args):
+        """
+        Print message on self.display object.
+        """
+
+        # self
+        self = args[0]
+        # message
+        message = args[1]
+        # print
+        print(message)
+
+    def print_message_qtextedit(*args):
+        """
+        Print message on self.display object.
+        """
+
+        # self
+        self = args[0]
+        # message
+        message = args[1]
+        # setText
+        self.display.setText(message)
+
+
+#  UniversalStreamHandler
+#  ------------------------------------------------------------------
+class UniversalStreamHandler(logging.StreamHandler):
+    """
+    Stream handler subclass that is initialized with
+    a UniversalPrintObject that delivers the correct
+    print behaviour under the same interface.
+    """
+
+    def __init__(self,
+                    universal_print_object=UniversalPrintObject(),
+                    logging_level=logging.DEBUG):
+        """
+        Initialize UniversalStreamHandler
+        """
+
+        #  super class init
+        super(UniversalStreamHandler, self).__init__()
+
+        #  logger
+        #  ------------------------------------------------------------------
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logging_level = logging_level
+        self.logger.setLevel(self.logging_level)
+
+        #  instance vars
+        #  ------------------------------------------------------------------
+        #  universal_print_object
+        self.universal_print_object = universal_print_object
+
+    #  Methods
+    #  ------------------------------------------------------------------
     def emit(self, record):
         """
-        Custom emit for StreamHandler subclass
+        Custom emit for UniversalStreamHandler.
         """
-        
+
         try:
-            #message
+            #  message
             message = self.format(record)
-            #stream
-            stream = self.stream
-            
-            
-            #if wdgt_status exists then log
-            if(self.wdgt_status):
-                #display message
-                self.wdgt_status.set_status(message)
-            
-            
-            #flush
+            #  print (just a wrapper around sys.stdout.write())
+            self.universal_print_object.print_message(message)
+            #  flush
             self.flush()
-        
+
         except (KeyboardInterrupt, SystemExit):
             raise
-        
+
         except:
             self.handleError(record)
+
+
+#  Functions
+#  ------------------------------------------------------------------
+def get_formatter(verbose_level=logging.WARNING):
+    """
+    Return correctly formatted handler for display.
+    For ease of use, verbose_level corresponds to
+    known logging constants.
+    """
+
+    # debug
+    if (verbose_level == logging.DEBUG):
+        return logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    # info
+    elif (verbose_level == logging.INFO):
+        return logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+
+    # warning
+    elif (verbose_level == logging.WARNING):
+        return logging.Formatter('%(name)s - %(message)s')
+
+    # error
+    elif (verbose_level >= logging.ERROR):
+        return logging.Formatter('%(message)s')
+
+def get_handler(display=sys.stdout):
+    """
+    Return correctly formatted handler for display.
+    """
+
+    # formatter
+    formatter = get_formatter()
+    # universal_print_object
+    universal_print_object = UniversalPrintObject(display)
+    # handler
+    handler = UniversalStreamHandler(universal_print_object)
+    # add formatter
+    handler.setFormatter(formatter)
+
+    # return
+    return handler
+
+def get_logger(name,
+                display=sys.stdout,
+                logging_level=logging.DEBUG):
+    """
+    Return correctly formatted logger from single source.
+    """
+
+    #handler
+    handler = get_handler(display)
+    
+    # logger
+    logger = logging.getLogger(name)
+    logger.setLevel(logging_level)
+    logger.handlers = []
+    logger.addHandler(handler)
+
+    # return
+    return logger
+

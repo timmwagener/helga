@@ -24,6 +24,11 @@ VERSION = 0.1
 # Pathes
 # ------------------------------------------------------------------
 TOOL_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+LIB_PATH = os.path.join(TOOL_ROOT_PATH, 'lib')
+GUI_PATH = os.path.join(LIB_PATH, 'gui')
+MVC_PATH = os.path.join(LIB_PATH, 'mvc')
+THIRD_PARTY_PATH = os.path.join(LIB_PATH, 'third_party')
+
 MEDIA_PATH = os.path.join(TOOL_ROOT_PATH, 'media')
 ICONS_PATH = os.path.join(MEDIA_PATH, 'icons')
 FONTS_PATH = os.path.join(MEDIA_PATH, 'fonts')
@@ -32,8 +37,10 @@ UI_PATH = os.path.join(MEDIA_PATH, 'ui')
 
 # Fonts
 # ------------------------------------------------------------------
+FUTURA_LT_LIGHT = ('Futura LT Light', 'futura-lt-light.ttf')
+
 # FONTS_LIST [(Font Name, Font File Name), (Font Name, Font File Name)...]
-FONTS_LIST = [('Futura LT Light', 'futura-lt-light.ttf')]
+FONTS_LIST = [FUTURA_LT_LIGHT]
 
 # iterate and install if not installed
 for font_name, font_file_name in FONTS_LIST:

@@ -131,7 +131,7 @@ class RenderThreads(form_class, base_class):
 
     def __init__(self,
                 logging_level=logging.DEBUG,
-                dock_it = True,
+                dock_it=True,
                 thread_interval=2000,
                 export_thread_timeout=300,
                 hide_export_shell=True,
@@ -155,25 +155,22 @@ class RenderThreads(form_class, base_class):
         # title
         self.title = self.__class__.__name__ + ' ' + str(VERSION)
 
-        #dock_it
+        # dock_it
         self.dock_it = dock_it
 
         # logger
-        # ------------------------------------------------------------------
-        # logger
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logging_level = logging_level
-        self.logger.setLevel(self.logging_level)
-
-        # status_handler
-        # self.status_handler = asset_manager_logging_handler.StatusStreamHandler(self)
-        # self.logger.addHandler(self.status_handler)
+        self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
 
         # Init procedure
         # ------------------------------------------------------------------
 
         # setupUi
         self.setupUi(self)
+
+        # Add te_log_handler after creation of UI
+        # ------------------------------------------------------------------
+        self.te_log_handler = renderthreads_logging.get_handler(self.te_log)
+        self.logger.addHandler(self.te_log_handler)
 
         # setup_additional_ui
         self.setup_additional_ui()
@@ -187,9 +184,9 @@ class RenderThreads(form_class, base_class):
         # run_tests
         self.run_tests()
 
-        #dock_it
+        # dock_it
         if (self.dock_it):
-            self.make_dockable()
+            renderthreads_gui_helper.make_dockable(self)
 
     # Additional UI
     # ------------------------------------------------------------------
@@ -235,7 +232,8 @@ class RenderThreads(form_class, base_class):
         Connect buttons.
         """
 
-        pass
+        # temp
+        self.btn_menu_render.clicked.connect(functools.partial(self.dummy_method, 'G-Unit'))
 
     def connect_widgets(self):
         """
@@ -259,62 +257,15 @@ class RenderThreads(form_class, base_class):
         """
 
         # correct_styled_background_attribute
-        self.correct_styled_background_attribute()
+        renderthreads_gui_helper.correct_styled_background_attribute(self)
 
         # set_margins_and_spacing
-        self.set_margins_and_spacing()
+        renderthreads_gui_helper.set_margins_and_spacing_for_child_layouts(self)
 
         # set_stylesheet
         self.setStyleSheet(renderthreads_stylesheets.get_stylesheet())
 
-    def correct_styled_background_attribute(self):
-        """
-        Set QtCore.Qt.WA_StyledBackground True for all widgets.
-        Without this attr. set, the background-color stylesheet
-        will have no effect on QWidgets. This should replace the
-        need for palette settings.
-        ToDo:
-        Maybe add exclude list when needed.
-        """
-
-        # wdgt_list
-        wdgt_list = self.findChildren(QtGui.QWidget)  # Return several types ?!?!
-
-        # iterate and set
-        for wdgt in wdgt_list:
-
-            # check type
-            if(type(wdgt) is QtGui.QWidget):
-
-                # styled_background
-                wdgt.setAttribute(QtCore.Qt.WA_StyledBackground, True)
-
-    def set_margins_and_spacing(self):
-        """
-        Eliminate margin and spacing for all layout widgets.
-        """
-
-        # margin_list
-        margin_list = [0, 0, 0, 0]
-
-        # lyt_classes_list
-        lyt_classes_list = [QtGui.QStackedLayout, QtGui.QGridLayout, QtGui.QFormLayout,
-                            QtGui.QBoxLayout, QtGui.QVBoxLayout, QtGui.QHBoxLayout, QtGui.QBoxLayout]
-
-        # lyt_list
-        lyt_list = []
-        for lyt_class in lyt_classes_list:
-            lyt_list += [wdgt for wdgt in self.findChildren(lyt_class)]
-
-        # set margin and spacing
-        for lyt in lyt_list:
-
-            # check type
-            if(type(lyt) in lyt_classes_list):
-
-                # set
-                lyt.setContentsMargins(*margin_list)
-                lyt.setSpacing(0)
+    
 
     # Getter & Setter
     # ------------------------------------------------------------------
@@ -328,18 +279,13 @@ class RenderThreads(form_class, base_class):
 
         # log
         self.logger.debug('{0}'.format(msg))
-        # print
-        print('{0}'.format(msg))
 
     def dummy_method_silent(self):
         """
         Dummy method without output.
         """
 
-        # log
-        self.logger.debug('{0}'.format(msg))
-        # print
-        print('{0}'.format(msg))
+        pass
 
     # Test
     # ------------------------------------------------------------------
@@ -365,40 +311,7 @@ class RenderThreads(form_class, base_class):
         # log
         self.logger.debug('\n\n-----------------------------\nFinished test methods.')
 
-    # Docking
-    #------------------------------------------------------------------
-    def make_dockable(self):
-        """
-        Make this window dockable.
-        """
-
-        # nuke_main_window
-        nuke_main_window = renderthreads_gui_helper.get_nuke_main_window()
-
-        # q_main_window_list
-        q_main_window_list = nuke_main_window.findChildren(QtGui.QMainWindow)
-        # check
-        if not (q_main_window_list):
-            # log
-            self.logger.debug('Current Nuke configuration has no QMainWindow instance which is needed for docking\
-Not performing dock behaviour.')
-            return
-
-        # q_main_window
-        q_main_window = q_main_window_list[0]
-
-        # wdgt_dock
-        self.wdgt_dock = renderthreads_dock_widget.RenderThreadsDockWidget(parent=q_main_window)
-        self.wdgt_dock.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
-
-        # set title
-        #self.wdgt_dock.setWindowTitle(self.title)
-
-        # set wdgt
-        self.wdgt_dock.setWidget(self)
-        
-        # add to maya main window
-        q_main_window.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.wdgt_dock)
+    
 
     # Events
     # ------------------------------------------------------------------

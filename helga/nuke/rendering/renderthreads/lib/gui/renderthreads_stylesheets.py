@@ -14,11 +14,15 @@ Module that has only one method.
 #Import variable
 do_reload = True
 
+# temp
+import sys
+for path in sys.path:
+	print(path)
 
 #renderthreads
 
 #renderthreads_globals
-from lib import renderthreads_globals
+from .. import renderthreads_globals
 if(do_reload):
     reload(renderthreads_globals)
 

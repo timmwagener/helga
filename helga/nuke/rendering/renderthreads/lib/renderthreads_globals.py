@@ -47,8 +47,8 @@ for font_name, font_file_name in FONTS_LIST:
 
 # Colors
 # ------------------------------------------------------------------
-BRIGHT_ORANGE = QtGui.QColor('# f9661e')
-DARK_ORANGE = BRIGHT_ORANGE.darker(DARKENING_FACTOR)
+# BRIGHT_ORANGE = QtGui.QColor('# f9661e')
+# DARK_ORANGE = BRIGHT_ORANGE.darker(DARKENING_FACTOR)
 
 
 # Icons

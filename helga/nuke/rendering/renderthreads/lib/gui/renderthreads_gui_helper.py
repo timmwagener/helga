@@ -142,7 +142,15 @@ def load_ui_type(ui_file):
     # lazy import
 
     try:
-
+        #python
+        import os
+        import sys
+        import logging
+        import re
+        import shutil
+        from cStringIO import StringIO
+        import xml.etree.ElementTree as xml
+        import types
         # PySide
         from PySide import QtGui
         from PySide import QtCore

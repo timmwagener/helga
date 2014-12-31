@@ -9,5 +9,5 @@
 PIPELINE_BASE_PATH: "C:/symlinks/filmaka/helga"
 PIPELINE_FLAVOUR: "sandbox"
 MAYA_EXE: "C:/symlinks/maya/maya2014x64/bin/maya.exe"
-NUKE_EXE: "D:/tools/Nuke8.0v1/Nuke8.0.exe"
+NUKE_EXE: "D:/tools/Nuke8.0v6/Nuke8.0.exe"
 HOUDINI_EXE: "C:/symlinks/houdini/13.0.260/hfs/bin/houdinifx.exe"

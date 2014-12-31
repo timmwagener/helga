@@ -43,7 +43,6 @@ import logging
 from PySide import QtGui
 from PySide import QtCore
 from PySide import QtUiTools
-import pysideuic
 
 
 # Import variable
@@ -75,6 +74,11 @@ if(do_reload):
 from lib.gui import renderthreads_stylesheets
 if(do_reload):
     reload(renderthreads_stylesheets)
+
+# renderthreads_dock_widget
+from lib.gui import renderthreads_dock_widget
+if(do_reload):
+    reload(renderthreads_dock_widget)
 
 
 # Globals
@@ -118,6 +122,7 @@ class RenderThreads(form_class, base_class):
 
         # delete and cleanup old instances
         renderthreads_gui_helper.check_and_delete_wdgt_instances_with_class_name(cls.__name__)
+        renderthreads_gui_helper.check_and_delete_wdgt_instances_with_class_name(renderthreads_dock_widget.RenderThreadsDockWidget.__name__)
 
         # renderthreads_instance
         renderthreads_instance = super(RenderThreads, cls).__new__(cls, args, kwargs)
@@ -126,6 +131,7 @@ class RenderThreads(form_class, base_class):
 
     def __init__(self,
                 logging_level=logging.DEBUG,
+                dock_it = True,
                 thread_interval=2000,
                 export_thread_timeout=300,
                 hide_export_shell=True,
@@ -148,6 +154,9 @@ class RenderThreads(form_class, base_class):
         # ------------------------------------------------------------------
         # title
         self.title = self.__class__.__name__ + ' ' + str(VERSION)
+
+        #dock_it
+        self.dock_it = dock_it
 
         # logger
         # ------------------------------------------------------------------
@@ -177,6 +186,10 @@ class RenderThreads(form_class, base_class):
 
         # run_tests
         self.run_tests()
+
+        #dock_it
+        if (self.dock_it):
+            self.make_dockable()
 
     # Additional UI
     # ------------------------------------------------------------------
@@ -351,6 +364,41 @@ class RenderThreads(form_class, base_class):
 
         # log
         self.logger.debug('\n\n-----------------------------\nFinished test methods.')
+
+    # Docking
+    #------------------------------------------------------------------
+    def make_dockable(self):
+        """
+        Make this window dockable.
+        """
+
+        # nuke_main_window
+        nuke_main_window = renderthreads_gui_helper.get_nuke_main_window()
+
+        # q_main_window_list
+        q_main_window_list = nuke_main_window.findChildren(QtGui.QMainWindow)
+        # check
+        if not (q_main_window_list):
+            # log
+            self.logger.debug('Current Nuke configuration has no QMainWindow instance which is needed for docking\
+Not performing dock behaviour.')
+            return
+
+        # q_main_window
+        q_main_window = q_main_window_list[0]
+
+        # wdgt_dock
+        self.wdgt_dock = renderthreads_dock_widget.RenderThreadsDockWidget(parent=q_main_window)
+        self.wdgt_dock.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+
+        # set title
+        #self.wdgt_dock.setWindowTitle(self.title)
+
+        # set wdgt
+        self.wdgt_dock.setWidget(self)
+        
+        # add to maya main window
+        q_main_window.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.wdgt_dock)
 
     # Events
     # ------------------------------------------------------------------

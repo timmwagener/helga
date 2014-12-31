@@ -14,10 +14,6 @@ Module that has only one method.
 #Import variable
 do_reload = True
 
-# temp
-import sys
-for path in sys.path:
-	print(path)
 
 #renderthreads
 
@@ -68,4 +64,19 @@ def get_stylesheet():
     Return stylesheet string, defining all stylesheets for RenderThreads.
     """
 
-    return ''
+    #str_stylesheet
+    str_stylesheet = " \
+\
+\
+/* QWidget */\
+QWidget { background-color: red; \
+          font-family: \"Futura LT Light\"; \
+          font-size: 14pt; \
+          selection-background-color: green; \
+}\
+\
+\
+"
+	
+	#return
+    return str_stylesheet

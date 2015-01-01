@@ -118,14 +118,12 @@ def check_and_delete_wdgt_instances_with_class_name(wdgt_class_name):
     for index, wdgt in enumerate(wdgt_list):
 
         # Enable when threads are in.
-        """
-        # try to stop threads (wdgt == AssetManager)
+        # try to stop threads
         try:
-            print('Stop threads for wdgt {0}'.format(wdgt.objectName()))
             wdgt.stop_all_threads_and_timer()
+            logger.debug('Stopped threads for wdgt {0}'.format(wdgt.objectName()))
         except:
             pass
-        """
 
         # schedule widget for deletion
         try:

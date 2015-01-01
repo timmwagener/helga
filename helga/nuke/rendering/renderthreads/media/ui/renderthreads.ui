@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>661</width>
-    <height>997</height>
+    <width>411</width>
+    <height>790</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,43 +34,8 @@
     </widget>
    </item>
    <item>
-    <widget class="QWidget" name="wdgt_menu" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QPushButton" name="btn_menu_render">
-        <property name="text">
-         <string>PushButton</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btn_menu_threads">
-        <property name="text">
-         <string>PushButton</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btn_menu_options">
-        <property name="text">
-         <string>PushButton</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="spcr_menu">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
+    <widget class="QWidget" name="wdgt_stkwdgt_menu" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout"/>
     </widget>
    </item>
    <item>
@@ -125,22 +90,14 @@
                </widget>
               </item>
               <item>
-               <widget class="QWidget" name="wdgt_progressbar" native="true">
+               <widget class="QWidget" name="wdgt_pbar_render" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <layout class="QVBoxLayout" name="verticalLayout_6">
-                 <item>
-                  <widget class="QProgressBar" name="pbar_nodes">
-                   <property name="value">
-                    <number>24</number>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                <layout class="QVBoxLayout" name="verticalLayout_6"/>
                </widget>
               </item>
              </layout>
@@ -159,7 +116,7 @@
                  <item>
                   <widget class="QLabel" name="lbl_log_header">
                    <property name="text">
-                    <string>TextLabel</string>
+                    <string>Log</string>
                    </property>
                   </widget>
                  </item>
@@ -182,6 +139,9 @@
                    </property>
                    <property name="horizontalScrollBarPolicy">
                     <enum>Qt::ScrollBarAlwaysOn</enum>
+                   </property>
+                   <property name="readOnly">
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
@@ -293,19 +253,6 @@
              </layout>
             </widget>
            </widget>
-          </item>
-          <item>
-           <spacer name="spcr_threads_and_stats">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </widget>

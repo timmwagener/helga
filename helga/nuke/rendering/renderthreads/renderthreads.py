@@ -63,17 +63,22 @@ from lib import renderthreads_logging
 if(do_reload):
     reload(renderthreads_logging)
 
+# renderthreads_gui
+from lib import renderthreads_gui
+if(do_reload):
+    reload(renderthreads_gui)
+
+# renderthreads_threads
+from lib import renderthreads_threads
+if(do_reload):
+    reload(renderthreads_threads)
+
 # lib.gui
 
 # renderthreads_gui_helper
 from lib.gui import renderthreads_gui_helper
 if(do_reload):
     reload(renderthreads_gui_helper)
-
-# renderthreads_stylesheets
-from lib.gui import renderthreads_stylesheets
-if(do_reload):
-    reload(renderthreads_stylesheets)
 
 # renderthreads_dock_widget
 from lib.gui import renderthreads_dock_widget
@@ -83,14 +88,9 @@ if(do_reload):
 
 # Globals
 # ------------------------------------------------------------------
-# Version
-VERSION = renderthreads_globals.VERSION
+TITLE = renderthreads_globals.TITLE
 # Pathes
-TOOL_ROOT_PATH = renderthreads_globals.TOOL_ROOT_PATH
-ICONS_PATH = renderthreads_globals.ICONS_PATH
 UI_PATH = renderthreads_globals.UI_PATH
-# Icons
-ICON_RENDERTHREADS = renderthreads_globals.ICON_RENDERTHREADS
 
 
 # form_class, base_class
@@ -112,6 +112,7 @@ class RenderThreads(form_class, base_class):
 
     # Signals
     # ------------------------------------------------------------------
+    
 
     # Create and initialize
     # ------------------------------------------------------------------
@@ -130,6 +131,7 @@ class RenderThreads(form_class, base_class):
         return renderthreads_instance
 
     def __init__(self,
+                dev=True,
                 logging_level=logging.DEBUG,
                 dock_it=True,
                 thread_interval=2000,
@@ -152,34 +154,31 @@ class RenderThreads(form_class, base_class):
 
         # instance variables
         # ------------------------------------------------------------------
-        # title
-        self.title = self.__class__.__name__ + ' ' + str(VERSION)
-
         # dock_it
         self.dock_it = dock_it
-
-        # logger
-        self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
+        
+        # dev
+        self.dev = dev
+        
+        # thread_manager
+        self.thread_manager = renderthreads_threads.ThreadManager()
 
         # Init procedure
         # ------------------------------------------------------------------
+        # setup_threads
+        self.thread_manager.setup_threads()
 
         # setupUi
         self.setupUi(self)
 
-        # Add te_log_handler after creation of UI
-        # ------------------------------------------------------------------
+        # setup_additional_ui
+        renderthreads_gui.setup_additional_ui(self)
+
+        # logger
+        self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
+        # te_log_handler
         self.te_log_handler = renderthreads_logging.get_handler(self.te_log)
         self.logger.addHandler(self.te_log_handler)
-
-        # setup_additional_ui
-        self.setup_additional_ui()
-
-        # connect_ui
-        self.connect_ui()
-
-        # style_ui
-        self.style_ui()
 
         # run_tests
         self.run_tests()
@@ -188,87 +187,14 @@ class RenderThreads(form_class, base_class):
         if (self.dock_it):
             renderthreads_gui_helper.make_dockable(self)
 
-    # Additional UI
-    # ------------------------------------------------------------------
-    def setup_additional_ui(self):
-        """
-        Setup additional UI like mvc or helga tool header.
-        """
-
-        # make sure its floating intead of embedded
-        self.setWindowFlags(QtCore.Qt.Window)
-
-        # set title
-        self.setWindowTitle(self.title)
-
-    # Connections
-    # ------------------------------------------------------------------
-    def connect_ui(self):
-        """
-        Connect UI widgets with slots or functions.
-        """
-
-        # connect_signals
-        self.connect_signals()
-
-        # connect_buttons
-        self.connect_buttons()
-
-        # connect_widgets
-        self.connect_widgets()
-
-        # connect_threads
-        self.connect_threads()
-
-    def connect_signals(self):
-        """
-        Connect Signals for the ui.
-        """
-
-        pass
-
-    def connect_buttons(self):
-        """
-        Connect buttons.
-        """
-
-        # temp
-        self.btn_menu_render.clicked.connect(functools.partial(self.dummy_method, 'G-Unit'))
-
-    def connect_widgets(self):
-        """
-        Connect widgets.
-        """
-
-        pass
-
-    def connect_threads(self):
-        """
-        Connect threads.
-        """
-
-        pass
-
-    # Style
-    # ------------------------------------------------------------------
-    def style_ui(self):
-        """
-        Setup tool palette, tool stylesheet and specific widget stylesheets.
-        """
-
-        # correct_styled_background_attribute
-        renderthreads_gui_helper.correct_styled_background_attribute(self)
-
-        # set_margins_and_spacing
-        renderthreads_gui_helper.set_margins_and_spacing_for_child_layouts(self)
-
-        # set_stylesheet
-        self.setStyleSheet(renderthreads_stylesheets.get_stylesheet())
-
-    
-
     # Getter & Setter
     # ------------------------------------------------------------------
+    def is_dev(self):
+        """
+        Return developer status of app.
+        """
+
+        return self.dev
 
     # Misc
     # ------------------------------------------------------------------
@@ -315,6 +241,20 @@ class RenderThreads(form_class, base_class):
 
     # Events
     # ------------------------------------------------------------------
+    def stop_all_threads_and_timer(self):
+        """
+        Try to stop all threads and timers that RenderThreads started.
+        This method is ment to be used in a closeEvent.
+        """
+        
+        try:
+            #stop threads
+            self.thread_manager.stop_threads()
+
+        except:
+            #log
+            self.logger.debug('Error stopping threads for queue.')
+
     def closeEvent(self, event):
         """
         Customized closeEvent.
@@ -324,7 +264,7 @@ class RenderThreads(form_class, base_class):
         self.logger.debug('Close Event')
 
         # stop_all_threads_and_timer
-        # self.stop_all_threads_and_timer()
+        self.stop_all_threads_and_timer()
 
         # parent close event
         self.parent_class.closeEvent(event)

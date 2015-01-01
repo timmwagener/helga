@@ -1,56 +1,58 @@
 
 
 """
-asset_manager_threads_functionality
+renderthreads_threads
 ==========================================
 
-Module that handles everything related with AssetManager and Threads.
+Module that handles everything related with renderthreads and Threads.
 It spawns a number of Daemon threads that are always on and checking for a global
 queue to retrieve work, if available. The queue contains callables that
 represent closures.
 """
 
 
-
-
-#Import
-#------------------------------------------------------------------
-#python
+# Import
+# ------------------------------------------------------------------
+# python
 import logging
 import Queue
 import time
 import hashlib
 import multiprocessing
-#PySide
+# PySide
 from PySide import QtGui
 from PySide import QtCore
 
 
+# Import variable
+do_reload = True
 
 
+# renderthreads
+
+# lib
+
+# renderthreads_logging
+import renderthreads_logging
+if(do_reload):
+    reload(renderthreads_logging)
 
 
-
-
-
-#WorkerThread class
-#------------------------------------------------------------------
+# WorkerThread class
+# ------------------------------------------------------------------
 class WorkerThread(QtCore.QThread):
     """
     Thread executing tasks from a given tasks queue
     """
 
-    #Signals
-    #------------------------------------------------------------------
-
+    # Signals
+    # ------------------------------------------------------------------
     restart = QtCore.Signal()
     setup_timer = QtCore.Signal()
-    sgnl_task_done = QtCore.Signal()
+    task_done = QtCore.Signal()
 
-    
-
-
-    
+    # Creation and Initialization
+    # ------------------------------------------------------------------
     def __init__(self, 
                     queue, 
                     logging_level = logging.DEBUG,
@@ -63,43 +65,37 @@ class WorkerThread(QtCore.QThread):
         in the main thread.
         """
 
-        #super
+        # super
         self.parent_class = super(WorkerThread, self)
         self.parent_class.__init__()
 
         self.setObjectName(self.__class__.__name__)
 
-        #instance variables
-        #------------------------------------------------------------------
+        # instance variables
+        # ------------------------------------------------------------------
 
-        #queue
+        # queue
         self.queue = queue
 
-        #thread_interval
-        self.thread_interval = thread_interval #ONLY IMPORTANT FOR INITIAL STARTUP INTERVAL. NOT USED AGAIN
+        # thread_interval
+        self.thread_interval = thread_interval  # ONLY IMPORTANT FOR INITIAL STARTUP INTERVAL. NOT USED AGAIN
 
-        #thread_id
+        # thread_id
         self.thread_id = thread_id
 
-        #first_execution
+        # first_execution
         self.first_execution = True
 
-        #timer_created
+        # timer_created
         self.timer_created = False
 
-
-
-        #logger
-        #------------------------------------------------------------------
+        # logger
+        self.logger = renderthreads_logging.get_logger(self.__class__.__name__ +' - ' + str(self.thread_id))
         
-        #logger
-        self.logger = logging.getLogger(self.__class__.__name__ +' - ' + str(self.thread_id))
-        self.logging_level = logging_level
-        self.logger.setLevel(self.logging_level)
 
 
-        #Connections
-        #------------------------------------------------------------------
+        # Connections
+        # ------------------------------------------------------------------
         
         self.restart.connect(self.on_restart)
         self.setup_timer.connect(self.on_setup_timer)
@@ -111,8 +107,8 @@ class WorkerThread(QtCore.QThread):
     
 
 
-    #Slots
-    #------------------------------------------------------------------
+    # Slots
+    # ------------------------------------------------------------------
     
     @QtCore.Slot()
     def on_restart(self):
@@ -120,10 +116,10 @@ class WorkerThread(QtCore.QThread):
         Restart thread under certain conditions
         """
 
-        #is finished?
+        # is finished?
         if (self.isFinished()):
             
-            #start
+            # start
             self.start()
 
 
@@ -133,62 +129,62 @@ class WorkerThread(QtCore.QThread):
         Setup self.thread_timer
         """
 
-        #thread_timer
+        # thread_timer
         self.thread_timer = QtCore.QTimer()
         self.thread_timer.setObjectName('thread_timer')
         self.thread_timer.timeout.connect(self.restart)
         self.thread_timer.start(self.thread_interval)
 
-        #log
+        # log
         self.logger.debug('thread_timer created')
 
-        #set timer_created
+        # set timer_created
         self.timer_created = True
 
 
 
     
 
-    #Getter & Setter
-    #------------------------------------------------------------------
+    # Getter & Setter
+    # ------------------------------------------------------------------
 
     def set_queue(self, queue):
         """
         Set self.queue
         """
 
-        #set
+        # set
         self.queue = queue
 
-        #log
+        # log
         self.logger.debug('Reset queue')
     
 
-    #Run
-    #------------------------------------------------------------------
+    # Run
+    # ------------------------------------------------------------------
     
     def run(self):
         """
         Run method. Only method that executes in its own thread.
         """
 
-        #Startup
-        #------------------------------------------------------------------
+        # Startup
+        # ------------------------------------------------------------------
         if(self.first_execution):
 
-            #log
+            # log
             self.logger.debug('Thread first execution')
             
-            #setup_timer
+            # setup_timer
             self.setup_timer.emit()
             
-            #first_execution
+            # first_execution
             self.first_execution = False
 
 
 
-        #Code
-        #------------------------------------------------------------------
+        # Code
+        # ------------------------------------------------------------------
         else:
 
             try:
@@ -202,10 +198,10 @@ class WorkerThread(QtCore.QThread):
             except Exception, e:
                 self.logger.debug('{0}'.format(e))
             finally:
-                #notify queue
+                # notify queue
                 self.queue.task_done()
-                #notify gui
-                self.sgnl_task_done.emit()
+                # notify gui
+                self.task_done.emit()
                     
 
 
@@ -216,33 +212,28 @@ class WorkerThread(QtCore.QThread):
 
 
 
-#AssetManagerThreadsFunctionality class
-#------------------------------------------------------------------
-class AssetManagerThreadsFunctionality(QtCore.QObject):
+# ThreadManager class
+# ------------------------------------------------------------------
+class ThreadManager(QtCore.QObject):
     """
     Class that manages the QThread daemon threads.
     """
 
-    
-
-    #Signals
-    #------------------------------------------------------------------
-
+    # Signals
+    # ------------------------------------------------------------------
     do_update_threads = QtCore.Signal()
 
-    
-
-
-
+    # Creation and Initialization
+    # ------------------------------------------------------------------
     def __new__(cls, *args, **kwargs):
         """
-        AssetManagerThreadsFunctionality instance factory.
+        ThreadManager instance factory.
         """
 
-        #asset_manager_threads_functionality_instance
-        asset_manager_threads_functionality_instance = super(AssetManagerThreadsFunctionality, cls).__new__(cls, args, kwargs)
+        # thread_manager_instance
+        thread_manager_instance = super(ThreadManager, cls).__new__(cls, args, kwargs)
 
-        return asset_manager_threads_functionality_instance
+        return thread_manager_instance
 
     
     def __init__(self,
@@ -253,63 +244,47 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         Customize instance.
         """
 
-        #super
-        self.parent_class = super(AssetManagerThreadsFunctionality, self)
+        # super
+        self.parent_class = super(ThreadManager, self)
         self.parent_class.__init__()
 
         self.setObjectName(self.__class__.__name__)
 
+        # instance variables
+        # ------------------------------------------------------------------
+        # logger
+        self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
 
-        #logger
-        #------------------------------------------------------------------
-        #logger
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logging_level = logging_level
-        self.logger.setLevel(self.logging_level)
-
-
-        #instance variables
-        #------------------------------------------------------------------
-
-        #max_threads
+        # max_threads
         self.max_threads = multiprocessing.cpu_count()
         
-        #thread_count
+        # thread_count
         self.thread_count = self.max_threads
-        #set_thread_count_to_half_of_max
+        # set_thread_count_to_half_of_max
         if (set_thread_count_to_half_of_max and 
             self.max_threads > 1):
             
-            #set thread count to half of max
+            # set thread count to half of max
             self.thread_count = int(self.max_threads / 2)
 
-        #thread_list
+        # thread_list
         self.thread_list = []
 
-        #queue
+        # queue
         self.queue = queue
         if not(self.queue):
             
-            #create
+            # create
             self.queue = Queue.Queue()
             
-            #log
+            # log
             self.logger.debug('No queue passed as argument. Creating queue.')
 
-        #connect
+        # connect
         self.do_update_threads.connect(self.update_threads)
 
-
-        
-
-        
-        
-
-
-
-    #Getter & Setter
-    #------------------------------------------------------------------
-
+    # Getter & Setter
+    # ------------------------------------------------------------------
     def get_thread_list(self):
         """
         Return self.thread_list
@@ -317,7 +292,6 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
 
         return self.thread_list
 
-    
     @QtCore.Slot(int)
     def set_thread_count(self, value):
         """
@@ -330,11 +304,11 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         elif (value > 0 and value <= self.max_threads):
             self.thread_count = value
 
-        #value smaller 0 = invalid.
+        # value smaller 1 = invalid.
         else:
             return
 
-        #update
+        # update
         self.do_update_threads.emit()
 
 
@@ -360,13 +334,13 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         and all threads.
         """
 
-        #create and set self
+        # create and set self
         self.queue = Queue.Queue()
 
-        #log
+        # log
         self.logger.debug('Reset queue')
 
-        #set on threads
+        # set on threads
         self.set_queue_for_threads(self.queue)
 
 
@@ -375,10 +349,10 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         Set queue on threads
         """
 
-        #iterate and set
+        # iterate and set
         for thread in self.thread_list:
             
-            #set timer
+            # set timer
             thread.set_queue(queue)
 
 
@@ -390,27 +364,27 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         so they are mostly silent initially.
         """
 
-        #iterate and set
+        # iterate and set
         for thread in self.thread_list:
             
             try:
                 
-                #set logger
+                # set logger
                 thread.logger.setLevel(logging_level)
 
-                #log
+                # log
                 self.logger.debug('Setting logging level for thread {0} to {1}'.format(thread.thread_id, 
                                                                                         logging_level))
 
             except:
                 
-                #log
+                # log
                 self.logger.debug('Error setting logging level for thread {0}'.format(thread.thread_id))
 
 
 
-    #Methods
-    #------------------------------------------------------------------
+    # Methods
+    # ------------------------------------------------------------------
 
     def setup_threads(self, 
                         thread_interval = 2000, 
@@ -419,35 +393,35 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         Start daemon threads.
         """
 
-        #create and initialize max. number threads
+        # create and initialize max. number threads
         for index in range(self.max_threads):
             
-            #worker_thread
+            # worker_thread
             worker_thread = WorkerThread(self.queue, 
                                             thread_id = index,
                                             thread_interval = thread_interval,
                                             logging_level = logging_level)
-            #append worker_thread
+            # append worker_thread
             self.thread_list.append(worker_thread)
-            #start worker_thread
+            # start worker_thread
             worker_thread.start()
 
-            #log
+            # log
             self.logger.debug('Started thread {0}'.format(index))
 
 
-        #wait till all finished first time
+        # wait till all finished first time
         while (True):
             
-            #check if all timer created
+            # check if all timer created
             if (all([thread.timer_created for thread in self.thread_list])):
 
                 break
 
-            #process events
+            # process events
             QtCore.QCoreApplication.processEvents()
 
-        #update threads to set active threads to thread_count
+        # update threads to set active threads to thread_count
         self.do_update_threads.emit()
 
         
@@ -457,7 +431,7 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         Adds work to the queue
         """
         
-        #add
+        # add
         self.queue.put((func, args, kwargs))
 
 
@@ -467,13 +441,13 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         Call start on thread objects thread_timer.
         """
 
-        #iterate and set
+        # iterate and set
         for index, thread in enumerate(self.thread_list):
             
-            #if index < thread_count
+            # if index < thread_count
             if (index < self.thread_count):
 
-                #set timer
+                # set timer
                 thread.thread_timer.start()
 
 
@@ -483,10 +457,10 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         Call stop on thread objects thread_timer.
         """
 
-        #iterate and set
+        # iterate and set
         for thread in self.thread_list:
             
-            #set timer
+            # set timer
             thread.thread_timer.stop()
 
 
@@ -497,10 +471,10 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
         the self.thread_count variable has been changed.
         """
 
-        #stop threads
+        # stop threads
         self.stop_threads()
 
-        #start threads
+        # start threads
         self.start_threads()
 
 
@@ -521,18 +495,18 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
 
         try:
             
-            #iterate and set
+            # iterate and set
             for thread in self.thread_list:
                 
-                #set timer
+                # set timer
                 thread.thread_timer.setInterval(interval)
             
-            #log
+            # log
             self.logger.debug('Set interval to: {0} ms'.format(interval))
         
         except:
             
-            #log
+            # log
             self.logger.debug('Error setting timer to interval: {0}'.format(interval))
 
 
@@ -549,7 +523,7 @@ class AssetManagerThreadsFunctionality(QtCore.QObject):
             
             self.add_to_queue(mul, i, i + 1)
 
-        #log
+        # log
         self.logger.debug('Added work to queue')
 
 

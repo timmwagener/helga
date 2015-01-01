@@ -16,8 +16,9 @@ from PySide import QtGui
 from PySide import QtCore
 
 
-# Version
+# Version and Title
 # ------------------------------------------------------------------
+TITLE = 'renderthreads'
 VERSION = 0.1
 
 

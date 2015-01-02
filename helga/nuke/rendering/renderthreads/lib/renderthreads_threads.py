@@ -435,6 +435,22 @@ class ThreadManager(QtCore.QObject):
         self.queue.put((func, args, kwargs))
 
 
+    @QtCore.Slot(int)
+    def toggle_threads(self, value):
+        """
+        Call start or stop on thread objects thread_timer
+        depending on value.
+        """
+
+        # on
+        if (value > 0):
+            # start_threads
+            self.start_threads()
+        else:
+            # stop_threads
+            self.stop_threads()
+
+    
     @QtCore.Slot()
     def start_threads(self):
         """

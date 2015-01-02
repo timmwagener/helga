@@ -114,8 +114,8 @@ class UniversalPrintObject(object):
         self = args[0]
         # message
         message = args[1]
-        # setText
-        self.display.setText(message)
+        # append
+        self.display.append(message)
 
 
 #  UniversalStreamHandler

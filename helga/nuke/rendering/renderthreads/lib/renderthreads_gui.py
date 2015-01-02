@@ -48,6 +48,11 @@ from gui import renderthreads_gui_helper
 if(do_reload):
     reload(renderthreads_gui_helper)
 
+#  renderthreads_slider_widget
+from gui import renderthreads_slider_widget
+if(do_reload):
+    reload(renderthreads_slider_widget)
+
 #  renderthreads_stylesheets
 from gui import renderthreads_stylesheets
 if(do_reload):
@@ -112,6 +117,9 @@ def create_additional_ui(wdgt):
     #  create_stkwdgt_menu
     create_stkwdgt_menu(wdgt)
 
+    # create_threads_menu
+    create_threads_menu(wdgt)
+
     #  create_pbar_render
     create_pbar_render(wdgt)
 
@@ -142,6 +150,100 @@ def create_stkwdgt_menu(wdgt):
     # acn_threads
     wdgt.acn_threads = wdgt.mnubar_stkwdgt.addAction('Threads')
     wdgt.acn_threads.setObjectName('acn_threads')
+
+    # acn_options
+    wdgt.acn_options = wdgt.mnubar_stkwdgt.addAction('Options')
+    wdgt.acn_options.setObjectName('acn_options')
+
+
+def create_threads_menu(wdgt):
+    """
+    Menu for threads. This function
+    creates not a QMenu but the entire optons
+    content for the stackwidget threads page.
+    """
+
+    # create_sub_threads_menu
+    create_sub_threads_menu(wdgt)
+
+    # create_queue_menu
+    create_queue_menu(wdgt)
+
+    # Add stretch for main layout at end
+
+    # lyt_sawdgt_threads_options
+    lyt_sawdgt_threads_options = wdgt.sawdgt_threads_options.layout()
+    lyt_sawdgt_threads_options.addStretch()
+
+
+def create_sub_threads_menu(wdgt):
+    """
+    Menu for threads that use the the custom
+    renderthreads slider widget.
+    """
+
+    #  lyt_wdgt_threads
+    lyt_wdgt_threads = wdgt.wdgt_threads.layout()
+
+    # lbl_threads_submenu
+    wdgt.lbl_threads_submenu = QtGui.QLabel('Threads')
+    lyt_wdgt_threads.addWidget(wdgt.lbl_threads_submenu)
+
+    # sldr_threadcount
+    wdgt.sldr_threadcount = renderthreads_slider_widget.Slider(header = 'Threadcount',
+                                                                minimum = 1,
+                                                                maximum = wdgt.thread_manager.get_max_threads(),
+                                                                initial_value = wdgt.thread_manager.get_thread_count())
+    wdgt.sldr_threadcount.set_tick_position(QtGui.QSlider.TicksBelow)
+    wdgt.sldr_threadcount.set_tick_interval(1)
+    lyt_wdgt_threads.addWidget(wdgt.sldr_threadcount)
+
+    # sldr_thread_interval
+    wdgt.sldr_thread_interval = renderthreads_slider_widget.Slider(header = 'Thread interval',
+                                                                minimum = 100,
+                                                                maximum = 10000,
+                                                                initial_value = 2000)
+    wdgt.sldr_thread_interval.set_tick_position(QtGui.QSlider.TicksBelow)
+    wdgt.sldr_thread_interval.set_tick_interval(100)
+    lyt_wdgt_threads.addWidget(wdgt.sldr_thread_interval)
+
+    # sldr_thread_logging
+    wdgt.sldr_thread_logging = renderthreads_slider_widget.Slider(header = 'Thread logging',
+                                                                minimum = logging.DEBUG,
+                                                                maximum = logging.CRITICAL,
+                                                                initial_value = logging.DEBUG)
+    wdgt.sldr_thread_logging.set_tick_position(QtGui.QSlider.TicksBelow)
+    wdgt.sldr_thread_logging.set_tick_interval(10)
+    lyt_wdgt_threads.addWidget(wdgt.sldr_thread_logging)
+
+    # btn_start_threads
+    wdgt.btn_start_threads = QtGui.QPushButton('Re/Start threads')
+    lyt_wdgt_threads.addWidget(wdgt.btn_start_threads)
+
+    # btn_stop_threads
+    wdgt.btn_stop_threads = QtGui.QPushButton('Stop threads')
+    lyt_wdgt_threads.addWidget(wdgt.btn_stop_threads)
+
+
+def create_queue_menu(wdgt):
+    """
+    Menu for thread queue.
+    """
+
+    #  lyt_wdgt_queue
+    lyt_wdgt_queue = wdgt.wdgt_queue.layout()
+
+    # lbl_queue_submenu
+    wdgt.lbl_queue_submenu = QtGui.QLabel('Queue')
+    lyt_wdgt_queue.addWidget(wdgt.lbl_queue_submenu)
+
+    # btn_print_queue_size
+    wdgt.btn_print_queue_size = QtGui.QPushButton('Print queue size')
+    lyt_wdgt_queue.addWidget(wdgt.btn_print_queue_size)
+
+    # btn_reset_queue
+    wdgt.btn_reset_queue = QtGui.QPushButton('Reset queue')
+    lyt_wdgt_queue.addWidget(wdgt.btn_reset_queue)
 
 
 def create_pbar_render(wdgt):
@@ -218,8 +320,8 @@ def connect_ui(wdgt):
     #  connect_signals
     connect_signals(wdgt)
 
-    #  connect_buttons
-    connect_buttons(wdgt)
+    #  connect_actions
+    connect_actions(wdgt)
 
     #  connect_widgets
     connect_widgets(wdgt)
@@ -241,12 +343,17 @@ def connect_signals(wdgt):
     pass
 
 
-def connect_buttons(wdgt):
+def connect_actions(wdgt):
     """
-    Connect buttons.
+    Connect actions.
     """
 
-    pass
+    # acn_render
+    wdgt.acn_render.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 0))
+    # acn_threads
+    wdgt.acn_threads.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 1))
+    # acn_options
+    wdgt.acn_options.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 2))
 
 
 def connect_widgets(wdgt):
@@ -254,10 +361,22 @@ def connect_widgets(wdgt):
     Connect widgets.
     """
 
-    # acn_render
-    wdgt.acn_render.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 0))
-    # acn_threads
-    wdgt.acn_threads.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 1))
+    # sldr_threadcount
+    wdgt.sldr_threadcount.value_changed.connect(wdgt.thread_manager.set_thread_count)
+    # sldr_thread_interval
+    wdgt.sldr_thread_interval.value_changed.connect(wdgt.thread_manager.set_interval)
+    # sldr_thread_logging
+    wdgt.sldr_thread_logging.value_changed.connect(wdgt.thread_manager.set_logging_level_for_threads)
+
+    # btn_start_threads
+    wdgt.btn_start_threads.clicked.connect(wdgt.thread_manager.start_threads)
+    # btn_stop_threads
+    wdgt.btn_stop_threads.clicked.connect(wdgt.thread_manager.stop_threads)
+
+    # btn_print_queue_size
+    wdgt.btn_print_queue_size.clicked.connect(wdgt.thread_manager.print_queue_size)
+    # btn_reset_queue
+    wdgt.btn_reset_queue.clicked.connect(wdgt.thread_manager.reset_queue)
 
 
 def connect_threads(self):

@@ -25,7 +25,7 @@ do_reload = True
 # lib.gui
 
 # renderthreads_stylesheets
-from . import renderthreads_stylesheets
+import renderthreads_stylesheets
 if(do_reload):
     reload(renderthreads_stylesheets)
 

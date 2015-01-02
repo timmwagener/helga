@@ -326,4 +326,4 @@ Not performing dock behaviour.')
     wdgt_dock.setWidget(wdgt)
 
     # add to maya main window
-    q_main_window.addDockWidget(QtCore.Qt.LeftDockWidgetArea, wdgt_dock)
+    q_main_window.addDockWidget(QtCore.Qt.RightDockWidgetArea, wdgt_dock)

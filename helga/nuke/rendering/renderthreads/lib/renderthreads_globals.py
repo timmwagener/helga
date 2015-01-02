@@ -38,6 +38,11 @@ UI_PATH = os.path.join(MEDIA_PATH, 'ui')
 
 # Fonts
 # ------------------------------------------------------------------
+# Sizes
+FONT_SIZE_DEFAULT = 10
+FONT_SIZE_LARGE = 14
+FONT_SIZE_SMALL = 8
+# Fonts
 FUTURA_LT_LIGHT = ('Futura LT Light', 'futura-lt-light.ttf')
 
 # FONTS_LIST [(Font Name, Font File Name), (Font Name, Font File Name)...]
@@ -55,12 +60,28 @@ for font_name, font_file_name in FONTS_LIST:
 
 # Colors
 # ------------------------------------------------------------------
-# BRIGHT_ORANGE = QtGui.QColor('# f9661e')
-# DARK_ORANGE = BRIGHT_ORANGE.darker(DARKENING_FACTOR)
+#darkening_factor
+DARKENING_FACTOR = 120
+#brightening_factor
+BRIGHTENING_FACTOR = 150
+
+BLACK = QtGui.QColor('#000000')
+WHITE = QtGui.QColor('#f5f5f5')
+GREY = QtGui.QColor('#484f57')
+GREY_DARK = GREY.darker(DARKENING_FACTOR)
+GREY_BRIGHT = GREY.lighter(DARKENING_FACTOR)
+RED = QtGui.QColor('#fb3e2a')
+RED_DARK = RED.darker(DARKENING_FACTOR)
+RED_BRIGHT = RED.lighter(DARKENING_FACTOR)
+BLUE = QtGui.QColor('#07faff')
+BLUE_DARK = BLUE.darker(DARKENING_FACTOR)
+BLUE_BRIGHT = BLUE.lighter(DARKENING_FACTOR)
 
 
-# Icons
+# Images
 # ------------------------------------------------------------------
+HEADER_IMAGE = os.path.join(ICONS_PATH, 'icn_renderthreads.png').replace('\\', '/')  # Temp
+
 ICON_RENDERTHREADS = os.path.join(ICONS_PATH, 'icn_renderthreads.png').replace('\\', '/')
 
 

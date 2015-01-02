@@ -30,8 +30,6 @@ if(do_reload):
 
 #Globals
 #------------------------------------------------------------------
-
-"""
 #Pathes
 TOOL_ROOT_PATH = renderthreads_globals.TOOL_ROOT_PATH
 MEDIA_PATH = renderthreads_globals.MEDIA_PATH
@@ -39,25 +37,54 @@ ICONS_PATH = renderthreads_globals.ICONS_PATH
 UI_PATH = renderthreads_globals.UI_PATH
 
 #Fonts
+FONT_SIZE_DEFAULT = renderthreads_globals.FONT_SIZE_DEFAULT
+FONT_SIZE_LARGE = renderthreads_globals.FONT_SIZE_LARGE
+FONT_SIZE_SMALL = renderthreads_globals.FONT_SIZE_SMALL
+
 FUTURA_LT_LIGHT = renderthreads_globals.FUTURA_LT_LIGHT
 
 #Header
 HEADER_IMAGE = renderthreads_globals.HEADER_IMAGE
 
-#Transparency
-TABLEVIEW_EDITOR_TRANSPARENCY = renderthreads_globals.TABLEVIEW_EDITOR_TRANSPARENCY
+#Colors
+BLACK = renderthreads_globals.BLACK
+WHITE = renderthreads_globals.WHITE
 
-#AssetManager colors
-BRIGHT_ORANGE = renderthreads_globals.BRIGHT_ORANGE
+GREY = renderthreads_globals.GREY
+GREY_DARK = renderthreads_globals.GREY_DARK
+GREY_BRIGHT = renderthreads_globals.GREY_BRIGHT
 
-"""
+RED = renderthreads_globals.RED
+RED_DARK = renderthreads_globals.RED_DARK
+RED_BRIGHT = renderthreads_globals.RED_BRIGHT
 
+BLUE = renderthreads_globals.BLUE
+BLUE_DARK = renderthreads_globals.BLUE_DARK
+BLUE_BRIGHT = renderthreads_globals.BLUE_BRIGHT
 
 
 
 
 #get_stylesheet
 #------------------------------------------------------------------
+
+#ss_dict
+ss_dict = {'header_image' : HEADER_IMAGE,
+            'font_size_default' : FONT_SIZE_DEFAULT,
+            'font_size_large' : FONT_SIZE_LARGE,
+            'font_size_small' : FONT_SIZE_SMALL,
+            'futura_lt_light' : FUTURA_LT_LIGHT[0],
+            'black' : BLACK.name(),
+            'white' : WHITE.name(),
+            'grey' : GREY.name(),
+            'grey_dark' : GREY_DARK.name(),
+            'grey_bright' : GREY_BRIGHT.name(),
+            'red' : RED.name(),
+            'red_dark' : RED_DARK.name(),
+            'red_bright' : RED_BRIGHT.name(),
+            'blue' : BLUE.name(),
+            'blue_dark' : BLUE_DARK.name(),
+            'blue_bright' : BLUE_BRIGHT.name()}
 
 def get_stylesheet():
     """
@@ -69,14 +96,348 @@ def get_stylesheet():
 \
 \
 /* QWidget */\
-QWidget { background-color: red; \
-          font-family: \"Futura LT Light\"; \
-          font-size: 14pt; \
-          selection-background-color: green; \
+QWidget { background-color: %(white)s; \
+          font-family: \"%(futura_lt_light)s\"; \
+          font-size: %(font_size_default)spt; \
+          color: %(grey)s; \
+          selection-background-color: %(white)s; \
 }\
 \
 \
-"
+/* QWidget - wdgt_header_icon */\
+QWidget#wdgt_header_icon { background-color: %(black)s; \
+                            border-image: url(%(header_image)s); } \
+\
+\
+/* QWidget - wdgt_header_spacer_left */\
+QWidget#wdgt_header_spacer_left { background-color: %(black)s; } \
+\
+\
+/* QWidget - wdgt_header_spacer_right */\
+QWidget#wdgt_header_spacer_right { background-color: %(black)s; } \
+\
+\
+/* QWidget - wdgt_stkwdgt_menu */\
+QWidget#wdgt_stkwdgt_menu { background-color: %(black)s; \
+                            border: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QFrame - frm_nodes_header */\
+QFrame#frm_nodes_header { padding: 10px; \
+                            border: 1px solid %(grey)s; \
+} \
+\
+\
+/* QFrame - frm_nodes */\
+QFrame#frm_nodes { padding: 0px; \
+                    border-left: 1px solid %(grey)s; \
+                    border-right: 1px solid %(grey)s; \
+                    border-bottom: none; \
+                    border-top: none; \
+} \
+\
+\
+/* QFrame - frm_pbar_render */\
+QFrame#frm_pbar_render { padding: 0px; \
+                            border-left: none; \
+                            border-right: none; \
+                            border-bottom: none; \
+                            border-top: none; \
+} \
+\
+\
+/* QFrame - frm_log_header */\
+QFrame#frm_log_header { padding: 10px; \
+                            border: 1px solid %(grey)s; \
+} \
+\
+\
+/* QFrame - frm_log_text_edit */\
+QFrame#frm_log_text_edit { padding: 0px; \
+                            border-left: 1px solid %(grey)s; \
+                            border-right: 1px solid %(grey)s; \
+                            border-bottom: 1px solid %(grey)s; \
+                            border-top: none; \
+} \
+\
+\
+/* QFrame - frm_threads_options */\
+QFrame#frm_threads_options { padding: 0px; \
+                                border: none; \
+} \
+\
+\
+/* QFrame - frm_threads_header */\
+QFrame#frm_threads_header { padding: 10px; \
+                            border: 1px solid %(grey)s; \
+} \
+\
+\
+/* QFrame - frm_threads */\
+QFrame#frm_threads { padding: 10px; \
+                        border-left: 1px solid %(grey)s; \
+                        border-right: 1px solid %(grey)s; \
+                        border-bottom: 1px solid %(grey)s; \
+                        border-top: none; \
+} \
+\
+\
+/* QFrame - frm_queue_header */\
+QFrame#frm_queue_header { padding: 10px; \
+                            border: 1px solid %(grey)s; \
+} \
+\
+\
+/* QFrame - frm_queue */\
+QFrame#frm_queue { padding: 10px; \
+                    border-left: 1px solid %(grey)s; \
+                    border-right: 1px solid %(grey)s; \
+                    border-bottom: 1px solid %(grey)s; \
+                    border-top: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QStackedWidget - stkwdgt_content */\
+QStackedWidget#stkwdgt_content { padding: 10px; } \
+\
+\
+\
+\
+\
+\
+/* QToolTip */\
+QToolTip { background-color: %(grey)s; \
+            color: %(black)s; \
+            border-left: none; \
+            border-top: 1px solid %(blue)s; \
+            border-bottom: none; \
+            border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QMenuBar - mnubar_stkwdgt */\
+QMenuBar#mnubar_stkwdgt { background-color: transparent;\
+                        font-size: %(font_size_large)spt; \
+                        color: %(white)s; \
+                        border-left: none; \
+                        border-right: none; \
+                        border-bottom: none; \
+                        border-top: none; \
+} \
+\
+\
+/* QMenuBar - mnubar_stkwdgt - item */\
+QMenuBar#mnubar_stkwdgt::item { background-color: transparent;\
+                                font-size: %(font_size_large)spt; \
+                                color: %(white)s; \
+                                margin-left: 8; \
+                                margin-right: 8; \
+                                border-left: none; \
+                                border-right: none; \
+                                border-bottom: none; \
+                                border-top: none; \
+} \
+\
+\
+/* QMenuBar - mnubar_stkwdgt - item - selected */\
+QMenuBar#mnubar_stkwdgt::item:selected { background-color: transparent;\
+                                            font-size: %(font_size_large)spt; \
+                                            color: %(red)s; \
+                                            border-left: none; \
+                                            border-right: none; \
+                                            border-bottom: none; \
+                                            border-top: none; \
+} \
+\
+\
+/* QMenuBar - mnubar_stkwdgt - item - pressed */\
+QMenuBar#mnubar_stkwdgt::item:pressed { background-color: transparent;\
+                                        font-size: %(font_size_large)spt; \
+                                        color: %(red_bright)s; \
+                                        border-left: none; \
+                                        border-right: none; \
+                                        border-bottom: none; \
+                                        border-top: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QMenu */\
+QMenu { background-color: %(white)s; \
+        color: %(grey)s; \
+        border-left: none; \
+        border-top: 1px solid %(red)s; \
+        border-bottom: none; \
+        border-right: none; \
+} \
+\
+\
+/* QMenu -item - selected */\
+QMenu::item:selected { color: %(red)s; \
+                        border: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QSplitter - handle */\
+QSplitter::handle { background-color: %(blue)s; } \
+\
+\
+\
+\
+\
+\
+/* QLabel - lbl_log_header */\
+QLabel#lbl_log_header { font-size: %(font_size_large)spt; } \
+\
+\
+/* QLabel - lbl_nodes_header */\
+QLabel#lbl_nodes_header { font-size: %(font_size_large)spt; } \
+\
+\
+/* QLabel - lbl_threads_header */\
+QLabel#lbl_threads_header { font-size: %(font_size_large)spt; } \
+\
+\
+/* QLabel - lbl_queue_header */\
+QLabel#lbl_queue_header { font-size: %(font_size_large)spt; } \
+\
+\
+\
+\
+\
+\
+/* RenderThreadsDockWidget */\
+RenderThreadsDockWidget { background: %(black)s; \
+                            font-size: %(font_size_default)spt; \
+                            color: %(grey)s; \
+} \
+\
+\
+/* RenderThreadsDockWidget - title */\
+RenderThreadsDockWidget::title { background: %(black)s; \
+                                text-align: left; \
+                                font-size: %(font_size_large)spt; \
+                                color: %(grey)s; \
+                                border-left: none; \
+                                border-top: 1px solid %(red)s; \
+                                border-bottom: none; \
+                                border-right: none; \
+} \
+\
+\
+RenderThreadsDockWidget::close-button, RenderThreadsDockWidget::float-button {background: %(red)s; \
+                                                                                border: none; \
+} \
+\
+\
+RenderThreadsDockWidget::close-button:hover, RenderThreadsDockWidget::float-button:hover { background: %(red_dark)s; \
+} \
+\
+\
+RenderThreadsDockWidget::close-button:pressed, RenderThreadsDockWidget::float-button:pressed { background: %(red_dark)s; \
+} \
+\
+\
+\
+\
+\
+\
+/* QProgressBar */\
+QProgressBar { border: none;\
+                 background-color: %(grey)s;\
+                 color: %(white)s;\
+                 text-align: center;\
+} \
+\
+\
+/* QProgressBar - chunk */\
+QProgressBar::chunk { border: none;\
+                        background-color: %(red)s;\
+} \
+\
+\
+\
+\
+\
+\
+/* QScrollBar - vertical */\
+QScrollBar:vertical { background-color: %(grey)s; \
+                        border: none; \
+} \
+\
+\
+/* QScrollBar - handle - vertical */\
+QScrollBar::handle:vertical { background-color: %(red)s; \
+                                border: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QSlider - groove - horizontal */\
+QSlider::groove:horizontal { background: %(red)s; \
+                                height: 1px; \
+} \
+\
+\
+/* QSlider - handle - horizontal */\
+QSlider::handle:horizontal { background: %(black)s; \
+                                margin: -6px 0; \
+                                width: 4px; \
+} \
+\
+\
+\
+\
+\
+\
+/* QPushButton */\
+QPushButton { border: none;\
+                background-color: %(white)s;\
+                color: %(grey)s;\
+                text-align: center;\
+} \
+\
+\
+/* QPushButton - pressed */\
+QPushButton:pressed { border: none;\
+                        background-color: %(white)s;\
+                        color: %(red_bright)s;\
+                        text-align: center;\
+} \
+\
+\
+\
+\
+\
+\
+/* QLCDNumber */\
+QLCDNumber { background: transparent; \
+                border: none; \
+} \
+"%ss_dict
 	
 	#return
     return str_stylesheet

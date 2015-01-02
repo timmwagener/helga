@@ -64,6 +64,8 @@ if(do_reload):
 TITLE = renderthreads_globals.TITLE
 VERSION = renderthreads_globals.VERSION
 
+ICON_RENDERTHREADS = renderthreads_globals.ICON_RENDERTHREADS
+
 
 #  logger (Module Level)
 #  ------------------------------------------------------------------
@@ -114,6 +116,9 @@ def create_additional_ui(wdgt):
     #  set title
     wdgt.setWindowTitle(TITLE + ' ' + str(VERSION))
 
+    #  set icon
+    wdgt.setWindowIcon(QtGui.QIcon(ICON_RENDERTHREADS))
+
     #  create_stkwdgt_menu
     create_stkwdgt_menu(wdgt)
 
@@ -151,10 +156,6 @@ def create_stkwdgt_menu(wdgt):
     wdgt.acn_threads = wdgt.mnubar_stkwdgt.addAction('Threads')
     wdgt.acn_threads.setObjectName('acn_threads')
 
-    # acn_options
-    wdgt.acn_options = wdgt.mnubar_stkwdgt.addAction('Options')
-    wdgt.acn_options.setObjectName('acn_options')
-
 
 def create_threads_menu(wdgt):
     """
@@ -182,12 +183,8 @@ def create_sub_threads_menu(wdgt):
     renderthreads slider widget.
     """
 
-    #  lyt_wdgt_threads
-    lyt_wdgt_threads = wdgt.wdgt_threads.layout()
-
-    # lbl_threads_submenu
-    wdgt.lbl_threads_submenu = QtGui.QLabel('Threads')
-    lyt_wdgt_threads.addWidget(wdgt.lbl_threads_submenu)
+    #  frm_threads
+    frm_threads = wdgt.frm_threads.layout()
 
     # sldr_threadcount
     wdgt.sldr_threadcount = renderthreads_slider_widget.Slider(header = 'Threadcount',
@@ -196,7 +193,7 @@ def create_sub_threads_menu(wdgt):
                                                                 initial_value = wdgt.thread_manager.get_thread_count())
     wdgt.sldr_threadcount.set_tick_position(QtGui.QSlider.TicksBelow)
     wdgt.sldr_threadcount.set_tick_interval(1)
-    lyt_wdgt_threads.addWidget(wdgt.sldr_threadcount)
+    frm_threads.addWidget(wdgt.sldr_threadcount)
 
     # sldr_thread_interval
     wdgt.sldr_thread_interval = renderthreads_slider_widget.Slider(header = 'Thread interval',
@@ -205,7 +202,7 @@ def create_sub_threads_menu(wdgt):
                                                                 initial_value = 2000)
     wdgt.sldr_thread_interval.set_tick_position(QtGui.QSlider.TicksBelow)
     wdgt.sldr_thread_interval.set_tick_interval(100)
-    lyt_wdgt_threads.addWidget(wdgt.sldr_thread_interval)
+    frm_threads.addWidget(wdgt.sldr_thread_interval)
 
     # sldr_thread_logging
     wdgt.sldr_thread_logging = renderthreads_slider_widget.Slider(header = 'Thread logging',
@@ -214,15 +211,17 @@ def create_sub_threads_menu(wdgt):
                                                                 initial_value = logging.DEBUG)
     wdgt.sldr_thread_logging.set_tick_position(QtGui.QSlider.TicksBelow)
     wdgt.sldr_thread_logging.set_tick_interval(10)
-    lyt_wdgt_threads.addWidget(wdgt.sldr_thread_logging)
+    frm_threads.addWidget(wdgt.sldr_thread_logging)
 
     # btn_start_threads
     wdgt.btn_start_threads = QtGui.QPushButton('Re/Start threads')
-    lyt_wdgt_threads.addWidget(wdgt.btn_start_threads)
+    wdgt.btn_start_threads.setFlat(True)
+    frm_threads.addWidget(wdgt.btn_start_threads)
 
     # btn_stop_threads
     wdgt.btn_stop_threads = QtGui.QPushButton('Stop threads')
-    lyt_wdgt_threads.addWidget(wdgt.btn_stop_threads)
+    wdgt.btn_stop_threads.setFlat(True)
+    frm_threads.addWidget(wdgt.btn_stop_threads)
 
 
 def create_queue_menu(wdgt):
@@ -230,20 +229,18 @@ def create_queue_menu(wdgt):
     Menu for thread queue.
     """
 
-    #  lyt_wdgt_queue
-    lyt_wdgt_queue = wdgt.wdgt_queue.layout()
-
-    # lbl_queue_submenu
-    wdgt.lbl_queue_submenu = QtGui.QLabel('Queue')
-    lyt_wdgt_queue.addWidget(wdgt.lbl_queue_submenu)
+    #  lyt_frm_queue
+    lyt_frm_queue = wdgt.frm_queue.layout()
 
     # btn_print_queue_size
     wdgt.btn_print_queue_size = QtGui.QPushButton('Print queue size')
-    lyt_wdgt_queue.addWidget(wdgt.btn_print_queue_size)
+    wdgt.btn_print_queue_size.setFlat(True)
+    lyt_frm_queue.addWidget(wdgt.btn_print_queue_size)
 
     # btn_reset_queue
     wdgt.btn_reset_queue = QtGui.QPushButton('Reset queue')
-    lyt_wdgt_queue.addWidget(wdgt.btn_reset_queue)
+    wdgt.btn_reset_queue.setFlat(True)
+    lyt_frm_queue.addWidget(wdgt.btn_reset_queue)
 
 
 def create_pbar_render(wdgt):
@@ -252,7 +249,7 @@ def create_pbar_render(wdgt):
     """
 
     #  lyt_pbar_render
-    lyt_pbar_render = wdgt.wdgt_pbar_render.layout()
+    lyt_pbar_render = wdgt.frm_pbar_render.layout()
 
     #  pbar_render
     wdgt.pbar_render = QtGui.QProgressBar()
@@ -352,8 +349,6 @@ def connect_actions(wdgt):
     wdgt.acn_render.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 0))
     # acn_threads
     wdgt.acn_threads.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 1))
-    # acn_options
-    wdgt.acn_options.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 2))
 
 
 def connect_widgets(wdgt):

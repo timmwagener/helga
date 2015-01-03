@@ -94,7 +94,7 @@ def print_nodes(filter_type=None, selected=False, convert=False):
 
     # iterate and print
     for node in node_list:
-        print('{0} - {1}'.format(node.name(), node.Class()))
+        print('{0} - {1}'.format(node.fullName(), node.Class()))
 
 
 def convert_nodes(nuke_node_list):
@@ -137,8 +137,8 @@ def convert_nuke_to_renderthread_node(nuke_node):
     Convert a nuke to a renderthread node.
     """
 
-    start_frame = nuke.root().knob('first_frame')
-    end_frame = nuke.root().knob('last_frame')
+    start_frame = int(nuke.Root().firstFrame())
+    end_frame = int(nuke.Root().lastFrame())
 
     # write
     if (nuke_node.Class() == 'Write'):

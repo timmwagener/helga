@@ -71,7 +71,7 @@ class RenderThreadsView(QtGui.QTableView):
         # ------------------------------------------------------------------
         # parent_class
         self.parent_class = super(RenderThreadsView, self)
-        self.parent_class.__init__(parent)
+        self.parent_class.__init__(parent=parent)
 
         # setObjectName
         self.setObjectName(self.__class__.__name__)

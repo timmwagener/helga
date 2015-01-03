@@ -53,6 +53,10 @@ class RenderThreadsNode(QtCore.QObject):
     Supported interface:
     #. name:
         Returns self._nuke_node.name()
+    #. setName:
+        Returns self._nuke_node.setName()
+    #. fullName:
+        Returns self._nuke_node.fullName()
     #. Class:
         Returns self.__class__.__name__
     """
@@ -201,6 +205,17 @@ class RenderThreadsNode(QtCore.QObject):
             self.logger.debug('Error aquiring nuke node name. Returning None')
             return None
 
+    def set_nuke_node_name(self, value):
+        """
+        Calls self._nuke_node.setName().
+        """
+
+        try:
+            self._nuke_node.setName(value)
+        except:
+            # log
+            self.logger.debug('Error setting nuke node name')
+
     def name(self):
         """
         Wrapper for get_nuke_node_name to be consistent with
@@ -208,6 +223,37 @@ class RenderThreadsNode(QtCore.QObject):
         """
 
         return self.get_nuke_node_name()
+
+    def setName(self, value):
+        """
+        Wrapper for get_nuke_node_name to be consistent with
+        nuke python API. This method return self._nuke_node.name().
+        """
+
+        return self.set_nuke_node_name(value)
+
+    def get_nuke_node_full_name(self):
+        """
+        Return Nuke Node full name. This
+        is a unique identifier.
+        """
+
+        try:
+            nuke_node_full_name = self._nuke_node.fullName()
+            return nuke_node_full_name
+
+        except:
+            # log
+            self.logger.debug('Error aquiring nuke node full name. Returning None')
+            return None
+
+    def fullName(self):
+        """
+        Wrapper for get_nuke_node_full_name to be consistent with
+        nuke python API. This method return self._nuke_node.fullName().
+        """
+
+        return self.get_nuke_node_full_name()
 
     def get_nuke_node_type(self):
         """
@@ -233,6 +279,15 @@ class RenderThreadsNode(QtCore.QObject):
         """
 
         return self.__class__.__name__
+
+    # Comparison
+    # ------------------------------------------------------------------
+    def __eq__(self, other):
+        return self.get_nuke_node_full_name() == other.get_nuke_node_full_name()
+    def __ne__(self, other):
+        return self.get_nuke_node_full_name() != other.get_nuke_node_full_name()
+    def __hash__(self):
+        return hash(self.get_nuke_node_full_name())
 
     # Misc
     # ------------------------------------------------------------------

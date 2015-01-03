@@ -84,7 +84,7 @@ def create_mvc(wdgt):
     """
 
     # nodes_view
-    wdgt.nodes_view = renderthreads_view.RenderThreadsView()
+    wdgt.nodes_view = renderthreads_view.RenderThreadsView(parent = wdgt)
     wdgt.nodes_view.setWordWrap(True)
     # set resize mode for horizontal header
     wdgt.nodes_view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
@@ -109,7 +109,7 @@ def create_mvc(wdgt):
     '''
     
     # nodes_model
-    wdgt.nodes_model = renderthreads_model.RenderThreadsModel()
+    wdgt.nodes_model = renderthreads_model.RenderThreadsModel(parent = wdgt)
     #set model in view
     wdgt.nodes_view.setModel(wdgt.nodes_model)
 

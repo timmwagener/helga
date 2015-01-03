@@ -43,6 +43,11 @@ from .. import renderthreads_logging
 if(do_reload):
     reload(renderthreads_logging)
 
+#  renderthreads_nuke
+from .. import renderthreads_nuke
+if(do_reload):
+    reload(renderthreads_nuke)
+
 # lib.gui
 
 # renderthreads_gui_helper
@@ -83,7 +88,7 @@ class NodesContextMenu(QtGui.QMenu):
         
         # parent_class
         self.parent_class = super(NodesContextMenu, self)
-        self.parent_class.__init__(parent)
+        self.parent_class.__init__(parent=parent)
 
         # setObjectName
         self.setObjectName(self.__class__.__name__)
@@ -194,14 +199,14 @@ class NodesContextMenu(QtGui.QMenu):
         """
 
         # acn_add_selected
-        self.acn_add_selected.triggered.connect(functools.partial(self.dummy_method, 'acn_add_selected'))
+        self.acn_add_selected.triggered.connect(functools.partial(self.add_selected))
         # acn_add_all
-        self.acn_add_all.triggered.connect(functools.partial(self.dummy_method, 'acn_add_all'))
+        self.acn_add_all.triggered.connect(functools.partial(self.add_all))
 
         # acn_remove_selected
         self.acn_remove_selected.triggered.connect(functools.partial(self.dummy_method, 'acn_remove_selected'))
         # acn_remove_all
-        self.acn_remove_all.triggered.connect(functools.partial(self.dummy_method, 'acn_remove_all'))
+        self.acn_remove_all.triggered.connect(functools.partial(self.remove_all))
 
         # acn_select_selected
         self.acn_select_selected.triggered.connect(functools.partial(self.dummy_method, 'acn_select_selected'))
@@ -237,12 +242,13 @@ class NodesContextMenu(QtGui.QMenu):
     # Getter & Setter
     # ------------------------------------------------------------------
 
-    def set_view(self, view):
+    def set_view_and_model(self, view):
         """
-        Set self.view
+        Set self.view and self.model
         """
 
         self.view = view
+        self.model = view.model()
 
     # Methods
     # ------------------------------------------------------------------
@@ -317,6 +323,75 @@ class NodesContextMenu(QtGui.QMenu):
 
         return node_list
 
+    # Slots
+    # ------------------------------------------------------------------
+
+    @QtCore.Slot()
+    def add_selected(self):
+        """
+        Add selected DAG graph write nodes as
+        renderthread nodes to model.
+        """
+
+        # nuke_node_list
+        nuke_node_list = renderthreads_nuke.get_nodes('Write', True)
+        # renderthread_node_list
+        renderthread_node_list = renderthreads_nuke.convert_nodes(nuke_node_list)
+
+        try:
+            # update
+            self.model.add_flat(renderthread_node_list)
+        except:
+            # log
+            self.logger.debug('Error adding renderthread node list to model. Maybe model is not set.')
+
+    @QtCore.Slot()
+    def add_all(self):
+        """
+        Add all DAG graph write nodes as
+        renderthread nodes to model.
+        """
+
+        # nuke_node_list
+        nuke_node_list = renderthreads_nuke.get_nodes('Write')
+        # renderthread_node_list
+        renderthread_node_list = renderthreads_nuke.convert_nodes(nuke_node_list)
+
+        try:
+            # update
+            self.model.add_flat(renderthread_node_list)
+        except:
+            # log
+            self.logger.debug('Error adding renderthread node list to model. Maybe model is not set.')
+
+    @QtCore.Slot()
+    def remove_selected(self):
+        """
+        Remove selected nodes from model.
+        """
+
+        return
+
+        try:
+            # clear
+            self.model.clear()
+        except:
+            # log
+            self.logger.debug('Error clearing model. Maybe model is not set.')
+
+    @QtCore.Slot()
+    def remove_all(self):
+        """
+        Clear model.
+        """
+
+        try:
+            # clear
+            self.model.clear()
+        except:
+            # log
+            self.logger.debug('Error clearing model. Maybe model is not set.')
+
     '''
     @QtCore.Slot()
     def select_nodes(self):
@@ -361,6 +436,7 @@ class NodesContextMenu(QtGui.QMenu):
         # create
         self.asset_manager_functionality.create_node('HelgaShotsMetadata')
     '''
+    
 
     
 

@@ -37,6 +37,13 @@ from .. import renderthreads_logging
 if(do_reload):
     reload(renderthreads_logging)
 
+# lib.mvc
+
+# renderthreads_node
+import renderthreads_node
+if(do_reload):
+    reload(renderthreads_node)
+
 
 # RenderThreadsModel
 # ------------------------------------------------------------------
@@ -73,7 +80,7 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         # super and objectName
         # ------------------------------------------------------------------
         self.parent_class = super(RenderThreadsModel, self)
-        self.parent_class.__init__(parent)
+        self.parent_class.__init__(parent=parent)
 
         # setObjectName
         self.setObjectName(self.__class__.__name__)
@@ -138,7 +145,7 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
             # log
             self.logger.debug('Index {0} not valid.'.format(index))
             # evaluate in superclass
-            return self.parent_class.data(index, role)
+            return None
         
         
         # row & col
@@ -165,7 +172,7 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
             if (current_header == self.header_name_list[0]):
                 
                 # name
-                name = renderthreads_node.name
+                name = renderthreads_node.fullName()
                 return name
 
             # column start_frame
@@ -186,17 +193,16 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
             elif (current_header == self.header_name_list[3]):
                 
                 # additional_args
-                additional_args = pynode.additional_args
-                
+                additional_args = renderthreads_node.additional_args
                 return additional_args
 
             else:
                 # evaluate in superclass
-                return self.parent_class.data(index, role)
+                return None
         
         else:
             # evaluate in superclass
-            return self.parent_class.data(index, role)
+            return None
 
 
     def setData(self, index, value, role = QtCore.Qt.EditRole):
@@ -236,7 +242,7 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
                 if(self.validate_value_for_name(value)):
                     
                     # set value
-                    renderthreads_node.name = value
+                    renderthreads_node.setName(value)
                     # data changed signal
                     self.dataChanged.emit(index, index)
                 
@@ -314,6 +320,33 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         # reset
         self.reset()
 
+    def update_flat(self, data_list_flat):
+        """
+        Set data_list from flat list and reset display.
+        """
+
+        # data_list
+        data_list = self.convert_flat_to_nested_list(data_list_flat)
+        # set data_list
+        self.data_list = data_list
+        # reset
+        self.reset()
+
+    def add_flat(self, additional_data_list_flat):
+        """
+        Add additional_data_list to self.data_list.
+        Perform check to dismiss duplicates.
+        """
+
+        # data_list_flat
+        data_list_flat = self.convert_nested_to_flat_list(self.data_list)
+
+        # clean_data_list_flat
+        clean_data_list_flat = list(set(data_list_flat + additional_data_list_flat))
+
+        # update_flat
+        self.update_flat(clean_data_list_flat)
+
     def clear(self):
         """
         Set empty data_list to model.
@@ -334,26 +367,62 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
     def get_data_list_flat(self):
         """
         Return self.data_list entries as flat list.
-        [[data], [data]] >> [data, data, data]
         """
 
-        # data_list_flat
-        data_list_flat = []
+        return self.convert_nested_to_flat_list(self.data_list)
+
+    def convert_nested_to_flat_list(self, nested_list):
+        """
+        Return nested_list entries as flat list.
+        [[data], [data]] >> [data, data, data].
+        """
+
+        # flat_list
+        flat_list = []
 
         # iterate
-        for inner_data_list in self.data_list:
+        for inner_list in nested_list:
             
             # check if index exists
             try:
-                data = inner_data_list[0]
+                data = inner_list[0]
             except:
                 continue
 
             # append
-            data_list_flat.append(data)
+            flat_list.append(data)
 
         # return
-        return data_list_flat
+        return flat_list
+
+    def convert_flat_to_nested_list(self, flat_list):
+        """
+        Return flat_list entries as nested list.
+        [data, data, data] >> [[data], [data]].
+        """
+
+        # flat list empty or filled with empty entries
+        if not (any(flat_list)):
+            return [[]]
+
+        # nested_list
+        nested_list = []
+
+        # iterate and add
+        for data in flat_list:
+
+            # check type
+            if (isinstance(data, renderthreads_node.RenderThreadsNode)):
+
+                # append
+                nested_list.append([data])
+
+        # nested_list empty
+        if not (nested_list):
+            return [[]]
+
+        # return
+        return nested_list
 
     # Validation
     # ------------------------------------------------------------------

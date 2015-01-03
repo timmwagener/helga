@@ -132,11 +132,7 @@
                 <property name="frameShadow">
                  <enum>QFrame::Plain</enum>
                 </property>
-                <layout class="QVBoxLayout" name="verticalLayout_2">
-                 <item>
-                  <widget class="QTableView" name="view_nodes"/>
-                 </item>
-                </layout>
+                <layout class="QVBoxLayout" name="lyt_frm_nodes"/>
                </widget>
               </item>
               <item>
@@ -266,8 +262,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>281</width>
-            <height>460</height>
+            <width>119</width>
+            <height>224</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="lyt_sawdgt_threads">

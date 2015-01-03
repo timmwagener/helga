@@ -63,10 +63,15 @@ from lib import renderthreads_logging
 if(do_reload):
     reload(renderthreads_logging)
 
-# renderthreads_gui
-from lib import renderthreads_gui
+# renderthreads_gui_setup
+from lib import renderthreads_gui_setup
 if(do_reload):
-    reload(renderthreads_gui)
+    reload(renderthreads_gui_setup)
+
+# renderthreads_mvc_setup
+from lib import renderthreads_mvc_setup
+if(do_reload):
+    reload(renderthreads_mvc_setup)
 
 # renderthreads_threads
 from lib import renderthreads_threads
@@ -84,6 +89,13 @@ if(do_reload):
 from lib.gui import renderthreads_dock_widget
 if(do_reload):
     reload(renderthreads_dock_widget)
+
+# lib.mvc
+
+# renderthreads_model_context_menu
+from lib.mvc import renderthreads_model_context_menu
+if(do_reload):
+    reload(renderthreads_model_context_menu)
 
 
 # Globals
@@ -172,7 +184,13 @@ class RenderThreads(form_class, base_class):
         self.setupUi(self)
 
         # setup_additional_ui
-        renderthreads_gui.setup_additional_ui(self)
+        renderthreads_gui_setup.setup_additional_ui(self)
+
+        # setup_mvc
+        renderthreads_mvc_setup.setup_mvc(self)
+
+        # connect_context_menus
+        self.connect_context_menus()
 
         # logger
         self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
@@ -186,6 +204,28 @@ class RenderThreads(form_class, base_class):
         # dock_it
         if (self.dock_it):
             renderthreads_gui_helper.make_dockable(self)
+
+    # Context Menus
+    # ------------------------------------------------------------------
+    def connect_context_menus(self):
+        """
+        Connect context menus. This didnt fit in the
+        renderthreads_mvc_setup module because of implicit
+        first argument of pyside context menu signal.
+        """
+
+        #nodes_view
+        self.nodes_view.customContextMenuRequested.connect(self.display_nodes_context_menu)
+
+    def display_nodes_context_menu(self, pos):
+        """
+        Create and display nodes model context menu.
+        """
+        
+        #context_menu
+        context_menu = renderthreads_model_context_menu.NodesContextMenu(parent = self)
+        context_menu.set_view(self.nodes_view)
+        context_menu.popup(self.nodes_view.mapToGlobal(pos))
 
     # Getter & Setter
     # ------------------------------------------------------------------

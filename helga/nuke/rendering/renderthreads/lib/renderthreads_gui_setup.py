@@ -1,7 +1,7 @@
 
 
 """
-renderthreads_gui
+renderthreads_gui_setup
 ==========================================
 
 This module encapsulates the creation/connection of the
@@ -296,6 +296,16 @@ def add_dev_menu(wdgt):
     wdgt.acn_print_selected_write_nodes.setObjectName('acn_print_selected_write_nodes')
     wdgt.mnu_dev_nuke.addAction(wdgt.acn_print_selected_write_nodes)
 
+    #acn_print_all_converted_write_nodes
+    wdgt.acn_print_all_converted_write_nodes = QtGui.QAction('Print all converted write nodes', wdgt)
+    wdgt.acn_print_all_converted_write_nodes.setObjectName('acn_print_all_converted_write_nodes')
+    wdgt.mnu_dev_nuke.addAction(wdgt.acn_print_all_converted_write_nodes)
+
+    #acn_print_selected_converted_write_nodes
+    wdgt.acn_print_selected_converted_write_nodes = QtGui.QAction('Print selected converted write nodes', wdgt)
+    wdgt.acn_print_selected_converted_write_nodes.setObjectName('acn_print_selected_converted_write_nodes')
+    wdgt.mnu_dev_nuke.addAction(wdgt.acn_print_selected_converted_write_nodes)
+
     # mnu_dev_threads
     wdgt.mnu_dev_threads = QtGui.QMenu('Threads', parent = wdgt)
     wdgt.mnu_dev_threads.setObjectName('mnu_dev_threads')
@@ -388,9 +398,21 @@ def connect_dev_ui(wdgt):
     """
 
     # acn_print_all_write_nodes
-    wdgt.acn_print_all_write_nodes.triggered.connect(functools.partial(renderthreads_nuke.get_write_nodes))
+    wdgt.acn_print_all_write_nodes.triggered.connect(functools.partial(renderthreads_nuke.print_nodes, 'Write'))
     # acn_print_selected_write_nodes
-    wdgt.acn_print_selected_write_nodes.triggered.connect(functools.partial(renderthreads_nuke.get_selected_write_nodes))
+    wdgt.acn_print_selected_write_nodes.triggered.connect(functools.partial(renderthreads_nuke.print_nodes, 'Write', True))
+
+    # acn_print_all_converted_write_nodes
+    wdgt.acn_print_all_converted_write_nodes.triggered.connect(functools.partial(renderthreads_nuke.print_nodes,
+                                                                                    'Write',
+                                                                                    False,
+                                                                                    True))
+    # acn_print_selected_converted_write_nodes
+    wdgt.acn_print_selected_converted_write_nodes.triggered.connect(functools.partial(renderthreads_nuke.print_nodes,
+                                                                                        'Write',
+                                                                                        True,
+                                                                                        True))
+    
     # acn_test_threads
     wdgt.acn_test_threads.triggered.connect(wdgt.thread_manager.test_setup)
 

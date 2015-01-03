@@ -1,6 +1,6 @@
 
 """
-shot_metadata_item_delegate
+renderthreads_item_delegate
 ==========================================
 
 Subclass of QStyledItemDelegate to format view

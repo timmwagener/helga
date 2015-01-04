@@ -37,6 +37,11 @@ from .. import renderthreads_logging
 if(do_reload):
     reload(renderthreads_logging)
 
+# renderthreads_nuke
+from .. import renderthreads_nuke
+if(do_reload):
+    reload(renderthreads_nuke)
+
 # lib.mvc
 
 # renderthreads_node
@@ -60,6 +65,9 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
                         [renderthreads_node], [renderthreads_node],
                         ......]
     """
+
+    # Creation and Initialization
+    # ------------------------------------------------------------------
 
     def __new__(cls, *args, **kwargs):
         """
@@ -89,15 +97,17 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         # instance variables
         # ------------------------------------------------------------------
         # header_name_list
-        self.header_name_list = ['name', 'start_frame', 'end_frame', 'additional_args']
+        self.header_name_list = ['nuke_node', 'start_frame', 'end_frame', 'additional_args']
 
         # data_list
         self.data_list = [[]]
         
         # logger
         self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
+
+    # Methods
+    # ------------------------------------------------------------------
         
-    
     def headerData(self, section, orientation, role = QtCore.Qt.DisplayRole):
         """
         Return header description for section.
@@ -119,7 +129,6 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         
         return QtCore.QAbstractTableModel.headerData(self, section, orientation, role)
 
-    
     def rowCount(self, parent):
 
         # if any item in list return len
@@ -128,12 +137,10 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
 
         # else 0
         return 0
-
     
     def columnCount(self, parent):
         return len(self.header_name_list) 
 
-    
     def data(self, index, role = QtCore.Qt.DisplayRole):
         """
         Return data for current index. The returned data is
@@ -160,6 +167,7 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
 
         # nuke_node exists
         if not(renderthreads_node.nuke_node_exists()):
+            # return
             return None
         
         # DisplayRole and EditRole (return identical in most cases,
@@ -168,12 +176,12 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
             role == QtCore.Qt.ToolTipRole or
             role == QtCore.Qt.EditRole):
 
-            # column name
+            # column nuke_node
             if (current_header == self.header_name_list[0]):
                 
-                # name
-                name = renderthreads_node.fullName()
-                return name
+                # nuke_node
+                nuke_node = renderthreads_node.nuke_node
+                return nuke_node
 
             # column start_frame
             elif (current_header == self.header_name_list[1]):
@@ -203,7 +211,6 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         else:
             # evaluate in superclass
             return None
-
 
     def setData(self, index, value, role = QtCore.Qt.EditRole):
         """
@@ -235,11 +242,11 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         # EditRole
         if (role == QtCore.Qt.EditRole):
 
-            # column name
+            # column nuke_node
             if (current_header == self.header_name_list[0]):
                 
                 # validate
-                if(self.validate_value_for_name(value)):
+                if(self.validate_value_for_nuke_node(value)):
                     
                     # set value
                     renderthreads_node.setName(value)
@@ -315,8 +322,10 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         Set data_list and reset display.
         """
 
-        # set data_list
-        self.data_list = data_list
+        # sorted_data_list
+        sorted_data_list = self.sort_data_list(data_list)
+        # set sorted_data_list
+        self.data_list = sorted_data_list
         # reset
         self.reset()
 
@@ -327,10 +336,29 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
 
         # data_list
         data_list = self.convert_flat_to_nested_list(data_list_flat)
-        # set data_list
-        self.data_list = data_list
-        # reset
-        self.reset()
+        
+        # update
+        self.update(data_list)
+
+    @QtCore.Slot()
+    def update_invalid(self):
+        """
+        Update data_list to remove all
+        invalid entries. (Renderthread nodes
+        whose get_nuke_node() returns None)
+        """
+
+        # data_list_flat
+        data_list_flat = self.get_data_list_flat()
+
+        # check if needed
+        if not (all([node.nuke_node_exists() for node in data_list_flat])):
+
+            # clean_data_list_flat
+            clean_data_list_flat = [node for node in data_list_flat if (node.nuke_node_exists())]
+
+            # update_flat
+            self.update_flat(clean_data_list_flat)
 
     def add_flat(self, additional_data_list_flat):
         """
@@ -339,7 +367,7 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         """
 
         # data_list_flat
-        data_list_flat = self.convert_nested_to_flat_list(self.data_list)
+        data_list_flat = self.get_data_list_flat()
 
         # clean_data_list_flat
         clean_data_list_flat = list(set(data_list_flat + additional_data_list_flat))
@@ -352,10 +380,25 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         Set empty data_list to model.
         """
 
-        # set data_list
-        self.data_list = [[]]
-        # reset
-        self.reset()
+        # update
+        self.update([[]])
+
+    def sort_data_list(self, data_list):
+        """
+        Sort data list by full name attribute
+        of nuke_node of renderthreads node.
+        """
+
+        # data_list_flat
+        data_list_flat = self.convert_nested_to_flat_list(data_list)
+        # sorted_data_list_flat
+        sorted_data_list_flat = sorted(data_list_flat,
+                                        key = lambda renderthreads_node: renderthreads_node.fullName().lower())
+        # sorted_data_list
+        sorted_data_list = self.convert_flat_to_nested_list(sorted_data_list_flat)
+
+        # return
+        return sorted_data_list
 
     def get_data_list(self):
         """
@@ -424,10 +467,72 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         # return
         return nested_list
 
+    def remove_data_from_list(self, data_to_remove):
+        """
+        Cleanup data list.
+        """
+
+        # renderthreads_node
+        if (isinstance(data_to_remove, renderthreads_node.RenderThreadsNode)):
+
+            # remove_node_from_data_list
+            self.remove_node_from_data_list(data_to_remove)
+
+        # [renderthreads_node, renderthreads_node]
+        elif (isinstance(data_to_remove, list)):
+
+            # remove_nodes_from_data_list
+            self.remove_nodes_from_data_list(data_to_remove)
+
+    def remove_node_from_data_list(self, node_to_remove):
+        """
+        Remove single renderthreads node
+        from data list.
+        """
+
+        try:
+            # data_list_flat
+            data_list_flat = self.get_data_list_flat()
+            # remove
+            clean_data_list_flat = [data for
+                                    data in
+                                    data_list_flat if not
+                                    (id(data) == id(node_to_remove))]
+            # update
+            self.update_flat(clean_data_list_flat)
+        except:
+            # log
+            self.logger.debug('Error removing node from data_list')
+
+    def remove_nodes_from_data_list(self, node_remove_list):
+        """
+        Remove list of renderthreads nodes
+        from data list.
+        """
+
+        try:
+            # node_remove_id_list
+            node_remove_id_list = [id(node) for node in node_remove_list]
+
+            # data_list_flat
+            data_list_flat = self.get_data_list_flat()
+            
+            # clean_data_list_flat
+            clean_data_list_flat = [node for
+                                    node in
+                                    data_list_flat if not
+                                    (id(node) in node_remove_id_list)]
+
+            # update
+            self.update_flat(clean_data_list_flat)
+        except:
+            # log
+            self.logger.debug('Error removing node list from data_list')
+
     # Validation
     # ------------------------------------------------------------------
 
-    def validate_value_for_name(self, value):
+    def validate_value_for_nuke_node(self, value):
         """
         Validate the value that should be set on the attr. of the data object.
         Return True or False.

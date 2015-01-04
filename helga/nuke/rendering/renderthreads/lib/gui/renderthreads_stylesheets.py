@@ -437,6 +437,121 @@ QPushButton:pressed { border: none;\
 QLCDNumber { background: transparent; \
                 border: none; \
 } \
+\
+\
+\
+\
+\
+\
+/* QTableCornerButton */\
+QTableCornerButton { background-color: %(white)s; \
+                        border: none; \
+}\
+\
+\
+/* QTableCornerButton - section */\
+QTableCornerButton::section { background-color: %(white)s; \
+                                border: none; \
+}\
+\
+\
+\
+\
+\
+\
+/* RenderThreadsView - nodes_view */\
+RenderThreadsView#nodes_view { background-color: %(white)s; \
+                                alternate-background-color: %(grey_bright)s; \
+                                selection-background-color: %(red)s; \
+                                color: %(black)s;\
+                                border-left: none; \
+                                border-top: none; \
+                                border-bottom: none; \
+                                border-right: none; \
+} \
+\
+\
+/* RenderThreadsView - nodes_view - item */\
+RenderThreadsView#nodes_view::item { border-left: none; \
+                                        border-top: none; \
+                                        border-bottom: none; \
+                                        border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QHeaderView - nodes_view_horizontal_header*/\
+QHeaderView#nodes_view_horizontal_header{ background-color: %(white)s; \
+                                            border-left: none; \
+                                            border-top: none; \
+                                            border-bottom: 1px solid %(black)s; \
+                                            border-right: none; \
+} \
+\
+\
+/* QHeaderView - nodes_view_horizontal_header - section */\
+QHeaderView#nodes_view_horizontal_header::section { background-color: %(white)s; \
+                                                    font-weight: bold; \
+                                                    border-left: none; \
+                                                    border-top: none; \
+                                                    border-bottom: none; \
+                                                    border-right: 1px solid %(red)s; \
+} \
+\
+\
+/* QHeaderView - nodes_view_vertical_header */\
+QHeaderView#nodes_view_vertical_header { background-color: %(white)s; \
+                                            border-left: none; \
+                                            border-top: none; \
+                                            border-bottom: none; \
+                                            border-right: none; \
+} \
+\
+\
+/* QHeaderView - nodes_view_vertical_header - section */\
+QHeaderView#nodes_view_vertical_header::section { background-color: %(white)s; \
+                                                    border-left: none; \
+                                                    border-top: none; \
+                                                    border-bottom: none; \
+                                                    border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* NodesContextMenu */\
+NodesContextMenu { background-color: %(white)s; \
+                    color: %(grey)s; \
+                    border-left: none; \
+                    border-top: 1px solid %(red)s; \
+                    border-bottom: none; \
+                    border-right: none; \
+} \
+\
+\
+/* NodesContextMenu -item - selected */\
+NodesContextMenu::item:selected { background-color: %(white)s; \
+} \
+\
+\
+\
+\
+\
+\
+/* QTextEdit */\
+QTextEdit { background-color: %(white)s; \
+            selection-background-color: %(red)s; \
+            color: %(black)s; \
+            border-left: none; \
+            border-top: none; \
+            border-bottom: none; \
+            border-right: none; \
+} \
 "%ss_dict
 	
 	#return

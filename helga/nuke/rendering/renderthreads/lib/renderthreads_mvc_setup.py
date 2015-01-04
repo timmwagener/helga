@@ -48,6 +48,11 @@ from mvc import renderthreads_view
 if(do_reload):
     reload(renderthreads_view)
 
+# renderthreads_item_delegate
+from mvc import renderthreads_item_delegate
+if(do_reload):
+    reload(renderthreads_item_delegate)
+
 
 # Globals
 # ------------------------------------------------------------------
@@ -75,9 +80,12 @@ def setup_mvc(wdgt):
     # connect_mvc
     connect_mvc(wdgt)
 
+    
+
 
 # Create
 # ------------------------------------------------------------------
+
 def create_mvc(wdgt):
     """
     Create MVC for RenderThreads instance.
@@ -86,6 +94,7 @@ def create_mvc(wdgt):
     # nodes_view
     wdgt.nodes_view = renderthreads_view.RenderThreadsView(parent = wdgt)
     wdgt.nodes_view.setWordWrap(True)
+    wdgt.nodes_view.setShowGrid(False)
     # set resize mode for horizontal header
     wdgt.nodes_view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
     wdgt.nodes_view.horizontalHeader().setStretchLastSection(False)
@@ -95,18 +104,20 @@ def create_mvc(wdgt):
     wdgt.nodes_view.setObjectName('nodes_view')
     wdgt.nodes_view.horizontalHeader().setObjectName('nodes_view_horizontal_header')
     wdgt.nodes_view.verticalHeader().setObjectName('nodes_view_vertical_header')
+    #hide vertical header
+    wdgt.nodes_view.verticalHeader().hide()
     # context menu
     wdgt.nodes_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
     # add to ui
     wdgt.frm_nodes.layout().addWidget(wdgt.nodes_view)
 
-    '''
-    #shot_metadata_item_delegate
-    self.shot_metadata_item_delegate = shot_metadata_item_delegate.ShotMetadataItemDelegate(self.logging_level)
-    self.shot_metadata_item_delegate.setObjectName('shot_metadata_item_delegate')
+    
+    #nodes_item_delegate
+    wdgt.nodes_item_delegate = renderthreads_item_delegate.RenderThreadsItemDelegate(parent = wdgt)
+    wdgt.nodes_item_delegate.setObjectName('nodes_item_delegate')
     #set in view
-    self.shot_metadata_view.setItemDelegate(self.shot_metadata_item_delegate)
-    '''
+    wdgt.nodes_view.setItemDelegate(wdgt.nodes_item_delegate)
+    
     
     # nodes_model
     wdgt.nodes_model = renderthreads_model.RenderThreadsModel(parent = wdgt)
@@ -117,11 +128,14 @@ def create_mvc(wdgt):
     wdgt.nodes_selection_model = QtGui.QItemSelectionModel(wdgt.nodes_model)
     wdgt.nodes_view.setSelectionModel(wdgt.nodes_selection_model)
 
+
 # Connect
 # ------------------------------------------------------------------
+
 def connect_mvc(wdgt):
     """
     Connect MVC components.
     """
 
     pass
+

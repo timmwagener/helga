@@ -14,6 +14,7 @@ functionality.
 # Python
 import logging
 import functools
+import collections
 # nuke
 import nuke
 
@@ -52,6 +53,10 @@ if(do_reload):
 logger = renderthreads_logging.get_logger(__name__)
 
 
+# MemoryInfo
+# ------------------------------------------------------------------
+MemoryInfo = collections.namedtuple('MemoryInfo', 'info ram_total ram_in_use total_virtual_memory')
+
 
 # Scene Interaction
 # ------------------------------------------------------------------
@@ -59,19 +64,22 @@ def get_nodes(filter_type=None, selected=False):
     """
     Return list of all write nodes in DAG.
     """
-    # func
-    func = nuke.allNodes
     
     # selected
     if (selected):
-        func = nuke.selectedNodes
+        # all nodes (also group content)
+        node_list = nuke.allNodes(recurseGroups = True)
+        # selected_nodes
+        node_list = [node for node in node_list if (node.isSelected())]
+    # all
+    else:
+        node_list = nuke.allNodes(recurseGroups = True)
 
     # filter_type
     if (filter_type):
-        func = functools.partial(func, filter_type)
+        node_list = [node for node in node_list if (node.Class() == filter_type)]
 
-    # node_list
-    node_list = func()
+    # check
     if not (node_list):
         # log
         logger.debug('node_list empty or None. Returning empty list.')
@@ -121,17 +129,6 @@ def convert_nodes(nuke_node_list):
     return renderthread_node_list
 
 
-def node_exists(node):
-    """
-    Check whether or not node exists.
-    """
-
-    try:
-        result = nuke.exists(node.name())
-        return result
-    except:
-        return False
-
 def convert_nuke_to_renderthread_node(nuke_node):
     """
     Convert a nuke to a renderthread node.
@@ -146,3 +143,95 @@ def convert_nuke_to_renderthread_node(nuke_node):
     # generic
     else:
         return renderthreads_node.RenderThreadsNode(nuke_node, start_frame, end_frame)
+
+
+def node_exists(node):
+    """
+    Check whether or not node exists.
+    """
+
+    try:
+        result = nuke.exists(node.name())
+        return result
+    except:
+        return False
+
+
+def deselect_all():
+    """
+    Deselect all nuke nodes.
+    """
+
+    # all nodes (also group content)
+    node_list = nuke.allNodes(recurseGroups = True)
+    
+    # deselect
+    for node in node_list:
+        try:
+            node.setSelected(False)
+        except:
+            continue
+
+
+def select_nodes(nuke_node_list):
+    """
+    Select nodes from given nuke_node_list.
+    """
+
+    # iterate and select
+    for nuke_node in nuke_node_list:
+
+        # select
+        try:
+            select_node(nuke_node)
+        except:
+            logger.debug('Error selecting nuke node {0}. Continuing'.format(nuke_node))
+            continue
+
+
+def select_node(nuke_node, exclusive=False):
+    """
+    Select nuke_node from given nuke_node.
+    """
+
+    #exclusive
+    if (exclusive):
+        nuke_node.selectOnly()
+    # else
+    else:
+        nuke_node.setSelected(True)
+
+
+def get_memory_info(display=False):
+    """
+    Return list of memory info.
+    """
+
+    # values
+    info = str(nuke.memory('info'))
+    ram_total = byte_to_megabyte(nuke.memory('total_ram'))
+    ram_in_use = byte_to_megabyte(nuke.memory('usage'))
+    total_virtual_memory = byte_to_megabyte(nuke.memory('total_vm'))
+
+    # memory_info
+    memory_info = MemoryInfo(info, ram_total, ram_in_use, total_virtual_memory)
+    
+    # display
+    if (display):
+        
+        # log
+        logger.debug('{0}'.format(memory_info))
+
+
+def byte_to_megabyte(byte_number):
+    """
+    Convert bytes to megabytes.
+    For example a byte_number of 
+    17135431680 returns 16341 megabyte.
+    1048576 byte are 1 mbyte.
+    """
+
+    try:
+        return int(byte_number/1048576)
+    except:
+        return None

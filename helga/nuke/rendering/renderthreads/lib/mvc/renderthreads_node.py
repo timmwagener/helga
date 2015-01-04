@@ -109,6 +109,9 @@ class RenderThreadsNode(QtCore.QObject):
         # _additional_args
         self.set_additional_args(additional_args)
 
+        # container_protocol_index_size
+        self.container_protocol_index_size = 4
+
         # logger
         self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
 
@@ -144,10 +147,6 @@ class RenderThreadsNode(QtCore.QObject):
         Set self._start_frame
         """
 
-        # wrong value then set to root
-        if not (value):
-            value = nuke.Root().firstFrame()
-
         self._start_frame = value
 
     start_frame = property(get_start_frame, set_start_frame)
@@ -164,10 +163,6 @@ class RenderThreadsNode(QtCore.QObject):
         """
         Set self._end_frame
         """
-
-        # wrong value then set to root
-        if not (value):
-            value = nuke.Root().lastFrame()
         
         self._end_frame = value
 
@@ -280,14 +275,54 @@ class RenderThreadsNode(QtCore.QObject):
 
         return self.__class__.__name__
 
-    # Comparison
+    # Operator overrides
     # ------------------------------------------------------------------
     def __eq__(self, other):
+        """=="""
         return self.get_nuke_node_full_name() == other.get_nuke_node_full_name()
     def __ne__(self, other):
+        """!="""
         return self.get_nuke_node_full_name() != other.get_nuke_node_full_name()
     def __hash__(self):
         return hash(self.get_nuke_node_full_name())
+    def __len__(self):
+        """
+        Return number of properties.
+        [0]_nuke_node
+        [1]_start_frame
+        [2]_end_frame
+        [3]_additional_args
+        """
+        return self.container_protocol_index_size
+    
+    def __getitem__(self, key):
+        """
+        Return value accessed by one of the
+        property object. See __len__ for a list.
+        """
+
+        # TypeError
+        if not (type(key) == int):
+            raise TypeError
+
+        # KeyError
+        if (key < 0 and
+            key > self.container_protocol_index_size - 1):
+            raise KeyError
+
+        # 0
+        if (key == 0): 
+            return self.get_nuke_node()
+        # 1
+        elif (key == 1): 
+            return self.get_start_frame()
+        # 2
+        elif (key == 2): 
+            return self.get_end_frame()
+        # 3
+        elif (key == 3): 
+            return self.get_additional_args()
+
 
     # Misc
     # ------------------------------------------------------------------
@@ -299,8 +334,8 @@ class RenderThreadsNode(QtCore.QObject):
         """
         
         try:
-            name = self.get_nuke_node_name()
-            return nuke.exists(name)
+            full_name = self.get_nuke_node_full_name()
+            return nuke.exists(full_name)
         except:
             return False
 

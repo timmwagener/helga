@@ -73,6 +73,11 @@ from lib import renderthreads_mvc_setup
 if(do_reload):
     reload(renderthreads_mvc_setup)
 
+# renderthreads_services_setup
+from lib import renderthreads_services_setup
+if(do_reload):
+    reload(renderthreads_services_setup)
+
 # renderthreads_threads
 from lib import renderthreads_threads
 if(do_reload):
@@ -189,6 +194,9 @@ class RenderThreads(form_class, base_class):
         # setup_mvc
         renderthreads_mvc_setup.setup_mvc(self)
 
+        # setup_services
+        renderthreads_services_setup.setup_services(self)
+
         # connect_context_menus
         self.connect_context_menus()
 
@@ -223,7 +231,8 @@ class RenderThreads(form_class, base_class):
         """
         
         #context_menu
-        context_menu = renderthreads_model_context_menu.NodesContextMenu(parent = self)
+        context_menu = renderthreads_model_context_menu.NodesContextMenu(dev=self.is_dev(),
+                                                                            parent = self)
         context_menu.set_view_and_model(self.nodes_view)
         context_menu.popup(self.nodes_view.mapToGlobal(pos))
 
@@ -288,8 +297,11 @@ class RenderThreads(form_class, base_class):
         """
         
         try:
-            #stop threads
+            # thread_manager threads
             self.thread_manager.stop_threads()
+
+            # stop_services
+            renderthreads_services_setup.stop_services(self)
 
         except:
             #log

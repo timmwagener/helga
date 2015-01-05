@@ -223,6 +223,15 @@ QFrame#frm_command_line { padding: 10px; \
 } \
 \
 \
+/* QFrame - frm_command_line_options */\
+QFrame#frm_command_line_options { padding: 10px; \
+                                    border-left: 1px solid %(grey)s; \
+                                    border-right: 1px solid %(grey)s; \
+                                    border-bottom: 1px solid %(grey)s; \
+                                    border-top: none; \
+} \
+\
+\
 /* QFrame - frm_constants_header */\
 QFrame#frm_constants_header { padding: 10px; \
                                 border: 1px solid %(grey)s; \

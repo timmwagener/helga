@@ -86,6 +86,7 @@ ICON_RENDERTHREADS = os.path.join(ICONS_PATH, 'icn_renderthreads.png').replace('
 
 # Text
 # ------------------------------------------------------------------
+WRITE_NODE_REPLACEMENT_TEMPLATE = 'write_node_template'
 TEXT_DIVIDER = '---------------------------'
 
 

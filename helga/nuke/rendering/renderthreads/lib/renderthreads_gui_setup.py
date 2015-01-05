@@ -42,6 +42,11 @@ import renderthreads_nuke
 if(do_reload):
     reload(renderthreads_nuke)
 
+#  renderthreads_command_line_engine
+import renderthreads_command_line_engine
+if(do_reload):
+    reload(renderthreads_command_line_engine)
+
 #  lib.gui
 
 #  renderthreads_gui_helper
@@ -75,6 +80,8 @@ ICON_RENDERTHREADS = renderthreads_globals.ICON_RENDERTHREADS
 TEXT_DIVIDER = renderthreads_globals.TEXT_DIVIDER
 
 COMMAND_LINE_FLAG_SPACING = renderthreads_globals.COMMAND_LINE_FLAG_SPACING
+
+WRITE_NODE_REPLACEMENT_TEMPLATE = renderthreads_globals.WRITE_NODE_REPLACEMENT_TEMPLATE
 
 
 #  logger (Module Level)
@@ -261,6 +268,9 @@ def create_options_menu(wdgt):
     content for the stackwidget options page.
     """
 
+    # create_command_line
+    create_command_line(wdgt)
+
     # create_command_line_menu
     create_command_line_menu(wdgt)
 
@@ -271,6 +281,34 @@ def create_options_menu(wdgt):
     lyt_sawdgt_options = wdgt.sawdgt_options.layout()
     lyt_sawdgt_options.addStretch()
 
+    # update_command_line
+    update_command_line(wdgt)
+
+
+def create_command_line(wdgt):
+    """
+    Create wdgt.lbl_command_line which displays
+    the current command line.
+    """
+
+    # tooltip
+    tooltip = 'This is the current command line that will be used for the render process.\n\
+{0}\n\
+PLEASE KEEP IN MIND:\n\
+Not all the command line flags make sense together. Some settings and combinations\n\
+might be invalid and cause the render to fail.'.format(TEXT_DIVIDER)
+    wdgt.frm_command_line.setToolTip(tooltip)
+
+    #  lyt_frm_command_line
+    lyt_frm_command_line = wdgt.frm_command_line.layout()
+
+    # lbl_command_line
+    wdgt.lbl_command_line = QtGui.QLabel(parent = wdgt)
+    wdgt.lbl_command_line.setObjectName('lbl_command_line')
+    wdgt.lbl_command_line.setText('temp')
+    wdgt.lbl_command_line.setWordWrap(True)
+    lyt_frm_command_line.addWidget(wdgt.lbl_command_line)
+
 
 def create_command_line_menu(wdgt):
     """
@@ -280,8 +318,8 @@ def create_command_line_menu(wdgt):
     # command_line_flag_list
     wdgt.command_line_flag_list = []
 
-    #  lyt_frm_command_line
-    lyt_frm_command_line = wdgt.frm_command_line.layout()
+    #  lyt_frm_command_line_options
+    lyt_frm_command_line_options = wdgt.frm_command_line_options.layout()
 
     
     # flg_a
@@ -291,11 +329,11 @@ def create_command_line_menu(wdgt):
                                                                         tooltip = tooltip,
                                                                         checkable = True,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_a)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_a)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_a)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_nukeassist
@@ -305,11 +343,11 @@ def create_command_line_menu(wdgt):
                                                                                     tooltip = tooltip,
                                                                                     checkable = True,
                                                                                     parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_nukeassist)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_nukeassist)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_nukeassist)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
     
     # flg_b
@@ -319,11 +357,11 @@ def create_command_line_menu(wdgt):
                                                                         tooltip = tooltip,
                                                                         checkable = True,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_b)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_b)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_b)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_c
@@ -335,11 +373,11 @@ def create_command_line_menu(wdgt):
                                                                         checkable = True,
                                                                         wdgt_parameter = wdgt_parameter,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_c)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_c)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_c)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_cont
@@ -350,11 +388,11 @@ If not specified, the application will stop on the first error.'
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_cont)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_cont)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_cont)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_d
@@ -364,11 +402,11 @@ If not specified, the application will stop on the first error.'
                                                                         tooltip = tooltip,
                                                                         checkable = True,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_d)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_d)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_d)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_f
@@ -378,11 +416,11 @@ If not specified, the application will stop on the first error.'
                                                                         tooltip = tooltip,
                                                                         checkable = True,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_f)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_f)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_f)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_F
@@ -395,17 +433,19 @@ A range can be one of:\n\
 THIS FLAG IS NOT AVAILABLE FOR USER INPUT\n\
 SINCE IT IS HANDLED BY THE TOOL INTERNALLY.'.format(TEXT_DIVIDER)
     wdgt_parameter = QtGui.QSpinBox(parent = wdgt)
+    wdgt_parameter.setValue(1)
     wdgt.flg_F = renderthreads_command_line_flag_widget.CommandLineFlag(flag = '-F',
-                                                                        state = False,
                                                                         tooltip = tooltip,
                                                                         checkable = False,
                                                                         wdgt_parameter = wdgt_parameter,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_F)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_F)
+    # force parameter enabled
+    wdgt.flg_F.force_parameter_enabled(False)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_F)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_gpu
@@ -418,11 +458,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                             checkable = True,
                                                                             wdgt_parameter = wdgt_parameter,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_gpu)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_gpu)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_gpu)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_gpulist
@@ -432,11 +472,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                                 tooltip = tooltip,
                                                                                 checkable = True,
                                                                                 parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_gpulist)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_gpulist)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_gpulist)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_h
@@ -446,11 +486,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                                 tooltip = tooltip,
                                                                                 checkable = True,
                                                                                 parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_h)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_h)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_h)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_hiero
@@ -460,11 +500,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                                 tooltip = tooltip,
                                                                                 checkable = True,
                                                                                 parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_hiero)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_hiero)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_hiero)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_i
@@ -474,11 +514,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                         tooltip = tooltip,
                                                                         checkable = True,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_i)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_i)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_i)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_l
@@ -488,11 +528,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                         tooltip = tooltip,
                                                                         checkable = True,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_l)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_l)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_l)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_m
@@ -508,11 +548,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                         checkable = True,
                                                                         wdgt_parameter = wdgt_parameter,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_m)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_m)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_m)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_n
@@ -522,11 +562,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                         tooltip = tooltip,
                                                                         checkable = True,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_n)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_n)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_n)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_nukex
@@ -536,11 +576,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_nukex)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_nukex)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_nukex)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_p
@@ -550,11 +590,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                         tooltip = tooltip,
                                                                         checkable = True,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_p)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_p)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_p)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_P
@@ -564,11 +604,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                         tooltip = tooltip,
                                                                         checkable = True,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_P)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_P)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_P)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_pause
@@ -578,11 +618,11 @@ that defaults to 0 if none given. Will override preferences when in interactive 
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_pause)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_pause)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_pause)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_safe
@@ -593,11 +633,11 @@ as well as stopping any Ofx plugins being loaded (including FurnaceCore)'
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_safe)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_safe)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_safe)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_ple
@@ -607,11 +647,11 @@ as well as stopping any Ofx plugins being loaded (including FurnaceCore)'
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_ple)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_ple)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_ple)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_priority
@@ -628,11 +668,11 @@ low'
                                                                                 checkable = True,
                                                                                 wdgt_parameter = wdgt_parameter,
                                                                                 parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_priority)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_priority)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_priority)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_q
@@ -642,11 +682,11 @@ low'
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_q)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_q)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_q)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_s
@@ -662,11 +702,11 @@ this defaults to 16777216 (16MB) the smallest allowed value is 1048576 (1MB).'
                                                                             checkable = True,
                                                                             wdgt_parameter = wdgt_parameter,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_s)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_s)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_s)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_sro
@@ -677,11 +717,11 @@ nodes such that Reads can use files created by earlier Write nodes'
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_sro)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_sro)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_sro)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_t
@@ -692,11 +732,11 @@ If <script> is a .py file it will be executed.'
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_t)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_t)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_t)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_tg
@@ -707,11 +747,11 @@ PyQt can be used. Needs an X session.'
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_tg)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_tg)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_tg)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_V
@@ -729,11 +769,11 @@ PyQt can be used. Needs an X session.'
                                                                             checkable = True,
                                                                             wdgt_parameter = wdgt_parameter,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_V)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_V)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_V)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_view
@@ -745,11 +785,11 @@ PyQt can be used. Needs an X session.'
                                                                             checkable = True,
                                                                             wdgt_parameter = wdgt_parameter,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_view)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_view)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_view)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_version
@@ -759,40 +799,47 @@ PyQt can be used. Needs an X session.'
                                                                             tooltip = tooltip,
                                                                             checkable = True,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_version)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_version)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_version)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
     
     # flg_x
-    tooltip = 'Execute the script (rather than edit it).'
+    tooltip = 'Execute the script (rather than edit it).\n\
+{0}\n\
+THIS FLAG IS NOT AVAILABLE FOR USER INPUT\n\
+SINCE IT IS HANDLED BY THE TOOL INTERNALLY.'.format(TEXT_DIVIDER)
     wdgt.flg_x = renderthreads_command_line_flag_widget.CommandLineFlag(flag = '-x',
                                                                         tooltip = tooltip,
                                                                         checkable = False,
                                                                         parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_x)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_x)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_x)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_X
-    tooltip = 'Only execute these nodes (comma-separated list).'
-    wdgt_parameter = QtGui.QLineEdit(text = '', parent = wdgt)
+    tooltip = 'Only execute these nodes (comma-separated list).\n\
+{0}\n\
+THIS FLAG IS NOT AVAILABLE FOR USER INPUT\n\
+SINCE IT IS HANDLED BY THE TOOL INTERNALLY.'.format(TEXT_DIVIDER)
+    wdgt_parameter = QtGui.QLineEdit(text = WRITE_NODE_REPLACEMENT_TEMPLATE, parent = wdgt)
     wdgt.flg_X = renderthreads_command_line_flag_widget.CommandLineFlag(flag = '-X',
-                                                                            state = False,
-                                                                            tooltip = tooltip,
-                                                                            checkable = True,
-                                                                            wdgt_parameter = wdgt_parameter,
-                                                                            parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_X)
+                                                                        tooltip = tooltip,
+                                                                        checkable = False,
+                                                                        wdgt_parameter = wdgt_parameter,
+                                                                        parent = wdgt)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_X)
+    # force parameter enabled
+    wdgt.flg_X.force_parameter_enabled(False)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_X)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_remap
@@ -809,11 +856,11 @@ This option will cause an error if there are not an equal number of \'map froms\
                                                                             checkable = True,
                                                                             wdgt_parameter = wdgt_parameter,
                                                                             parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_remap)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_remap)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_remap)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_crashhandling
@@ -830,11 +877,11 @@ This can also be controlled by using the environment variable NUKE_CRASH_HANDLIN
                                                                                     checkable = True,
                                                                                     wdgt_parameter = wdgt_parameter,
                                                                                     parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_crashhandling)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_crashhandling)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_crashhandling)
     # spacer widget
-    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_command_line_options, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
 
 
     # flg_nocrashprompt
@@ -846,12 +893,9 @@ by using the NUKE_NO_CRASH_PROMPT environment variable.'
                                                                                     tooltip = tooltip,
                                                                                     checkable = True,
                                                                                     parent = wdgt)
-    lyt_frm_command_line.addWidget(wdgt.flg_nocrashprompt)
+    lyt_frm_command_line_options.addWidget(wdgt.flg_nocrashprompt)
     # command_line_flag_list
     wdgt.command_line_flag_list.append(wdgt.flg_nocrashprompt)
-
-    
-    
 
 
 def create_constants_menu(wdgt):
@@ -1015,7 +1059,20 @@ def connect_signals(wdgt):
     Connect Signals for the ui.
     """
 
-    pass
+    # iterate flags
+    # state and parameter
+    for flag in wdgt.command_line_flag_list:
+
+        # state_changed
+        flag.state_changed.connect(functools.partial(update_command_line, wdgt))
+        # parameter_changed
+        flag.parameter_changed.connect(functools.partial(update_command_line, wdgt))
+
+    # le_script_path
+    wdgt.le_script_path.textChanged.connect(functools.partial(update_command_line, wdgt))
+
+    # le_nuke_path
+    wdgt.le_nuke_path.textChanged.connect(functools.partial(update_command_line, wdgt))
 
 
 def connect_actions(wdgt):
@@ -1109,7 +1166,7 @@ def style_ui(wdgt):
     wdgt.setStyleSheet(renderthreads_stylesheets.get_stylesheet())
 
 
-#  Functions
+#  Slots
 #  ------------------------------------------------------------------
 
 def update_script_path(wdgt):
@@ -1124,3 +1181,41 @@ def update_script_path(wdgt):
 
     # set
     wdgt.le_script_path.setText(nuke_script_path)
+
+
+def update_command_line(wdgt, *args):
+    """
+    Update lbl_command_line when state or
+    parameter of flag are changed.
+    """
+
+    # nuke_script_path
+    nuke_script_path = wdgt.le_script_path.text()
+    
+    # nuke_script_path_word_wrap
+    nuke_script_path_word_wrap = renderthreads_gui_helper.prepare_string_for_word_wrap(nuke_script_path)
+
+    # nuke_path
+    nuke_path = wdgt.le_nuke_path.text()
+
+    # flag_list
+    flag_list = wdgt.command_line_flag_list
+
+    # command_line_string
+    command_line_string = renderthreads_command_line_engine.get_command_line_string(flag_list,
+                                                                                    nuke_path,
+                                                                                    nuke_script_path)
+
+    # command_line_string_word_wrap
+    command_line_string_word_wrap = renderthreads_command_line_engine.get_command_line_string(flag_list,
+                                                                                                nuke_path,
+                                                                                                nuke_script_path_word_wrap)
+
+    # set lbl_command_line
+    wdgt.lbl_command_line.setText(command_line_string_word_wrap)
+
+    # log
+    logger.debug('{0}'.format(command_line_string))
+
+    # return
+    return command_line_string

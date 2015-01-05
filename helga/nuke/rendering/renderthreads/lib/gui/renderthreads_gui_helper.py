@@ -321,6 +321,36 @@ def insert_spacer_widget(wdgt_or_lyt, minimum_width=0, minimum_height=0, parent=
     lyt.addWidget(wdgt_spacer)
 
 
+def prepare_string_for_word_wrap(string_to_prepare, steps=40):
+    """
+    Insert spaces into string at steps
+    to make sure word wrap has an effect.
+    This aids the display of long, continous
+    strings in widgets with word-wrap enabled.
+    """
+
+    # string_to_prepare_broken
+    string_to_prepare_broken = ''
+
+    # break if long
+    for index, char in enumerate(string_to_prepare):
+
+        # steps reached
+        if not (index % steps):
+
+            # add space
+            string_to_prepare_broken = string_to_prepare_broken + char + ' '
+        
+        # else
+        else:
+
+            # add
+            string_to_prepare_broken = string_to_prepare_broken + char
+
+    # return
+    return string_to_prepare_broken
+
+
 # Docking
 # ------------------------------------------------------------------
 def make_dockable(wdgt):

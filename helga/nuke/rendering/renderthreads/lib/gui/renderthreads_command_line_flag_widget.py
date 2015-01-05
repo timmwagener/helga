@@ -65,6 +65,7 @@ class CommandLineFlag(QtGui.QFrame):
     # ------------------------------------------------------------------
 
     state_changed = QtCore.Signal()
+    parameter_changed = QtCore.Signal()
 
     # Create and initialize
     # ------------------------------------------------------------------
@@ -118,6 +119,9 @@ class CommandLineFlag(QtGui.QFrame):
 
         # logger
         self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
+
+        # container_protocol_index_size
+        self.container_protocol_index_size = 5 
 
 
         # Init procedure
@@ -176,7 +180,7 @@ class CommandLineFlag(QtGui.QFrame):
 
         # else
         else:
-            
+
             # addStretch
             self.lyt_command_line_flag.addStretch()
 
@@ -191,6 +195,45 @@ class CommandLineFlag(QtGui.QFrame):
         
         # self.state_changed.
         self.state_changed.connect(self.update_ui)
+
+        # wdgt_parameter
+        if (self.wdgt_parameter):
+
+            # connect_parameter
+            self.connect_parameter()
+
+    def connect_parameter(self):
+        """
+        Connect parameter_changed signal to specific
+        parameter change signal of wdgt_parameter.
+        """
+
+        # not existing
+        if not (self.wdgt_parameter):
+            # log
+            self.logger.debug('wdgt_parameter not set on {0}. Not connecting signal parameter_changed'.format(self))
+            return None
+
+        # textChanged
+        if (type(self.wdgt_parameter) is QtGui.QLineEdit):
+
+            # connect
+            self.wdgt_parameter.textChanged.connect(self.parameter_changed)
+
+        # currentIndexChanged
+        if (type(self.wdgt_parameter) is QtGui.QComboBox):
+
+            # connect
+            self.wdgt_parameter.currentIndexChanged.connect(self.parameter_changed)
+
+        # valueChanged
+        if (type(self.wdgt_parameter) is QtGui.QSpinBox or
+            type(self.wdgt_parameter) is QtGui.QDoubleSpinBox or
+            type(self.wdgt_parameter) is QtGui.QDial or
+            type(self.wdgt_parameter) is QtGui.QSlider):
+
+            # connect
+            self.wdgt_parameter.valueChanged.connect(self.parameter_changed)
 
 
     def style_ui(self):
@@ -234,6 +277,18 @@ An update of this Descriptor (set) causes an update of the ui.")
     An update of this Descriptor (set) causes an
     update of the ui.
     """
+
+    def get_flag_without_parameter(self):
+        """
+        Return self._flag. This is not the function
+        from the property, which adds a possible
+        parameter value from wdgt_parameter.
+        This method is usefull for string comparison
+        for example.
+        """
+
+        return self._flag
+
 
     def get_flag(self):
         """
@@ -372,6 +427,74 @@ The setter just sets self._flag.")
         self.setToolTip(tooltip)
 
 
+    # Operator overrides
+    # ------------------------------------------------------------------
+    
+    def __eq__(self, other):
+        """=="""
+        return self.get_flag_without_parameter() == other.get_flag_without_parameter()
+    def __ne__(self, other):
+        """!="""
+        return self.get_flag_without_parameter() != other.get_flag_without_parameter()
+    def __gt__(self, other):
+        """>"""
+        return self.get_flag_without_parameter() > other.get_flag_without_parameter()
+    def __lt__(self, other):
+        """<"""
+        return self.get_flag_without_parameter() < other.get_flag_without_parameter()
+    def __ge__(self, other):
+        """>="""
+        return self.get_flag_without_parameter() >= other.get_flag_without_parameter()
+    def __le__(self, other):
+        """<="""
+        return self.get_flag_without_parameter() <= other.get_flag_without_parameter()
+    def __hash__(self):
+        return hash(self.get_flag_without_parameter())
+    def __len__(self):
+        """
+        Return number of properties.
+        [0]flag
+        [1]_flag (without possible parameter)
+        [2]state
+        [3]wdgt_parameter
+        [4]parameter
+        """
+        return self.container_protocol_index_size
+    
+    def __getitem__(self, key):
+        """
+        Return values when accessed by index operator.
+        See __len__ for a list.
+        """
+
+        # TypeError
+        if not (type(key) == int):
+            raise TypeError
+
+        # KeyError
+        if (key < 0 and
+            key > self.container_protocol_index_size - 1):
+            raise KeyError
+
+        # 0
+        if (key == 0): 
+            return self.get_flag()
+        # 1
+        elif (key == 1): 
+            return self.get_flag_without_parameter()
+        # 2
+        elif (key == 2): 
+            return self.get_state()
+
+        # 3
+        elif (key == 3): 
+            return self.wdgt_parameter
+
+        # 4
+        elif (key == 4): 
+            return self.get_parameter()
+
+
 
     # Slots
     # ------------------------------------------------------------------
@@ -397,6 +520,25 @@ The setter just sets self._flag.")
             self.wdgt_parameter.setEnabled(state)
             # log
             self.logger.debug('wdgt_parameter {0}'.format(self.wdgt_parameter.isEnabled()))
+
+
+    def force_parameter_enabled(self, status):
+        """
+        This method is for the rare cases where you want
+        the lbl_flag and wdgt_parameter stati (enabled or
+        disabled) to be different from the flag state.
+        This is only useful if you want a locked input
+        for wdgt_parameter on an activated flag. An example
+        would be the flg_X or flg_F.
+        """
+
+        # lbl_flag
+        self.lbl_flag.setEnabled(status)
+
+        # wdgt_parameter
+        if (self.wdgt_parameter):
+            self.wdgt_parameter.setEnabled(status)
+
     
     # Events
     # ------------------------------------------------------------------

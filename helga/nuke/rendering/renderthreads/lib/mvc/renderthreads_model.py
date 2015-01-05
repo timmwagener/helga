@@ -97,7 +97,7 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         # instance variables
         # ------------------------------------------------------------------
         # header_name_list
-        self.header_name_list = ['nuke_node', 'start_frame', 'end_frame', 'additional_args']
+        self.header_name_list = ['nuke_node', 'start_frame', 'end_frame']
 
         # data_list
         self.data_list = [[]]
@@ -197,13 +197,6 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
                 end_frame = renderthreads_node.end_frame
                 return end_frame
 
-            # column additional_args
-            elif (current_header == self.header_name_list[3]):
-                
-                # additional_args
-                additional_args = renderthreads_node.additional_args
-                return additional_args
-
             else:
                 # evaluate in superclass
                 return None
@@ -280,21 +273,6 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
                     
                     # set value
                     renderthreads_node.end_frame = value
-                    # data changed signal
-                    self.dataChanged.emit(index, index)
-                
-                    return True
-
-                return False
-
-            # column additional_args
-            elif (current_header == self.header_name_list[3]):
-                
-                # validate
-                if(self.validate_value_for_additional_args(value)):
-                    
-                    # set value
-                    renderthreads_node.additional_args = value
                     # data changed signal
                     self.dataChanged.emit(index, index)
                 
@@ -551,14 +529,6 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
 
     
     def validate_value_for_end_frame(self, value):
-        """
-        Validate the value that should be set on the attr. of the data object.
-        Return True or False.
-        """
-
-        return True
-
-    def validate_value_for_additional_args(self, value):
         """
         Validate the value that should be set on the attr. of the data object.
         Return True or False.

@@ -296,6 +296,30 @@ def set_margins_and_spacing_for_child_layouts(wdgt, margin_list=[0, 0, 0, 0]):
             lyt.setSpacing(0)
 
 
+def insert_spacer_widget(wdgt_or_lyt, minimum_width=0, minimum_height=0, parent=None):
+    """
+    Insert spacer widget into layout with given min width
+    and min height.
+    """
+
+    # lyt
+    lyt = wdgt_or_lyt
+
+    # not instance of layout
+    if not (isinstance(lyt, QtGui.QLayout)):
+
+        # lyt
+        lyt = wdgt_or_lyt.layout()
+
+    # wdgt_spacer
+    wdgt_spacer = QtGui.QWidget(parent=parent)
+    wdgt_spacer.setMinimumWidth(minimum_width)
+    wdgt_spacer.setMinimumHeight(minimum_height)
+
+    # add to lyt
+    lyt.addWidget(wdgt_spacer)
+
+
 # Docking
 # ------------------------------------------------------------------
 def make_dockable(wdgt):

@@ -81,10 +81,14 @@ BLUE_BRIGHT = BLUE.lighter(DARKENING_FACTOR)
 # Images
 # ------------------------------------------------------------------
 HEADER_IMAGE = os.path.join(ICONS_PATH, 'icn_renderthreads.png').replace('\\', '/')  # Temp
-
 ICON_RENDERTHREADS = os.path.join(ICONS_PATH, 'icn_renderthreads.png').replace('\\', '/')
 
 
 # Text
 # ------------------------------------------------------------------
-SHOT_METADATA_EXPLANATION_HEADER = 'Shot Metadata'
+TEXT_DIVIDER = '---------------------------'
+
+
+# Misc.
+# ------------------------------------------------------------------
+COMMAND_LINE_FLAG_SPACING = 4

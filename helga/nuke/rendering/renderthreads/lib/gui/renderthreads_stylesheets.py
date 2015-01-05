@@ -202,6 +202,42 @@ QFrame#frm_queue { padding: 10px; \
 } \
 \
 \
+/* QFrame - frm_options */\
+QFrame#frm_options { padding: 0px; \
+                        border: none; \
+} \
+\
+\
+/* QFrame - frm_command_line_header */\
+QFrame#frm_command_line_header { padding: 10px; \
+                                    border: 1px solid %(grey)s; \
+} \
+\
+\
+/* QFrame - frm_command_line */\
+QFrame#frm_command_line { padding: 10px; \
+                            border-left: 1px solid %(grey)s; \
+                            border-right: 1px solid %(grey)s; \
+                            border-bottom: 1px solid %(grey)s; \
+                            border-top: none; \
+} \
+\
+\
+/* QFrame - frm_constants_header */\
+QFrame#frm_constants_header { padding: 10px; \
+                                border: 1px solid %(grey)s; \
+} \
+\
+\
+/* QFrame - frm_constants */\
+QFrame#frm_constants { padding: 10px; \
+                        border-left: 1px solid %(grey)s; \
+                        border-right: 1px solid %(grey)s; \
+                        border-bottom: 1px solid %(grey)s; \
+                        border-top: none; \
+} \
+\
+\
 \
 \
 \
@@ -215,10 +251,10 @@ QStackedWidget#stkwdgt_content { padding: 10px; } \
 \
 \
 /* QToolTip */\
-QToolTip { background-color: %(grey)s; \
-            color: %(black)s; \
+QToolTip { background-color: %(black)s; \
+            color: %(white)s; \
             border-left: none; \
-            border-top: 1px solid %(blue)s; \
+            border-top: 1px solid %(red)s; \
             border-bottom: none; \
             border-right: none; \
 } \
@@ -320,6 +356,14 @@ QLabel#lbl_threads_header { font-size: %(font_size_large)spt; } \
 \
 /* QLabel - lbl_queue_header */\
 QLabel#lbl_queue_header { font-size: %(font_size_large)spt; } \
+\
+\
+/* QLabel - lbl_command_line_header */\
+QLabel#lbl_command_line_header { font-size: %(font_size_large)spt; } \
+\
+\
+/* QLabel - lbl_constants_header */\
+QLabel#lbl_constants_header { font-size: %(font_size_large)spt; } \
 \
 \
 \
@@ -551,6 +595,137 @@ QTextEdit { background-color: %(white)s; \
             border-top: none; \
             border-bottom: none; \
             border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QLineEdit */\
+QLineEdit { background-color: %(white)s; \
+            selection-background-color: %(red)s; \
+            color: %(black)s; \
+            border-left: 1px solid %(grey)s; \
+            border-top: 1px solid %(grey)s; \
+            border-bottom: 1px solid %(grey)s; \
+            border-right: 1px solid %(grey)s; \
+} \
+\
+\
+\
+\
+\
+\
+/* QSpinBox */\
+QSpinBox { background-color: %(white)s; \
+            selection-background-color: %(red)s; \
+            color: %(black)s; \
+            border-left: 1px solid %(grey)s; \
+            border-top: 1px solid %(grey)s; \
+            border-bottom: 1px solid %(grey)s; \
+            border-right: 1px solid %(grey)s; \
+} \
+\
+\
+/* QSpinBox - up-button */\
+QSpinBox::up-button { background-color: %(white)s; \
+                        color: %(black)s; \
+                        border-left: none; \
+                        border-top: none; \
+                        border-bottom: none; \
+                        border-right: none; \
+                        border-image: url(%(header_image)s) 1; \
+} \
+\
+\
+/* QSpinBox - up-button - hover */\
+QSpinBox::up-button:hover { background-color: %(red)s; \
+                            color: %(black)s; \
+                            border-left: none; \
+                            border-top: none; \
+                            border-bottom: none; \
+                            border-right: none; \
+                            border-image: url(%(header_image)s) 1; \
+} \
+\
+\
+/* QSpinBox - down-button */\
+QSpinBox::down-button { background-color: %(white)s; \
+                        color: %(black)s; \
+                        border-left: none; \
+                        border-top: none; \
+                        border-bottom: none; \
+                        border-right: none; \
+                        border-image: url(%(header_image)s) 1; \
+} \
+\
+\
+/* QSpinBox - down-button - hover */\
+QSpinBox::down-button:hover { background-color: %(red)s; \
+                            color: %(black)s; \
+                            border-left: none; \
+                            border-top: none; \
+                            border-bottom: none; \
+                            border-right: none; \
+                            border-image: url(%(header_image)s) 1; \
+} \
+\
+\
+\
+\
+\
+\
+/* QComboBox */\
+QComboBox { background-color: %(white)s; \
+            selection-background-color: %(red)s; \
+            color: %(black)s; \
+            border-left: 1px solid %(grey)s; \
+            border-top: 1px solid %(grey)s; \
+            border-bottom: 1px solid %(grey)s; \
+            border-right: 1px solid %(grey)s; \
+} \
+\
+\
+/* QComboBox - drop-down */\
+QComboBox::drop-down { background-color: %(white)s; \
+                        selection-background-color: %(red)s; \
+                        color: %(black)s; \
+                        border-left: none; \
+                        border-top: none; \
+                        border-bottom: none; \
+                        border-right: none; \
+} \
+\
+\
+/* QComboBox - down-arrow */\
+QComboBox::down-arrow { border-image: url(%(header_image)s) 1; \
+} \
+\
+\
+\
+\
+\
+\
+/* QScrollArea */\
+QScrollArea { border-left: none; \
+                border-top: none; \
+                border-bottom: none; \
+                border-right: none; \
+} \
+\
+\
+\
+\
+\
+\
+/* QCheckBox */\
+QCheckBox { background-color: %(white)s; \
+} \
+\
+\
+/* QCheckBox - disabled */\
+QCheckBox:disabled { background-color: %(red)s; \
 } \
 "%ss_dict
 	

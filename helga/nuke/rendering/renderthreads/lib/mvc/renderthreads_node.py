@@ -81,7 +81,6 @@ class RenderThreadsNode(QtCore.QObject):
                     nuke_node=None,
                     start_frame=None,
                     end_frame=None,
-                    additional_args=None,
                     logging_level=logging.DEBUG):
         """
         Customize instance.
@@ -106,11 +105,8 @@ class RenderThreadsNode(QtCore.QObject):
         # _end_frame
         self.set_end_frame(end_frame)
 
-        # _additional_args
-        self.set_additional_args(additional_args)
-
         # container_protocol_index_size
-        self.container_protocol_index_size = 4
+        self.container_protocol_index_size = 3
 
         # logger
         self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
@@ -168,23 +164,6 @@ class RenderThreadsNode(QtCore.QObject):
 
     end_frame = property(get_end_frame, set_end_frame)
     """Access for self._end_frame"""
-
-    def get_additional_args(self):
-        """
-        Return self._additional_args
-        """
-
-        return self._additional_args
-
-    def set_additional_args(self, value):
-        """
-        Set self._additional_args
-        """
-        
-        self._additional_args = value
-
-    additional_args = property(get_additional_args, set_additional_args)
-    """Access for self._additional_args"""
 
     def get_nuke_node_name(self):
         """
@@ -291,7 +270,6 @@ class RenderThreadsNode(QtCore.QObject):
         [0]_nuke_node
         [1]_start_frame
         [2]_end_frame
-        [3]_additional_args
         """
         return self.container_protocol_index_size
     
@@ -319,9 +297,6 @@ class RenderThreadsNode(QtCore.QObject):
         # 2
         elif (key == 2): 
             return self.get_end_frame()
-        # 3
-        elif (key == 3): 
-            return self.get_additional_args()
 
 
     # Misc
@@ -368,7 +343,6 @@ class RenderThreadsNodeWrite(RenderThreadsNode):
                     nuke_node=None,
                     start_frame=None,
                     end_frame=None,
-                    additional_args=None,
                     logging_level=logging.DEBUG):
         """
         Customize instance.
@@ -381,7 +355,6 @@ class RenderThreadsNodeWrite(RenderThreadsNode):
         self.parent_class.__init__(nuke_node = nuke_node,
                                     start_frame = start_frame,
                                     end_frame = end_frame,
-                                    additional_args = additional_args,
                                     logging_level = logging_level)
 
         self.setObjectName(self.__class__.__name__)

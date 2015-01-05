@@ -43,6 +43,11 @@ import renderthreads_nuke
 if(do_reload):
     reload(renderthreads_nuke)
 
+# renderthreads_gui_setup
+import renderthreads_gui_setup
+if(do_reload):
+    reload(renderthreads_gui_setup)
+
 
 # Globals
 # ------------------------------------------------------------------
@@ -87,6 +92,9 @@ def create_services(wdgt):
     # create_memory_check
     create_memory_check(wdgt)
 
+    # create_script_check
+    create_script_check(wdgt)
+
 def create_mvc_validity_check(wdgt, interval = 1000):
     """
     Setup check to remove invalid entries from
@@ -110,6 +118,16 @@ def create_memory_check(wdgt, interval = 2000):
     wdgt.tmr_memory_check = QtCore.QTimer(wdgt)
     wdgt.tmr_memory_check.start(interval)
 
+def create_script_check(wdgt, interval = 1000):
+    """
+    Create a timer that delivers the name of
+    the current nuke script.
+    """
+
+    #tmr_script_check
+    wdgt.tmr_script_check = QtCore.QTimer(wdgt)
+    wdgt.tmr_script_check.start(interval)
+
 # Connect
 # ------------------------------------------------------------------
 
@@ -123,6 +141,9 @@ def connect_services(wdgt):
 
     # connect_memory_check
     connect_memory_check(wdgt)
+
+    # connect_script_check
+    connect_script_check(wdgt)
 
 
 def connect_mvc_validity_check(wdgt):
@@ -141,6 +162,14 @@ def connect_memory_check(wdgt):
     # tmr_memory_check
     wdgt.tmr_memory_check.timeout.connect(functools.partial(renderthreads_nuke.get_memory_info))
 
+def connect_script_check(wdgt):
+    """
+    Connect script check service.
+    """
+
+    # tmr_script_check
+    wdgt.tmr_script_check.timeout.connect(functools.partial(renderthreads_gui_setup.update_script_path, wdgt))
+
 # Close
 # ------------------------------------------------------------------
 
@@ -154,3 +183,6 @@ def stop_services(wdgt):
 
     # tmr_memory_check
     wdgt.tmr_memory_check.stop()
+
+    # tmr_script_check
+    wdgt.tmr_script_check.stop()

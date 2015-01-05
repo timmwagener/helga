@@ -12,6 +12,7 @@ helper functions
 # Import
 # ------------------------------------------------------------------
 # Python
+import os
 import logging
 # PySide
 from PySide import QtGui
@@ -351,3 +352,48 @@ Not performing dock behaviour.')
 
     # add to maya main window
     q_main_window.addDockWidget(QtCore.Qt.RightDockWidgetArea, wdgt_dock)
+
+
+# File/Directory picking
+# ------------------------------------------------------------------
+
+def pick_file(wdgt_display=None, filter_string=None):
+    """
+    Pick a file and display it on wdgt_display
+    if set.
+    """
+
+    # file_path
+    file_path, selected_filter = QtGui.QFileDialog.getOpenFileName(filter=filter_string)
+    file_path = str(file_path)
+
+    # check
+    if not (file_path):
+        # log
+        logger.debug('File path invalid. Returning None.')
+        return None
+
+    # absolute path
+    file_path = os.path.abspath(file_path).replace('\\', '/')
+
+    # wdgt_display
+    if (wdgt_display):
+
+        # setText()
+        if (type(wdgt_display) is QtGui.QLineEdit or
+            type(wdgt_display) is QtGui.QLabel):
+
+            # set
+            wdgt_display.setText(file_path)
+
+        # unknown
+        else:
+
+            # log
+            logger.debug('wdgt_display type {0} is unknown. File path cannot be set.'.format(type(wdgt_display)))
+
+    # log
+    logger.debug('{0}'.format(file_path))
+
+    # return
+    return file_path

@@ -235,3 +235,19 @@ def byte_to_megabyte(byte_number):
         return int(byte_number/1048576)
     except:
         return None
+
+
+def get_nuke_path():
+    """
+    Return path to currently used Nuke.exe.
+    """
+
+    return nuke.EXE_PATH
+
+
+def get_script_path():
+    """
+    Return script path.
+    """
+
+    return nuke.root().name()

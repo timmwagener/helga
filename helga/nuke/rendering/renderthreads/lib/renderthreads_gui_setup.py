@@ -862,6 +862,54 @@ def create_constants_menu(wdgt):
     #  lyt_frm_constants
     lyt_frm_constants = wdgt.frm_constants.layout()
 
+    # nuke_script_path
+    nuke_script_path = renderthreads_nuke.get_script_path()
+    # nuke_path
+    nuke_path = renderthreads_nuke.get_nuke_path()
+
+
+    # lbl_script_path
+    wdgt.lbl_script_path = QtGui.QLabel(text = 'Nuke Script', parent = wdgt)
+    wdgt.lbl_script_path.setObjectName('lbl_script_path')
+    lyt_frm_constants.addWidget(wdgt.lbl_script_path)
+    
+    # le_script_path
+    wdgt.le_script_path = QtGui.QLineEdit(parent = wdgt)
+    wdgt.le_script_path.setObjectName('le_script_path')
+    wdgt.le_script_path.setText(nuke_script_path)
+    wdgt.le_script_path.setReadOnly(True)
+    lyt_frm_constants.addWidget(wdgt.le_script_path)
+
+
+    # spacer widget
+    renderthreads_gui_helper.insert_spacer_widget(lyt_frm_constants, 0, COMMAND_LINE_FLAG_SPACING, wdgt)
+
+    
+    # lbl_nuke_path
+    wdgt.lbl_nuke_path = QtGui.QLabel(text = 'Nuke Executable', parent = wdgt)
+    wdgt.lbl_nuke_path.setObjectName('lbl_nuke_path')
+    lyt_frm_constants.addWidget(wdgt.lbl_nuke_path)
+
+    # wdgt_nuke_path
+    wdgt.wdgt_nuke_path = QtGui.QWidget(parent = wdgt)
+    wdgt.wdgt_nuke_path.setObjectName('wdgt_nuke_path')
+    wdgt.wdgt_nuke_path.setLayout(QtGui.QHBoxLayout())
+    lyt_frm_constants.addWidget(wdgt.wdgt_nuke_path)
+
+    # lyt_nuke_path
+    lyt_nuke_path = wdgt.wdgt_nuke_path.layout()
+
+    # le_nuke_path
+    wdgt.le_nuke_path = QtGui.QLineEdit(parent = wdgt)
+    wdgt.le_nuke_path.setObjectName('le_nuke_path')
+    wdgt.le_nuke_path.setText(nuke_path)
+    lyt_nuke_path.addWidget(wdgt.le_nuke_path)
+
+    # btn_nuke_path
+    wdgt.btn_nuke_path = QtGui.QPushButton(text = 'Pick', parent = wdgt)
+    wdgt.btn_nuke_path.setObjectName('btn_nuke_path')
+    lyt_nuke_path.addWidget(wdgt.btn_nuke_path)
+
 
 def create_pbar_render(wdgt):
     """
@@ -1005,6 +1053,11 @@ def connect_widgets(wdgt):
     # btn_reset_queue
     wdgt.btn_reset_queue.clicked.connect(wdgt.thread_manager.reset_queue)
 
+    # btn_nuke_path
+    wdgt.btn_nuke_path.clicked.connect(functools.partial(renderthreads_gui_helper.pick_file,
+                                                            wdgt.le_nuke_path,
+                                                            'Executables (*.exe)'))
+
 
 def connect_threads(self):
     """
@@ -1054,3 +1107,20 @@ def style_ui(wdgt):
 
     #  set_stylesheet
     wdgt.setStyleSheet(renderthreads_stylesheets.get_stylesheet())
+
+
+#  Functions
+#  ------------------------------------------------------------------
+
+def update_script_path(wdgt):
+    """
+    Update wdgt.le_script_path with current
+    nuke script path. This function is triggered
+    by script_check service.
+    """
+
+    # nuke_script_path
+    nuke_script_path = renderthreads_nuke.get_script_path()
+
+    # set
+    wdgt.le_script_path.setText(nuke_script_path)

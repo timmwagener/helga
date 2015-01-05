@@ -165,11 +165,8 @@ class CommandLineFlag(QtGui.QFrame):
         # wdgt_parameter
         if (self.wdgt_parameter):
 
-            # wdgt_spacer_flag_and_parameter
-            self.wdgt_spacer_flag_and_parameter = QtGui.QWidget()
-            self.wdgt_spacer_flag_and_parameter.setMinimumWidth(10)
-            self.wdgt_spacer_flag_and_parameter.setMaximumWidth(10)
-            self.lyt_command_line_flag.addWidget(self.wdgt_spacer_flag_and_parameter)
+            # add stretch
+            self.lyt_command_line_flag.addStretch()
 
             # setEnabled
             self.wdgt_parameter.setEnabled(self.get_state())
@@ -177,8 +174,11 @@ class CommandLineFlag(QtGui.QFrame):
             # addWidget
             self.lyt_command_line_flag.addWidget(self.wdgt_parameter)
 
-        # addStretch
-        self.lyt_command_line_flag.addStretch()
+        # else
+        else:
+            
+            # addStretch
+            self.lyt_command_line_flag.addStretch()
 
 
     def connect_ui(self):

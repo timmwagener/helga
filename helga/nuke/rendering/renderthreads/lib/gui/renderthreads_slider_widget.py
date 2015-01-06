@@ -70,8 +70,7 @@ class Slider(QtGui.QWidget):
 
         return slider_instance
 
-    def __init__(self, 
-                    logging_level = logging.DEBUG,
+    def __init__(self,
                     header = 'Slider',
                     minimum = 0,
                     maximum = 99,

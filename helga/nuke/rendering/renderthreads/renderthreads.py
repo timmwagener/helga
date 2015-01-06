@@ -109,6 +109,8 @@ TITLE = renderthreads_globals.TITLE
 # Pathes
 UI_PATH = renderthreads_globals.UI_PATH
 
+INITIAL_LOGGING_LEVEL = renderthreads_globals.INITIAL_LOGGING_LEVEL
+
 
 # form_class, base_class
 # ------------------------------------------------------------------
@@ -149,12 +151,10 @@ class RenderThreads(form_class, base_class):
 
     def __init__(self,
                 dev=True,
-                logging_level=logging.DEBUG,
                 dock_it=True,
                 thread_interval=2000,
                 export_thread_timeout=300,
                 hide_export_shell=True,
-                threads_initial_logging_level=logging.CRITICAL,
                 parent=renderthreads_gui_helper.get_nuke_main_window()):
         """
         Customize instance.
@@ -183,7 +183,7 @@ class RenderThreads(form_class, base_class):
         # Init procedure
         # ------------------------------------------------------------------
         # setup_threads
-        self.thread_manager.setup_threads()
+        self.thread_manager.setup_threads(logging_level = INITIAL_LOGGING_LEVEL)
 
         # setupUi
         self.setupUi(self)

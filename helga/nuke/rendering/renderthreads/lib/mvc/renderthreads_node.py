@@ -80,8 +80,7 @@ class RenderThreadsNode(QtCore.QObject):
     def __init__(self,
                     nuke_node=None,
                     start_frame=None,
-                    end_frame=None,
-                    logging_level=logging.DEBUG):
+                    end_frame=None):
         """
         Customize instance.
         """
@@ -342,8 +341,7 @@ class RenderThreadsNodeWrite(RenderThreadsNode):
     def __init__(self,
                     nuke_node=None,
                     start_frame=None,
-                    end_frame=None,
-                    logging_level=logging.DEBUG):
+                    end_frame=None):
         """
         Customize instance.
         """
@@ -354,8 +352,7 @@ class RenderThreadsNodeWrite(RenderThreadsNode):
         self.parent_class = super(RenderThreadsNodeWrite, self)
         self.parent_class.__init__(nuke_node = nuke_node,
                                     start_frame = start_frame,
-                                    end_frame = end_frame,
-                                    logging_level = logging_level)
+                                    end_frame = end_frame)
 
         self.setObjectName(self.__class__.__name__)
 

@@ -22,6 +22,13 @@ do_reload = True
 
 # renderthreads
 
+# lib
+
+# renderthreads_logging
+from .. import renderthreads_logging
+if(do_reload):
+    reload(renderthreads_logging)
+
 # lib.gui
 
 # renderthreads_stylesheets
@@ -58,7 +65,6 @@ class RenderThreadsDockWidget(QtGui.QDockWidget):
         return renderthreads_dock_widget_instance
 
     def __init__(self,
-                logging_level=logging.DEBUG,
                 parent=None):
         """
         RenderThreadsDockWidget instance customization.
@@ -75,11 +81,7 @@ class RenderThreadsDockWidget(QtGui.QDockWidget):
         # ------------------------------------------------------------------
 
         # logger
-        # ------------------------------------------------------------------
-        # logger
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logging_level = logging_level
-        self.logger.setLevel(self.logging_level)
+        self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
 
         # Init procedure
         # ------------------------------------------------------------------

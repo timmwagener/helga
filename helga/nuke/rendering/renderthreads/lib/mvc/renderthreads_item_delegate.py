@@ -61,8 +61,7 @@ class RenderThreadsItemDelegate(QtGui.QStyledItemDelegate):
         return renderthreads_item_delegate_instance
 
     
-    def __init__(self, 
-                logging_level = logging.DEBUG,
+    def __init__(self,
                 parent=None):
         """
         Customize instance.

@@ -54,8 +54,7 @@ class WorkerThread(QtCore.QThread):
     # Creation and Initialization
     # ------------------------------------------------------------------
     def __init__(self, 
-                    queue, 
-                    logging_level = logging.DEBUG,
+                    queue,
                     thread_id = 0,
                     thread_interval = 2000):
         """
@@ -237,7 +236,6 @@ class ThreadManager(QtCore.QObject):
 
     
     def __init__(self,
-                    logging_level = logging.DEBUG,
                     set_thread_count_to_half_of_max = True,
                     queue = None):
         """
@@ -399,8 +397,7 @@ class ThreadManager(QtCore.QObject):
             # worker_thread
             worker_thread = WorkerThread(self.queue, 
                                             thread_id = index,
-                                            thread_interval = thread_interval,
-                                            logging_level = logging_level)
+                                            thread_interval = thread_interval)
             # append worker_thread
             self.thread_list.append(worker_thread)
             # start worker_thread

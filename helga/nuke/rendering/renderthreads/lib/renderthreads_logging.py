@@ -35,6 +35,24 @@ from PySide import QtGui
 from PySide import QtCore
 
 
+#  Import variable
+do_reload = True
+
+#  renderthreads
+
+#  lib
+
+#  renderthreads_globals
+import renderthreads_globals
+if(do_reload):
+    reload(renderthreads_globals)
+
+
+#  Globals
+#  ------------------------------------------------------------------
+INITIAL_LOGGING_LEVEL = renderthreads_globals.INITIAL_LOGGING_LEVEL
+
+
 #  Decorators
 #  ------------------------------------------------------------------
 
@@ -86,7 +104,7 @@ class UniversalPrintObject(object):
 
     def __init__(self,
                     display=sys.stdout,
-                    logging_level=logging.DEBUG):
+                    logging_level=INITIAL_LOGGING_LEVEL):
         """
         Initialize UniversalPrintObject
         """
@@ -166,7 +184,7 @@ class UniversalStreamHandler(logging.StreamHandler):
 
     def __init__(self,
                     universal_print_object=UniversalPrintObject(),
-                    logging_level=logging.DEBUG):
+                    logging_level=INITIAL_LOGGING_LEVEL):
         """
         Initialize UniversalStreamHandler
         """
@@ -262,7 +280,7 @@ def get_handler(display=sys.stdout):
 @execute_with_logger(RenderThreadsLogger)
 def get_logger(name,
                 display=sys.stdout,
-                logging_level=logging.DEBUG):
+                logging_level=INITIAL_LOGGING_LEVEL):
     """
     Return correctly formatted logger from single source.
     """
@@ -298,4 +316,4 @@ def set_logging_level(logging_level):
             logger.setLevel(logging_level)
 
             # print
-            print('Set {0} to {1}'.format(logger_name, logging_level))
+            print('Set logger {0} to {1}'.format(logger_name, logging_level))

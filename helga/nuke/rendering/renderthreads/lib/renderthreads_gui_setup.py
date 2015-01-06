@@ -77,6 +77,8 @@ VERSION = renderthreads_globals.VERSION
 
 ICON_RENDERTHREADS = renderthreads_globals.ICON_RENDERTHREADS
 
+INITIAL_LOGGING_LEVEL = renderthreads_globals.INITIAL_LOGGING_LEVEL
+
 TEXT_DIVIDER = renderthreads_globals.TEXT_DIVIDER
 
 COMMAND_LINE_FLAG_SPACING = renderthreads_globals.COMMAND_LINE_FLAG_SPACING
@@ -138,6 +140,9 @@ def create_additional_ui(wdgt):
     # create_threads_menu
     create_threads_menu(wdgt)
 
+    # create_command_line_menu
+    create_command_line_menu(wdgt)
+
     # create_options_menu
     create_options_menu(wdgt)
 
@@ -171,6 +176,10 @@ def create_stkwdgt_menu(wdgt):
     # acn_threads
     wdgt.acn_threads = wdgt.mnubar_stkwdgt.addAction('Threads')
     wdgt.acn_threads.setObjectName('acn_threads')
+
+    # acn_command_line
+    wdgt.acn_command_line = wdgt.mnubar_stkwdgt.addAction('Cmd. Line')
+    wdgt.acn_command_line.setObjectName('acn_command_line')
 
     # acn_options
     wdgt.acn_options = wdgt.mnubar_stkwdgt.addAction('Options')
@@ -222,15 +231,6 @@ def create_sub_threads_menu(wdgt):
     wdgt.sldr_thread_interval.set_tick_interval(100)
     frm_threads.addWidget(wdgt.sldr_thread_interval)
 
-    # sldr_thread_logging
-    wdgt.sldr_thread_logging = renderthreads_slider_widget.Slider(header = 'Thread logging',
-                                                                minimum = logging.DEBUG,
-                                                                maximum = logging.CRITICAL,
-                                                                initial_value = logging.DEBUG)
-    wdgt.sldr_thread_logging.set_tick_position(QtGui.QSlider.TicksBelow)
-    wdgt.sldr_thread_logging.set_tick_interval(10)
-    frm_threads.addWidget(wdgt.sldr_thread_logging)
-
     # btn_start_threads
     wdgt.btn_start_threads = QtGui.QPushButton('Re/Start threads')
     wdgt.btn_start_threads.setFlat(True)
@@ -261,25 +261,21 @@ def create_queue_menu(wdgt):
     lyt_frm_queue.addWidget(wdgt.btn_reset_queue)
 
 
-def create_options_menu(wdgt):
+def create_command_line_menu(wdgt):
     """
-    Menu for options. This function
+    Menu for command line. This function
     creates not a QMenu but the entire optons
-    content for the stackwidget options page.
+    content for the stackwidget command line page.
     """
 
     # create_command_line
     create_command_line(wdgt)
 
-    # create_command_line_menu
-    create_command_line_menu(wdgt)
+    # create_flags_menu
+    create_flags_menu(wdgt)
 
     # create_constants_menu
     create_constants_menu(wdgt)
-    
-    # Add stretch for main layout at end
-    lyt_sawdgt_options = wdgt.sawdgt_options.layout()
-    lyt_sawdgt_options.addStretch()
 
     # update_command_line
     update_command_line(wdgt)
@@ -310,7 +306,7 @@ might be invalid and cause the render to fail.'.format(TEXT_DIVIDER)
     lyt_frm_command_line.addWidget(wdgt.lbl_command_line)
 
 
-def create_command_line_menu(wdgt):
+def create_flags_menu(wdgt):
     """
     Menu for command line options.
     """
@@ -955,6 +951,42 @@ def create_constants_menu(wdgt):
     lyt_nuke_path.addWidget(wdgt.btn_nuke_path)
 
 
+def create_options_menu(wdgt):
+    """
+    Menu for options. This function
+    creates not a QMenu but the entire optons
+    content for the stackwidget options page.
+    """
+
+    # create_general_options_menu
+    create_general_options_menu(wdgt)
+    
+    # Add stretch for main layout at end
+    lyt_sawdgt_options = wdgt.sawdgt_options.layout()
+    lyt_sawdgt_options.addStretch()
+
+
+def create_general_options_menu(wdgt):
+    """
+    Menu for general options like
+    logging etc.
+    """
+
+    #  lyt_frm_general_options
+    lyt_frm_general_options = wdgt.frm_general_options.layout()
+
+    # sldr_logging_level
+    wdgt.sldr_logging_level = renderthreads_slider_widget.Slider(header = 'Logging level',
+                                                                    minimum = logging.DEBUG,
+                                                                    maximum = logging.CRITICAL,
+                                                                    initial_value = INITIAL_LOGGING_LEVEL)
+    wdgt.sldr_logging_level.set_tick_position(QtGui.QSlider.TicksBelow)
+    wdgt.sldr_logging_level.set_tick_interval(10)
+    lyt_frm_general_options.addWidget(wdgt.sldr_logging_level)
+
+
+
+
 def create_pbar_render(wdgt):
     """
     Setup progressbar for rendering.
@@ -1031,22 +1063,6 @@ def add_dev_menu(wdgt):
     wdgt.mnu_dev_threads.addAction(wdgt.acn_test_threads)
 
 
-    # mnu_dev_logging
-    wdgt.mnu_dev_logging = QtGui.QMenu('Logging', parent = wdgt)
-    wdgt.mnu_dev_logging.setObjectName('mnu_dev_logging')
-    wdgt.mnu_dev.addMenu(wdgt.mnu_dev_logging)
-
-    # acn_set_logging_level_debug
-    wdgt.acn_set_logging_level_debug = QtGui.QAction('Debug', wdgt)
-    wdgt.acn_set_logging_level_debug.setObjectName('acn_set_logging_level_debug')
-    wdgt.mnu_dev_logging.addAction(wdgt.acn_set_logging_level_debug)
-
-    # acn_set_logging_level_info
-    wdgt.acn_set_logging_level_info = QtGui.QAction('Info', wdgt)
-    wdgt.acn_set_logging_level_info.setObjectName('acn_set_logging_level_info')
-    wdgt.mnu_dev_logging.addAction(wdgt.acn_set_logging_level_info)
-
-
 #  Connect
 #  ------------------------------------------------------------------
 def connect_ui(wdgt):
@@ -1102,8 +1118,10 @@ def connect_actions(wdgt):
     wdgt.acn_render.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 0))
     # acn_threads
     wdgt.acn_threads.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 1))
+    # acn_command_line
+    wdgt.acn_command_line.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 2))
     # acn_options
-    wdgt.acn_options.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 2))
+    wdgt.acn_options.triggered.connect(functools.partial(wdgt.stkwdgt_content.setCurrentIndex, 3))
 
 
 def connect_widgets(wdgt):
@@ -1115,23 +1133,27 @@ def connect_widgets(wdgt):
     wdgt.sldr_threadcount.value_changed.connect(wdgt.thread_manager.set_thread_count)
     # sldr_thread_interval
     wdgt.sldr_thread_interval.value_changed.connect(wdgt.thread_manager.set_interval)
-    # sldr_thread_logging
-    wdgt.sldr_thread_logging.value_changed.connect(wdgt.thread_manager.set_logging_level_for_threads)
+
 
     # btn_start_threads
     wdgt.btn_start_threads.clicked.connect(wdgt.thread_manager.start_threads)
     # btn_stop_threads
     wdgt.btn_stop_threads.clicked.connect(wdgt.thread_manager.stop_threads)
 
+    
     # btn_print_queue_size
     wdgt.btn_print_queue_size.clicked.connect(wdgt.thread_manager.print_queue_size)
     # btn_reset_queue
     wdgt.btn_reset_queue.clicked.connect(wdgt.thread_manager.reset_queue)
 
+    
     # btn_nuke_path
     wdgt.btn_nuke_path.clicked.connect(functools.partial(renderthreads_gui_helper.pick_file,
                                                             wdgt.le_nuke_path,
                                                             'Executables (*.exe)'))
+
+    # sldr_logging_level
+    wdgt.sldr_logging_level.value_changed.connect(renderthreads_logging.set_logging_level)
 
 
 def connect_threads(self):
@@ -1165,12 +1187,6 @@ def connect_dev_ui(wdgt):
     
     # acn_test_threads
     wdgt.acn_test_threads.triggered.connect(wdgt.thread_manager.test_setup)
-
-
-    # acn_set_logging_level_debug
-    wdgt.acn_set_logging_level_debug.triggered.connect(functools.partial(renderthreads_logging.set_logging_level, logging.DEBUG))
-    # acn_set_logging_level_info
-    wdgt.acn_set_logging_level_info.triggered.connect(functools.partial(renderthreads_logging.set_logging_level, logging.INFO))
 
 
 #  Style

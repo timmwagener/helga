@@ -202,9 +202,9 @@ QFrame#frm_queue { padding: 10px; \
 } \
 \
 \
-/* QFrame - frm_options */\
-QFrame#frm_options { padding: 0px; \
-                        border: none; \
+/* QFrame - frm_command_line_complete */\
+QFrame#frm_command_line_complete { padding: 0px; \
+                                    border: none; \
 } \
 \
 \
@@ -215,7 +215,8 @@ QFrame#frm_command_line_header { padding: 10px; \
 \
 \
 /* QFrame - frm_command_line */\
-QFrame#frm_command_line { padding: 10px; \
+QFrame#frm_command_line { background-color: %(black)s; \
+                            padding: 10px; \
                             border-left: 1px solid %(grey)s; \
                             border-right: 1px solid %(grey)s; \
                             border-bottom: 1px solid %(grey)s; \
@@ -244,6 +245,12 @@ QFrame#frm_constants { padding: 10px; \
                         border-right: 1px solid %(grey)s; \
                         border-bottom: 1px solid %(grey)s; \
                         border-top: none; \
+} \
+\
+\
+/* QFrame - frm_options */\
+QFrame#frm_options { padding: 0px; \
+                        border: none; \
 } \
 \
 \
@@ -364,6 +371,11 @@ QSplitter::handle { background-color: %(blue)s; } \
 \
 \
 \
+\
+\
+/* QLabel - lbl_command_line */\
+QLabel#lbl_command_line { background-color: transparent; \
+                            color: %(white)s; } \
 \
 \
 /* QLabel - lbl_log_header */\

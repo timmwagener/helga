@@ -11,6 +11,7 @@ Module that has renderthreads tool globals
 # ------------------------------------------------------------------
 # import
 import os
+import logging
 # PySide
 from PySide import QtGui
 from PySide import QtCore
@@ -20,6 +21,11 @@ from PySide import QtCore
 # ------------------------------------------------------------------
 TITLE = 'renderthreads'
 VERSION = 0.1
+
+
+# Logging
+# ------------------------------------------------------------------
+INITIAL_LOGGING_LEVEL = logging.DEBUG
 
 
 # Pathes

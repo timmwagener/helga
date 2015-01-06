@@ -60,8 +60,7 @@ class RenderThreadsView(QtGui.QTableView):
         return renderthreads_view_instance
     
     
-    def __init__(self, 
-                logging_level = logging.DEBUG,
+    def __init__(self,
                 parent=None):
     	"""
     	Customize instance.

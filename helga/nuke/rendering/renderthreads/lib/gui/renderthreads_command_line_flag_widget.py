@@ -79,8 +79,7 @@ class CommandLineFlag(QtGui.QFrame):
 
         return command_line_flag_instance
 
-    def __init__(self, 
-                    logging_level=logging.DEBUG,
+    def __init__(self,
                     flag='',
                     tooltip='',
                     state=True,

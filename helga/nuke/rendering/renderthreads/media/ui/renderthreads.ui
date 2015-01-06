@@ -73,7 +73,7 @@
    <item>
     <widget class="QStackedWidget" name="stkwdgt_content">
      <property name="currentIndex">
-      <number>2</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="pg_nodes_and_log">
       <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -262,8 +262,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>119</width>
-            <height>224</height>
+            <width>281</width>
+            <height>460</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="lyt_sawdgt_threads">
@@ -385,17 +385,17 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="pg_options">
+     <widget class="QWidget" name="pg_command_line">
       <layout class="QVBoxLayout" name="verticalLayout_19">
        <item>
-        <widget class="QScrollArea" name="sa_options">
+        <widget class="QScrollArea" name="sa_command_line">
          <property name="horizontalScrollBarPolicy">
           <enum>Qt::ScrollBarAlwaysOff</enum>
          </property>
          <property name="widgetResizable">
           <bool>true</bool>
          </property>
-         <widget class="QWidget" name="sawdgt_options">
+         <widget class="QWidget" name="sawdgt_command_line">
           <property name="geometry">
            <rect>
             <x>0</x>
@@ -406,7 +406,7 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
-            <widget class="QFrame" name="frm_options">
+            <widget class="QFrame" name="frm_command_line_complete">
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
              </property>
@@ -525,25 +525,47 @@
                 </layout>
                </widget>
               </item>
-              <item>
-               <widget class="QWidget" name="wdgt_constants_and_general_options_space" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>10</height>
-                 </size>
-                </property>
-               </widget>
-              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pg_options">
+      <layout class="QVBoxLayout" name="verticalLayout_31">
+       <item>
+        <widget class="QScrollArea" name="sa_options">
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="sawdgt_options">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>277</width>
+            <height>456</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_32">
+           <item>
+            <widget class="QFrame" name="frm_options">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_36">
               <item>
                <widget class="QWidget" name="wdgt_general_options" native="true">
-                <layout class="QVBoxLayout" name="verticalLayout_28">
+                <layout class="QVBoxLayout" name="verticalLayout_33">
                  <item>
                   <widget class="QFrame" name="frm_general_options_header">
                    <property name="frameShape">
@@ -552,7 +574,7 @@
                    <property name="frameShadow">
                     <enum>QFrame::Raised</enum>
                    </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_29">
+                   <layout class="QVBoxLayout" name="verticalLayout_34">
                     <item>
                      <widget class="QLabel" name="lbl_general_options_header">
                       <property name="text">
@@ -571,7 +593,7 @@
                    <property name="frameShadow">
                     <enum>QFrame::Raised</enum>
                    </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_30"/>
+                   <layout class="QVBoxLayout" name="verticalLayout_35"/>
                   </widget>
                  </item>
                 </layout>

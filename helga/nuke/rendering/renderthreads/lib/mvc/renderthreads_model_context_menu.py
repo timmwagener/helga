@@ -78,7 +78,6 @@ class NodesContextMenu(QtGui.QMenu):
     
     def __init__(self,
                 dev=True,
-                logging_level = logging.DEBUG,
                 parent = None):
         """
         Customize instance.
@@ -186,20 +185,28 @@ class NodesContextMenu(QtGui.QMenu):
         # Separator
         self.addSeparator()
 
-        # mnu_render
-        self.mnu_render = QtGui.QMenu('Render', parent = self)
-        self.mnu_render.setObjectName(self.__class__.__name__ + '_' + 'mnu_render')
-        self.addMenu(self.mnu_render)
-
         # acn_render_selected
         self.acn_render_selected = QtGui.QAction('Render selected nodes', self)
         self.acn_render_selected.setObjectName(self.__class__.__name__ + '_' + 'acn_render_selected')
-        self.mnu_render.addAction(self.acn_render_selected)
+        self.addAction(self.acn_render_selected)
 
         # acn_render_all
         self.acn_render_all = QtGui.QAction('Render all nodes', self)
         self.acn_render_all.setObjectName(self.__class__.__name__ + '_' + 'acn_render_all')
-        self.mnu_render.addAction(self.acn_render_all)
+        self.addAction(self.acn_render_all)
+
+        # Separator
+        self.addSeparator()
+
+        # acn_stop_render_selected
+        self.acn_stop_render_selected = QtGui.QAction('Stop render selected', self)
+        self.acn_stop_render_selected.setObjectName(self.__class__.__name__ + '_' + 'acn_stop_render_selected')
+        self.addAction(self.acn_stop_render_selected)
+
+        # acn_stop_render_all
+        self.acn_stop_render_all = QtGui.QAction('Stop render all', self)
+        self.acn_stop_render_all.setObjectName(self.__class__.__name__ + '_' + 'acn_stop_render_all')
+        self.addAction(self.acn_stop_render_all)
 
         # dev
         if (self.is_dev()):
@@ -242,6 +249,11 @@ class NodesContextMenu(QtGui.QMenu):
         self.acn_render_selected.triggered.connect(functools.partial(self.dummy_method, 'acn_render_selected'))
         # acn_render_all
         self.acn_render_all.triggered.connect(functools.partial(self.dummy_method, 'acn_render_all'))
+
+        # acn_stop_render_selected
+        self.acn_stop_render_selected.triggered.connect(functools.partial(self.dummy_method, 'acn_stop_render_selected'))
+        # acn_stop_render_all
+        self.acn_stop_render_all.triggered.connect(functools.partial(self.dummy_method, 'acn_stop_render_all'))
         
     # Style
     # ------------------------------------------------------------------

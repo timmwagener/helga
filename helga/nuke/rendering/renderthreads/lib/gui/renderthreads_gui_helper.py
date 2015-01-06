@@ -55,7 +55,6 @@ THIRD_PARTY_PATH = renderthreads_globals.THIRD_PARTY_PATH
 logger = renderthreads_logging.get_logger(__name__)
 
 
-
 # Cleanup
 # ------------------------------------------------------------------
 def get_widget_by_class_name_closure(wdgt_class_name):

@@ -64,6 +64,11 @@ from gui import renderthreads_command_line_flag_widget
 if(do_reload):
     reload(renderthreads_command_line_flag_widget)
 
+#  renderthreads_signal_remapper
+from gui import renderthreads_signal_remapper
+if(do_reload):
+    reload(renderthreads_signal_remapper)
+
 #  renderthreads_stylesheets
 from gui import renderthreads_stylesheets
 if(do_reload):
@@ -148,6 +153,9 @@ def create_additional_ui(wdgt):
 
     #  create_pbar_render
     create_pbar_render(wdgt)
+
+    #  create_signal_remapper
+    create_signal_remapper(wdgt)
 
     # dev
     if (wdgt.is_dev()):
@@ -954,7 +962,7 @@ def create_constants_menu(wdgt):
 def create_options_menu(wdgt):
     """
     Menu for options. This function
-    creates not a QMenu but the entire optons
+    creates not a QMenu but the entire options
     content for the stackwidget options page.
     """
 
@@ -977,14 +985,21 @@ def create_general_options_menu(wdgt):
 
     # sldr_logging_level
     wdgt.sldr_logging_level = renderthreads_slider_widget.Slider(header = 'Logging level',
-                                                                    minimum = logging.DEBUG,
-                                                                    maximum = logging.CRITICAL,
-                                                                    initial_value = INITIAL_LOGGING_LEVEL)
+                                                                    minimum = 1,
+                                                                    maximum = 5,
+                                                                    initial_value = INITIAL_LOGGING_LEVEL / 10)
     wdgt.sldr_logging_level.set_tick_position(QtGui.QSlider.TicksBelow)
-    wdgt.sldr_logging_level.set_tick_interval(10)
+    wdgt.sldr_logging_level.set_tick_interval(1)
     lyt_frm_general_options.addWidget(wdgt.sldr_logging_level)
 
-
+    # sldr_display_shell
+    wdgt.sldr_display_shell = renderthreads_slider_widget.Slider(header = 'Display render shell',
+                                                                    minimum = 0,
+                                                                    maximum = 1,
+                                                                    initial_value = 1)
+    wdgt.sldr_display_shell.set_tick_position(QtGui.QSlider.TicksBelow)
+    wdgt.sldr_display_shell.set_tick_interval(1)
+    lyt_frm_general_options.addWidget(wdgt.sldr_display_shell)
 
 
 def create_pbar_render(wdgt):
@@ -1003,6 +1018,15 @@ def create_pbar_render(wdgt):
     wdgt.pbar_render.setValue(50)
     #  add
     lyt_pbar_render.addWidget(wdgt.pbar_render)
+
+
+def create_signal_remapper(wdgt):
+    """
+    Setup signal remapper instance.
+    """
+
+    # signal_remapper
+    wdgt.signal_remapper = renderthreads_signal_remapper.SignalRemapper()
 
 
 def create_dev_ui(wdgt):
@@ -1109,6 +1133,10 @@ def connect_signals(wdgt):
     wdgt.le_nuke_path.textChanged.connect(functools.partial(update_command_line, wdgt))
 
 
+    # sgnl_set_logging
+    wdgt.signal_remapper.sgnl_set_logging.connect(renderthreads_logging.set_logging_level)
+
+
 def connect_actions(wdgt):
     """
     Connect actions.
@@ -1153,7 +1181,7 @@ def connect_widgets(wdgt):
                                                             'Executables (*.exe)'))
 
     # sldr_logging_level
-    wdgt.sldr_logging_level.value_changed.connect(renderthreads_logging.set_logging_level)
+    wdgt.sldr_logging_level.value_changed.connect(wdgt.signal_remapper.remap_logging)
 
 
 def connect_threads(self):

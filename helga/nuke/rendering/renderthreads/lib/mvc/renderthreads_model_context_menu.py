@@ -48,6 +48,16 @@ from .. import renderthreads_nuke
 if(do_reload):
     reload(renderthreads_nuke)
 
+#  renderthreads_command_line_engine
+from .. import renderthreads_command_line_engine
+if(do_reload):
+    reload(renderthreads_command_line_engine)
+
+#  renderthreads_render
+from .. import renderthreads_render
+if(do_reload):
+    reload(renderthreads_render)
+
 # lib.gui
 
 # renderthreads_gui_helper
@@ -104,6 +114,9 @@ class NodesContextMenu(QtGui.QMenu):
 
         # view
         self.view = None
+
+        # wdgt_main
+        self.wdgt_main = None
         
         # Init procedure
         # ------------------------------------------------------------------
@@ -246,9 +259,9 @@ class NodesContextMenu(QtGui.QMenu):
         self.acn_deselect_all.triggered.connect(functools.partial(self.deselect_all))
 
         # acn_render_selected
-        self.acn_render_selected.triggered.connect(functools.partial(self.dummy_method, 'acn_render_selected'))
+        self.acn_render_selected.triggered.connect(functools.partial(self.render_selected))
         # acn_render_all
-        self.acn_render_all.triggered.connect(functools.partial(self.dummy_method, 'acn_render_all'))
+        self.acn_render_all.triggered.connect(functools.partial(self.render_all))
 
         # acn_stop_render_selected
         self.acn_stop_render_selected.triggered.connect(functools.partial(self.dummy_method, 'acn_stop_render_selected'))
@@ -286,6 +299,13 @@ class NodesContextMenu(QtGui.QMenu):
 
         self.view = view
         self.model = view.model()
+
+    def set_main_widget(self, wdgt):
+        """
+        Set self.wdgt_main
+        """
+
+        self.wdgt_main = wdgt
 
     def is_dev(self):
         """
@@ -371,6 +391,40 @@ class NodesContextMenu(QtGui.QMenu):
             pass
 
         return node_list
+
+
+    def get_command_object_list_from_nodes(self, renderthread_node_list):
+        """
+        Return list of RenderCommand objects for
+        given list of renderthread nodes.
+        """
+
+        # command_object_list
+        command_object_list = []
+
+        # iterate and add job
+        for renderthread_node in renderthread_node_list:
+
+            # frame_list
+            frame_list = renderthread_node.get_frame_list()
+
+            # iterate frame list
+            for frame in frame_list:
+
+                # command
+                command = renderthreads_command_line_engine.get_command_line_string(self.wdgt_main,
+                                                                                    renderthread_node,
+                                                                                    frame)
+
+                # command_object
+                command_object = renderthreads_render.RenderCommand(command)
+
+                # append
+                command_object_list.append(command_object)
+
+        # return
+        return command_object_list
+
 
     # Slots
     # ------------------------------------------------------------------
@@ -471,6 +525,7 @@ class NodesContextMenu(QtGui.QMenu):
             # log
             self.logger.debug('Error selecting selected nodes.')
 
+    
     @QtCore.Slot()
     def select_all(self):
         """
@@ -493,6 +548,7 @@ class NodesContextMenu(QtGui.QMenu):
             # log
             self.logger.debug('Error selecting all nodes.')
 
+    
     @QtCore.Slot()
     def deselect_all(self):
         """
@@ -505,6 +561,59 @@ class NodesContextMenu(QtGui.QMenu):
         except:
             # log
             self.logger.debug('Error deselecting all nodes.')
+
+
+    
+    @QtCore.Slot()
+    def render_selected(self):
+        """
+        Render renderthread nodes which are currently
+        selected in the model.
+        """
+
+        # selected_indices_list
+        selected_indices_list = self.get_selected_indices()
+
+        # renderthread_node_list
+        renderthread_node_list = self.indices_list_to_node_list(selected_indices_list)
+
+        # command_object_list
+        command_object_list = self.get_command_object_list_from_nodes(renderthread_node_list)
+
+        # iterate
+        for command_object in command_object_list:
+
+            # connect
+            command_object.task_done.connect(functools.partial(self.wdgt_main.dummy_method, 'task_done'))
+            
+            # add
+            self.wdgt_main.thread_manager.add_to_queue(command_object)
+
+
+    @QtCore.Slot()
+    def render_all(self):
+        """
+        Render renderthread nodes which are currently
+        in the model.
+        """
+
+        # renderthread_node_list
+        renderthread_node_list = self.model.get_data_list_flat()
+
+        # command_object_list
+        command_object_list = self.get_command_object_list_from_nodes(renderthread_node_list)
+
+        # iterate
+        for command_object in command_object_list:
+            
+            # add
+            self.wdgt_main.thread_manager.add_to_queue(command_object)
+
+
+    
+    
+
+            
 
     
     # Misc

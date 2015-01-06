@@ -253,6 +253,26 @@ class RenderThreadsNode(QtCore.QObject):
 
         return self.__class__.__name__
 
+    def get_frame_list(self):
+        """
+        Return frame list.
+        This list consists of the integers that can
+        be used as Frame numbers directly (for example
+        in the -F flag).
+        Example:
+        self._start_frame = 10
+        self._end_frame = 20
+        frame_list = [10,11,12,......,20]
+        """
+
+        # frame_list
+        frame_list = range(self._end_frame + 1)
+        frame_list = frame_list[self._start_frame:]
+
+        # return
+        return frame_list
+
+
     # Operator overrides
     # ------------------------------------------------------------------
     def __eq__(self, other):

@@ -1257,30 +1257,11 @@ def update_command_line(wdgt, *args):
     parameter of flag are changed.
     """
 
-    # nuke_script_path
-    nuke_script_path = wdgt.le_script_path.text()
-    
-    # nuke_script_path_word_wrap
-    nuke_script_path_word_wrap = renderthreads_gui_helper.prepare_string_for_word_wrap(nuke_script_path)
-
-    # nuke_path
-    nuke_path = wdgt.le_nuke_path.text()
-
-    # flag_list
-    flag_list = wdgt.command_line_flag_list
-
     # command_line_string
-    command_line_string = renderthreads_command_line_engine.get_command_line_string(flag_list,
-                                                                                    nuke_path,
-                                                                                    nuke_script_path)
-
-    # command_line_string_word_wrap
-    command_line_string_word_wrap = renderthreads_command_line_engine.get_command_line_string(flag_list,
-                                                                                                nuke_path,
-                                                                                                nuke_script_path_word_wrap)
+    command_line_string = renderthreads_command_line_engine.get_command_line_string(wdgt)
 
     # set lbl_command_line
-    wdgt.lbl_command_line.setText(command_line_string_word_wrap)
+    wdgt.lbl_command_line.setText(command_line_string)
 
     # log
     logger.debug('{0}'.format(command_line_string))

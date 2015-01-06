@@ -234,6 +234,7 @@ class RenderThreads(form_class, base_class):
         context_menu = renderthreads_model_context_menu.NodesContextMenu(dev=self.is_dev(),
                                                                             parent = self)
         context_menu.set_view_and_model(self.nodes_view)
+        context_menu.set_main_widget(self)
         context_menu.popup(self.nodes_view.mapToGlobal(pos))
 
     # Getter & Setter

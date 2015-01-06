@@ -187,13 +187,13 @@ class WorkerThread(QtCore.QThread):
         else:
 
             try:
-                func, args, kwargs = self.queue.get(block=False)
+                obj = self.queue.get(block=False)
             except Queue.Empty:
                 self.logger.debug('Queue empty')
                 return
             
             try:
-                func(*args, **kwargs)
+                obj()
             except Exception, e:
                 self.logger.debug('{0}'.format(e))
             finally:
@@ -423,13 +423,13 @@ class ThreadManager(QtCore.QObject):
 
         
     @QtCore.Slot()
-    def add_to_queue(self, func, *args, **kwargs):
+    def add_to_queue(self, obj):
         """
         Adds work to the queue
         """
         
         # add
-        self.queue.put((func, args, kwargs))
+        self.queue.put(obj)
 
 
     @QtCore.Slot(int)

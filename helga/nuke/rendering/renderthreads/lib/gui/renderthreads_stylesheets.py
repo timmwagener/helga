@@ -247,6 +247,21 @@ QFrame#frm_constants { padding: 10px; \
 } \
 \
 \
+/* QFrame - frm_general_options_header */\
+QFrame#frm_general_options_header { padding: 10px; \
+                                    border: 1px solid %(grey)s; \
+} \
+\
+\
+/* QFrame - frm_general_options */\
+QFrame#frm_general_options { padding: 10px; \
+                                border-left: 1px solid %(grey)s; \
+                                border-right: 1px solid %(grey)s; \
+                                border-bottom: 1px solid %(grey)s; \
+                                border-top: none; \
+} \
+\
+\
 \
 \
 \
@@ -373,6 +388,10 @@ QLabel#lbl_command_line_header { font-size: %(font_size_large)spt; } \
 \
 /* QLabel - lbl_constants_header */\
 QLabel#lbl_constants_header { font-size: %(font_size_large)spt; } \
+\
+\
+/* QLabel - lbl_general_options_header */\
+QLabel#lbl_general_options_header { font-size: %(font_size_large)spt; } \
 \
 \
 \

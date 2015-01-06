@@ -494,58 +494,7 @@ class NodesContextMenu(QtGui.QMenu):
             # log
             self.logger.debug('Error deselecting all nodes.')
 
-    '''
-    @QtCore.Slot()
-    def select_nodes(self):
-        """
-        Select nodes.
-        """
-
-        # selected_indices_list
-        selected_indices_list = self.get_selected_indices()
-        # pynode_list
-        pynode_list = self.indices_list_to_pynode_list(selected_indices_list)
-        # clean_pynode_list
-        clean_pynode_list = self.asset_manager_functionality.remove_duplicate_pynodes(pynode_list)
-
-        # select
-        self.asset_manager_functionality.select_nodes(clean_pynode_list)
-
-
-    @QtCore.Slot()
-    def delete_nodes(self):
-        """
-        Delete nodes.
-        """
-
-        # selected_indices_list
-        selected_indices_list = self.get_selected_indices()
-        # pynode_list
-        pynode_list = self.indices_list_to_pynode_list(selected_indices_list)
-        # clean_pynode_list
-        clean_pynode_list = self.asset_manager_functionality.remove_duplicate_pynodes(pynode_list)
-
-        # select
-        self.asset_manager_functionality.delete_nodes(clean_pynode_list)
-
-
-    @QtCore.Slot()
-    def create_node(self):
-        """
-        Create node.
-        """
     
-        # create
-        self.asset_manager_functionality.create_node('HelgaShotsMetadata')
-    '''
-    
-
-    
-
-
-
-
-
     # Misc
     # ------------------------------------------------------------------
     def dummy_method(self, msg='dummy'):

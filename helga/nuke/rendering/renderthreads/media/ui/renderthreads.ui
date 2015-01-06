@@ -73,7 +73,7 @@
    <item>
     <widget class="QStackedWidget" name="stkwdgt_content">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="pg_nodes_and_log">
       <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -262,8 +262,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>281</width>
-            <height>460</height>
+            <width>119</width>
+            <height>224</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="lyt_sawdgt_threads">
@@ -520,6 +520,58 @@
                     <enum>QFrame::Raised</enum>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_26"/>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="wdgt_constants_and_general_options_space" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>10</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="wdgt_general_options" native="true">
+                <layout class="QVBoxLayout" name="verticalLayout_28">
+                 <item>
+                  <widget class="QFrame" name="frm_general_options_header">
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_29">
+                    <item>
+                     <widget class="QLabel" name="lbl_general_options_header">
+                      <property name="text">
+                       <string>General</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="frm_general_options">
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_30"/>
                   </widget>
                  </item>
                 </layout>

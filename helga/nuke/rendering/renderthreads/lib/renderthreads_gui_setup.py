@@ -993,6 +993,7 @@ def add_dev_menu(wdgt):
     wdgt.mnu_dev.setObjectName('mnu_dev')
     wdgt.mnubar_stkwdgt.addMenu(wdgt.mnu_dev)
 
+    
     # mnu_dev_nuke
     wdgt.mnu_dev_nuke = QtGui.QMenu('Nuke', parent = wdgt)
     wdgt.mnu_dev_nuke.setObjectName('mnu_dev_nuke')
@@ -1018,6 +1019,7 @@ def add_dev_menu(wdgt):
     wdgt.acn_print_selected_converted_write_nodes.setObjectName('acn_print_selected_converted_write_nodes')
     wdgt.mnu_dev_nuke.addAction(wdgt.acn_print_selected_converted_write_nodes)
 
+    
     # mnu_dev_threads
     wdgt.mnu_dev_threads = QtGui.QMenu('Threads', parent = wdgt)
     wdgt.mnu_dev_threads.setObjectName('mnu_dev_threads')
@@ -1027,6 +1029,22 @@ def add_dev_menu(wdgt):
     wdgt.acn_test_threads = QtGui.QAction('Test threads', wdgt)
     wdgt.acn_test_threads.setObjectName('acn_test_threads')
     wdgt.mnu_dev_threads.addAction(wdgt.acn_test_threads)
+
+
+    # mnu_dev_logging
+    wdgt.mnu_dev_logging = QtGui.QMenu('Logging', parent = wdgt)
+    wdgt.mnu_dev_logging.setObjectName('mnu_dev_logging')
+    wdgt.mnu_dev.addMenu(wdgt.mnu_dev_logging)
+
+    # acn_set_logging_level_debug
+    wdgt.acn_set_logging_level_debug = QtGui.QAction('Debug', wdgt)
+    wdgt.acn_set_logging_level_debug.setObjectName('acn_set_logging_level_debug')
+    wdgt.mnu_dev_logging.addAction(wdgt.acn_set_logging_level_debug)
+
+    # acn_set_logging_level_info
+    wdgt.acn_set_logging_level_info = QtGui.QAction('Info', wdgt)
+    wdgt.acn_set_logging_level_info.setObjectName('acn_set_logging_level_info')
+    wdgt.mnu_dev_logging.addAction(wdgt.acn_set_logging_level_info)
 
 
 #  Connect
@@ -1147,6 +1165,12 @@ def connect_dev_ui(wdgt):
     
     # acn_test_threads
     wdgt.acn_test_threads.triggered.connect(wdgt.thread_manager.test_setup)
+
+
+    # acn_set_logging_level_debug
+    wdgt.acn_set_logging_level_debug.triggered.connect(functools.partial(renderthreads_logging.set_logging_level, logging.DEBUG))
+    # acn_set_logging_level_info
+    wdgt.acn_set_logging_level_info.triggered.connect(functools.partial(renderthreads_logging.set_logging_level, logging.INFO))
 
 
 #  Style

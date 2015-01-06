@@ -29,9 +29,46 @@ Members:
 #  python
 import sys
 import logging
+import functools
 #  PySide
 from PySide import QtGui
 from PySide import QtCore
+
+
+#  Decorators
+#  ------------------------------------------------------------------
+
+def execute_with_logger(logger_class):
+    """
+    Closure logger with argument.
+    """
+
+    def execute_with_logger_func_decorator(func):
+        """
+        Use enclosed logger_class and
+        return func object to use.
+        """
+
+        def wrapped_func(*args, **kwargs):
+            
+            # current_logger_class
+            current_logger_class = logging.getLoggerClass()
+
+            # set default logger
+            logging.setLoggerClass(logger_class)
+
+            # execute func
+            result = func(*args, **kwargs)
+            
+            # reset logger
+            logging.setLoggerClass(current_logger_class)
+
+            # return
+            return result
+        
+        return wrapped_func
+
+    return execute_with_logger_func_decorator
 
 
 #  UniversalPrintObject
@@ -170,6 +207,15 @@ class UniversalStreamHandler(logging.StreamHandler):
             self.handleError(record)
 
 
+#  RenderThreadsLogger
+#  ------------------------------------------------------------------
+class RenderThreadsLogger(logging.getLoggerClass()):
+    """
+    Custom logging class RenderThreadsLogger to
+    be able to test against type.
+    """
+
+
 #  Functions
 #  ------------------------------------------------------------------
 def get_formatter(verbose_level=logging.WARNING):
@@ -212,6 +258,8 @@ def get_handler(display=sys.stdout):
     # return
     return handler
 
+
+@execute_with_logger(RenderThreadsLogger)
 def get_logger(name,
                 display=sys.stdout,
                 logging_level=logging.DEBUG):
@@ -219,7 +267,7 @@ def get_logger(name,
     Return correctly formatted logger from single source.
     """
 
-    #handler
+    # handler
     handler = get_handler(display)
     
     # logger
@@ -231,3 +279,23 @@ def get_logger(name,
     # return
     return logger
 
+
+def set_logging_level(logging_level):
+    """
+    Set logging level for all instances of
+    RenderThreads loggers. (That is all loggers in
+    global dict of type RenderThreadsLogger)
+    """
+
+    # iterate
+    for logger_name, logger in logging.Logger.manager.loggerDict.iteritems():
+        
+        # check type (a direct type check fails here, for whatever reason)
+        # Instead check against __name__ of type which succeeds
+        if (type(logger).__name__ == RenderThreadsLogger.__name__):
+
+            # set level
+            logger.setLevel(logging_level)
+
+            # print
+            print('Set {0} to {1}'.format(logger_name, logging_level))

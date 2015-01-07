@@ -111,6 +111,8 @@ UI_PATH = renderthreads_globals.UI_PATH
 
 INITIAL_LOGGING_LEVEL = renderthreads_globals.INITIAL_LOGGING_LEVEL
 
+INITIAL_THREAD_INTERVAL = renderthreads_globals.INITIAL_THREAD_INTERVAL
+
 
 # form_class, base_class
 # ------------------------------------------------------------------
@@ -131,6 +133,16 @@ class RenderThreads(form_class, base_class):
 
     # Signals
     # ------------------------------------------------------------------
+
+    # command object signals to connect with RenderCommand instances
+    # in the queue. The signals are defined here in the main wdgt
+    # since a new context menu instance is created at each right
+    # click in the nodes view. The instance signals here remain
+    # the same self
+    sgnl_command_set_enabled = QtCore.Signal(bool)
+    sgnl_command_set_timeout = QtCore.Signal(int)
+    sgnl_command_set_display_shell = QtCore.Signal(int)
+    
     
 
     # Create and initialize
@@ -183,7 +195,7 @@ class RenderThreads(form_class, base_class):
         # Init procedure
         # ------------------------------------------------------------------
         # setup_threads
-        self.thread_manager.setup_threads(logging_level = INITIAL_LOGGING_LEVEL)
+        self.thread_manager.setup_threads(thread_interval = INITIAL_THREAD_INTERVAL)
 
         # setupUi
         self.setupUi(self)

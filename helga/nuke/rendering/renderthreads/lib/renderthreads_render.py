@@ -30,11 +30,6 @@ do_reload = True
 
 # lib
 
-# renderthreads_globals
-import renderthreads_globals
-if(do_reload):
-    reload(renderthreads_globals)
-
 # renderthreads_logging
 import renderthreads_logging
 if(do_reload):
@@ -69,7 +64,10 @@ class RenderCommand(QtCore.QObject):
         return render_command_instance
 
     
-    def __init__(self, command, timeout = 60):
+    def __init__(self,
+                    command,
+                    timeout,
+                    display_shell):
         """
         Customize RenderCommand instance.
         Parameter timeout is in seconds NOT in ms.
@@ -86,15 +84,18 @@ class RenderCommand(QtCore.QObject):
         # instance variables
         # ------------------------------------------------------------------
 
-        #command
+        # command
         self.command = command
-        #timeout
+        # timeout
         self.timeout = timeout
+        # display_shell
+        self.display_shell = display_shell
 
-        #process
+        # process
         self.process = None
-        #enabled
+        # enabled
         self.enabled = True
+        
 
         # logger
         self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
@@ -144,10 +145,17 @@ class RenderCommand(QtCore.QObject):
             # env_dict
             env_dict = os.environ.copy()
 
+            # creation_flags
+            creation_flags = 0
+
+            # display_shell
+            if (self.display_shell):
+                creation_flags = subprocess.CREATE_NEW_CONSOLE
+
             # process
             self.process = subprocess.Popen('{0}'.format(self.command),
                                             env = env_dict,
-                                            creationflags = subprocess.CREATE_NEW_CONSOLE)
+                                            creationflags = creation_flags)
 
             # communicate
             self.process.communicate()
@@ -197,3 +205,34 @@ class RenderCommand(QtCore.QObject):
         """
 
         self.enabled = value
+
+    def get_timeout(self):
+        """
+        Return self.timeout.
+        """
+
+        return self.timeout
+
+    @QtCore.Slot(int)
+    def set_timeout(self, value):
+        """
+        Set self.timeout.
+        """
+
+        # set
+        self.timeout = value
+
+    def get_display_shell(self):
+        """
+        Return self.display_shell.
+        """
+
+        return self.display_shell
+
+    @QtCore.Slot(bool)
+    def set_display_shell(self, value):
+        """
+        Set self.display_shell.
+        """
+
+        self.display_shell = value

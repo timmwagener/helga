@@ -90,6 +90,10 @@ COMMAND_LINE_FLAG_SPACING = renderthreads_globals.COMMAND_LINE_FLAG_SPACING
 
 WRITE_NODE_REPLACEMENT_TEMPLATE = renderthreads_globals.WRITE_NODE_REPLACEMENT_TEMPLATE
 
+INITIAL_THREAD_INTERVAL = renderthreads_globals.INITIAL_THREAD_INTERVAL
+INITIAL_THREAD_TIMEOUT = renderthreads_globals.INITIAL_THREAD_TIMEOUT
+INITIAL_DISPLAY_SHELL = renderthreads_globals.INITIAL_DISPLAY_SHELL
+
 
 #  logger (Module Level)
 #  ------------------------------------------------------------------
@@ -234,10 +238,29 @@ def create_sub_threads_menu(wdgt):
     wdgt.sldr_thread_interval = renderthreads_slider_widget.Slider(header = 'Thread interval',
                                                                 minimum = 100,
                                                                 maximum = 10000,
-                                                                initial_value = 2000)
+                                                                initial_value = INITIAL_THREAD_INTERVAL)
     wdgt.sldr_thread_interval.set_tick_position(QtGui.QSlider.TicksBelow)
     wdgt.sldr_thread_interval.set_tick_interval(100)
     frm_threads.addWidget(wdgt.sldr_thread_interval)
+
+    # sldr_thread_timeout
+    wdgt.sldr_thread_timeout = renderthreads_slider_widget.Slider(header = 'Thread Timeout',
+                                                                    minimum = 10,
+                                                                    maximum = 600,
+                                                                    tracking = False,
+                                                                    initial_value = INITIAL_THREAD_TIMEOUT)
+    wdgt.sldr_thread_timeout.set_tick_position(QtGui.QSlider.TicksBelow)
+    wdgt.sldr_thread_timeout.set_tick_interval(10)
+    frm_threads.addWidget(wdgt.sldr_thread_timeout)
+
+    # sldr_display_shell
+    wdgt.sldr_display_shell = renderthreads_slider_widget.Slider(header = 'Display render shell',
+                                                                    minimum = 0,
+                                                                    maximum = 1,
+                                                                    initial_value = INITIAL_DISPLAY_SHELL)
+    wdgt.sldr_display_shell.set_tick_position(QtGui.QSlider.TicksBelow)
+    wdgt.sldr_display_shell.set_tick_interval(1)
+    frm_threads.addWidget(wdgt.sldr_display_shell)
 
     # btn_start_threads
     wdgt.btn_start_threads = QtGui.QPushButton('Re/Start threads')
@@ -992,15 +1015,6 @@ def create_general_options_menu(wdgt):
     wdgt.sldr_logging_level.set_tick_interval(1)
     lyt_frm_general_options.addWidget(wdgt.sldr_logging_level)
 
-    # sldr_display_shell
-    wdgt.sldr_display_shell = renderthreads_slider_widget.Slider(header = 'Display render shell',
-                                                                    minimum = 0,
-                                                                    maximum = 1,
-                                                                    initial_value = 1)
-    wdgt.sldr_display_shell.set_tick_position(QtGui.QSlider.TicksBelow)
-    wdgt.sldr_display_shell.set_tick_interval(1)
-    lyt_frm_general_options.addWidget(wdgt.sldr_display_shell)
-
 
 def create_pbar_render(wdgt):
     """
@@ -1161,6 +1175,10 @@ def connect_widgets(wdgt):
     wdgt.sldr_threadcount.value_changed.connect(wdgt.thread_manager.set_thread_count)
     # sldr_thread_interval
     wdgt.sldr_thread_interval.value_changed.connect(wdgt.thread_manager.set_interval)
+    # sldr_thread_timeout
+    wdgt.sldr_thread_timeout.value_changed.connect(wdgt.sgnl_command_set_timeout)
+    # sldr_display_shell
+    wdgt.sldr_display_shell.value_changed.connect(wdgt.sgnl_command_set_display_shell)
 
 
     # btn_start_threads

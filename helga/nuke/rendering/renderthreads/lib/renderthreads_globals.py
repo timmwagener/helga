@@ -99,3 +99,10 @@ TEXT_DIVIDER = '---------------------------'
 # Misc.
 # ------------------------------------------------------------------
 COMMAND_LINE_FLAG_SPACING = 4
+
+
+# Threads
+# ------------------------------------------------------------------
+INITIAL_THREAD_INTERVAL = 1000  # msec
+INITIAL_THREAD_TIMEOUT = 60  # sec
+INITIAL_DISPLAY_SHELL = 1  # Can be 0 or 1

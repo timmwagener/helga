@@ -154,6 +154,37 @@ class NodesContextMenu(QtGui.QMenu):
         # Separator
         self.addSeparator()
 
+        # mnu_render
+        self.mnu_render = QtGui.QMenu('Render', parent = self)
+        self.mnu_render.setObjectName(self.__class__.__name__ + '_' + 'mnu_render')
+        self.addMenu(self.mnu_render)
+
+        # acn_render_selected
+        self.acn_render_selected = QtGui.QAction('Render selected nodes', self)
+        self.acn_render_selected.setObjectName(self.__class__.__name__ + '_' + 'acn_render_selected')
+        self.mnu_render.addAction(self.acn_render_selected)
+
+        # acn_render_all
+        self.acn_render_all = QtGui.QAction('Render all nodes', self)
+        self.acn_render_all.setObjectName(self.__class__.__name__ + '_' + 'acn_render_all')
+        self.mnu_render.addAction(self.acn_render_all)
+
+        # Separator
+        self.mnu_render.addSeparator()
+
+        # acn_stop_render_selected
+        self.acn_stop_render_selected = QtGui.QAction('Stop render selected', self)
+        self.acn_stop_render_selected.setObjectName(self.__class__.__name__ + '_' + 'acn_stop_render_selected')
+        self.mnu_render.addAction(self.acn_stop_render_selected)
+
+        # acn_stop_render_all
+        self.acn_stop_render_all = QtGui.QAction('Stop render all', self)
+        self.acn_stop_render_all.setObjectName(self.__class__.__name__ + '_' + 'acn_stop_render_all')
+        self.mnu_render.addAction(self.acn_stop_render_all)
+
+        # Separator
+        self.addSeparator()
+
         # mnu_remove
         self.mnu_remove = QtGui.QMenu('Remove', parent = self)
         self.mnu_remove.setObjectName(self.__class__.__name__ + '_' + 'mnu_remove')
@@ -194,32 +225,6 @@ class NodesContextMenu(QtGui.QMenu):
         self.acn_deselect_all = QtGui.QAction('Deselect all DAG nodes', self)
         self.acn_deselect_all.setObjectName(self.__class__.__name__ + '_' + 'acn_deselect_all')
         self.mnu_select.addAction(self.acn_deselect_all)
-
-        # Separator
-        self.addSeparator()
-
-        # acn_render_selected
-        self.acn_render_selected = QtGui.QAction('Render selected nodes', self)
-        self.acn_render_selected.setObjectName(self.__class__.__name__ + '_' + 'acn_render_selected')
-        self.addAction(self.acn_render_selected)
-
-        # acn_render_all
-        self.acn_render_all = QtGui.QAction('Render all nodes', self)
-        self.acn_render_all.setObjectName(self.__class__.__name__ + '_' + 'acn_render_all')
-        self.addAction(self.acn_render_all)
-
-        # Separator
-        self.addSeparator()
-
-        # acn_stop_render_selected
-        self.acn_stop_render_selected = QtGui.QAction('Stop render selected', self)
-        self.acn_stop_render_selected.setObjectName(self.__class__.__name__ + '_' + 'acn_stop_render_selected')
-        self.addAction(self.acn_stop_render_selected)
-
-        # acn_stop_render_all
-        self.acn_stop_render_all = QtGui.QAction('Stop render all', self)
-        self.acn_stop_render_all.setObjectName(self.__class__.__name__ + '_' + 'acn_stop_render_all')
-        self.addAction(self.acn_stop_render_all)
 
         # dev
         if (self.is_dev()):
@@ -266,7 +271,7 @@ class NodesContextMenu(QtGui.QMenu):
         # acn_stop_render_selected
         self.acn_stop_render_selected.triggered.connect(functools.partial(self.dummy_method, 'acn_stop_render_selected'))
         # acn_stop_render_all
-        self.acn_stop_render_all.triggered.connect(functools.partial(self.dummy_method, 'acn_stop_render_all'))
+        self.acn_stop_render_all.triggered.connect(functools.partial(self.stop_render_all))
         
     # Style
     # ------------------------------------------------------------------
@@ -286,8 +291,6 @@ class NodesContextMenu(QtGui.QMenu):
         # set_margins_and_spacing_for_child_layouts
         renderthreads_gui_helper.set_margins_and_spacing_for_child_layouts(self)
 
-        # adjust size (Shrink to minimum size)
-        # self.adjustSize()
     
     # Getter & Setter
     # ------------------------------------------------------------------
@@ -402,6 +405,11 @@ class NodesContextMenu(QtGui.QMenu):
         # command_object_list
         command_object_list = []
 
+        # timeout
+        timeout = self.wdgt_main.sldr_thread_timeout.get_value()
+        # display_shell
+        display_shell = self.wdgt_main.sldr_display_shell.get_value()
+
         # iterate and add job
         for renderthread_node in renderthread_node_list:
 
@@ -417,13 +425,45 @@ class NodesContextMenu(QtGui.QMenu):
                                                                                     frame)
 
                 # command_object
-                command_object = renderthreads_render.RenderCommand(command)
+                command_object = renderthreads_render.RenderCommand(command,
+                                                                    timeout,
+                                                                    display_shell)
 
                 # append
                 command_object_list.append(command_object)
 
         # return
         return command_object_list
+
+
+    def connect_command_object_list(self, command_object_list):
+        """
+        Connect the given RenderCommand objects
+        in command_object_list to signals and slots.
+        """
+
+        # iterate
+        for command_object in command_object_list:
+
+            # sgnl_command_set_enabled
+            self.wdgt_main.sgnl_command_set_enabled.connect(command_object.set_enabled)
+            # sgnl_command_set_timeout
+            self.wdgt_main.sgnl_command_set_timeout.connect(command_object.set_timeout)
+            # sgnl_command_set_display_shell
+            self.wdgt_main.sgnl_command_set_display_shell.connect(command_object.set_display_shell)
+
+
+    def add_command_object_list_to_queue(self, command_object_list):
+        """
+        Add the given RenderCommand objects
+        in command_object_list to the queue.
+        """
+
+        # iterate
+        for command_object in command_object_list:
+
+            # add
+            self.wdgt_main.thread_manager.add_to_queue(command_object)
 
 
     # Slots
@@ -580,14 +620,11 @@ class NodesContextMenu(QtGui.QMenu):
         # command_object_list
         command_object_list = self.get_command_object_list_from_nodes(renderthread_node_list)
 
-        # iterate
-        for command_object in command_object_list:
+        # connect_command_object_list
+        self.connect_command_object_list(command_object_list)
 
-            # connect
-            command_object.task_done.connect(functools.partial(self.wdgt_main.dummy_method, 'task_done'))
-            
-            # add
-            self.wdgt_main.thread_manager.add_to_queue(command_object)
+        # add_command_object_list_to_queue
+        self.add_command_object_list_to_queue(command_object_list)
 
 
     @QtCore.Slot()
@@ -603,14 +640,27 @@ class NodesContextMenu(QtGui.QMenu):
         # command_object_list
         command_object_list = self.get_command_object_list_from_nodes(renderthread_node_list)
 
-        # iterate
-        for command_object in command_object_list:
-            
-            # add
-            self.wdgt_main.thread_manager.add_to_queue(command_object)
+        # connect_command_object_list
+        self.connect_command_object_list(command_object_list)
+
+        # add_command_object_list_to_queue
+        self.add_command_object_list_to_queue(command_object_list)
 
 
-    
+    @QtCore.Slot()
+    def stop_render_all(self):
+        """
+        Emit sgnl_command_set_enabled(False).
+        This method does not STOP! the commands or
+        delete them. Instead it sets their enabled
+        state to false which causes them to not
+        compute anything but remain the normal
+        get/task_done queue procedure.
+        """
+
+        # emit
+        self.wdgt_main.sgnl_command_set_enabled.emit(False)
+
     
 
             

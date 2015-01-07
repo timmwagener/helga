@@ -38,6 +38,10 @@ if(do_reload):
     reload(renderthreads_logging)
 
 
+#  Globals
+#  ------------------------------------------------------------------
+
+
 # WorkerThread class
 # ------------------------------------------------------------------
 class WorkerThread(QtCore.QThread):
@@ -384,9 +388,7 @@ class ThreadManager(QtCore.QObject):
     # Methods
     # ------------------------------------------------------------------
 
-    def setup_threads(self, 
-                        thread_interval = 2000, 
-                        logging_level = logging.DEBUG):
+    def setup_threads(self, thread_interval = 2000):
         """
         Start daemon threads.
         """

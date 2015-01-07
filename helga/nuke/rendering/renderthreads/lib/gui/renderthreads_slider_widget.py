@@ -75,6 +75,7 @@ class Slider(QtGui.QWidget):
                     minimum = 0,
                     maximum = 99,
                     initial_value = 50,
+                    tracking=True,
                     parent = None):
         """
         Slider instance customization.
@@ -101,6 +102,8 @@ class Slider(QtGui.QWidget):
         self.maximum = maximum
         # header
         self.header = header
+        # tracking
+        self.tracking = tracking
 
         # wdgt_spinbox_complete
         self.wdgt_spinbox_complete = None
@@ -150,6 +153,7 @@ class Slider(QtGui.QWidget):
         self.slider.setOrientation(QtCore.Qt.Horizontal)
         self.slider.setRange(self.minimum, self.maximum)
         self.slider.setValue(self.initial_value)
+        self.slider.setTracking(self.tracking)
         self.lyt_wdgt_slider_and_display.addWidget(self.slider)
 
         #lcd_slider_value
@@ -198,6 +202,13 @@ class Slider(QtGui.QWidget):
         """
 
         self.slider.setTickInterval(value)
+
+    def get_value(self):
+        """
+        Return self.slider.value().
+        """
+
+        return self.slider.value()
 
     # Slots
     # ------------------------------------------------------------------

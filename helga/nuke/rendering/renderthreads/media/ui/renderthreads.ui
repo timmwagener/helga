@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>317</width>
-    <height>644</height>
+    <width>168</width>
+    <height>484</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -73,7 +73,7 @@
    <item>
     <widget class="QStackedWidget" name="stkwdgt_content">
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="pg_nodes_and_log">
       <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -262,8 +262,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>281</width>
-            <height>460</height>
+            <width>119</width>
+            <height>224</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="lyt_sawdgt_threads">
@@ -400,8 +400,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>277</width>
-            <height>456</height>
+            <width>149</width>
+            <height>252</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -549,8 +549,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>277</width>
-            <height>456</height>
+            <width>128</width>
+            <height>296</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_32">

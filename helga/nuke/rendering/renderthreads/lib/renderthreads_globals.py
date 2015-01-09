@@ -106,3 +106,5 @@ COMMAND_LINE_FLAG_SPACING = 4
 INITIAL_THREAD_INTERVAL = 1000  # msec
 INITIAL_THREAD_TIMEOUT = 60  # sec
 INITIAL_DISPLAY_SHELL = 1  # Can be 0 or 1
+
+INITIAL_PRIORITY = 50  # Range is from 1 - 100. PriorityQueue values are negated so 1 is highest, 100 lowest

@@ -269,7 +269,7 @@ class NodesContextMenu(QtGui.QMenu):
         self.acn_render_all.triggered.connect(functools.partial(self.render_all))
 
         # acn_stop_render_selected
-        self.acn_stop_render_selected.triggered.connect(functools.partial(self.dummy_method, 'acn_stop_render_selected'))
+        self.acn_stop_render_selected.triggered.connect(functools.partial(self.stop_render_selected))
         # acn_stop_render_all
         self.acn_stop_render_all.triggered.connect(functools.partial(self.stop_render_all))
         
@@ -396,14 +396,16 @@ class NodesContextMenu(QtGui.QMenu):
         return node_list
 
 
-    def get_command_object_list_from_nodes(self, renderthread_node_list):
+    def get_renderthreads_node_to_command_object_list_from_nodes(self, renderthreads_node_list):
         """
-        Return list of RenderCommand objects for
-        given list of renderthread nodes.
+        Return list of RenderThreadNode and RenderCommand objects for
+        given list of renderthread nodes. The format is:
+        [[renderthreads_node, command_object], [renderthreads_node, command_object], ...].
+        There is a pair for each frame that needs to be rendered.
         """
 
-        # command_object_list
-        command_object_list = []
+        # renderthreads_node_to_command_object_list
+        renderthreads_node_to_command_object_list = []
 
         # timeout
         timeout = self.wdgt_main.sldr_thread_timeout.get_value()
@@ -411,64 +413,80 @@ class NodesContextMenu(QtGui.QMenu):
         display_shell = self.wdgt_main.sldr_display_shell.get_value()
 
         # iterate and add job
-        for renderthread_node in renderthread_node_list:
+        for renderthreads_node in renderthreads_node_list:
 
             # frame_list
-            frame_list = renderthread_node.get_frame_list()
+            frame_list = renderthreads_node.get_frame_list()
 
             # iterate frame list
             for frame in frame_list:
 
                 # command
                 command = renderthreads_command_line_engine.get_command_line_string(self.wdgt_main,
-                                                                                    renderthread_node,
+                                                                                    renderthreads_node,
                                                                                     frame)
+
+                # identifier
+                identifier = renderthreads_node.get_nuke_node_full_name()
+                # priority
+                priority = renderthreads_node.get_priority()
+                # negated_priority (PriorityQueue needs negated values)
+                negated_priority = 101 - priority
 
                 # command_object
                 command_object = renderthreads_render.RenderCommand(command,
                                                                     timeout,
-                                                                    display_shell)
+                                                                    display_shell,
+                                                                    identifier,
+                                                                    negated_priority)
 
                 # append
-                command_object_list.append(command_object)
+                renderthreads_node_to_command_object_list.append([renderthreads_node, command_object])
 
         # return
-        return command_object_list
+        return renderthreads_node_to_command_object_list
 
 
-    def connect_command_object_list(self, command_object_list):
+    def connect_command_object_list(self, renderthreads_node_to_command_object_list):
         """
         Connect the given RenderCommand objects
         in command_object_list to signals and slots.
         """
 
         # iterate
-        for command_object in command_object_list:
+        for renderthreads_node, command_object in renderthreads_node_to_command_object_list:
 
             # Command States
             # sgnl_command_set_enabled
             self.wdgt_main.sgnl_command_set_enabled.connect(command_object.set_enabled)
+            # sgnl_command_set_enabled_for_identifier
+            self.wdgt_main.sgnl_command_set_enabled_for_identifier.connect(command_object.set_enabled_for_identifier)
             # sgnl_command_set_timeout
             self.wdgt_main.sgnl_command_set_timeout.connect(command_object.set_timeout)
             # sgnl_command_set_display_shell
             self.wdgt_main.sgnl_command_set_display_shell.connect(command_object.set_display_shell)
+            # sgnl_command_set_priority_for_identifier
+            renderthreads_node.sgnl_command_set_priority_for_identifier.connect(command_object.set_priority_for_identifier)
 
             # Command Object
             # sgnl_task_done
             command_object.sgnl_task_done.connect(self.wdgt_main.pbar_render.increment_value)
+            command_object.sgnl_task_done.connect(renderthreads_node.progressbar.increment_value)
+            command_object.sgnl_task_done.connect(self.wdgt_main.nodes_view.update)
 
 
-    def add_command_object_list_to_queue(self, command_object_list):
+    def add_command_object_list_to_queue(self, renderthreads_node_to_command_object_list):
         """
         Add the given RenderCommand objects
         in command_object_list to the queue.
         """
 
         # iterate
-        for command_object in command_object_list:
+        for renderthreads_node, command_object in renderthreads_node_to_command_object_list:
 
             # increment progressbar range
             self.wdgt_main.pbar_render.increment_range()
+            renderthreads_node.progressbar.increment_range()
 
             # add
             self.wdgt_main.thread_manager.add_to_queue(command_object)
@@ -625,14 +643,14 @@ class NodesContextMenu(QtGui.QMenu):
         # renderthread_node_list
         renderthread_node_list = self.indices_list_to_node_list(selected_indices_list)
 
-        # command_object_list
-        command_object_list = self.get_command_object_list_from_nodes(renderthread_node_list)
+        # renderthreads_node_to_command_object_list
+        renderthreads_node_to_command_object_list = self.get_renderthreads_node_to_command_object_list_from_nodes(renderthread_node_list)
 
         # connect_command_object_list
-        self.connect_command_object_list(command_object_list)
+        self.connect_command_object_list(renderthreads_node_to_command_object_list)
 
         # add_command_object_list_to_queue
-        self.add_command_object_list_to_queue(command_object_list)
+        self.add_command_object_list_to_queue(renderthreads_node_to_command_object_list)
 
 
     @QtCore.Slot()
@@ -645,14 +663,43 @@ class NodesContextMenu(QtGui.QMenu):
         # renderthread_node_list
         renderthread_node_list = self.model.get_data_list_flat()
 
-        # command_object_list
-        command_object_list = self.get_command_object_list_from_nodes(renderthread_node_list)
+        # renderthreads_node_to_command_object_list
+        renderthreads_node_to_command_object_list = self.get_renderthreads_node_to_command_object_list_from_nodes(renderthread_node_list)
 
         # connect_command_object_list
-        self.connect_command_object_list(command_object_list)
+        self.connect_command_object_list(renderthreads_node_to_command_object_list)
 
         # add_command_object_list_to_queue
-        self.add_command_object_list_to_queue(command_object_list)
+        self.add_command_object_list_to_queue(renderthreads_node_to_command_object_list)
+
+
+    @QtCore.Slot()
+    def stop_render_selected(self):
+        """
+        Emit sgnl_command_set_enabled_for_identifier(identifier, False).
+        This method does not STOP! the commands or
+        delete them. Instead it sets their enabled
+        state to false which causes them to not
+        compute anything but remain the normal
+        get/task_done queue procedure.
+        The identifier is a string (in this case
+        the nuke node full name).
+        """
+
+        # selected_indices_list
+        selected_indices_list = self.get_selected_indices()
+
+        # renderthreads_node_list
+        renderthreads_node_list = self.indices_list_to_node_list(selected_indices_list)
+
+        # iterate
+        for renderthreads_node in renderthreads_node_list:
+
+            # identifier
+            identifier = renderthreads_node.get_nuke_node_full_name()
+
+            # emit
+            self.wdgt_main.sgnl_command_set_enabled_for_identifier.emit(identifier, False)
 
 
     @QtCore.Slot()

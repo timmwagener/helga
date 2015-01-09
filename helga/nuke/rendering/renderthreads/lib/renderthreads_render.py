@@ -67,7 +67,9 @@ class RenderCommand(QtCore.QObject):
     def __init__(self,
                     command,
                     timeout,
-                    display_shell):
+                    display_shell,
+                    identifier,
+                    priority):
         """
         Customize RenderCommand instance.
         Parameter timeout is in seconds NOT in ms.
@@ -90,6 +92,10 @@ class RenderCommand(QtCore.QObject):
         self.timeout = timeout
         # display_shell
         self.display_shell = display_shell
+        # identifier
+        self.identifier = identifier
+        # priority
+        self.priority = priority
 
         # process
         self.process = None
@@ -108,6 +114,19 @@ class RenderCommand(QtCore.QObject):
 
         # run
         self.run()
+
+    def __cmp__(self, other):
+        """Implement all comparison methods"""
+
+        # priority equal
+        if (self.priority == other.priority):
+            return cmp(self.identifier, other.identifier)
+        
+        # else
+        else:
+            return cmp(self.priority, other.priority)
+    
+    
 
     # Methods
     # ------------------------------------------------------------------
@@ -206,6 +225,47 @@ class RenderCommand(QtCore.QObject):
 
         self.enabled = value
 
+    @QtCore.Slot(str, bool)
+    def set_enabled_for_identifier(self, identifier, value):
+        """
+        Set self.enabled if identifier check
+        is successfull.
+        """
+
+        # check identifier
+        if (self.identifier == identifier):
+
+            # set enabled
+            self.enabled = value
+
+    def get_priority(self):
+        """
+        Return self.priority.
+        """
+
+        return self.priority
+
+    @QtCore.Slot(int)
+    def set_priority(self, value):
+        """
+        Set self.priority.
+        """
+
+        self.priority = value
+
+    @QtCore.Slot(str, int)
+    def set_priority_for_identifier(self, identifier, value):
+        """
+        Set self.priority if identifier check
+        is successfull.
+        """
+
+        # check identifier
+        if (self.identifier == identifier):
+
+            # set priority
+            self.priority = value
+
     def get_timeout(self):
         """
         Return self.timeout.
@@ -236,3 +296,17 @@ class RenderCommand(QtCore.QObject):
         """
 
         self.display_shell = value
+
+    def get_identifier(self):
+        """
+        Return self.identifier.
+        """
+
+        return self.identifier
+
+    def set_identifier(self, value):
+        """
+        Set self.identifier.
+        """
+
+        self.identifier = value

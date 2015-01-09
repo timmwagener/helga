@@ -35,9 +35,20 @@ from .. import renderthreads_logging
 if(do_reload):
     reload(renderthreads_logging)
 
+# lib.gui
+
+#  renderthreads_progressbar
+from ..gui import renderthreads_progressbar
+if(do_reload):
+    reload(renderthreads_progressbar)
+
 
 # Globals
 # ------------------------------------------------------------------
+
+#Colors
+BLACK = renderthreads_globals.BLACK
+RED = renderthreads_globals.RED
 
 
 # RenderThreadsItemDelegate
@@ -62,7 +73,7 @@ class RenderThreadsItemDelegate(QtGui.QStyledItemDelegate):
 
     
     def __init__(self,
-                parent=None):
+                    parent=None):
         """
         Customize instance.
         """
@@ -189,6 +200,12 @@ class RenderThreadsItemDelegate(QtGui.QStyledItemDelegate):
             # paint_nuke_node
             self.paint_nuke_node(painter, option, data)
 
+        # renderthreads_progressbar.RenderThreadsProgressBar
+        elif(type(data) is renderthreads_progressbar.RenderThreadsProgressBar):
+            
+            # paint_renderthreads_progressbar
+            self.paint_renderthreads_progressbar(painter, option, data)
+
         # other type
         else:
             
@@ -240,3 +257,97 @@ class RenderThreadsItemDelegate(QtGui.QStyledItemDelegate):
 
         #restore painter
         painter.restore()
+
+    def paint_renderthreads_progressbar(self, painter, option, data, custom = True):
+        """
+        Paint renderthreads_progressbar.RenderThreadsProgressBar 
+        as QStyleOptionProgressBar in ui.
+        """
+
+        # custom
+        if (custom):
+
+            # custom
+            self.paint_renderthreads_progressbar_custom(painter, option, data)
+
+        # else (style option):
+        else:
+
+            # style option
+            self.paint_renderthreads_progressbar_style_option(painter, option, data)
+
+
+    def paint_renderthreads_progressbar_custom(self, painter, option, data):
+        """
+        Paint renderthreads_progressbar.RenderThreadsProgressBar 
+        as QStyleOptionProgressBar in ui.
+        """
+
+        #save painter
+        painter.save()
+
+        # no pen
+        painter.setPen(QtGui.QPen(QtCore.Qt.NoPen))
+
+        # draw background
+        painter.setBrush(QtGui.QBrush(QtGui.QColor(QtCore.Qt.transparent)))
+        painter.drawRect(option.rect)
+
+        # maximum
+        maximum = float(data.maximum())
+        # minimum
+        minimum = float(data.minimum())
+        # value
+        value = float(data.value())
+
+        # percent
+        percent = float(0)
+        if (value):
+            percent = value / maximum
+
+
+        # x, y, width, height
+        x = option.rect.x()
+        y = option.rect.y()
+        width = float(option.rect.width())
+        height = option.rect.height()
+
+        # rect_progress
+        rect_progress = QtCore.QRectF(x, y, width * percent, height)
+
+        # draw progress
+        painter.setBrush(QtGui.QBrush(QtGui.QColor(RED)))
+        painter.drawRect(rect_progress)
+
+        # pen text
+        painter.setPen(QtGui.QPen(QtGui.QColor(BLACK)))
+        painter.drawText(option.rect, QtCore.Qt.AlignCenter, data.text())
+
+        #restore painter
+        painter.restore()
+
+    
+    def paint_renderthreads_progressbar_style_option(self, painter, option, data):
+        """
+        Paint renderthreads_progressbar.RenderThreadsProgressBar 
+        as QStyleOptionProgressBar in ui.
+        """
+
+        # maximum
+        maximum = data.maximum()
+        # minimum
+        minimum = data.minimum()
+        # value
+        value = data.value()
+        
+        # progressbar_option
+        progressbar_option = QtGui.QStyleOptionProgressBarV2()
+        progressbar_option.rect = option.rect
+        progressbar_option.minimum = 0
+        progressbar_option.maximum = maximum
+        progressbar_option.progress = value
+        progressbar_option.text = '{0} %'.format(value)
+        progressbar_option.textVisible = True
+
+        # draw
+        QtGui.QApplication.instance().style().drawControl(QtGui.QStyle.CE_ProgressBar, progressbar_option, painter)

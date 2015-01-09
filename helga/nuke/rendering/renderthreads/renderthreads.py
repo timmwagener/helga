@@ -140,6 +140,7 @@ class RenderThreads(form_class, base_class):
     # click in the nodes view. The instance signals here remain
     # the same self
     sgnl_command_set_enabled = QtCore.Signal(bool)
+    sgnl_command_set_enabled_for_identifier = QtCore.Signal(str, bool)
     sgnl_command_set_timeout = QtCore.Signal(int)
     sgnl_command_set_display_shell = QtCore.Signal(int)
     

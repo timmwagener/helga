@@ -456,7 +456,7 @@ RenderThreadsProgressBar { border: none;\
 \
 /* RenderThreadsProgressBar - chunk */\
 RenderThreadsProgressBar::chunk { border: none;\
-                        background-color: %(red)s;\
+                                    background-color: %(red)s;\
 } \
 \
 \

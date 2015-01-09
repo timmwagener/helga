@@ -38,6 +38,18 @@ from .. import renderthreads_logging
 if(do_reload):
     reload(renderthreads_logging)
 
+# lib.gui
+
+#  renderthreads_progressbar
+from ..gui import renderthreads_progressbar
+if(do_reload):
+    reload(renderthreads_progressbar)
+
+
+# globals
+# ------------------------------------------------------------------
+
+INITIAL_PRIORITY = renderthreads_globals.INITIAL_PRIORITY
 
 
 # RenderThreadsNode
@@ -63,6 +75,8 @@ class RenderThreadsNode(QtCore.QObject):
 
     # Signals
     # ------------------------------------------------------------------
+    sgnl_command_set_priority_for_identifier = QtCore.Signal(str, int)
+
 
     # Creation and Initialization
     # ------------------------------------------------------------------
@@ -104,8 +118,14 @@ class RenderThreadsNode(QtCore.QObject):
         # _end_frame
         self.set_end_frame(end_frame)
 
+        # progressbar
+        self.progressbar = self.create_progressbar()
+
+        # priority
+        self.priority = INITIAL_PRIORITY
+
         # container_protocol_index_size
-        self.container_protocol_index_size = 3
+        self.container_protocol_index_size = 5
 
         # logger
         self.logger = renderthreads_logging.get_logger(self.__class__.__name__)
@@ -272,6 +292,48 @@ class RenderThreadsNode(QtCore.QObject):
         # return
         return frame_list
 
+    def get_progressbar(self):
+        """
+        Return self.progressbar
+        """
+
+        return self.progressbar
+
+    def get_progressbar_value(self):
+        """
+        Return self.progressbar.value()
+        """
+
+        return self.progressbar.value()
+
+    def get_progressbar_minimum(self):
+        """
+        Return self.progressbar.minimum()
+        """
+
+        return self.progressbar.minimum()
+
+    def get_progressbar_maximum(self):
+        """
+        Return self.progressbar.maximum()
+        """
+
+        return self.progressbar.maximum()
+
+    def get_priority(self):
+        """
+        Return self.priority
+        """
+
+        return self.priority
+
+    def set_priority(self, value):
+        """
+        Set self.priority
+        """
+
+        self.priority = value
+
 
     # Operator overrides
     # ------------------------------------------------------------------
@@ -289,6 +351,8 @@ class RenderThreadsNode(QtCore.QObject):
         [0]_nuke_node
         [1]_start_frame
         [2]_end_frame
+        [3]self.get_progressbar_value()
+        [4]priority
         """
         return self.container_protocol_index_size
     
@@ -316,10 +380,31 @@ class RenderThreadsNode(QtCore.QObject):
         # 2
         elif (key == 2): 
             return self.get_end_frame()
+        # 3
+        elif (key == 3): 
+            return self.get_progressbar_value()
+        # 4
+        elif (key == 4): 
+            return self.get_priority()
 
 
     # Misc
     # ------------------------------------------------------------------
+
+    def create_progressbar(self):
+        """
+        Create instance progressbar.
+        """
+
+        #  progressbar
+        progressbar = renderthreads_progressbar.RenderThreadsProgressBar()
+        progressbar.setMinimum(0)
+        progressbar.setMaximum(1)
+        progressbar.setValue(0)
+
+        # return
+        return progressbar
+        
     
     def nuke_node_exists(self):
         """

@@ -240,7 +240,7 @@ def create_sub_threads_menu(wdgt):
     frm_threads.addWidget(wdgt.sldr_threadcount)
 
     # sldr_thread_interval
-    wdgt.sldr_thread_interval = renderthreads_slider_widget.Slider(header = 'Thread interval',
+    wdgt.sldr_thread_interval = renderthreads_slider_widget.Slider(header = 'Thread interval (msec.)',
                                                                 minimum = 100,
                                                                 maximum = 10000,
                                                                 initial_value = INITIAL_THREAD_INTERVAL)
@@ -249,9 +249,9 @@ def create_sub_threads_menu(wdgt):
     frm_threads.addWidget(wdgt.sldr_thread_interval)
 
     # sldr_thread_timeout
-    wdgt.sldr_thread_timeout = renderthreads_slider_widget.Slider(header = 'Thread Timeout',
+    wdgt.sldr_thread_timeout = renderthreads_slider_widget.Slider(header = 'Thread Timeout (sec.)',
                                                                     minimum = 10,
-                                                                    maximum = 600,
+                                                                    maximum = 1200,
                                                                     tracking = False,
                                                                     initial_value = INITIAL_THREAD_TIMEOUT)
     wdgt.sldr_thread_timeout.set_tick_position(QtGui.QSlider.TicksBelow)
@@ -1282,6 +1282,9 @@ def update_command_line(wdgt, *args):
 
     # command_line_string
     command_line_string = renderthreads_command_line_engine.get_command_line_string(wdgt)
+
+    # break for word wrap
+    command_line_string = renderthreads_gui_helper.prepare_string_for_word_wrap(command_line_string)
 
     # set lbl_command_line
     wdgt.lbl_command_line.setText(command_line_string)

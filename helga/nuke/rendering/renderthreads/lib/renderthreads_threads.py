@@ -277,7 +277,7 @@ class ThreadManager(QtCore.QObject):
         if not(self.queue):
             
             # create
-            self.queue = Queue.Queue()
+            self.queue = Queue.PriorityQueue()
             
             # log
             self.logger.debug('No queue passed as argument. Creating queue.')
@@ -337,7 +337,7 @@ class ThreadManager(QtCore.QObject):
         """
 
         # create and set self
-        self.queue = Queue.Queue()
+        self.queue = Queue.PriorityQueue()
 
         # log
         self.logger.debug('Reset queue')

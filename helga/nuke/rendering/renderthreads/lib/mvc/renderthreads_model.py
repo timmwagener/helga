@@ -97,7 +97,7 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         # instance variables
         # ------------------------------------------------------------------
         # header_name_list
-        self.header_name_list = ['nuke_node', 'start_frame', 'end_frame']
+        self.header_name_list = ['nuke_node', 'start_frame', 'end_frame', 'progress', 'priority']
 
         # data_list
         self.data_list = [[]]
@@ -197,11 +197,48 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
                 end_frame = renderthreads_node.end_frame
                 return end_frame
 
+            # column progress
+            elif (current_header == self.header_name_list[3]):
+                
+                # progress
+                progress = renderthreads_node.get_progressbar()
+                return progress
+
+            # column priority
+            elif (current_header == self.header_name_list[4]):
+                
+                # priority
+                priority = renderthreads_node.get_priority()
+                return priority
+
             else:
                 # evaluate in superclass
                 return None
+
+        # TextAlignmentRole
+        elif (role == QtCore.Qt.TextAlignmentRole):
+
+            # column start_frame
+            if (current_header == self.header_name_list[1]):
+                
+                return QtCore.Qt.AlignCenter
+
+            # column end_frame
+            elif (current_header == self.header_name_list[2]):
+                
+                return QtCore.Qt.AlignCenter
+
+            # column priority
+            elif (current_header == self.header_name_list[4]):
+                
+                return QtCore.Qt.AlignCenter
+
+            else:
+                # left
+                return QtCore.Qt.AlignLeft
         
         else:
+
             # evaluate in superclass
             return None
 
@@ -280,6 +317,33 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
 
                 return False
 
+            # column priority
+            elif (current_header == self.header_name_list[4]):
+                
+                # validate
+                if(self.validate_value_for_priority(value)):
+                    
+                    # set value
+                    renderthreads_node.set_priority(value)
+                    # data changed signal
+                    self.dataChanged.emit(index, index)
+
+                    # Setting the priority via signal on the
+                    # command objects works. However it has
+                    # no influence of the PriorityQueue since
+                    # priority queues cannot be updated.
+                    # nuke_node_full_name
+                    nuke_node_full_name = renderthreads_node.fullName()
+                    # negated_value
+                    negated_value = 101 - value
+                    # emit sgnl_command_set_priority_for_identifier
+                    renderthreads_node.sgnl_command_set_priority_for_identifier.emit(nuke_node_full_name,
+                                                                                        negated_value)
+                
+                    return True
+
+                return False
+
             else:
                 # evaluate in superclass
                 return self.parent_class.setData(index, value, role)
@@ -292,8 +356,34 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         """
         Return flags for indices.
         """
+
+        # index invalid
+        if not(index.isValid()):
+            
+            # log
+            self.logger.debug('Index {0} not valid.'.format(index))
+            # evaluate in superclass
+            return self.parent_class.flags(index)
         
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable
+        
+        # row & col
+        row = index.row()
+        col = index.column()
+
+        # current_header
+        current_header = self.header_name_list[col]
+
+        # progress
+        if (current_header == self.header_name_list[3]):
+
+            # enabled
+            return QtCore.Qt.ItemIsEnabled
+
+        # else
+        else:
+            
+            # enabled, editable, selectable
+            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable
 
     def update(self, data_list):
         """
@@ -533,6 +623,20 @@ class RenderThreadsModel(QtCore.QAbstractTableModel):
         Validate the value that should be set on the attr. of the data object.
         Return True or False.
         """
+
+        return True
+
+
+    def validate_value_for_priority(self, value):
+        """
+        Validate the value that should be set on the attr. of the data object.
+        Return True or False. The range for priority is between 1-100
+        including 1 and 100.
+        """
+
+        # value larger than 100
+        if (value > 100 or value < 1):
+            return False
 
         return True
 

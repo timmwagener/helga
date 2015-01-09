@@ -445,12 +445,17 @@ class NodesContextMenu(QtGui.QMenu):
         # iterate
         for command_object in command_object_list:
 
+            # Command States
             # sgnl_command_set_enabled
             self.wdgt_main.sgnl_command_set_enabled.connect(command_object.set_enabled)
             # sgnl_command_set_timeout
             self.wdgt_main.sgnl_command_set_timeout.connect(command_object.set_timeout)
             # sgnl_command_set_display_shell
             self.wdgt_main.sgnl_command_set_display_shell.connect(command_object.set_display_shell)
+
+            # Command Object
+            # sgnl_task_done
+            command_object.sgnl_task_done.connect(self.wdgt_main.pbar_render.increment_value)
 
 
     def add_command_object_list_to_queue(self, command_object_list):
@@ -461,6 +466,9 @@ class NodesContextMenu(QtGui.QMenu):
 
         # iterate
         for command_object in command_object_list:
+
+            # increment progressbar range
+            self.wdgt_main.pbar_render.increment_range()
 
             # add
             self.wdgt_main.thread_manager.add_to_queue(command_object)

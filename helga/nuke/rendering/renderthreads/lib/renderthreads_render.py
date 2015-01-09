@@ -49,7 +49,7 @@ class RenderCommand(QtCore.QObject):
 
     # Signals
     # ------------------------------------------------------------------
-    task_done = QtCore.Signal()
+    sgnl_task_done = QtCore.Signal()
 
     # Creation and Initialization
     # ------------------------------------------------------------------
@@ -121,7 +121,7 @@ class RenderCommand(QtCore.QObject):
         if not (self.enabled):
 
             # notify gui
-            self.task_done.emit()
+            self.sgnl_task_done.emit()
 
             # return 0 (0 being the code for "executed properly")
             return 0
@@ -181,7 +181,7 @@ class RenderCommand(QtCore.QObject):
             thread.join()
 
         # notify gui
-        self.task_done.emit()
+        self.sgnl_task_done.emit()
 
         #exitcode
         exitcode = self.process.returncode

@@ -446,16 +446,16 @@ RenderThreadsDockWidget::close-button:pressed, RenderThreadsDockWidget::float-bu
 \
 \
 \
-/* QProgressBar */\
-QProgressBar { border: none;\
-                 background-color: %(grey)s;\
-                 color: %(white)s;\
-                 text-align: center;\
+/* RenderThreadsProgressBar */\
+RenderThreadsProgressBar { border: none;\
+                            background-color: %(grey)s;\
+                            color: %(white)s;\
+                            text-align: center;\
 } \
 \
 \
-/* QProgressBar - chunk */\
-QProgressBar::chunk { border: none;\
+/* RenderThreadsProgressBar - chunk */\
+RenderThreadsProgressBar::chunk { border: none;\
                         background-color: %(red)s;\
 } \
 \

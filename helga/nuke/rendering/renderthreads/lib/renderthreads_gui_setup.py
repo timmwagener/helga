@@ -69,6 +69,11 @@ from gui import renderthreads_signal_remapper
 if(do_reload):
     reload(renderthreads_signal_remapper)
 
+#  renderthreads_progressbar
+from gui import renderthreads_progressbar
+if(do_reload):
+    reload(renderthreads_progressbar)
+
 #  renderthreads_stylesheets
 from gui import renderthreads_stylesheets
 if(do_reload):
@@ -1025,11 +1030,11 @@ def create_pbar_render(wdgt):
     lyt_pbar_render = wdgt.frm_pbar_render.layout()
 
     #  pbar_render
-    wdgt.pbar_render = QtGui.QProgressBar()
+    wdgt.pbar_render = renderthreads_progressbar.RenderThreadsProgressBar(parent = wdgt)
     wdgt.pbar_render.setOrientation(QtCore.Qt.Horizontal)
     wdgt.pbar_render.setMinimum(0)
-    wdgt.pbar_render.setMaximum(99)
-    wdgt.pbar_render.setValue(50)
+    wdgt.pbar_render.setMaximum(1)
+    wdgt.pbar_render.setValue(0)
     #  add
     lyt_pbar_render.addWidget(wdgt.pbar_render)
 

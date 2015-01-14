@@ -359,6 +359,25 @@ try:
     
 
 
+    #renderthreads
+    #------------------------------------------------------------------
+    #------------------------------------------------------------------
+
+    def run_renderthreads():
+        """
+        Ad-hoc definition of function to run renderthreads.
+        """
+
+        from renderthreads import renderthreads
+        reload(renderthreads)
+        renderthreads.run()
+
+    #cmds
+    helga_main_menu.addCommand('RenderThreads', lambda: run_renderthreads())
+
+
+    
+
     #directory_wizard
     #------------------------------------------------------------------
     #------------------------------------------------------------------

@@ -46,6 +46,28 @@ Here's how its used in Houdini. Its simple and comfortable.
 
 ----------------------------------
 
+Shots
+-----
+
+
++-------------------------+----------------------------+----------------------------------------------------+
+| $HELGA_SHOT_NAME        | Name of the current shot   | 030_establishertavern, 240_kick, etc.              |
++-------------------------+----------------------------+----------------------------------------------------+
+
+This variable is added by the pipeline on startup if it doesnt exist. However it is **NOT** given a value.
+The correct value for the current shot has to be set by the user. Please see below for examples.
+
+.. warning::
+
+	| When importing Alembics (**characters, shots, cameras**) please always have your path starting with:
+	| **$HELGA_ALEMBIC_PATH/$HELGA_SHOT_NAME/**
+	| For example:
+	| $HELGA_ALEMBIC_PATH/$HELGA_SHOT_NAME/props/
+	| $HELGA_ALEMBIC_PATH/$HELGA_SHOT_NAME/cameras/shot_cam.abc
+	| $HELGA_ALEMBIC_PATH/$HELGA_SHOT_NAME/chars/ulfbert_rendergeo.abc
+
+----------------------------------
+
 Applications
 ------------
 

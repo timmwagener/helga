@@ -125,6 +125,31 @@ except:
 
 
 
+#Check if $HELGA_SHOT_NAME variable exists and if not, set it
+#------------------------------------------------------------------
+
+# HELGA_SHOT_NAME
+HELGA_SHOT_NAME = '$HELGA_SHOT_NAME'
+
+# check if variable exists
+try:
+    
+    # check
+    hou.hscriptExpression('{0}'.format(HELGA_SHOT_NAME))
+
+    # variable_value
+    variable_value = hou.expandString('{0}'.format(HELGA_SHOT_NAME))
+    
+    # SuccessMsg
+    print('Variable {0} is set to {1}'.format(HELGA_SHOT_NAME, variable_value))
+
+except:
+
+    # FailMsg
+    print('Variable {0} does not exist. Setting it to empty value.'.format(HELGA_SHOT_NAME))
+
+    #set $HELGA_SHOT_NAME
+    hou.hscript("set -g HELGA_SHOT_NAME = {0}".format(''))
 
 
 

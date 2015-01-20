@@ -9,6 +9,7 @@ import os
 import sys
 import re
 import shutil
+import getpass
 #houdini
 import hou
 
@@ -35,6 +36,9 @@ if(do_reload):reload(global_functions)
 #init Globals
 #------------------------------------------------------------------
 
+# USER
+USER = getpass.getuser()
+
 #Assign all global variables to only use local ones later on
 PIPELINE_SCRIPTS_BASE_PATH = global_variables.PIPELINE_SCRIPTS_BASE_PATH
 PIPELINE_HDRI_PATH = global_variables.PIPELINE_HDRI_PATH
@@ -45,6 +49,8 @@ PIPELINE_FUR_PATH = global_variables.PIPELINE_FUR_PATH
 PIPELINE_TEXTURES_PATH = global_variables.PIPELINE_TEXTURES_PATH
 PIPELINE_RENDER_PATH = global_variables.PIPELINE_RENDER_PATH
 
+# FX specific
+FX_USER_LIST = ['jfranz']
 
 
 
@@ -52,6 +58,12 @@ PIPELINE_RENDER_PATH = global_variables.PIPELINE_RENDER_PATH
 
 
 
+
+
+#Print USER
+#------------------------------------------------------------------
+
+print('User: {0}'.format(USER))
 
 
 
@@ -190,13 +202,42 @@ except:
 
 #Helga set cm
 #------------------------------------------------------------------
+
+class UnitlengthError(Exception):
+    """
+    Error to be raised when setting unitlength to cm is not desired.
+    """
+    
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
 try:
+
+    # check if fx user
+    if (USER in FX_USER_LIST):
+        
+        # modal_return_value
+        modal_return_value = hou.ui.displayMessage("{0} has been detected as an FX user. Do you want to keep the unitlength to its default value (m) to aid simulations?".format(USER), buttons =("Yes" ,"No"))
+
+        # if 0 raise
+        if (modal_return_value == 0):
+
+            # raise
+            raise UnitlengthError(USER) 
     
     #default houdini startup when opened without hip file
     hou.hscript("unitlength 0.01")
 
     #SuccessMsg
     print('Successfully set unitlength to cm')
+
+except UnitlengthError as error:
+    
+    #FailMsg
+    print('FX User {0}. Not setting unitlength.'.format(error.value))
 
 except:
     

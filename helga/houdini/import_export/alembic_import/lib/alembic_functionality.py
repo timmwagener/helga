@@ -51,8 +51,10 @@ if(do_reload):reload(alembic_import_logging_handler)
 #------------------------------------------------------------------
 
 HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE = '$HELGA_ALEMBIC_PATH'
+HELGA_SHOT_NAME_VARIABLE = '$HELGA_SHOT_NAME'
 
-
+HELGA_VARIABLES_REPLACEMENT_LIST = [HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE,
+                                    HELGA_SHOT_NAME_VARIABLE]
 
 
 
@@ -856,10 +858,9 @@ class AlembicFunctionality(object):
         parm_load_locator = alembic_node.parm('loadLocator')
         parm_load_locator.set(True)
 
-
         #update alembic_path with global var if possible
-        alembic_path = self.replace_global_variable(alembic_path, 
-                                                    HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE)
+        for variable in HELGA_VARIABLES_REPLACEMENT_LIST:
+            alembic_path = self.replace_global_variable(alembic_path, variable)
 
         #set fileName
         parm_file_name = alembic_node.parm('fileName')
@@ -965,10 +966,9 @@ class AlembicFunctionality(object):
         parm_viewportlod = alembic_node.parm('viewportlod')
         parm_viewportlod.set(2)
 
-
         #update alembic_path with global var if possible
-        alembic_path = self.replace_global_variable(alembic_path, 
-                                                    HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE)
+        for variable in HELGA_VARIABLES_REPLACEMENT_LIST:
+            alembic_path = self.replace_global_variable(alembic_path, variable)
 
         #set fileName
         parm_file_name = alembic_node.parm('fileName')
@@ -1102,8 +1102,8 @@ class AlembicFunctionality(object):
         alembic_node = parent_node.createNode('alembic', parent_node.name())
 
         #update alembic_path with global var if possible
-        alembic_path = self.replace_global_variable(alembic_path, 
-                                                    HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE)
+        for variable in HELGA_VARIABLES_REPLACEMENT_LIST:
+            alembic_path = self.replace_global_variable(alembic_path, variable)
 
         #set fileName
         parm_file_name = alembic_node.parm('fileName')
@@ -1252,8 +1252,8 @@ class AlembicFunctionality(object):
         alembic_node = parent_node.createNode('alembic', parent_node.name())
 
         #update alembic_path with global var if possible
-        alembic_path = self.replace_global_variable(alembic_path, 
-                                                    HELGA_ALEMBIC_PATH_GLOBAL_VARIABLE)
+        for variable in HELGA_VARIABLES_REPLACEMENT_LIST:
+            alembic_path = self.replace_global_variable(alembic_path, variable)
 
         #set fileName
         parm_file_name = alembic_node.parm('fileName')

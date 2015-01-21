@@ -16,7 +16,7 @@ Usage
     from helga.general.setup.global_variables import global_variables
     reload(global_variables)
 
-    #pipeline_base_path
+    # pipeline_base_path
     pipeline_base_path = global_variables.PIPELINE_BASE_PATH
 
 -----------------------
@@ -24,30 +24,34 @@ Usage
 
 
 
-#Import
-#----------------------------------------------------
-#python
+# Import
+# ----------------------------------------------------
+# python
 import os
 import sys
 
 
 
 
-#Globals
-#----------------------------------------------------
+# Globals
+# ----------------------------------------------------
 
 
+# Licenses
+# ----------------------------------------------------
+RLM_LICENSE = [r'2764@red']  # LBrush for Maya
 
-#General
-#----------------------------------------------------
+
+# General
+# ----------------------------------------------------
 
 
 
 PIPELINE_BASE_PATH = os.getenv('HELGA_PIPELINE_BASE_PATH', False)
 """Helga pipeline base path"""
 
-#import protection
-#everything from here on will fail if the ancor PIPELINE_BASE_PATH fails
+# import protection
+# everything from here on will fail if the ancor PIPELINE_BASE_PATH fails
 if (PIPELINE_BASE_PATH):
 
     HELGA_PIPELINE_FLAVOUR = os.getenv('HELGA_PIPELINE_FLAVOUR', False)
@@ -57,7 +61,7 @@ if (PIPELINE_BASE_PATH):
     """Pipeline scripts base path. You can import helga from here."""
 
     PIPELINE_LIBRARIES_PATH_GENERAL = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/general/python2.7libs'
-    PIPELINE_LIBRARIES_PATH_GENERAL_FOR_HOUDINI = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/general' #HOUDINI_PATH searches for python2.7libs folder automatically
+    PIPELINE_LIBRARIES_PATH_GENERAL_FOR_HOUDINI = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/general'  # HOUDINI_PATH searches for python2.7libs folder automatically
     """General libraries to be used with all our DCCs. All DCCs have a Python 2.7.x interpreter."""
 
     PIPELINE_LIBRARIES_PATH_HOUDINI = PIPELINE_BASE_PATH + r'/Production/scripts/libraries/houdini'
@@ -138,16 +142,16 @@ if (PIPELINE_BASE_PATH):
 
 
 
-    #Maya
-    #----------------------------------------------------
+    # Maya
+    # ----------------------------------------------------
 
     MAYA_EXE = os.getenv('HELGA_MAYA_EXE', False)
     """Helga pipeline Maya exe"""
 
-    #maya_exe guard (for nuke farm rendering)
+    # maya_exe guard (for nuke farm rendering)
     if not (MAYA_EXE):
 
-        #log
+        # log
         print('MAYE_EXE env. var. not found. Skipping MAYA_PY assignment')
 
     else:
@@ -197,8 +201,8 @@ if (PIPELINE_BASE_PATH):
 
 
 
-    #Nuke
-    #----------------------------------------------------
+    # Nuke
+    # ----------------------------------------------------
 
     NUKE_EXE = os.getenv('HELGA_NUKE_EXE', False)
     """Helga pipeline Nuke exe"""
@@ -229,8 +233,8 @@ if (PIPELINE_BASE_PATH):
 
 
 
-    #Houdini
-    #----------------------------------------------------
+    # Houdini
+    # ----------------------------------------------------
 
     HOUDINI_EXE = os.getenv('HELGA_HOUDINI_EXE', False)
     """Helga pipeline Houdini exe"""
@@ -291,12 +295,12 @@ if (PIPELINE_BASE_PATH):
 
 
 
-    #Stylesheets
-    #----------------------------------------------------
+    # Stylesheets
+    # ----------------------------------------------------
 
 
-    #Maya
-    #----------------------------------------------------
+    # Maya
+    # ----------------------------------------------------
 
     MAYA_STYLESHEET_DICT = {'tab_selected_background_color' : '#b13b00' if(HELGA_PIPELINE_FLAVOUR == 'deploy') else '#006cbf',
                             'tab_hover_background_color' : '#f9661e' if(HELGA_PIPELINE_FLAVOUR == 'deploy') else '#008df9'}
@@ -305,7 +309,7 @@ if (PIPELINE_BASE_PATH):
     MAYA_STYLESHEET = "\
 \
 \
-/* QLineEdit#A3FGXfield */\
+/* QLineEdit# A3FGXfield */\
 QLineEdit#A3FGXfield { border-radius: 0; background-color: #222222; color: #ffbbbb } \
 QLineEdit#A3FGYfield { border-radius: 0; background-color: #222222; color: #bbffbb } \
 QLineEdit#A3FGZfield { border-radius: 0; background-color: #222222; color: #bbbbff } \
@@ -318,14 +322,14 @@ QTabBar::tab:hover { background-color: %(tab_hover_background_color)s; }\
 \
 \
 \
-"%MAYA_STYLESHEET_DICT
-    #----------------------------------------------------
+" % MAYA_STYLESHEET_DICT
+    # ----------------------------------------------------
 
     
 
 
-    #Nuke
-    #----------------------------------------------------
+    # Nuke
+    # ----------------------------------------------------
 
     NUKE_STYLESHEET_DICT = {'tab_selected_background_color' : '#b13b00' if(HELGA_PIPELINE_FLAVOUR == 'deploy') else '#006cbf',
                             'tab_hover_background_color' : '#f9661e' if(HELGA_PIPELINE_FLAVOUR == 'deploy') else '#008df9'}
@@ -341,8 +345,8 @@ QTabBar::tab:hover { background-color: %(tab_hover_background_color)s; }\
 \
 \
 \
-"%NUKE_STYLESHEET_DICT
-    #----------------------------------------------------
+" % NUKE_STYLESHEET_DICT
+    # ----------------------------------------------------
 
 
     

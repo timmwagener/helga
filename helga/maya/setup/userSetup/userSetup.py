@@ -154,7 +154,8 @@ try:
                         'rrSubmit_Maya_8.5+.py', 
                         'helga_asset_metadata.py', 
                         'helga_shots_metadata.py', 
-                        'AnimSchoolPicker.mll']
+                        'AnimSchoolPicker.mll',
+                        'LBrush']
         
 
         #iterate plugin_list and load

@@ -66,7 +66,8 @@ def get_env_vars():
                                     'PYTHONPATH':global_variables.MAYA_PYTHONPATH_LIST,
                                     'XBMLANGPATH':global_variables.MAYA_ICONS_PATH_LIST,
                                     'MAYA_PLUG_IN_PATH':global_variables.MAYA_PLUGIN_PATH_LIST,
-                                    'MAYA_SHELF_PATH':global_variables.MAYA_SHELF_PATH_LIST}
+                                    'MAYA_SHELF_PATH':global_variables.MAYA_SHELF_PATH_LIST,
+                                    'RLM_LICENSE':global_variables.RLM_LICENSE}
 
     return environment_pathes_dict
 

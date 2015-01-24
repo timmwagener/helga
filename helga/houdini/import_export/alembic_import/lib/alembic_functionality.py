@@ -535,6 +535,66 @@ class AlembicFunctionality(object):
     #Character Methods
     #------------------------------------------------------------------
 
+    def create_category_parms(self, node):
+        """
+        Create the category parms needed for light linking
+        with Houdini categories.
+        """
+
+        #parm_group
+        parm_group = node.parmTemplateGroup()
+
+        #fldr
+        fldr = parm_group.containingFolder('categories')
+         
+        #lightcategories
+        hou_parm_template = hou.StringParmTemplate("lightcategories", "Light Selection", 1, default_value='*')
+        hou_parm_template.setHelp("A space-separated list of categories. Lights in these categories will illuminate this object.")
+        #append
+        parm_group.appendToFolder(fldr, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_group)
+
+        #log
+        parm = node.parm("lightcategories")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+        #fldr
+        fldr = parm_group.containingFolder('categories')
+
+        #reflectcategories
+        hou_parm_template = hou.StringParmTemplate("reflectcategories", "Reflection Selection", 1, default_value='*')
+        hou_parm_template.setHelp("A space-separated list of categories. Objects in these categories will reflect in this object.")
+        #append
+        parm_group.appendToFolder(fldr, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_group)
+
+        #log
+        parm = node.parm("reflectcategories")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+        #fldr
+        fldr = parm_group.containingFolder('categories')
+
+        #refractcategories
+        hou_parm_template = hou.StringParmTemplate("refractcategories", "Refraction Selection", 1, default_value='*')
+        hou_parm_template.setHelp("A space-separated list of categories. Objects in these categories will be visible in refraction rays.")
+        #append
+        parm_group.appendToFolder(fldr, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_group)
+
+        #log
+        parm = node.parm("refractcategories")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
     def create_geo_node(self, parent_node, node_name):
         """
         Create character geo node. This node is used to assign materials
@@ -545,6 +605,9 @@ class AlembicFunctionality(object):
         geo_node = parent_node.createNode('geo', node_name)
         #delete_content
         self.delete_content(geo_node)
+
+        # create category parms
+        self.create_category_parms(geo_node)
 
         return geo_node
 

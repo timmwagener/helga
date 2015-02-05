@@ -1,0 +1,1045 @@
+//dkAnim.mel v .96
+//Written by Daniel Kramer
+//daniel@visionart.com
+//June 11 2000
+
+//v .1 - Inital Release
+//v .2 - fixed bugs with breakdown keys
+//v .3 - Added prompt for overwriting files
+//v .4 - Found a bug in Maya that was causing some of the tangents to read in wrong.. 
+//	 simply excecuting that tangent command twice seems to do the trick.
+//v .5 - dkAnim no longer stores setDriven key relationships.. it wasn't ment to catch them
+// 	 and was basically empty useless info in the file.
+//v .6 - Now dkAnim saves unkeyed attributes for the nodes.  You can choose to read them or not by 
+//	 checking "Load Un-Keyed Attributes"
+//     - Fixed bug where node names with a "." in them weren't handled correctly
+//v .7 - Re-designed UI to make it a bit clearer.
+//     - Removed "Save Explicit Node Paths" from writer.. this is now always done
+//     - Added "Load Explicit Node Paths" to reader.. this way the full path is always
+//	 saved in the file and you can choose to use them or not at read time
+//     - Fixed bug that froze Maya if you selected Search and Replace but the search field was blank
+//
+//Date - July 9th 2000
+//v .8 - Streamlined script procedures a bit to greatly increase speed of both read and write procs.  
+//	 Increases in speed are anywhere from 2 to 7 times faster for read and write operations!
+//     - Fixed a bug which incorrectly assigned tangents as "fixed" when they were some other type (like "spline").. 
+//       The curves ended up looking the same though so it was hard to spot this... hopfully it didn't cause a 
+//       loss or curruption of data. This was a bug in the write proc.
+//     - Fixed a bug where breakdown keys weren't always assigned correctly.. again this didn't really affect the values
+//       of the anim curves at all.. so this shouldn't have caused too much headache. This was a bug in the read proc.
+// 
+//Date - July 10th 2000
+//v .9 - Added "Channel Scope" to read options.  This allows you to selectivly choose channels to import from a .dkanim file
+//
+//Date - July 11th 2000
+//v .95- New channel scope speed improvments on very large .dkanim files.  By hiding and shrinking
+//	 The listbox large files load in a ton faster (from 35sec to 7sec in my one test case)
+//     - Addition of NT only dialog box for browse button.  Thanks to Cid Newman for adding this
+//	 Feature for me since I don't have access to NT Maya.  Apparently this is a better
+//	 File browser then the one I was using, but it's only available for NT.
+//
+//Date - July 21st 2000
+//v .96- Apparently attributeQuery mel command doesn't work as expected on character sets.. as a 
+//	 result dkAnim was failing to read in animation onto character sets.  This version checks
+//	 for the attribute using 'ls' instead and fixes the problem
+//     - dkAnim also wrote out channels as "static" when they were being controled
+//	 by something other then a channel (like a point constraint).. now it skips 
+//	 over those attributes that are controled by other nodes.
+/*
+----------------------------
+ToDo:
+----------------------------
+
+I have a few ideas to improve the script, other ideas are welcome:
+
+1) replace, insert, offset options.
+2) add a frame range on the read side
+3) build a UI to limit which channels are read into a file.  This way if you 
+wrote out animation for an entire character you could extract just a few or a 
+single channel from that file.
+4) probably going to re-structure it slightly so that you don't have to use
+the UI for dkAnim at all.. you could just call the read and write procedures
+directly.  This would be cool for incorperating dkAnim import/export into
+other scripts.
+
+
+
+To run type:
+
+dkAnim 
+
+	dkAnim.mel is for Importing or Exporting animation channels in Maya.
+I wrote dkAnim out of pure frustration with Maya's Animation Import/Export 
+plugin.  Specifically I was transferring animation from a stripped down Fast
+Anim file to my full blown Hi-Rez Render file and channels were getting assigned
+to the wrong objects in many cases.  Maya's plugin seems to save channels based 
+on hierarchy of your nodes, not necessarily node names.  This can be nice but if
+your hierarchy changes slightly you may get weird results.. channels getting
+assigned to the wrong nodes..etc.  I have also run into files that simply would
+not accept the .anim file at all for no reason that I could fathom.
+
+	dkAnim relies on node names to map channels to objects.  This way you 
+can be sure that if you save a channel attached to Hip.tx that it will get to
+Hip.tx in the destination file.  There are a few options to tweak this which I
+will describe below in the ReadOptions Section.
+
+	The other nice feature of dkAnim is that is saves all keyable 
+attributes for selected nodes.. not just keyed ones.  So if an animator has 
+changed a value of an animation control w/out keying it.. that will get saved 
+in the .dkanim file and can optionally be transferred into a new file if you
+wish.
+
+	dkAnim saves all features of a keyframe and curve to the file.. so 
+tangency, weight, pre-infinity, post-infinity, breakdown state.. etc.. it's all
+preserved unlike Maya's plugin which can corrupt or loose your data.
+
+	dkAnim has been tested on a Feature Film production for tranfering 
+animation between character files for a farily complex character.  It should be
+fairly solid at this point but bugs may show up on different setups.. just 
+mail me and I will try and squash them.
+
+	On the bad side.. dkAnim can be slow.  It's much slower then Maya's 
+plugin (That's just the nature of a mel script vs. a plugin).  Also reading in 
+animation can consume memory which doesn't seem to free.. I'm not sure 
+why this is but with very large files this might be an issue.  For me having 
+consistant animation transfer is worth these tradeoffs though.
+
+Usege: dkAnim
+
+----------------------------
+WriteOptions:
+----------------------------
+
+*Type in a path and name of a .dkanim file in the text field.  You can use the
+browse button but it has a limitation.. you can't selected a dir name with the
+Maya file requester unfortunately.  You could select some other file in the dir
+of your choice and then change the name by hand in the text field.
+
+*Save Hierarchy:  
+	When checked dkAnim will save channels for the selected nodes
+and all nodes below them. If unchecked then only selected node channels will be
+saved.  
+
+*Write Anim 
+	Write anim to file specified.  This will save all the keyable 
+attribues (keyed or not) to a file. For attribues with keyframes all the 
+keys are saved for objects scoped.. not just keys in your frame range. 
+
+----------------------------
+ReadOptions:
+----------------------------
+
+*Warning:
+	dkAnim only inserts new keyframes.. so if you want to replace a curve
+completely you will first have to delete all the keyframes in your object 
+before reading animation onto it.  This is a simple step using the 
+Edit->Keys->Delete Keys option in Maya.
+
+
+*Type in a path and name of a .dkanim file in the text field, or use browse 
+button to search for one.
+
+*Use Search and Replace:
+	When checked the 2 fields below it are active.  This is used to tweak 
+channel names in a saved .dkAnim file.  For example if you saved animation 
+on an object named "A_Hip" and you want to read that onto an object named 
+"B_Hip" you could type "A_" in the "Search For:" field and "B_" in the
+"Replace With:" field.
+
+*Add Prefix:
+	This will add whatever you type to the beginning of all node names in 
+the saved .dkAnim file.  If you wrote out animation on an object named "Hip" and
+you are reading that onto an object named "A_Hip" .. just type A_ in the 
+"Add Prefix:" field.  
+
+*Add To Top Nodes Only (prefix option):
+	When checked the above prefix will only be added to nodes that are at 
+the root of a hierarchy (top most parent).
+
+
+*Load Explicit Node Paths:
+	When a .dkAnim file is saved each node name is long listed.. that means
+that the node name contains the full path to that object in it's hierarchy.  
+This is done because in Maya it's possible to have 2 nodes with the same name 
+as long as they are parented under different objects.  So with this checked 
+dkAnim will look for an object with not only the same name.. but parented under
+the same nodes.  If you have re-parented your object or changed some of the 
+names in the hierarchy to that object then you'll need to uncheck this option. 
+If you are sure that you don't have 2 node names that are identical in your file
+then it's perfectly safe to uncheck this option.
+
+*Load Un-Keyed Attributes:
+	Many times when animating you might set a value of an attribute without
+actually keying it..  This happens all the time in fact.  dkAnim actually saves
+all of these un-keyed values for your nodes in the .dkAnim file.. if this is 
+checked then those values are transferred to the new file.
+
+*Limit Channels to Scope
+	This control goes along with the "Define Channel Scope" button.  Point
+the readOptions line to a valid .dkanim file and hit the "Define Channel Scope"
+button. This will list all channels that exist in the .dkanim file after being
+filtered though the various readOptions.  If you don't have 
+"Load Un-keyed Attributes" checked then only keyed anim curves will be loaded 
+into the channel scope box.  To use the feature make sure to highlight some 
+channels and click down the "Limit Channels to Scope" checkbox to activate the
+feature.  
+	If you update any of the search and replace fields or any other readOption
+control you will need to hit "Refresh" in the channel scope window to see the
+update. The is an information message that tries to tell you when the channel box is out of
+sinc after you change options.  The refresh also tries to keep the same selection you had 
+prior to a refresh.. this is handy for clicking off full paths.. selecting the nodes.. then 
+clicking full paths back on and retaining the selection.
+
+*Add and Remove Channel Scope
+	These are to help you define a channel scope with wildCards.  
+
+
+
+*/
+
+int $DKANIM_REFRESH = 1;
+int $DKANIM_REFRESH_KEEP = 1;
+
+global proc dkAnim ( )
+{
+	if (`window -ex  dkAnim`)
+    		deleteUI dkAnim;
+    	if (`window -ex  dkAnim_channels`)
+    		deleteUI dkAnim_channels;
+	
+
+	window -s 0 -ip  -in "dkAnim" -w 600 -h 495 -title "dkAnim V .96" dkAnim;
+	
+	
+	columnLayout -co left 10 -rs 10;
+		frameLayout -borderVisible true -labelVisible true -li 10 -h 125 -w 575 -labelAlign "center" -label "WriteOptions" -marginWidth 5 -marginHeight 5 ;
+			columnLayout -rs 5;
+				rowColumnLayout -nc 2 -cw 1 500 -cw 2 50 -cs 2 5 ;
+					textField -text "out.dkanim" -ed 1 dk_outname;
+					button -label "Browse" -c "dk_browse_output 0";
+					setParent ..;
+				checkBox -v 1 -label " Save Hierarchy" dk_hierarchy;	
+				button -label "Write Anim" -w 560 -c "dk_animWrite `textField -q -text dk_outname` `checkBox -q -v dk_hierarchy`" ;	
+				setParent ..;
+			setParent ..;
+		setParent ..;
+		frameLayout -borderVisible true -labelVisible true -li 10 -h 310 -w 575 -labelAlign "center" -label "ReadOptions" -marginWidth 5 -marginHeight 5 ;
+			columnLayout -rs 5;
+				rowColumnLayout -nc 2 -cw 1 500 -cw 2 50 -cs 2 5 ;
+					textField -text "out.dkanim" -cc "dk_setRefresh 0" dk_inname  ;
+					button -label "Browse" -c "dk_browse_output 1";
+					setParent ..;
+				separator -height 10 -w 565 -style "out";	
+				rowColumnLayout -nc 1 -cs 1 30 -cw 1 550;
+					checkBox -al "left" -v 0 -label "Use Search and Replace" -cc "dk_setRefresh 1" dk_doReplace;
+					rowColumnLayout -nc 2 -cw 1 250 -cw 2 260 -cs 2 0 ;
+ 						textFieldGrp  -cw 1 90 -cw 2 160 -label "Search For:" -cc "dk_setRefresh 1" dk_search;
+						textFieldGrp -cw 1 100 -cw 2 160 -label "Replace With:" -cc "dk_setRefresh 1"  dk_replace;
+						setParent ..;
+					setParent ..;
+					
+				separator -height 5 -w 565 -style "out";			
+				columnLayout -rs 5;
+					rowColumnLayout -nc 2 -cs 1 20 -cw 1 300 -cw 2 175 -cs 2 0 ;
+						textFieldGrp -cw 1 100 -cw 2 160 -label "Add Prefix:" -cc "dk_setRefresh 1" dk_prefix;
+						checkBox -v 0 -label "Add To Top Nodes Only" -cc "dk_setRefresh 1" dk_topNodes;
+						setParent ..;	
+					setParent ..;
+					
+				separator -height 5 -w 565 -style "out";			
+				columnLayout -rs 5;
+					rowColumnLayout -nc 2 -cw 1 290 -cw 2 175 -cs 2 0 -cs 1 30;
+						checkBox -al "left" -v 1 -label "Load Explicit Node Paths" -cc "dk_setRefresh 1" dk_paths;
+						checkBox -v 0 -label "Load Un-Keyed Attributes" -cc "dk_setRefresh 0" dk_unKeyed;
+						setParent ..;
+							
+					setParent ..;
+					
+					separator -height 5 -w 565 -style "out";
+					rowColumnLayout -cs 1 30 -cw 1 290 -cw 2 200 -nc 2 ;
+						checkBox -label "Limit Channels to Scope" -al "left" dk_useChannels;
+						button -label "Define Channel Scope"  -c dk_channels;
+						setParent ..;
+					separator -height 5 -w 565 -style "out";
+					button -label "Read Anim" -w 560 -c "dk_animRead `textField -q -text dk_inname` `checkBox -q -v dk_paths`" ;	
+					
+				setParent ..;
+			setParent ..;
+		setParent ..;
+		
+		
+	showWindow dkAnim;
+	window -e -w 600 -h 495 dkAnim;
+	
+	
+	
+}
+
+global proc dk_setRefresh (int $keep_selection)
+{
+	global int $DKANIM_REFRESH_KEEP;
+	global int $DKANIM_REFRESH;
+	$DKANIM_REFRESH = 1;
+	$DKANIM_REFRESH_KEEP = $keep_selection;
+
+	if (`window -ex  dkAnim_channels`)
+		dk_updateChanLabel;
+}
+
+global proc dk_channels ()
+{
+global int $DKANIM_REFRESH;
+
+	if (`window -ex  dkAnim_channels`)
+	{
+		if($DKANIM_REFRESH == 1)
+			dk_loadChannels;
+
+	}
+	else
+	{
+		window -ret -ip  -in "Channels" -w 375 -h 400 -title "Channels" dkAnim_channels;
+			scrollLayout -horizontalScrollBarThickness 16 -verticalScrollBarThickness 16 -rc dk_resize_chanList dk_scroll_layout;
+				columnLayout -rs 5 ;
+					rowColumnLayout  -cs 2 5 -cs 3 5  -cw 1 75 -cw 2 75  -cw 3 150 -nc 3 ;
+						button -label "Add" -c "dk_matchChannels 1";
+						button -label "Remove" -c "dk_matchChannels 0";
+						textField -tx "*" dk_wildCard;
+						setParent ..;
+					rowColumnLayout  -cs 2 5  -cw 1 100 -cw 2 250  -nc 2 ;
+						button -label "Refresh List" -c "dk_loadChannels";
+						text -label "1000 Channels Scoped" dk_chanLabel;
+					setParent ..;
+					textScrollList -h (`scrollLayout -q -h dk_scroll_layout`-60) -allowMultiSelection true -sc dk_updateChanLabel dk_chanList;
+					
+				
+		dk_loadChannels;
+		window -e -w 375 -h 400 dkAnim_channels;
+		dk_matchChannels 1;
+	
+		
+	}
+	
+	showWindow dkAnim_channels;	
+	dk_resize_chanList;
+}
+
+
+global proc dk_resize_chanList()
+{
+
+string $filteredNames[];
+textScrollList -e -nr `textScrollList -q -ni dk_chanList` dk_chanList;
+textScrollList -e  -a "tempSizerLine"  dk_chanList;
+textScrollList -e  -ri "tempSizerLine"  dk_chanList;
+if(`textScrollList -q -w dk_chanList` < `scrollLayout -q -w dk_scroll_layout`)
+	textScrollList -e  -w (`scrollLayout -q -w dk_scroll_layout` -25)  dk_chanList;
+
+
+}
+
+
+global proc dk_updateChanLabel()
+{
+	global int $DKANIM_REFRESH;
+	global int $DKANIM_REFRESH_KEEP;
+	int $num = `textScrollList -q -nsi dk_chanList`;
+	string $s = "s";
+	string $state = "Refreshed";
+
+	if($num == 1)
+		$s = "";
+
+	if($DKANIM_REFRESH)
+		$state = "Refresh Needed";
+
+	text -e -label ($num + " Channel" + $s + " Scoped (" + $state + ")") dk_chanLabel;
+	
+}
+
+
+
+global proc dk_loadChannels( )
+{
+	global int $DKANIM_REFRESH;
+	global int $DKANIM_REFRESH_KEEP;
+	int $size;
+	string $buffer[];
+	string $chan;
+	string $node;
+	string $path = "";
+	int $i;
+	string $filename = `textField -q -text dk_inname`;
+	int $test = filetest("-r",$filename);
+	int $selected[] = `textScrollList -q -sii dk_chanList`;
+
+	textScrollList -e -w 10 -h 10 -vis 0 -m 0  dk_chanList;
+	print "\nLoading Channel List...\n";
+
+	if(!$test)
+	{
+		textScrollList -e -w 10 -h 10 -vis 0 -m 0 -ra dk_chanList;
+		//$confirm = `confirmDialog -title "Warning" -message "File Doesn't Exist" -button "Ok" -defaultButton "Ok" -cancelButton "Ok" -dismissString "Ok"`;
+	}
+	else
+	{
+		textScrollList -e -w 10 -h 10 -vis 0 -m 0 -ra dk_chanList;
+		
+		int $fileID = fopen( $filename, "r+" ); 	
+		while (!feof($fileID))
+		{
+			
+			$line = fgetline($fileID);
+			$size = tokenize ($line," ",$buffer); 
+
+			if (size($line) > 0)
+			{
+				if (`substring $line 1 5` == "anim " || `substring $line 1 7` == "static ")
+				{
+					if($size == 7 || $size == 6)
+					{
+					
+						if (`substring $line 1 5` == "anim " || (`substring $line 1 7` == "static " && `checkBox -q -v dk_unKeyed`))
+						{
+							$filteredNames = dk_filter_nodes($line,`checkBox -q -v dk_paths`);
+						
+						
+							$node = $filteredNames[2];
+							$chan = $filteredNames[3];
+
+							textScrollList -e -a ($node + "." + $chan) -w 10 -h 10 -vis 0 -m 0  dk_chanList;
+						}
+					
+					}
+					
+				}
+			
+			}
+			
+		}
+	
+	fclose($fileID);
+	}
+$DKANIM_REFRESH = 0;
+
+if($DKANIM_REFRESH_KEEP == 1)
+{
+	for ($item in $selected)
+		textScrollList -e -sii $item dk_chanList;
+}	
+	
+
+
+textScrollList -e  -w 10 -h 10 -vis 1 -m 1  dk_chanList;
+$DKANIM_REFRESH_KEEP = 1;
+dk_updateChanLabel;
+dk_resize_chanList;
+print "\nDone Loading Channel List\n";
+
+}
+
+
+global proc dk_matchChannels (int $mode)
+{
+
+	int $loop = 1;
+	int $total = `textScrollList -q -ni dk_chanList`;
+	string $all_items[] = `textScrollList -q -ai  dk_chanList`;
+	string $text = `textField -q -tx dk_wildCard` ;
+	while ($loop<=$total)
+		{
+		if (gmatch($all_items[$loop-1],$text))
+			if($mode)
+				textScrollList -e -sii $loop  dk_chanList;
+			else 
+				textScrollList -e -dii $loop  dk_chanList;
+		$loop++;
+		}
+dk_updateChanLabel;
+}
+
+
+
+global proc dk_browse_output( int $field )
+{
+	string $file;
+	if ($field == 0)
+	{
+		if (`getenv("OS")` == "Windows_NT")
+			fileBrowserDialog -m 1 -fc "dk_edit_output" -ft "text" -an "Save";
+		else 
+		{
+			$file = `fileDialog`; 
+			textField  -e -tx $file dk_outname;
+		}
+	}
+	if ($field == 1)
+	{
+		$file = `fileDialog`; 
+		textField  -e -tx $file dk_inname;
+	}
+}
+
+
+global proc dk_edit_output(string $fileName,string $fileType)
+  {
+		textField  -e -tx $fileName dk_outname;
+  }
+
+
+
+global proc dk_animWrite( string $filename, int $hi ) 
+{
+int $parent = 0;
+string $objects[];
+string $node;
+string $evalme;
+string $chan;
+string $item;
+string $attr;
+string $buffer[];
+string $curAttr;
+int $weighted = 0;
+string $preIn = "constant";
+string $postIn = "constant";
+int $bd;
+string $nodeTemp[];
+int $test;
+string $selected[] = `ls -sl`;
+string $confirm ;
+string $channels[];
+
+
+//Does File Exist?
+	$test = filetest("-r",$filename);
+    
+	if($test)
+		$confirm = `confirmDialog -title "Confirm" -message "File Exists,  Do you want to Overwrite it?" -button "Yes" -button "No" -defaultButton "No" -cancelButton "No" -dismissString "No"`;
+		
+	if($test == 0 || $confirm == "Yes")
+		{
+		print "\nWriting Animation Curves...\n";
+		int $fileID = fopen( $filename, "w" );
+		fprint ($fileID, "#Generated by dkAnim.mel\n#\n#dkAnim written by Daniel Kramer\n#daniel@visionart.com\n");
+		fprint ($fileID, "#Written out of " + `file -q -sn` + "\n#\n\n");
+	
+		if ($hi)
+			select -hi;
+		
+		
+		$objects = `ls -sl -l`;
+		
+		
+		for ($item in $objects)
+			{
+			$shortItem = `ls -sl $item`;
+	
+			$channels = `listConnections -t animCurve $item`;
+			for ($chan in $channels)
+				{
+				
+				string $connects[] = (`listConnections -p 1 $chan`);
+				$curAttr =  $connects[0];
+
+				int $num = tokenize ($curAttr, ".", $buffer);
+
+				$num = $num - 1;
+				$node = "";
+				for ($i = 0;  $i < $num; $i++)
+				{
+				if($i == 0)
+					$node = $buffer[$i];
+				else
+					$node = $node + "." + $buffer[$i];
+				}
+
+				
+				$nodeTemp = `ls -l $node`;
+
+				$attr = $buffer[$num];
+				$node = $nodeTemp[0];
+			
+				$nodeTemp = `listRelatives -p $node`;		
+
+				if($nodeTemp[0] != "")
+					$parent = 1;
+				else 
+					$parent = 0;
+
+				string $testit[] = `listAnimatable $curAttr`;
+				float $testit2[] = `keyframe -q $chan`;
+				if ($testit[0] != "" && size($testit2))
+					{
+					$evalme = ("getAttr " + $chan + ".preInfinity;");
+			
+					if(`eval $evalme` == 0)
+						$preIn = "constant";
+					if(`eval $evalme` == 1)
+						$preIn = "linear";
+					if(`eval $evalme` == 2)
+						$preIn = "constant";
+					if(`eval $evalme` == 3)
+						$preIn = "cycle";
+					if(`eval $evalme` == 4)
+						$preIn = "cycleRelative";	
+					if(`eval $evalme` == 5)
+						$preIn = "oscillate";	
+			
+					$evalme = ("getAttr " + $chan + ".postInfinity;");
+					$postIn = `eval $evalme`;
+			
+					if(`eval $evalme` == 0)
+						$postIn = "constant";
+					if(`eval $evalme` == 1)
+						$postIn = "linear";
+					if(`eval $evalme` == 2)
+						$postIn = "constant";
+					if(`eval $evalme` == 3)
+						$postIn = "cycle";
+					if(`eval $evalme` == 4)
+						$postIn = "cycleRelative";	
+					if(`eval $evalme` == 5)
+						$postIn = "oscillate";	
+			
+			
+					$evalme = ("getAttr " + $chan + ".weightedTangents;");
+					$weighted = `eval $evalme`;
+			
+					fprint ($fileID, "anim " + $attr + " " + $attr + " " + $node + " " + $parent + " 0 0;\n");
+					fprint ($fileID, "animData {\n");
+					fprint ($fileID, "  weighted " + $weighted + ";\n");
+					fprint ($fileID, "  preInfinity " + $preIn  + ";\n");
+					fprint ($fileID, "  postInfinity " + $postIn + ";\n");
+					fprint ($fileID, "  keys {\n");
+
+					
+					float $keys[] = `keyframe -q $chan`;
+					float $values[]  = `keyframe -q -vc $chan`;
+					string $inTan[] = `keyTangent -q -itt $chan`;
+					string $outTan[] = `keyTangent -q -ott $chan`;
+					int $tanLock[] = `keyTangent -q -lock $chan`;
+					int $weightLock[] = `keyTangent -q -weightLock $chan`;
+					float $breakDown[] = `keyframe -q -breakdown $chan`;
+					float $inAngle[] = `keyTangent -q -inAngle $chan`;
+					float $outAngle[] = `keyTangent -q -outAngle $chan`;
+					float $inWeight[] = `keyTangent -q -inWeight $chan`;
+					float $outWeight[] = `keyTangent -q -outWeight $chan`;
+					
+					for ($i = 0;  $i < size($keys); $i++)
+			  			{
+			  			
+			  			$bd = 0;
+			  			
+			  			for ($bd_item in $breakDown)
+			  			{
+			  				if($bd_item == $keys[$i])
+				    				$bd = 1;
+				    		}
+			  			
+						fprint ($fileID, "    " + $keys[$i] + " " + $values[$i] + " " + $inTan[$i] + " " + $outTan[$i] + " " + $tanLock[$i] + " " + $weightLock[$i] + " " + $bd);
+						if ($inTan[$i] == "fixed")
+				   			fprint ($fileID, " " + $inAngle[$i] + " " + $inWeight[$i]);
+				    			
+						if ($outTan[$i] == "fixed")
+				    			fprint ($fileID, " " + $outAngle[$i] + " " + $outWeight[$i]);
+				    			
+						fprint ($fileID, ";\n");					
+					}
+		
+					fprint ($fileID, "  }\n}\n");
+				}
+			}
+			
+			
+			$staticChans = `listAnimatable $item`;
+			for ($staticChan in $staticChans)
+				{
+				$curAttr =  $staticChan;
+
+				int $num = tokenize ($curAttr, ".", $buffer);
+
+				$num = $num - 1;
+				$node = "";
+				for ($i = 0;  $i < $num; $i++)
+				{
+				if($i == 0)
+					$node = $buffer[$i];
+				else
+					$node = $node + "." + $buffer[$i];
+				}
+
+				
+				$nodeTemp = `ls -l $node`;
+				
+
+				$attr = $buffer[$num];
+				$node = $nodeTemp[0];
+			
+				$nodeTemp = `listRelatives -p $node`;		
+
+				if($nodeTemp[0] != "")
+					$parent = 1;
+				else 
+					$parent = 0;
+
+				
+				$staticChan = ($node + "." + $attr);
+				float $testit[] = `keyframe -q $staticChan`;
+
+				string $connected[] = `listConnections -d 0 $staticChan`;
+		
+				
+				if (size($testit) == 0 && $connected[0] == "")
+				{
+				fprint ($fileID, "static " + $attr + " " + $attr + " " + $node + " " + $parent + " " + `getAttr $staticChan` + "\n");
+				}
+			}
+
+	    	}
+
+fclose $fileID;
+select -cl;
+for ($item in $selected)
+	select -tgl $item;
+	}
+print "\nDone Writing Animation Curves\n";
+}
+
+
+global proc string[] dk_filter_nodes ( string $line, int $paths )
+{
+	global int $DKANIM_REFRESH;
+	string $newPath = "";
+	string $buffer2[];
+	string $buffer[];
+	string $buffer3[];
+	int $pass = 1;
+	string $returnVal[];
+	
+	$size = tokenize ($line," ",$buffer);
+
+	string $search = `textFieldGrp -q -text dk_search`;
+	string $replace = `textFieldGrp  -q -text dk_replace`;
+	if (`checkBox -q -v dk_doReplace` && ($search != ""))
+	{
+		string $match = ("*" + $search + "*");
+		while (`gmatch $buffer[3] $match`)
+			$buffer[3] = `substitute $search $buffer[3] $replace`;
+	}
+
+	string $prefix = `textFieldGrp -q -text dk_prefix`;
+						
+	$newPath = "";
+
+	if ((`checkBox -q -v dk_topNodes` && $buffer[4] == "0") || `checkBox -q -v dk_topNodes` == 0)
+	{
+		if (`gmatch $buffer[3] "*|*"`)
+		{
+			int $count = tokenize($buffer[3],"|",$buffer2);
+								
+			for ($item in $buffer2)
+				$newPath = ($newPath + "|" + $prefix + $item);	
+				$buffer[3] = $newPath;
+		}
+		else 
+			$buffer[3] = ($prefix + "" + $buffer[3]);
+	}
+						
+						
+		
+	if (`checkBox -q -v dk_topNodes` && $buffer[4] == "1")
+	{
+		if (`gmatch $buffer[3] "*|*"`)
+		{
+			int $count = tokenize($buffer[3],"|",$buffer2);
+			for ($i = 0;  $i < size($buffer2); $i++)
+			{
+				if ($i ==0)
+					$newPath = ("|" + $prefix + $buffer2[$i]);
+				else
+					$newPath = ($newPath + "|" + $buffer2[$i]);
+									
+				$buffer[3] = $newPath;
+			}	
+		}	
+		else
+			$buffer[3] = ($buffer[3]);
+	}
+						
+						
+	if ($paths == 0)
+	{
+		int $total  = tokenize($buffer[3],"|",$buffer3);
+		$total = $total - 1;
+		$buffer[3] = $buffer3[$total];
+	}
+
+		
+	if(`checkBox -q -v dk_useChannels` && `window -ex dkAnim_channels` )
+	{
+		if($DKANIM_REFRESH == 1)
+			dk_loadChannels;
+		$pass = 0;
+		int $loop = 1;
+		int $total = `textScrollList -q -nsi dk_chanList`;
+		string $all_items[] = `textScrollList -q -ai dk_chanList`;
+		int $selected[] = `textScrollList -q -sii dk_chanList`;
+		string $text = ($buffer[3] + "." + $buffer[2]) ;
+		while ($loop<=$total)
+		{
+			if (gmatch($all_items[$selected[$loop-1]-1],$text))
+				$pass = 1;
+				
+			$loop++;
+		}
+			
+	}
+
+
+$returnVal = {$buffer[3],$buffer[2],$buffer[3],$buffer[2]};
+
+if ($pass == 0)
+	$returnVal = {"dk_skip","dk_skip",$buffer[3],$buffer[2]};
+
+return $returnVal;
+
+}
+
+
+
+global proc dk_animRead( string $filename, int $paths ) 
+{	
+	float $tan1;
+	float $tan2;
+	float $weight1;
+	float $weight2;
+	string $weighted;
+	string $preI;
+	string $postI;
+	string $attr;
+	string $node;
+	string $line;
+	string $curAttr;
+	string $buffer[];
+	string $buffer2[];
+	string $buffer3[];
+	float $time = 0;
+	float $value = 0;
+	string $inType = "";
+	string $outType = "";
+	int $tanLock = 0;
+	int $weightLock = 0;
+	int $breakDown = 0;
+	string $filteredNames[];
+	string $test2[];
+	
+	
+	string $selected[] = `ls -sl`;
+	
+	int $size;
+	int $endit = 0;
+	
+	int $test = filetest("-r",$filename);
+
+	if(!$test)
+	{
+		$confirm = `confirmDialog -title "Warning" -message "File Doesn't Exist" -button "Ok" -defaultButton "Ok" -cancelButton "Ok" -dismissString "Ok"`;
+	}
+	else
+	{
+		int $fileID = fopen( $filename, "r+" ); 
+		print "\nReading Animation Curves...\n\n";	
+		while (!feof($fileID))
+		{
+			$line = fgetline($fileID); 
+			$weightState = 0;
+			if (size($line) > 0)
+			{
+
+				if (`substring $line 1 5` == "anim " || `substring $line 1 7` == "static ")
+				{
+					$size = tokenize ($line," ",$buffer);
+					if($size == 7 || $size == 6)
+					{
+						
+						$filteredNames = dk_filter_nodes($line,$paths);
+						
+						$curAttr = $filteredNames[0] + "." + $filteredNames[1];
+						$node = $filteredNames[0];
+						$attr = $filteredNames[1];
+						$endit = 0;
+						string $curAttrLong = ($node + "." + $attr);
+					
+						if (`objExists $node`)
+						{
+							$test2 = `ls $curAttrLong`;
+							if (size($test2) > 0)
+							{
+
+
+								if (`substring $line 1 7` == "static " && `checkBox -q -v dk_unKeyed`)
+								{
+	
+								string $connected[] = `listConnections -d 0 $curAttrLong`;
+								if (`getAttr -l $curAttrLong` == 0 && $connected[0] == "")
+									{
+									string $setMe = ("setAttr " + $curAttrLong + " " + $buffer[5] + ";");
+									eval $setMe;
+									}
+								else
+									print ("Warning: Attribute is locked - " + $curAttr + "\n");
+ 
+								}
+
+								if (`substring $line 1 5` == "anim ")
+								{
+									
+									while ($endit == 0)
+					 				{
+					    					$line = fgetline($fileID); 
+
+					    					if(`substring $line 3 11` == "weighted ")
+										{
+											if(`substring $line 12 12` == "1")
+						    					{
+						    						
+												$weighted = "keyTangent -edit -weightedTangents true " + $curAttr;
+												$weightState = 1;
+						    					}	
+						    					else
+						    						$weightState = 0;
+										}
+						
+					    					if(`substring $line 3 7` == "preIn")
+										{
+											tokenize ($line," ",$buffer);
+											tokenize ($buffer[1],";",$buffer);
+											$preI = $buffer[0]; 
+										}
+						
+					   					if(`substring $line 3 8` == "postIn")
+										{
+											tokenize ($line," ",$buffer);
+											tokenize ($buffer[1],";",$buffer);
+											$postI = $buffer[0]; 
+										}
+						
+					    					if(`substring $line 3 8` == "keys {")
+										{
+											$line = fgetline($fileID); 
+											while (`substring $line 3 3` != "}")
+						 					{
+						   						int $argNum = tokenize ($line," ",$buffer);
+						    						$time = $buffer[0];
+						    						$value = $buffer[1];
+						    						$inType = $buffer[2];
+						    						$outType = $buffer[3];
+						    						$tanLock = $buffer[4];
+						    						$weightLock = $buffer[5];
+						    						$breakDown = 0;
+						    						
+						   						if ($argNum == 7)
+												{
+													tokenize ($buffer[6],";",$buffer2);
+													$breakDown = $buffer2[0];
+												}
+						    						else
+												{
+													$breakDown = $buffer[6];
+							
+													if ($argNum > 7)
+							    						{
+														$tan1 = $buffer[7];
+														tokenize ($buffer[8],";",$buffer2);
+														$weight1 = $buffer2[0];
+							
+							    						}
+													if ($argNum > 9)
+							    						{
+														$tan2 = $buffer[9];
+														tokenize ($buffer[10],";",$buffer2);
+														$weight2 = $buffer2[0];							
+							    						}
+												}
+					  
+					    							setKeyframe -time $time -value $value -bd $breakDown $curAttr;
+						    						keyTangent -lock $tanLock -t $time $curAttr;
+						    						
+						    						if ($weightState == 1)
+												{
+													eval $weighted;
+													keyTangent -t $time -weightLock $weightLock $curAttr;
+													
+												}
+									
+						    						if($inType != "fixed" && $outType != "fixed")
+						    						{
+						    							keyTangent -e -a -t $time -itt $inType -ott $outType $curAttr;
+						    							//keyTangent -e -a -t $time -itt $inType -ott $outType $curAttr;
+						    						}
+						    			
+						    						if($inType == "fixed" && $outType != "fixed")
+												{
+											
+							   						keyTangent -e -a -t $time -inAngle $tan1 -inWeight $weight1 -itt $inType -ott $outType $curAttr;
+							   						//keyTangent -e -a -t $time -inAngle $tan1 -inWeight $weight1 -itt $inType -ott $outType $curAttr;
+	
+												}
+						    						if($inType != "fixed" && $outType == "fixed")
+												{
+										
+													keyTangent -e -a -t $time -outAngle $tan1 -inWeight $weight1 -itt $inType -ott $outType $curAttr;
+													//keyTangent -e -a -t $time -outAngle $tan1 -inWeight $weight1 -itt $inType -ott $outType $curAttr;
+							   		
+												}
+						    						if($inType == "fixed" && $outType == "fixed")
+												{
+							   			
+													keyTangent -e -a -t $time -inAngle $tan1 -inWeight $weight1 -outAngle $tan2 -outWeight $weight2 -itt $inType -ott $outType $curAttr;
+							   						//keyTangent -e -a -t $time -inAngle $tan1 -inWeight $weight1 -outAngle $tan2 -outWeight $weight2 -itt $inType -ott $outType $curAttr;
+												}
+						  
+						
+						    						$line = fgetline($fileID); 
+						   
+						    					}
+						    				setInfinity -poi $postI -pri $preI $curAttr; 	
+										$endit = 1;
+										}
+					
+									}
+								}
+							}
+							else
+							{
+								if ($curAttr != "dk_skip")
+									print ("Warning: " + $curAttr + " Does not exist... Skipping\n");
+							}
+						
+						}
+						else
+						{	
+							if ($node != "dk_skip")
+								print ("Warning: " + $node + " Does not exist... Skipping\n");
+						}
+						
+					}	
+		
+				}
+		
+		
+
+			}
+		
+
+		}
+		fclose $fileID;	
+		print "\nDone Reading Animation Curves\n";
+	}
+
+	select -cl;
+	for ($item in $selected)
+		select -tgl $item;
+	
+}
+

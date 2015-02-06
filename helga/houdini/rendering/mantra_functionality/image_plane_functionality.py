@@ -81,7 +81,9 @@ VARIABLE_NAME_LIST = ["direct_comp",
 "render_id_integer",
 "fresnel_one",
 "fresnel_two",
-"fur_gradient"
+"fur_gradient",
+"fur_mask",
+"fuzz_mask"
 ]
 
 

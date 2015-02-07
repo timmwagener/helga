@@ -623,10 +623,12 @@ class AlembicFunctionality(object):
         #alembic_node
         alembic_node = parent_node.createNode('alembic', object_shape_name)
 
-
+        # object_transform_path
+        object_transform_path = os.path.dirname(object_path)
+        
         #set objectPath
         alembic_node_object_path = alembic_node.parm('objectPath')
-        alembic_node_object_path.set(object_path)
+        alembic_node_object_path.set(object_transform_path)
 
 
         #return
@@ -813,7 +815,6 @@ class AlembicFunctionality(object):
                 #log
                 self.logger.debug('Create geo node {0}'.format(object_transform_name))
 
-                
                 
                 #geo_node
                 geo_node = self.create_geo_node(parent_node, object_transform_name)

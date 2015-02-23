@@ -8,6 +8,11 @@
 	<a href="http://www.kiiia.com/helga/github/helga_teaser.jpg" target="_blank"><img width="80" height="80" src="http://www.kiiia.com/helga/github/helga_teaser_thumb.jpg"></a>
 	<a href="http://www.kiiia.com/helga/github/helga_logo_repo.jpg" target="_blank"><img width="80" height="80" src="http://www.kiiia.com/helga/github/helga_logo_repo_thumb.jpg"></a>
 	<a href="http://www.kiiia.com/helga/github/helga_outro.jpg" target="_blank"><img width="80" height="80" src="http://www.kiiia.com/helga/github/helga_outro_thumb.jpg"></a>
+	<a href="http://www.kiiia.com/helga/github/asset_manager_chars.jpg" target="_blank"><img width="80" height="80" src="http://www.kiiia.com/helga/github/asset_manager_chars_thumb.jpg"></a>
+	<a href="http://www.kiiia.com/helga/github/asset_manager_prop.jpg" target="_blank"><img width="80" height="80" src="http://www.kiiia.com/helga/github/asset_manager_prop_thumb.jpg"></a>
+	<a href="http://www.kiiia.com/helga/github/asset_manager_shot.jpg" target="_blank"><img width="80" height="80" src="http://www.kiiia.com/helga/github/asset_manager_shot_thumb.jpg"></a>
+	<a href="http://www.kiiia.com/helga/github/maya_metadata_nodes.jpg" target="_blank"><img width="80" height="80" src="http://www.kiiia.com/helga/github/maya_metadata_nodes_thumb.jpg"></a>
+	<a href="http://www.kiiia.com/helga/github/houdini_alembic_import.jpg" target="_blank"><img width="80" height="80" src="http://www.kiiia.com/helga/github/houdini_alembic_import_thumb.jpg"></a>
 </div>
 -----------------------
 
@@ -24,9 +29,11 @@ What is it ?
 
 Example usage
 -----------------------
+	# Append path to helga package
 	import sys
 	sys.path.append(Path_to_helga_package)
 
+	# import something
 	from helga.houdini.animation import my_tool
 
 

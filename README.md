@@ -29,11 +29,9 @@ What is it ?
 
 Example usage
 -----------------------
-	# Append path to helga package
 	import sys
 	sys.path.append(Path_to_helga_package)
 
-	# import something
 	from helga.houdini.animation import my_tool
 
 

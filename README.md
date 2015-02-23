@@ -16,6 +16,9 @@
 
 -----------------------
 
+[**Documentation**](http://renderthreads.readthedocs.org/) [**Quickstart**](http://renderthreads.readthedocs.org/quickstart.html) [**Download**](https://pypi.python.org/pypi/renderthreads/) [**Vimeo**](https://vimeo.com/timmwagener/renderthreads) [**Author**](http://www.timmwagener.com/)
+
+-----------------------
 
 What is it ?
 -----------------------
@@ -34,9 +37,3 @@ Example usage
 	sys.path.append(Path_to_helga_package)
 
 	from helga.houdini.animation import my_tool
-
------------------------
-
-[**Documentation**](http://renderthreads.readthedocs.org/) [**Quickstart**](http://renderthreads.readthedocs.org/quickstart.html) [**Download**](https://pypi.python.org/pypi/renderthreads/) [**Vimeo**](https://vimeo.com/timmwagener/renderthreads) [**Author**](http://www.timmwagener.com/)
-
------------------------

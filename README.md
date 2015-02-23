@@ -16,19 +16,10 @@
 
 -----------------------
 
-[**Documentation**](http://renderthreads.readthedocs.org/) [**Quickstart**](http://renderthreads.readthedocs.org/quickstart.html) [**Download**](https://pypi.python.org/pypi/renderthreads/) [**Vimeo**](https://vimeo.com/timmwagener/renderthreads) [**Author**](http://www.timmwagener.com/)
-
------------------------
 
 What is it ?
 -----------------------
-Pipeline repository for our diploma movie with the working title "Helga". Contains the script environment for the whole project. The github repo allows to easily clone and setup the pipeline for remote project contributors or quickly develop from several locations.
-
-
-Features
------------------------
-* **Improve render speed**
-	Per-frame parallel command-line rendering made easy.
+**Pipeline repository** for our diploma movie with the working title **Helga**. Contains the script environment for the whole project. The github repo allows to easily clone and setup the pipeline for remote project contributors or quickly develop from several locations.
 
 
 Example usage
@@ -37,3 +28,10 @@ Example usage
 	sys.path.append(Path_to_helga_package)
 
 	from helga.houdini.animation import my_tool
+
+
+-----------------------
+
+[**Documentation**](http://helga-docs.readthedocs.org/) [**Vimeo**](https://vimeo.com/timmwagener/skolteaser) [**Author**](http://www.timmwagener.com/)
+
+-----------------------

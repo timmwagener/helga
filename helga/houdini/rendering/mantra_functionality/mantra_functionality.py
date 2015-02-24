@@ -575,12 +575,12 @@ class MantraFunctionality(object):
         #------------------------------------------------------------------
 
         #vm_reflectlimit
-        self.set_parm_value(node, 'vm_reflectlimit', 2)
+        self.set_parm_value(node, 'vm_reflectlimit', 4)
         #log
         print('{0} to {1}'.format('vm_reflectlimit', self.get_parm_value(node, 'vm_reflectlimit')))
 
         #vm_refractlimit
-        self.set_parm_value(node, 'vm_refractlimit', 2)
+        self.set_parm_value(node, 'vm_refractlimit', 4)
         #log
         print('{0} to {1}'.format('vm_refractlimit', self.get_parm_value(node, 'vm_refractlimit')))
 

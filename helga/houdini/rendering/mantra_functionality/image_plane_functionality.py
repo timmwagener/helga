@@ -84,11 +84,13 @@ VARIABLE_NAME_LIST = ["direct_comp",
 "fresnel_one",
 "fresnel_two",
 "fur_gradient",
-"fur_mask",
-"fuzz_mask",
 "mask_rgb_1",
 "mask_rgb_2",
-"mask_rgb_3"
+"mask_rgb_3",
+"mask_char",
+"mask_char_no_fur",
+"mask_fur",
+"mask_fuzz"
 ]
 
 

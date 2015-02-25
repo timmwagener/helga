@@ -79,6 +79,7 @@ VARIABLE_NAME_LIST = ["direct_comp",
 "amb_occ_body",
 "tangent_normals",
 "world_normals",
+"world_position",
 "render_id",
 "render_id_integer",
 "fresnel_one",
@@ -95,7 +96,7 @@ VARIABLE_NAME_LIST = ["direct_comp",
 
 
 TYPE_FLOAT_LIST = ["Af", "Pz", "Render_Time", "Shading_Samples", "Pixel_Samples"]
-QUANTIZE_32F_LIST = ["P", "Pz"]
+QUANTIZE_32F_LIST = ["P", "Pz", "world_position"]
 PER_LIGHT_EXPORT_LIST = []
 SAMPLE_FILTER_LIST = ["direct_emission"]
 EXPORT_VAR_FOR_EACH_COMPONENT_LIST = ["direct_comp", "indirect_comp"]

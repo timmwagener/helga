@@ -370,6 +370,30 @@ class AlembicFunctionality(object):
         return string_value
 
 
+    def add_folder(self, node, folder_name):
+        """
+        Add folder tab with label folder_name to node if a folder of
+        that name doesnt already exist.
+        """
+
+        # parm_template_group
+        parm_template_group = node.parmTemplateGroup()
+
+        # check if folder already exists
+        if (parm_template_group.findFolder(folder_name)):
+            print('{0} tab already exists. Not adding folder again.'.format(folder_name))
+            return
+
+        # folder
+        folder = hou.FolderParmTemplate("stdswitcher5", folder_name, folder_type=hou.folderType.Tabs, default_value=0, ends_tab_group=False)
+
+        # add folder to template group
+        parm_template_group.append(folder)
+        
+        #set in node
+        node.setParmTemplateGroup(parm_template_group)
+
+
     
     #Alembic Utility Methods
     #------------------------------------------------------------------
@@ -595,10 +619,52 @@ class AlembicFunctionality(object):
         parm_value = parm.eval()
         print('Added parm. {0} - {1}'.format(parm_name, parm_value))
 
+    def create_displacement_parms(self, node):
+        """
+        Create Shaders folder if it doesnt exist and create shop_disable_displace_shader
+        parm inside it.
+        """
+
+        # add_folder 'Shaders'
+        self.add_folder(node, 'Shaders')
+        
+        #Create Parameters
+        #------------------------------------------------------------------
+
+        # parm_template_group
+        parm_template_group = node.parmTemplateGroup()
+
+        # folder_shaders
+        folder_shaders = parm_template_group.findFolder('Shaders')
+        # shop_disable_displace_shader
+        hou_parm_template = hou.ToggleParmTemplate("shop_disable_displace_shader", "Disable Displace Shader Rendering", default_value=False)
+        hou_parm_template.setHelp("None")
+        hou_parm_template.setTags({"spare_category": "Shaders"})
+        #append
+        parm_template_group.appendToFolder(folder_shaders, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_template_group)
+
+        #log
+        parm = node.parm("shop_disable_displace_shader")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+
+        #Adjust Parameters
+        #------------------------------------------------------------------
+
+        # shop_disable_displace_shader 
+        hou_parm = node.parm("shop_disable_displace_shader")
+        hou_parm.lock(False)
+        hou_parm.set(0)
+        hou_parm.setAutoscope(False)
+
     def create_geo_node(self, parent_node, node_name):
         """
         Create character geo node. This node is used to assign materials
-        and contains an alembic sop node that points to the geoShape object. 
+        and contains an alembic sop node that points to the geoShape object.
         """
 
         #geo_node
@@ -608,6 +674,9 @@ class AlembicFunctionality(object):
 
         # create category parms
         self.create_category_parms(geo_node)
+
+        # create_displacement_parms
+        self.create_displacement_parms(geo_node)
 
         return geo_node
 

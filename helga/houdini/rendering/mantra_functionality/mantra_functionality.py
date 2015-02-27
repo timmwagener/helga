@@ -255,7 +255,7 @@ class MantraFunctionality(object):
         print('{0} --> picture path'.format(node.path()))
         
 
-    def apply_base_setup(self):
+    def apply_base_setup(self, add_displacement_property = False):
         """
         Apply rendering base setup for the selected Mantra nodes.
         """
@@ -278,12 +278,30 @@ class MantraFunctionality(object):
             try:
                 #decouple_indirect_noise_parameters
                 self.decouple_indirect_noise_parameters(mantra_node)
-                #add_operator_id_render_property
-                self.add_operator_id_render_property(mantra_node)
-            
             except:
                 #log
                 print('Error adding indirect parameters. Maybe they already existed.')
+
+            try:
+                #add_operator_id_render_property
+                self.add_operator_id_render_property(mantra_node)
+            except:
+                #log
+                print('Error adding operator id render property. Maybe it already existed.')
+
+            # add_displacement_property
+            # (optional since it doesnt seem to have an effect! Turned of by default on Mantra nodes
+            # and replaced with same parm on geo nodes)
+            if (add_displacement_property):
+                
+                try:
+                    # add_shaders_folder
+                    self.add_shaders_folder(mantra_node)
+                    # add_displacement_property
+                    self.add_displacement_property(mantra_node)
+                except:
+                    #log
+                    print('Error adding displacement property. Maybe it already existed.')
 
             #set_mantra_base_parameters
             self.set_mantra_base_parameters(mantra_node)
@@ -445,14 +463,68 @@ class MantraFunctionality(object):
         hou_parm.setAutoscope(False)
 
 
+    def add_shaders_folder(self, node):
+        """
+        Add Shaders Tab to Mantra node.
+        """
+
+        # parm_template_group
+        parm_template_group = node.parmTemplateGroup()
+
+        # check if folder already exists
+        if (parm_template_group.findFolder('Shaders')):
+            print('Shaders tab already exists. Not recreating.')
+            return
+
+        # folder_shaders
+        folder_shaders = hou.FolderParmTemplate("main5", "Shaders", folder_type=hou.folderType.Tabs, default_value=0, ends_tab_group=False)
+
+        # add folder to template group
+        parm_template_group.append(folder_shaders)
         
+        #set in node
+        node.setParmTemplateGroup(parm_template_group)
 
 
+    def add_displacement_property(self, node):
+        """
+        Add shop_disable_displace_shader property and Shaders Tab to Mantra node.
+        """
+
+        #Create Parameters
+        #------------------------------------------------------------------
+
+        # parm_template_group
+        parm_template_group = node.parmTemplateGroup()
+
+        # folder_shaders
+        folder_shaders = parm_template_group.findFolder('Shaders')
+        # shop_disable_displace_shader
+        hou_parm_template = hou.ToggleParmTemplate("shop_disable_displace_shader", "Disable Displace Shader Rendering", default_value=False)
+        hou_parm_template.setHelp("None")
+        hou_parm_template.setTags({"spare_category": "Shaders"})
+        #append
+        parm_template_group.appendToFolder(folder_shaders, hou_parm_template)
+        #set in node
+        node.setParmTemplateGroup(parm_template_group)
+
+        #log
+        parm = node.parm("shop_disable_displace_shader")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+
+        #Adjust Parameters
+        #------------------------------------------------------------------
+
+        # shop_disable_displace_shader 
+        hou_parm = node.parm("shop_disable_displace_shader")
+        hou_parm.lock(False)
+        hou_parm.set(0)
+        hou_parm.setAutoscope(False)
         
-
-        
-
-
+    
     def set_mantra_base_parameters(self, node):
         """
         Set mantra base parameters. This is the technically correct base setup.

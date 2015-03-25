@@ -289,6 +289,13 @@ class MantraFunctionality(object):
                 #log
                 print('Error adding operator id render property. Maybe it already existed.')
 
+            try:
+                # add_shutter_shape_property
+                self.add_shutter_shape_property(mantra_node)
+            except:
+                #log
+                print('Error adding shutter shape property. Maybe it already existed.')
+
             # add_displacement_property
             # (optional since it doesnt seem to have an effect! Turned of by default on Mantra nodes
             # and replaced with same parm on geo nodes)
@@ -461,6 +468,219 @@ class MantraFunctionality(object):
         hou_parm = node.parm("vm_generate_opid")
         hou_parm.lock(False)
         hou_parm.setAutoscope(False)
+
+
+    def add_shutter_shape_property(self, node):
+        """
+        Add vm_shuttershape property to mantra node and adjust it. This property maps
+        the shutter open/close speed of the camera.
+        """
+
+        # Create Parameters
+        #------------------------------------------------------------------
+
+        # parm_group
+        parm_group = node.parmTemplateGroup()
+
+        
+        # folder_sampling
+        folder_sampling = parm_group.containingFolder('allowmotionblur')
+        
+        # vm_shuttershape
+        hou_parm_template = hou.RampParmTemplate("vm_shuttershape", "Shutter Shape", hou.rampParmType.Float, default_value=2, default_basis=None, color_type=None)
+        hou_parm_template.setConditional( hou.parmCondType.DisableWhen, "{ allowmotionblur == 0 } { vm_renderengine == micropoly } { vm_renderengine == pbrmicropoly }")
+        hou_parm_template.setHelp("Controls the opening of the shutter along shutter time through a grayscale ramp. The higher the ramp value at a given time point, the more time sample will be focused in that area. Note that the ramp is always evaluated across the entire range, regardless of the shutter time setting.")
+        hou_parm_template.setTags({"rampfloatdefault": "1pos 0 1value 1 1interp catmull-rom 2pos 1 2value 1 2interp catmull-rom", "spare_category": "Sampling"})
+        
+        # append
+        parm_group.appendToFolder(folder_sampling, hou_parm_template)
+        
+        # set in node
+        node.setParmTemplateGroup(parm_group)
+
+        # log
+        parm = node.parm("vm_shuttershape")
+        parm_name = parm.name()
+        parm_value = parm.eval()
+        print('Added parm. {0} - {1}'.format(parm_name, parm_value))
+
+
+        # Adjust Parameters
+        #------------------------------------------------------------------
+
+        # vm_shuttershape
+        parm = node.parm("vm_shuttershape")
+        parm.lock(False)
+        parm.set(8)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape1pos
+        parm = node.parm("vm_shuttershape1pos")
+        parm.lock(False)
+        parm.set(0)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape1value
+        parm = node.parm("vm_shuttershape1value")
+        parm.lock(False)
+        parm.set(0)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape1interp
+        parm = node.parm("vm_shuttershape1interp")
+        parm.lock(False)
+        parm.set("linear")
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape2pos
+        parm = node.parm("vm_shuttershape2pos")
+        parm.lock(False)
+        parm.set(0.125)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape2value
+        parm = node.parm("vm_shuttershape2value")
+        parm.lock(False)
+        parm.set(0.65174126625061035)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape2interp
+        parm = node.parm("vm_shuttershape2interp")
+        parm.lock(False)
+        parm.set("monotonecubic")
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape3pos
+        parm = node.parm("vm_shuttershape3pos")
+        parm.lock(False)
+        parm.set(0.40000000596046448)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape3value
+        parm = node.parm("vm_shuttershape3value")
+        parm.lock(False)
+        parm.set(1)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape3interp
+        parm = node.parm("vm_shuttershape3interp")
+        parm.lock(False)
+        parm.set("catmull-rom")
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape4pos
+        parm = node.parm("vm_shuttershape4pos")
+        parm.lock(False)
+        parm.set(0.64999997615814209)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape4value
+        parm = node.parm("vm_shuttershape4value")
+        parm.lock(False)
+        parm.set(1)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape4interp
+        parm = node.parm("vm_shuttershape4interp")
+        parm.lock(False)
+        parm.set("catmull-rom")
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape5pos
+        parm = node.parm("vm_shuttershape5pos")
+        parm.lock(False)
+        parm.set(0.69999998807907104)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape5value
+        parm = node.parm("vm_shuttershape5value")
+        parm.lock(False)
+        parm.set(0.74129354953765869)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape5interp
+        parm = node.parm("vm_shuttershape5interp")
+        parm.lock(False)
+        parm.set("catmull-rom")
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape6pos
+        parm = node.parm("vm_shuttershape6pos")
+        parm.lock(False)
+        parm.set(0.80000001192092896)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape6value
+        parm = node.parm("vm_shuttershape6value")
+        parm.lock(False)
+        parm.set(0.42506229877471924)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape6interp
+        parm = node.parm("vm_shuttershape6interp")
+        parm.lock(False)
+        parm.set("catmull-rom")
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape7pos
+        parm = node.parm("vm_shuttershape7pos")
+        parm.lock(False)
+        parm.set(0.89999997615814209)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape7value
+        parm = node.parm("vm_shuttershape7value")
+        parm.lock(False)
+        parm.set(0.1840796023607254)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape7interp
+        parm = node.parm("vm_shuttershape7interp")
+        parm.lock(False)
+        parm.set("catmull-rom")
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape8pos
+        parm = node.parm("vm_shuttershape8pos")
+        parm.lock(False)
+        parm.set(1)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape8value
+        parm = node.parm("vm_shuttershape8value")
+        parm.lock(False)
+        parm.set(0)
+        parm.setAutoscope(False)
+
+
+        # vm_shuttershape8interp
+        parm = node.parm("vm_shuttershape8interp")
+        parm.lock(False)
+        parm.set("catmull-rom")
+        parm.setAutoscope(False)
 
 
     def add_shaders_folder(self, node):

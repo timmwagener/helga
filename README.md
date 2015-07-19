@@ -1,5 +1,7 @@
 
 
+[![Join the chat at https://gitter.im/timmwagener/helga](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/timmwagener/helga?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 <div align="center">
 	<a href="https://vimeo.com/timmwagener/skolteaser" target="_blank"><img src="http://www.kiiia.com/helga/github/helga_repo_header.jpg"></a>
 </div>
